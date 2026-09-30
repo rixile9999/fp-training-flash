@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { importedModules, REFERENCE_HASH, stdlibReference } from "../src/internal/gleam-reference.ts";
-import { PROMPT_VERSION } from "../src/internal/prompts.ts";
 
 describe("Gleam reference material", () => {
   it("finds imported stdlib modules in first-seen order", () => {
@@ -23,8 +22,7 @@ describe("Gleam reference material", () => {
     expect(ref).not.toContain("## gleam/dict");
   });
 
-  it("ties the prompt version to the reference material", () => {
+  it("exposes a content hash of the reference material", () => {
     expect(REFERENCE_HASH).toMatch(/^[0-9a-f]{8}$/);
-    expect(PROMPT_VERSION).toBe(`coach-v4+ref-${REFERENCE_HASH}`);
   });
 });

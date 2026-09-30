@@ -38,7 +38,20 @@ Prompt iteration on qwen3.8-flash (blind, 9 scenarios x 2 reps):
 | coach-v1 | 6.00 | 3.39 | 4.11 | 2/9 |
 | coach-v2 (no fixed expression before passing, no invented requirements, no emoji) | 6.89 | 4.11 | 4.67 | 7/9 |
 
-coach-v3 adds Gleam syntax facts (no if/else, `{ }` grouping) after the model suggested `if` and `( )` grouping.
+Reference material instead of rules (same model, blind, two independent judging runs):
+
+| prompt | run A overall | run B overall |
+|---|---|---|
+| coach-v2 (rules only) | 7.22 | 7.39 |
+| coach-v3 (v2 + hard-coded Gleam syntax facts) | 5.33 | - |
+| coach-v4 (v2 + compile-verified syntax reference in system prompt + stdlib signatures of imported modules) | 6.17 | 6.44 |
+| coach-v5 (v2 + stdlib signatures only) | - | 5.33 |
+
+Pushing reference material into every request made qwen3.8-flash longer and less focused, and did not reduce
+non-Gleam constructs (about 1 in 6 outputs in every variant). coach-v2 is kept. The material stays in the repo for
+on-demand use: `modules/coaching/src/reference/gleam/syntax.md` (verified syntax reference) and
+`generated/stdlib.json` (regenerate with `node tools/gleam-reference/src/main.ts`). Next step: expose it as tools the
+model calls when needed (pull, not push), evaluated the same way.
 
 ## Consequences
 
