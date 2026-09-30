@@ -3,10 +3,28 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "start": "node src/main.ts",
+    "dev": "node --watch src/main.ts"
+  },
   "fp": {
     "kind": "app",
     "description": "Composition root and HTTP server (Hono). Wires modules, runs migrations, maps HTTP to module services."
   },
-  "dependencies": { "@fp/kernel": "workspace:*", "@fp/api-contract": "workspace:*", "@fp/accounts": "workspace:*", "@fp/content": "workspace:*", "@fp/grading": "workspace:*", "@fp/learner": "workspace:*", "@fp/sessions": "workspace:*", "@fp/coaching": "workspace:*", "hono": "^4.13.11", "@hono/node-server": "^2.1.3", "zod": "^4.6.5" }
+  "dependencies": {
+    "@fp/kernel": "workspace:*",
+    "@fp/api-contract": "workspace:*",
+    "@fp/accounts": "workspace:*",
+    "@fp/content": "workspace:*",
+    "@fp/grading": "workspace:*",
+    "@fp/learner": "workspace:*",
+    "@fp/sessions": "workspace:*",
+    "@fp/coaching": "workspace:*",
+    "hono": "^4.13.11",
+    "@hono/node-server": "^2.1.3",
+    "zod": "^4.6.5"
+  }
 }
