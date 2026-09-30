@@ -108,7 +108,11 @@ export interface PredictSpec {
   readonly acceptedAnswers: readonly string[];
 }
 
-/** Learner-facing exercise. Never contains hidden tests or reference solutions. */
+/**
+ * Learner-facing exercise. Never contains hidden tests or reference solutions.
+ * It DOES contain every hint's markdown and, for predict exercises, `predict.acceptedAnswers`: whoever sends it to
+ * a client (apps/api) must strip hints the learner has not revealed and the accepted answers.
+ */
 export interface ExerciseDetail extends ExerciseSummary {
   readonly promptMarkdown: string;
   /** Module name of the learner's file, e.g. "coupon" -> src/coupon.gleam. */

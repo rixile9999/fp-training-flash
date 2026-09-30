@@ -12,7 +12,11 @@
     "boundaries": "node tools/check-boundaries.mjs",
     "ctx": "node tools/ctx.mjs",
     "check": "pnpm boundaries && pnpm typecheck && pnpm test",
-    "check:module": "node tools/check-module.mjs"
+    "check:module": "node tools/check-module.mjs",
+    "api": "pnpm --filter @fp/api start",
+    "web": "pnpm --filter @fp/web dev",
+    "runner:build": "sh modules/grading/runners/gleam/build-image.sh",
+    "content:ci": "node tools/content-ci/src/main.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.3",
