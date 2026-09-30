@@ -36,6 +36,31 @@ describe("loadConfig", () => {
     expect(custom.ok && custom.value.llm).toMatchObject({ model: "m" });
   });
 
+  it("selects DashScope when only its key is set, or when requested explicitly", () => {
+    const ds = loadConfig({ DASHSCOPE_API_KEY: "sk-ds" });
+    expect(ds.ok && ds.value.llm).toEqual({
+      provider: "dashscope",
+      apiKey: "sk-ds",
+      model: DEFAULTS.dashscopeCoachModel,
+      baseUrl: DEFAULTS.dashscopeBaseUrl,
+      enableThinking: false,
+    });
+    const both = loadConfig({ ANTHROPIC_API_KEY: "sk-a", DASHSCOPE_API_KEY: "sk-ds" });
+    expect(both.ok && both.value.llm.provider).toBe("anthropic");
+    const forced = loadConfig({
+      ANTHROPIC_API_KEY: "sk-a",
+      DASHSCOPE_API_KEY: "sk-ds",
+      FP_LLM_PROVIDER: "dashscope",
+      FP_COACH_MODEL: "qwen3.8-max",
+      FP_COACH_THINKING: "on",
+    });
+    expect(forced.ok && forced.value.llm).toMatchObject({ provider: "dashscope", model: "qwen3.8-max", enableThinking: true });
+    expect(loadConfig({ FP_LLM_PROVIDER: "dashscope" }).ok).toBe(false);
+    expect(loadConfig({ FP_LLM_PROVIDER: "openai" }).ok).toBe(false);
+    const none = loadConfig({ DASHSCOPE_API_KEY: "sk-ds", FP_LLM_PROVIDER: "none" });
+    expect(none.ok && none.value.llm).toEqual({ provider: "none" });
+  });
+
   it("configures the runner", () => {
     const docker = loadConfig({ FP_RUNNER_IMAGE: "img:1" });
     expect(docker.ok && runnerLabel(docker.value.runner)).toBe("docker:img:1");

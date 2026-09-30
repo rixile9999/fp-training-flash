@@ -406,6 +406,24 @@ importers:
         specifier: ^8.15.0
         version: 8.23.1
 
+  tools/coach-eval:
+    dependencies:
+      '@fp/coaching':
+        specifier: workspace:*
+        version: link:../../modules/coaching
+      '@fp/content':
+        specifier: workspace:*
+        version: link:../../modules/content
+      '@fp/grading':
+        specifier: workspace:*
+        version: link:../../modules/grading
+      '@fp/kernel':
+        specifier: workspace:*
+        version: link:../../shared/kernel
+      '@fp/learner':
+        specifier: workspace:*
+        version: link:../../modules/learner
+
   tools/content-ci:
     dependencies:
       '@fp/content':

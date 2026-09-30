@@ -123,7 +123,7 @@ export interface HealthResponse {
   readonly status: "ok";
   readonly contentBundle: string | null;
   readonly runner: string;
-  readonly llm: "anthropic" | "none";
+  readonly llm: "anthropic" | "dashscope" | "none";
 }
 
 // ---------- Routes ----------

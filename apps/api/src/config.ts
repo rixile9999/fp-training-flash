@@ -32,6 +32,8 @@ export const DEFAULTS = {
   dataDir: ".data/pglite",
   runnerImage: "fp-gleam-runner:1.18.1",
   coachModel: "claude-opus-5",
+  dashscopeCoachModel: "qwen3.8-flash",
+  dashscopeBaseUrl: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
   webOrigin: "http://localhost:5173",
 } as const;
 
@@ -79,11 +81,32 @@ export function loadConfig(env: Env, cwd: string = process.cwd()): Result<ApiCon
     problems.push(`FP_RUNNER must be "docker" or "local", got "${runnerKind}"`);
   }
 
-  const apiKey = nonEmpty(env.ANTHROPIC_API_KEY);
-  const llm: LlmConfig =
-    apiKey !== undefined
-      ? { provider: "anthropic", apiKey, model: nonEmpty(env.FP_COACH_MODEL) ?? DEFAULTS.coachModel }
-      : { provider: "none" };
+  // FP_LLM_PROVIDER picks the coaching LLM explicitly; otherwise the first configured key wins
+  // (ANTHROPIC_API_KEY, then DASHSCOPE_API_KEY). Without any, coaching is rule-based.
+  const anthropicKey = nonEmpty(env.ANTHROPIC_API_KEY);
+  const dashscopeKey = nonEmpty(env.DASHSCOPE_API_KEY);
+  const requested = nonEmpty(env.FP_LLM_PROVIDER);
+  const provider = requested ?? (anthropicKey ? "anthropic" : dashscopeKey ? "dashscope" : "none");
+  const coachModel = nonEmpty(env.FP_COACH_MODEL);
+  let llm: LlmConfig = { provider: "none" };
+  if (provider === "anthropic") {
+    if (anthropicKey === undefined) problems.push("FP_LLM_PROVIDER=anthropic requires ANTHROPIC_API_KEY");
+    else llm = { provider: "anthropic", apiKey: anthropicKey, model: coachModel ?? DEFAULTS.coachModel };
+  } else if (provider === "dashscope") {
+    if (dashscopeKey === undefined) problems.push("FP_LLM_PROVIDER=dashscope requires DASHSCOPE_API_KEY");
+    else {
+      const thinking = nonEmpty(env.FP_COACH_THINKING);
+      llm = {
+        provider: "dashscope",
+        apiKey: dashscopeKey,
+        model: coachModel ?? DEFAULTS.dashscopeCoachModel,
+        baseUrl: nonEmpty(env.DASHSCOPE_BASE_URL) ?? DEFAULTS.dashscopeBaseUrl,
+        enableThinking: thinking === "on" || thinking === "true" || thinking === "1",
+      };
+    }
+  } else if (provider !== "none") {
+    problems.push(`FP_LLM_PROVIDER must be "anthropic", "dashscope" or "none", got "${provider}"`);
+  }
 
   const webOrigin = nonEmpty(env.FP_WEB_ORIGIN) ?? DEFAULTS.webOrigin;
 

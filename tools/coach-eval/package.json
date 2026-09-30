@@ -1,0 +1,18 @@
+{
+  "name": "@fp/coach-eval",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": { "fp-coach-eval": "./src/main.ts" },
+  "fp": {
+    "kind": "tool",
+    "description": "Coaching model evaluation: real content + Docker grader + coaching with several LLM configs; records outputs, latency and automatic checks."
+  },
+  "dependencies": {
+    "@fp/kernel": "workspace:*",
+    "@fp/content": "workspace:*",
+    "@fp/grading": "workspace:*",
+    "@fp/learner": "workspace:*",
+    "@fp/coaching": "workspace:*"
+  }
+}
