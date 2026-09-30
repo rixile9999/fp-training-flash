@@ -34,7 +34,7 @@ rule-based fallback. Coaching never changes grading results or ratings.
   `PROMPT_VERSION` (bump on any prompt/schema/validation change: it is part of the cache key).
 - `src/internal/rule-based.ts`: deterministic feedback per outcome and the no-LLM chat reply.
 - `src/internal/llm.ts`: `LlmClient` interface, Anthropic implementation (structured JSON output via
-  `zodOutputFormat`, refusal/truncation -> throw), `withTimeout`, `DEFAULT_COACH_MODEL` ("claude-sonnet-5").
+  `zodOutputFormat`, server-side refusal fallbacks via beta `server-side-fallback-2026-07-01` + `fallbacks: "default"`, refusal of the whole chain or truncation -> throw), `withTimeout`, `DEFAULT_COACH_MODEL` ("claude-opus-5").
 - `src/internal/references.ts`: "15행" / "15번째 줄" / "line 15" extraction for `ChatReply.references`.
 - `src/internal/migrations.ts`: schema `coaching`.
 

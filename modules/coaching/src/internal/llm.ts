@@ -6,8 +6,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import type { z } from "zod";
 
-/** Current Sonnet model id (per the claude-api skill); override with LlmConfig.model. */
-export const DEFAULT_COACH_MODEL = "claude-sonnet-5";
+/** Default model id (per the claude-api skill); override with LlmConfig.model / FP_COACH_MODEL. */
+export const DEFAULT_COACH_MODEL = "claude-opus-5";
 
 export interface LlmMessage {
   readonly role: "user" | "assistant";
@@ -42,7 +42,11 @@ export function createAnthropicLlmClient(opts: AnthropicLlmOptions): LlmClient {
   return {
     model,
     async complete(req) {
-      const response = await client.messages.create({
+      // Server-side refusal fallback: if the model declines, the API re-runs the request on a fallback model
+      // chosen by refusal category. A refusal of the whole chain still throws below (rule-based feedback).
+      const response = await client.beta.messages.create({
+        betas: ["server-side-fallback-2026-07-01"],
+        fallbacks: "default",
         model,
         max_tokens: req.maxOutputTokens ?? opts.maxOutputTokens ?? 8000,
         // The system prompt is static per prompt version, so it is a stable cache prefix.
