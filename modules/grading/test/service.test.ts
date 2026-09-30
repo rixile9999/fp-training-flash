@@ -243,3 +243,29 @@ describe("job queue", () => {
     expect(q.active).toBe(0);
   });
 });
+
+describe("recoverInterrupted", () => {
+  it("completes submissions left running by a crashed process as system errors", async () => {
+    const catalog = fakeCatalog([rubricSpec, predictSpec]);
+    // First "process": the runner never answers, as if the server died mid-evaluation.
+    const hanging = fakeRunner(() => new Promise<RunOutput>(() => {}));
+    const crashed = createGradingModule({ db, clock, events: bus, logger: silentLogger, catalog, runner: hanging });
+    void crashed.service.submit(submitReq(fixture("wrong-filter-drops.gleam"), "k-crash"));
+    await new Promise((r) => setTimeout(r, 50));
+    const [running] = await crashed.service.listSubmissions(USER);
+    expect(running?.status).toBe("running");
+
+    // Second "process" starts on the same database.
+    const restarted = createGradingModule({ db, clock, events: bus, logger: silentLogger, catalog, runner: fakeRunner() });
+    expect(await restarted.recoverInterrupted()).toBe(1);
+    const recovered = await restarted.service.getSubmission(running!.id, USER);
+    expect(recovered?.status).toBe("completed");
+    expect(recovered?.evaluation?.outcome).toBe("system_error");
+    expect(events.map((e) => e.payload.outcome)).toEqual(["system_error"]);
+    expect(await restarted.recoverInterrupted()).toBe(0);
+
+    // A system error does not use up the learner's first attempt.
+    const next = await restarted.service.submit(submitReq(fixture("wrong-filter-drops.gleam"), "k-after"));
+    expect(next.ok && next.value.attemptNo).toBe(1);
+  });
+});

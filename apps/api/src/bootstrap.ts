@@ -143,6 +143,10 @@ export async function bootstrap(config: ApiConfig, opts: BootstrapOptions = {}):
       llm: config.llm,
     });
 
+    // Learner and sessions are subscribed by now, so recovered system-error events reach them (they ignore them).
+    const recovered = await grading.recoverInterrupted();
+    if (recovered > 0) logger.warn("interrupted submissions recovered as system errors", { count: recovered });
+
     const services: AppServices = {
       accounts: accounts.service,
       catalog: content.catalog,

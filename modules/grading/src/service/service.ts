@@ -34,7 +34,12 @@ export interface GradingServiceDeps {
 const MAX_STORED_CODE = 256 * 1024;
 const MAX_KEY = 200;
 
-export function createGradingService(deps: GradingServiceDeps): GradingService {
+export interface GradingServiceInternal extends GradingService {
+  /** Marks submissions left running by a crashed process as system errors and publishes their events. */
+  recoverInterrupted(): Promise<number>;
+}
+
+export function createGradingService(deps: GradingServiceDeps): GradingServiceInternal {
   const { clock, logger, catalog, runner } = deps;
   const repo = createSubmissionRepo(deps.db);
   const queue = createJobQueue(deps.concurrency ?? 2);
@@ -159,6 +164,24 @@ export function createGradingService(deps: GradingServiceDeps): GradingService {
         // Public tests only: hidden tests are never run in a trial, and never shown.
         tests: evaluation.tests.filter((t) => t.visibility === "public"),
       });
+    },
+
+    async recoverInterrupted() {
+      const evaluation: Evaluation = {
+        outcome: "system_error",
+        correctness: false,
+        compileDiagnostics: [],
+        tests: [],
+        requirements: [],
+        rubricChecks: [],
+        errorTags: [],
+        rejectionReasons: ["채점 중 서버가 중단되어 결과를 얻지 못했습니다. 다시 제출해 주세요."],
+        evaluatedAt: now(),
+      };
+      const recovered = await repo.completeInterrupted(evaluation);
+      for (const s of recovered) await publish(s, evaluation);
+      if (recovered.length > 0) logger.warn("recovered interrupted submissions", { count: recovered.length });
+      return recovered.length;
     },
 
     getSubmission: (id, userId) => repo.get(id, userId),

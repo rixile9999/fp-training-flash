@@ -34,9 +34,15 @@ export interface GradingModuleDeps {
 
 export interface GradingModule {
   readonly service: GradingService;
+  /**
+   * Call once at startup, before serving requests: completes submissions left "running" by a crashed process as
+   * system errors (never counted as learning failures) and publishes their events. Returns how many were recovered.
+   */
+  recoverInterrupted(): Promise<number>;
 }
 
 /** Run `migrations` (schema "grading") before using the service. */
 export function createGradingModule(deps: GradingModuleDeps): GradingModule {
-  return { service: createGradingService(deps) };
+  const service = createGradingService(deps);
+  return { service, recoverInterrupted: () => service.recoverInterrupted() };
 }

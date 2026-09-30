@@ -92,6 +92,21 @@ export function createSubmissionRepo(db: Db) {
       return toSubmission(r.rows[0]);
     },
 
+    /**
+     * Completes every submission still marked running as a system error. Used at startup: a submission can only
+     * be running there if the process died while evaluating it.
+     */
+    async completeInterrupted(evaluation: Evaluation): Promise<Submission[]> {
+      const r = await db.query<Row>(
+        `update grading.submissions
+            set status = 'completed', evaluation = $1::jsonb, outcome = 'system_error', system_error = true, evaluated_at = $2
+          where status = 'running'
+          returning ${COLUMNS}`,
+        [JSON.stringify(evaluation), evaluation.evaluatedAt],
+      );
+      return r.rows.map(toSubmission);
+    },
+
     async get(id: SubmissionId, userId: UserId): Promise<Submission | null> {
       const r = await db.query<Row>(`select ${COLUMNS} from grading.submissions where id = $1 and user_id = $2`, [id, userId]);
       return r.rows[0] ? toSubmission(r.rows[0]) : null;
