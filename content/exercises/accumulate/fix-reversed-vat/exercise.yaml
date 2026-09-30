@@ -1,0 +1,71 @@
+kind: fix
+format: drill
+module: vat
+title: 부가세 계산 결과 순서 버그 고치기
+contextTags: [pricing]
+source:
+  kind: original
+difficulty: 1250
+estimatedMinutes: 4
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: with_vat_keeps_order_test
+    name: 부가세를 더한 가격이 원래 순서대로 나온다
+    visibility: public
+    errorTag: reverses_order
+    requirements: [R1]
+  - fn: with_vat_rounds_down_test
+    name: 부가세 계산에서 1원 미만은 버린다
+    visibility: public
+  - fn: accumulate_keeps_order_test
+    name: accumulate 자체가 원래 순서를 유지한다
+    visibility: public
+    errorTag: patches_symptom_not_cause
+    requirements: [R2]
+  - fn: accumulate_empty_list_test
+    name: accumulate에 빈 목록을 주면 빈 목록을 반환한다
+    visibility: hidden
+  - fn: with_vat_empty_list_test
+    name: 가격이 없으면 빈 목록을 반환한다
+    visibility: hidden
+  - fn: accumulate_long_list_keeps_order_test
+    name: 원소가 여섯 개여도 accumulate가 순서를 유지한다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [R2]
+requirements:
+  - id: R1
+    description: 가격 목록의 순서 유지
+  - id: R2
+    description: 공용 함수 accumulate에서 원인을 고침
+hints:
+  - level: 1
+    kind: question
+    text: "`with_vat([1000, 2500, 300])`의 결과는 순서만 틀렸나요, 값도 틀렸나요? 순서를 바꾸는 코드는 어느 함수에 있나요?"
+  - level: 2
+    kind: concept
+    text: "누적자 앞에 `[x, ..acc]`로 쌓으면 먼저 처리한 원소가 점점 뒤로 밀려서, 다 쌓았을 때 순서가 입력과 반대가 됩니다."
+  - level: 3
+    kind: approach
+    text: "`with_vat`가 아니라 `accumulate`를 쓰는 모든 곳이 같은 문제를 겪습니다. 누적이 끝나는 지점에서 한 번만 순서를 되돌리세요."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      fn go(items: List(a), fun: fn(a) -> b, acc: List(b)) -> List(b) {
+        case items {
+          [] -> todo
+          [first, ..rest] -> go(rest, fun, [fun(first), ..acc])
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: reverse-at-call-site
+    mustFail: [accumulate_keeps_order_test, accumulate_long_list_keeps_order_test]
+    errorTag: patches_symptom_not_cause
+  - key: reverse-each-step
+    mustFail: [with_vat_keeps_order_test, accumulate_long_list_keeps_order_test]
+    errorTag: reverses_order

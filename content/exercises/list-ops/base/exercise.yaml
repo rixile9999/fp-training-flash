@@ -1,0 +1,94 @@
+kind: implement
+format: drill
+module: list_ops
+difficulty: 1250
+estimatedMinutes: 6
+limits: { timeMs: 6000, memoryMb: 256 }
+tests:
+  - fn: foldl_empty_returns_initial_test
+    name: 빈 목록을 접으면 초깃값을 그대로 반환한다
+    visibility: public
+    requirements: [ R1 ]
+  - fn: foldl_goes_left_to_right_test
+    name: foldl은 앞 원소부터 차례로 누적한다
+    visibility: public
+    errorTag: folds_in_wrong_direction
+    requirements: [ R1 ]
+  - fn: length_counts_items_test
+    name: length는 원소 개수를 센다
+    visibility: public
+    requirements: [ R2 ]
+  - fn: length_of_empty_list_test
+    name: 빈 목록의 길이는 0이다
+    visibility: hidden
+    errorTag: ignores_empty_input
+    requirements: [ R2 ]
+  - fn: reverse_test
+    name: reverse는 원소 순서를 뒤집는다
+    visibility: public
+    requirements: [ R3 ]
+  - fn: reverse_empty_test
+    name: 빈 목록을 뒤집으면 빈 목록이다
+    visibility: hidden
+    errorTag: ignores_empty_input
+    requirements: [ R3 ]
+  - fn: reverse_large_list_test
+    name: 원소 20만 개짜리 목록도 시간 제한 안에 뒤집는다
+    visibility: hidden
+    errorTag: quadratic_append
+    requirements: [ R4 ]
+requirements:
+  - id: R1
+    description: foldl은 앞에서부터 function(누적값, 원소)로 누적
+  - id: R2
+    description: length는 원소 개수
+  - id: R3
+    description: reverse는 순서를 뒤집은 새 목록
+  - id: R4
+    description: 목록 길이에 비례하는 시간
+hints:
+  - level: 1
+    kind: question
+    text: 목록을 앞에서부터 한 번 훑으면서 "지금까지의 결과"를 들고 다닐 수 있다면, 개수 세기와 뒤집기는 각각 그 결과를 어떻게 바꾸면
+      될까요?
+  - level: 2
+    kind: concept
+    text: "누적자(accumulator)는 재귀 호출에 넘기는 \"지금까지의 결과\"입니다. 목록 앞에 붙이기 `[x, ..acc]`는 원소
+      수와 상관없이 한 번에 끝나지만, 뒤에 이어 붙이기는 앞쪽 목록 전체를 복사합니다."
+  - level: 3
+    kind: approach
+    text: "`foldl`을 먼저 만드세요. 그러면 `length`는 누적값에 1을 더하는 접기, `reverse`는 빈 목록에서 시작해 원소를
+      하나씩 앞에 붙이는 접기로 쓸 수 있습니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn foldl(over list: List(a), from initial: b, with function: fn(b, a) -> b) -> b {
+        case list {
+          [] -> initial
+          [first, ..rest] -> foldl(over: rest, from: todo, with: function)
+        }
+      }
+
+      pub fn reverse(list: List(a)) -> List(a) {
+        foldl(over: list, from: [], with: fn(reversed, item) { todo })
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: reverse-with-append
+    mustFail: [ reverse_large_list_test ]
+    errorTag: quadratic_append
+  - key: foldl-from-right
+    mustFail: [ foldl_goes_left_to_right_test ]
+    errorTag: folds_in_wrong_direction
+performance:
+  module: list_ops_perf
+  sizes: [ 2000, 8000, 32000 ]
+  maxCostRatio: 5
+  referenceCost:
+    - 6751
+    - 27084
+    - 103771

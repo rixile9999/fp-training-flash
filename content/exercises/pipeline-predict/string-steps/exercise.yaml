@@ -1,0 +1,39 @@
+kind: predict
+format: drill
+title: 문자열 정리 파이프라인의 결과 예측하기
+difficulty: 1250
+estimatedMinutes: 4
+predict:
+  code: |
+    import gleam/list
+    import gleam/string
+
+    "  Hello, Gleam World  "
+    |> string.trim
+    |> string.lowercase
+    |> string.split(" ")
+    |> list.map(string.length)
+  acceptedAnswers: ["[6, 5, 5]", "[6,5,5]"]
+hints:
+  - level: 1
+    kind: question
+    text: "`string.split(\" \")` 직전의 문자열은 정확히 무엇인가요? 쉼표는 어느 조각에 붙어 있나요?"
+  - level: 2
+    kind: concept
+    text: "`string.trim`은 양 끝 공백만 지우고, `string.split`은 구분자 기준으로 나눌 뿐 구두점은 건드리지 않습니다. `string.length`는 글자 수를 셉니다."
+  - level: 3
+    kind: approach
+    text: 단계마다 결과 문자열이나 목록을 따옴표까지 정확히 적어 보세요.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      "  Hello, Gleam World  "
+      |> string.trim          // "Hello, Gleam World"
+      |> string.lowercase     // "hello, gleam world"
+      |> string.split(" ")    // todo
+      |> list.map(string.length)
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.

@@ -1,0 +1,90 @@
+kind: implement
+format: drill
+module: isbn_verifier
+difficulty: 1400
+estimatedMinutes: 7
+tests:
+  - fn: valid_isbn_test
+    name: 하이픈이 있는 올바른 ISBN은 True다
+    visibility: public
+    requirements: [R3]
+  - fn: invalid_check_digit_test
+    name: 검사 숫자가 틀리면 False다
+    visibility: public
+    requirements: [R3]
+  - fn: valid_with_x_check_digit_test
+    name: 마지막 글자 X는 10으로 계산한다
+    visibility: public
+    requirements: [R2]
+  - fn: valid_without_dashes_test
+    name: 하이픈이 없어도 올바른 ISBN은 True다
+    visibility: public
+    requirements: [R1]
+  - fn: x_only_valid_as_check_digit_test
+    name: X가 마지막이 아닌 자리에 있으면 False다
+    visibility: hidden
+    errorTag: accepts_x_anywhere
+    requirements: [R2]
+  - fn: invalid_character_not_zero_test
+    name: 숫자가 아닌 글자를 0으로 취급하지 않는다
+    visibility: hidden
+    errorTag: treats_invalid_as_zero
+    requirements: [R2]
+  - fn: too_long_test
+    name: 하이픈을 뺀 글자가 10개보다 많으면 False다
+    visibility: hidden
+    errorTag: missing_length_check
+    requirements: [R1]
+  - fn: empty_isbn_test
+    name: 빈 문자열은 False다
+    visibility: hidden
+    errorTag: missing_length_check
+    requirements: [R1]
+requirements:
+  - id: R1
+    description: 하이픈을 지운 뒤 정확히 10글자
+  - id: R2
+    description: 앞 9글자는 숫자, 마지막은 숫자 또는 X
+  - id: R3
+    description: 가중합이 11로 나누어떨어짐
+hints:
+  - level: 1
+    kind: question
+    text: "이 함수가 절대 멈추면 안 된다면, 글자 하나를 숫자로 바꾸는 단계가 실패할 때 어떻게 해야 할까요?"
+  - level: 2
+    kind: concept
+    text: "`int.parse(\"7\")`은 `Ok(7)`, `int.parse(\"P\")`는 `Error(Nil)`입니다. `list.try_map`으로 글자 목록 전체를 `Result(List(Int), Nil)`로 바꿀 수 있고, 하나라도 실패하면 `Error`가 됩니다."
+  - level: 3
+    kind: approach
+    text: "두 단계로 나누세요. (1) 하이픈을 지우고 길이를 확인한 뒤 글자를 값으로 바꾸는 파싱(`Result(List(Int), Nil)`), (2) 값 목록의 가중합이 11로 나누어떨어지는지 보는 계산. 파싱이 `Error`면 `False`입니다. X는 위치가 9(마지막)일 때만 10입니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn is_valid(isbn: String) -> Bool {
+        case parse(isbn) {
+          Ok(values) -> todo
+          Error(Nil) -> False
+        }
+      }
+
+      fn char_value(char: String, index: Int) -> Result(Int, Nil) {
+        case char, index {
+          "X", 9 -> Ok(10)
+          _, _ -> todo
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: x-anywhere
+    mustFail: [x_only_valid_as_check_digit_test]
+    errorTag: accepts_x_anywhere
+  - key: invalid-as-zero
+    mustFail: [invalid_character_not_zero_test]
+    errorTag: treats_invalid_as_zero
+  - key: no-length-check
+    mustFail: [empty_isbn_test]
+    errorTag: missing_length_check

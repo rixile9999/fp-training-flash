@@ -1,0 +1,75 @@
+kind: implement
+format: drill
+module: merge_sort
+title: 정렬된 두 목록 합치기
+difficulty: 1250
+estimatedMinutes: 5
+tests:
+  - fn: merge_with_empty_left_test
+    name: 왼쪽이 비어 있으면 오른쪽 목록을 그대로 반환한다
+    visibility: public
+    requirements: [R1]
+  - fn: merge_interleaves_test
+    name: 두 목록의 원소를 오름차순으로 번갈아 합친다
+    visibility: public
+    requirements: [R1]
+  - fn: merge_with_empty_right_test
+    name: 오른쪽이 비어 있으면 왼쪽 목록을 그대로 반환한다
+    visibility: hidden
+    errorTag: drops_remaining_items
+    requirements: [R2]
+  - fn: merge_leftover_tail_test
+    name: 오른쪽을 먼저 다 쓰면 왼쪽의 남은 원소를 모두 붙인다
+    visibility: hidden
+    errorTag: drops_remaining_items
+    requirements: [R2]
+  - fn: merge_keeps_duplicates_test
+    name: 양쪽에 같은 값이 있으면 모두 남긴다
+    visibility: hidden
+    errorTag: drops_duplicates
+    requirements: [R3]
+  - fn: merge_negative_numbers_test
+    name: 음수가 섞여 있어도 오름차순으로 합친다
+    visibility: hidden
+    errorTag: wrong_comparison
+    requirements: [R1]
+requirements:
+  - id: R1
+    description: 결과는 오름차순
+  - id: R2
+    description: 한쪽이 끝나면 다른 쪽의 나머지를 모두 포함
+  - id: R3
+    description: 같은 값도 개수만큼 모두 포함
+hints:
+  - level: 1
+    kind: question
+    text: 두 목록이 모두 오름차순이라면, 결과의 첫 원소가 될 수 있는 후보는 몇 개인가요?
+  - level: 2
+    kind: concept
+    text: "`case left, right { ... }`처럼 두 값을 한꺼번에 패턴 매칭할 수 있습니다. 한쪽이 빈 경우와 둘 다 원소가 있는 경우를 나누세요."
+  - level: 3
+    kind: approach
+    text: 두 머리 원소 중 작거나 같은 쪽을 결과 앞에 두고, 그 원소를 뺀 나머지와 다른 쪽 전체를 다시 합치세요. 한쪽이 비면 다른 쪽을 그대로 돌려줍니다.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn merge(left: List(Int), right: List(Int)) -> List(Int) {
+        case left, right {
+          [], _ -> right
+          _, [] -> left
+          [x, ..rest], [y, ..] if x <= y -> todo
+          _, [y, ..rest] -> todo
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: drops-leftover
+    mustFail: [merge_with_empty_right_test, merge_leftover_tail_test]
+    errorTag: drops_remaining_items
+  - key: drops-equal
+    mustFail: [merge_keeps_duplicates_test]
+    errorTag: drops_duplicates

@@ -1,0 +1,33 @@
+# Family-level defaults; each variant's exercise.yaml may override any of these.
+title: 진법 변환과 잘못된 입력 알리기
+primarySkill: explicit-failure
+secondarySkills: [recursive-algorithms]
+contextTags: [math]
+source:
+  kind: exercism
+  license: "MIT, Copyright (c) 2021 Exercism"
+  url: https://github.com/exercism/gleam/tree/main/exercises/practice/all-your-base
+  upstream: "exercism/gleam exercises/practice/all-your-base@34db02e"
+conceptNotes: [gleam-option-result, gleam-custom-types, gleam-list-transform]
+theoryTopics: [errors-as-values, total-vs-partial-functions]
+rubric:
+  - id: R-04
+    title: 표준 진법 변환 함수 없이 직접 구현
+    description: int.digits나 int.undigits에 맡기지 않고, 누적과 나눗셈으로 변환 과정을 직접 표현한다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "\\bint\\.(un)?digits\\b|gleam/int\\.\\{[^}]*\\b(un)?digits\\b"
+      message: int.digits 또는 int.undigits를 사용했습니다.
+  - id: R-05
+    title: 계산 로직 분리
+    description: 자릿수 목록을 정수로 바꾸는 부분과 정수를 자릿수로 바꾸는 부분을 이름 있는 함수로 나누면 각각 따로 검증할 수 있다.
+  - id: R-09
+    title: let assert와 panic을 쓰지 않음
+    description: 실패 가능성은 타입으로 표현한다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "\\blet assert\\b|\\bpanic\\b"
+      message: let assert 또는 panic을 사용했습니다.
+  - id: R-07
+    title: 오류를 삼키지 않음
+    description: 규칙에 맞지 않는 값을 버리거나 기본값으로 바꾸지 않고, 어떤 값이 왜 잘못됐는지 오류 값으로 돌려준다.

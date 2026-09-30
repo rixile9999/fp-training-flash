@@ -1,0 +1,81 @@
+kind: fix
+format: drill
+module: rating
+title: 리뷰 평균 계산의 panic 없애기
+contextTags: [reviews]
+difficulty: 1300
+estimatedMinutes: 5
+tests:
+  - fn: average_of_ratings_test
+    name: 올바른 평점의 평균은 지금처럼 계산한다
+    visibility: public
+    requirements: [R1]
+  - fn: empty_ratings_is_error_test
+    name: 평점이 없으면 panic 대신 NoRatings를 반환한다
+    visibility: public
+    errorTag: crashes_on_invalid_input
+    requirements: [R2]
+  - fn: rating_above_five_is_error_test
+    name: 5보다 큰 평점은 크래시 대신 OutOfRange에 그 평점을 담는다
+    visibility: public
+    errorTag: crashes_on_invalid_input
+    requirements: [R3]
+  - fn: rating_zero_is_error_test
+    name: 평점 0도 OutOfRange이다
+    visibility: hidden
+    errorTag: missing_range_check
+    requirements: [R3]
+  - fn: boundary_ratings_are_valid_test
+    name: 평점 1과 5는 올바른 값이다
+    visibility: hidden
+    errorTag: off_by_one
+    requirements: [R1]
+  - fn: first_out_of_range_rating_test
+    name: 범위를 벗어난 평점이 여럿이면 가장 앞의 것을 알린다
+    visibility: hidden
+    errorTag: reports_last_error
+    requirements: [R3]
+requirements:
+  - id: R1
+    description: 올바른 입력의 평균은 그대로 유지
+  - id: R2
+    description: 빈 목록은 NoRatings
+  - id: R3
+    description: 1~5를 벗어난 첫 평점을 OutOfRange로 반환
+hints:
+  - level: 1
+    kind: question
+    text: "`let assert True = list.all(...)`이 실패했을 때, 어느 평점이 문제였는지 알 수 있나요? `OutOfRange`에 담을 값은 어디서 얻어야 할까요?"
+  - level: 2
+    kind: concept
+    text: "`list.all`은 `Bool`만 알려 줍니다. `list.find(목록, 조건)`은 조건을 만족하는 첫 원소를 `Ok(원소)`로, 없으면 `Error(Nil)`로 돌려줍니다."
+  - level: 3
+    kind: approach
+    text: "`panic`이 있던 빈 목록 경우는 `Error(NoRatings)`로 바꾸세요. 범위를 벗어난 평점은 `list.find`로 찾아, 찾았으면 `Error(OutOfRange(그 평점))`, 못 찾았을 때만 평균을 계산하세요."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      case ratings, list.find(ratings, is_out_of_range) {
+        [], _ -> todo
+        _, Ok(bad) -> todo
+        _, Error(Nil) -> todo
+      }
+
+      fn is_out_of_range(rating: Int) -> Bool {
+        todo
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: upper-only
+    mustFail: [rating_zero_is_error_test]
+    errorTag: missing_range_check
+  - key: reports-last
+    mustFail: [first_out_of_range_rating_test]
+    errorTag: reports_last_error
+  - key: exclusive-bounds
+    mustFail: [boundary_ratings_are_valid_test]
+    errorTag: off_by_one

@@ -1,0 +1,22 @@
+title: 작은 문자열 함수로 정규화 파이프라인 만들기
+primarySkill: function-decomposition
+secondarySkills: [data-transformation]
+contextTags: [text]
+source:
+  kind: original
+conceptNotes: [gleam-strings, gleam-pipe-operator, gleam-list-transform]
+theoryTopics: [function-composition-pipelines, referential-transparency]
+rubric:
+  - id: R-02
+    title: 파이프라인이 의도를 드러냄
+    description: 정규화 함수는 작은 단계 함수를 파이프로 잇기만 하고, 읽는 순서가 처리 순서와 같다.
+  - id: R-05
+    title: 단계 함수 재사용
+    description: 한 단계의 규칙은 그 단계 함수에만 있고, 조합 함수는 같은 규칙을 다시 쓰지 않는다.
+  - id: R-09
+    title: let assert와 panic을 쓰지 않음
+    description: 실패 가능성은 타입으로 표현한다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "\\blet assert\\b|\\bpanic\\b"
+      message: let assert 또는 panic을 사용했습니다.

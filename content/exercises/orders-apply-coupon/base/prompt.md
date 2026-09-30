@@ -3,7 +3,7 @@
 - `Pending` 주문의 `amount`만 할인한다.
 - 다른 주문도 결과에 그대로 포함한다.
 - 원래 순서를 유지한다.
-- 할인 금액은 정수 나눗셈으로 내림한다.
+- 할인 후 금액은 `amount * { 100 - percent } / 100`이며, 정수 나눗셈으로 내림한다.
 
 ```gleam
 apply_coupon([Order(1, Pending, 10000), Order(2, Shipped, 5000)], 10)

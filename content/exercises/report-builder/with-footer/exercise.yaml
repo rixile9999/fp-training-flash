@@ -1,0 +1,85 @@
+kind: implement
+format: drill
+module: sales_report
+title: 매출 리포트에 합계와 건너뛴 줄 수 붙이기
+difficulty: 1500
+estimatedMinutes: 7
+tests:
+  - fn: parse_all_splits_valid_and_invalid_test
+    name: 올바른 판매 기록과 잘못된 줄 수를 함께 돌려준다
+    visibility: public
+    requirements: [R1]
+  - fn: parse_all_keeps_input_order_test
+    name: 올바른 판매 기록은 입력 순서를 유지한다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [R1]
+  - fn: parse_all_ignores_blank_lines_test
+    name: 빈 줄은 잘못된 줄로 세지 않는다
+    visibility: hidden
+    errorTag: counts_blank_lines
+    requirements: [R2]
+  - fn: footer_test
+    name: 합계 줄과 건너뛴 줄 수를 만든다
+    visibility: public
+    requirements: [R3]
+  - fn: footer_empty_test
+    name: 판매 기록이 없으면 합계는 0이다
+    visibility: hidden
+    errorTag: ignores_empty_input
+    requirements: [R3]
+  - fn: build_report_test
+    name: 카테고리 행 뒤에 합계와 건너뛴 줄 수를 붙인다
+    visibility: public
+    requirements: [R4]
+  - fn: build_report_only_invalid_test
+    name: 모든 줄이 잘못되면 합계 줄만 남는다
+    visibility: hidden
+    errorTag: ignores_empty_input
+    requirements: [R4]
+requirements:
+  - id: R1
+    description: parse_all은 올바른 기록을 입력 순서대로 모으고 잘못된 줄 수를 센다
+  - id: R2
+    description: 빈 줄은 무시하며 잘못된 줄로 세지 않는다
+  - id: R3
+    description: footer는 전체 합계와 건너뛴 줄 수를 두 줄로 만든다
+  - id: R4
+    description: build_report는 카테고리 행 뒤에 footer를 붙인다
+hints:
+  - level: 1
+    kind: question
+    text: 한 번 훑으면서 두 가지(올바른 기록 목록, 잘못된 줄 수)를 동시에 얻으려면 누적값은 어떤 모양이어야 할까요?
+  - level: 2
+    kind: concept
+    text: "`list.fold`의 누적값으로 튜플 `#(List(Sale), Int)`를 쓸 수 있습니다. 목록 앞에 붙이며 모았다면 마지막에 `list.reverse`가 필요합니다."
+  - level: 3
+    kind: approach
+    text: "`parse_all`은 줄마다 세 경우(빈 줄, 파싱 성공, 파싱 실패)를 `case`로 나눕니다. `build_report`는 이미 있는 `total_by_category`, `format_row`에 `footer`를 이어 붙이기만 하세요."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn parse_all(lines: List(String)) -> #(List(Sale), Int) {
+        let #(sales, skipped) =
+          list.fold(lines, #([], 0), fn(acc, line) {
+            let #(sales, skipped) = acc
+            case line, parse_line(line) {
+              "", _ -> acc
+              _, Ok(sale) -> todo
+              _, Error(Nil) -> todo
+            }
+          })
+        #(list.reverse(sales), skipped)
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: reversed-accumulator
+    mustFail: [parse_all_keeps_input_order_test]
+    errorTag: reverses_order
+  - key: counts-blank-lines
+    mustFail: [parse_all_ignores_blank_lines_test]
+    errorTag: counts_blank_lines

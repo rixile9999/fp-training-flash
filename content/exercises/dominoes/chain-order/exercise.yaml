@@ -1,0 +1,97 @@
+kind: implement
+format: drill
+module: dominoes
+title: 도미노 사슬을 실제로 만들어 돌려주기
+difficulty: 1650
+estimatedMinutes: 7
+conceptNotes: [gleam-recursion, gleam-option-result, gleam-list-transform]
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: empty_input_test
+    name: 돌이 없으면 빈 사슬을 돌려준다
+    visibility: public
+    errorTag: ignores_empty_input
+    requirements: [R3]
+  - fn: singleton_double_test
+    name: 양쪽 수가 같은 돌 하나는 그대로 사슬이다
+    visibility: public
+    requirements: [R1]
+  - fn: three_elements_form_chain_test
+    name: 돌려준 사슬은 이웃한 돌의 맞닿은 수가 같고 한 바퀴 닫힌다
+    visibility: public
+    errorTag: reverses_order
+    requirements: [R1, R2]
+  - fn: no_chain_test
+    name: 사슬을 만들 수 없으면 Error(Nil)을 돌려준다
+    visibility: public
+    requirements: [R3]
+  - fn: open_path_is_not_a_chain_test
+    name: 모두 이어져도 양 끝 수가 다르면 Error(Nil)을 돌려준다
+    visibility: hidden
+    errorTag: ignores_chain_closure
+    requirements: [R1, R3]
+  - fn: flipped_stones_are_written_flipped_test
+    name: 뒤집어 놓은 돌은 뒤집힌 방향으로 적는다
+    visibility: hidden
+    errorTag: ignores_stone_flip
+    requirements: [R2]
+  - fn: needs_backtracking_test
+    name: 막다른 길에서 되돌아가 찾은 사슬을 돌려준다
+    visibility: hidden
+    errorTag: greedy_without_backtracking
+    requirements: [R1]
+  - fn: longer_chain_in_order_test
+    name: 돌 9개짜리 사슬도 앞에서부터 순서대로 이어진다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [R1, R2]
+requirements:
+  - id: R1
+    description: 입력의 모든 돌을 한 번씩 써서 이웃한 돌의 맞닿은 수가 같고 양 끝이 같은 사슬을 돌려준다
+  - id: R2
+    description: 사슬의 각 돌은 실제로 놓인 방향(왼쪽, 오른쪽)으로 적는다
+  - id: R3
+    description: 빈 입력은 Ok([]), 사슬이 없으면 Error(Nil)
+hints:
+  - level: 1
+    kind: question
+    text: "`True`/`False`만 판단하던 탐색에서, 성공한 가지의 돌 순서를 돌려주려면 재귀가 무엇을 더 들고 다녀야 할까요? 돌을 뒤집어 놓았다면 결과에는 어떻게 적어야 할까요?"
+  - level: 2
+    kind: concept
+    text: "`list.find_map`은 후보마다 함수를 불러 처음 나온 `Ok` 값을 돌려주고, 모두 `Error`면 `Error(Nil)`입니다. `list.any`의 \"결과 값이 있는\" 버전이라 백트래킹의 첫 해 찾기에 알맞습니다."
+  - level: 3
+    kind: approach
+    text: "`extend(first, end, remaining, placed)`를 만드세요. `placed`는 놓은 돌을 역순으로 쌓는 누적자입니다. 후보 돌은 `end` 쪽 수가 왼쪽이 되도록 방향을 맞춰 `placed`에 붙입니다. 남은 돌이 없고 `first == end`이면 `Ok(list.reverse(placed))`입니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      fn extend(first: Int, end: Int, remaining: List(#(Int, Int)), placed: List(#(Int, Int))) -> Result(List(#(Int, Int)), Nil) {
+        case remaining {
+          [] -> todo
+          _ ->
+            selections(remaining)
+            |> list.find_map(fn(selection) {
+              let #(#(a, b), rest) = selection
+              case a == end, b == end {
+                True, _ -> extend(first, b, rest, [#(a, b), ..placed])
+                _, True -> todo
+                False, False -> Error(Nil)
+              }
+            })
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: no-closure-check
+    mustFail: [open_path_is_not_a_chain_test]
+    errorTag: ignores_chain_closure
+  - key: unflipped-output
+    mustFail: [flipped_stones_are_written_flipped_test]
+    errorTag: ignores_stone_flip
+  - key: reversed-chain
+    mustFail: [three_elements_form_chain_test, longer_chain_in_order_test]
+    errorTag: reverses_order

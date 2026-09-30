@@ -1,0 +1,27 @@
+# Family-level defaults; each variant's exercise.yaml may override any of these.
+title: 서로 공격하지 않는 퀸 배치 세기
+primarySkill: search-and-graphs
+secondarySkills: [recursive-algorithms]
+contextTags: []
+source:
+  kind: original
+conceptNotes: [gleam-recursion, gleam-list-transform, gleam-int-float]
+theoryTopics: [search-space-backtracking, structural-recursion-induction]
+rubric:
+  - id: R-02
+    title: 부분 해를 바로 가지치기
+    description: 퀸을 하나 놓을 때마다 안전한지 확인하고, 안전하지 않은 칸에서는 더 내려가지 않는다. 완성된 배치를 모두 만든 뒤 거르지 않는다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "list\\.permutations"
+      message: 모든 순열을 만든 뒤 거르면 가지치기가 일어나지 않습니다.
+  - id: R-05
+    title: 안전 검사 분리
+    description: 한 칸이 안전한지 판단하는 규칙을 is_safe 같은 이름 있는 함수로 분리해 따로 검증할 수 있게 한다.
+  - id: R-09
+    title: let assert와 panic을 쓰지 않음
+    description: 실패 가능성은 타입으로 표현한다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "\\blet assert\\b|\\bpanic\\b"
+      message: let assert 또는 panic을 사용했습니다.

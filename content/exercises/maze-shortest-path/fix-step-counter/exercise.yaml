@@ -1,0 +1,87 @@
+kind: fix
+format: drill
+module: maze
+title: 최단 경로 고치기 - 꺼낸 칸 수를 거리로 센 버그
+difficulty: 1450
+estimatedMinutes: 5
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: straight_corridor_test
+    name: 일자 통로에서는 칸 사이 거리가 답이다
+    visibility: public
+    requirements: [ R1 ]
+  - fn: goes_around_walls_test
+    name: 벽을 돌아가는 최단 이동 횟수를 구한다
+    visibility: public
+    errorTag: counts_visited_cells_as_distance
+    requirements: [ R1 ]
+  - fn: goal_next_to_start_test
+    name: G가 S 바로 옆이면 다른 칸을 먼저 봐도 1을 돌려준다
+    visibility: hidden
+    errorTag: counts_visited_cells_as_distance
+    requirements: [ R1 ]
+  - fn: side_branch_not_counted_test
+    name: 경로 옆의 칸을 둘러본 것은 이동 횟수에 들어가지 않는다
+    visibility: hidden
+    errorTag: counts_visited_cells_as_distance
+    requirements: [ R1 ]
+  - fn: open_room_test
+    name: 벽 없는 방의 대각선 끝까지 최단 이동 횟수를 구한다
+    visibility: hidden
+    errorTag: dfs_instead_of_bfs
+    requirements: [ R1 ]
+  - fn: unreachable_goal_test
+    name: 벽에 막혀 G에 갈 수 없으면 Error(Nil)을 돌려준다
+    visibility: hidden
+    errorTag: ignores_unreachable_goal
+    requirements: [ R2 ]
+requirements:
+  - id: R1
+    description: S에서 G까지 최소 이동 횟수를 구한다
+  - id: R2
+    description: 갈 수 없으면 Error(Nil)
+  - id: R3
+    description: 칸 수 V에 대해 O(V log V) 안에 끝난다
+hints:
+  - level: 1
+    kind: question
+    text: "`\"S..G\"`에서는 맞는 답이 나오는데 `[\"..\", \"SG\"]`에서는 왜 2가 나올까요? `steps`는 무엇을 셀
+      때마다 1씩 늘어나나요?"
+  - level: 2
+    kind: concept
+    text: 너비 우선 탐색에서 거리는 탐색 전체에 하나 있는 값이 아니라 칸마다 다른 값입니다. 어떤 칸의 거리는 그 칸을 발견한 칸의 거리 +
+      1입니다.
+  - level: 3
+    kind: approach
+    text: 큐에 위치만 넣지 말고 `#(위치, 거리)`를 넣으세요. G를 꺼냈을 때 그 항목의 거리를 돌려주면 됩니다. 큐의 순서(뒤에 넣고
+      앞에서 꺼내기)는 그대로 두세요.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      [#(pos, dist), ..], _ if pos == goal -> Ok(dist)
+      [#(pos, dist), ..rest], _ -> {
+        let next = todo // seen에 없는 open_neighbors
+        let seen = list.fold(next, seen, set.insert)
+        let back = list.fold(next, back, fn(acc, p) { todo })
+        search(cells, goal, rest, back, seen)
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: same-distance
+    mustFail: [straight_corridor_test]
+    errorTag: forgets_to_extend_state
+  - key: stack-order
+    mustFail: [ open_room_test ]
+    errorTag: dfs_instead_of_bfs
+performance:
+  module: maze_perf
+  sizes: [ 20, 40, 80 ]
+  maxCostRatio: 5
+  referenceCost:
+    - 47721
+    - 190331
+    - 764659

@@ -1,0 +1,104 @@
+kind: implement
+format: drill
+module: heap
+difficulty: 1650
+estimatedMinutes: 7
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: make_puts_higher_rank_left_test
+    name: make는 rank가 큰 자식을 왼쪽에 둔다
+    visibility: public
+    errorTag: breaks_leftist_property
+    requirements: [ R1 ]
+  - fn: insert_then_find_min_test
+    name: 여러 값을 넣으면 가장 작은 값이 맨 위에 온다
+    visibility: public
+    requirements: [ R2 ]
+  - fn: drains_in_ascending_order_test
+    name: 최솟값을 반복해서 꺼내면 오름차순이 된다
+    visibility: public
+    errorTag: loses_subtree
+    requirements: [ R2, R3 ]
+  - fn: make_rank_from_shorter_side_test
+    name: 새 노드의 rank는 오른쪽 자식의 rank + 1이다
+    visibility: hidden
+    errorTag: wrong_rank
+    requirements: [ R1 ]
+  - fn: delete_min_empty_test
+    name: 빈 힙에서 delete_min하면 Error(Nil)을 돌려준다
+    visibility: hidden
+    errorTag: ignores_empty_input
+    requirements: [ R3 ]
+  - fn: keeps_duplicates_test
+    name: 같은 값을 여러 번 넣으면 모두 꺼낼 수 있다
+    visibility: hidden
+    errorTag: loses_subtree
+    requirements: [ R2 ]
+  - fn: merge_keeps_all_values_test
+    name: 두 힙을 merge하면 양쪽 값이 모두 남는다
+    visibility: hidden
+    errorTag: loses_subtree
+    requirements: [ R2 ]
+  - fn: stays_leftist_test
+    name: 오름차순으로 16개를 넣어도 모든 노드가 레프티스트 성질을 지킨다
+    visibility: hidden
+    errorTag: breaks_leftist_property
+    requirements: [ R1, R4 ]
+requirements:
+  - id: R1
+    description: 모든 노드에서 rank(left) >= rank(right), rank = rank(right) + 1
+  - id: R2
+    description: merge, insert는 값을 잃지 않고 최소 힙 순서를 지킨다
+  - id: R3
+    description: delete_min은 최솟값을 뺀 힙, 빈 힙이면 Error(Nil)
+  - id: R4
+    description: merge, insert, delete_min이 O(log n)
+hints:
+  - level: 1
+    kind: question
+    text: 두 힙을 합칠 때 새 루트는 누구의 값이어야 하나요? 루트를 정하고 나면, 남은 세 조각(루트의 두 자식과 다른 힙)을 어떻게 두
+      자식으로 만들 수 있을까요?
+  - level: 2
+    kind: concept
+    text: 레프티스트 힙은 오른쪽 가지를 짧게 유지해서 merge가 오른쪽 가지만 따라 내려가게 합니다. rank가 오른쪽 가지의 길이이므로
+      rank(right)는 O(log n)입니다. 노드를 만들 때마다 rank가 작은 쪽을 오른쪽에 두면 이 성질이 지켜집니다.
+  - level: 3
+    kind: approach
+    text: "`make`는 두 자식의 rank를 비교해 큰 쪽을 왼쪽에 두고 rank를 (작은 쪽 rank + 1)로 정합니다. `merge`는
+      루트가 작은 힙의 왼쪽 자식은 그대로 두고, 오른쪽 자식과 다른 힙을 재귀로 merge한 결과와 함께 `make`에 넘깁니다.
+      `insert`와 `delete_min`은 merge 한 번입니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn merge(a: Heap, b: Heap) -> Heap {
+        case a, b {
+          Empty, heap | heap, Empty -> heap
+          Node(value: x, left: left_a, right: right_a, ..), Node(value: y, ..)
+            if x <= y
+          -> todo // make(x, ?, ?)
+          _, Node(value: y, left: left_b, right: right_b, ..) -> todo
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: no-swap
+    mustFail: [ make_puts_higher_rank_left_test, stays_leftist_test ]
+    errorTag: breaks_leftist_property
+  - key: rank-from-left
+    mustFail: [ make_rank_from_shorter_side_test ]
+    errorTag: wrong_rank
+  - key: drops-right-subtree
+    mustFail: [ merge_keeps_all_values_test, drains_in_ascending_order_test ]
+    errorTag: loses_subtree
+performance:
+  module: heap_perf
+  sizes: [ 500, 2000, 8000 ]
+  maxCostRatio: 4
+  referenceCost:
+    - 30002
+    - 147911
+    - 703914

@@ -1,0 +1,90 @@
+kind: implement
+format: drill
+module: invoice
+title: 멤버십 결제 명세서를 단계별로 만들기
+contextTags: [invoices, membership]
+difficulty: 1500
+estimatedMinutes: 7
+tests:
+  - fn: subtotal_test
+    name: 소계는 가격과 수량을 곱한 값의 합이다
+    visibility: public
+    requirements: [R1]
+  - fn: member_discount_test
+    name: 등급 할인액은 비율만큼이고 원 미만은 버린다
+    visibility: public
+    errorTag: wrong_rounding
+    requirements: [R2]
+  - fn: shipping_fee_test
+    name: 3만 원 미만이면 배송비 2500원
+    visibility: public
+    requirements: [R3]
+  - fn: shipping_fee_free_at_threshold_test
+    name: 정확히 3만 원이면 배송비가 없다
+    visibility: hidden
+    errorTag: off_by_one
+    requirements: [R3]
+  - fn: summarize_test
+    name: 명세서의 각 항목을 계산한다
+    visibility: public
+    requirements: [R4]
+  - fn: summarize_shipping_after_discount_test
+    name: 배송비는 할인 후 금액으로 판단한다
+    visibility: hidden
+    errorTag: wrong_step_order
+    requirements: [R4]
+  - fn: summarize_vat_excludes_shipping_test
+    name: 부가세는 배송비를 빼고 계산한다
+    visibility: hidden
+    errorTag: taxes_shipping
+    requirements: [R4]
+  - fn: summarize_empty_test
+    name: 빈 장바구니의 명세서는 모두 0이다
+    visibility: hidden
+    errorTag: ignores_empty_input
+    requirements: [R3, R4]
+requirements:
+  - id: R1
+    description: subtotal은 줄 금액의 합이다
+  - id: R2
+    description: member_discount는 등급 할인 규칙만 담는다
+  - id: R3
+    description: shipping_fee는 배송비 규칙만 담는다
+  - id: R4
+    description: summarize는 단계 함수를 정해진 순서로 조합한다
+hints:
+  - level: 1
+    kind: question
+    text: 배송비와 부가세는 각각 어떤 금액을 기준으로 계산하나요? 소계인가요, 할인 후 금액인가요?
+  - level: 2
+    kind: concept
+    text: 단계 사이의 중간 값에 `let`으로 이름을 붙이면 다음 단계가 무엇을 입력으로 받는지 코드에 드러납니다. 각 단계는 순수 함수라서 따로 테스트할 수 있습니다.
+  - level: 3
+    kind: approach
+    text: "`summarize`에서 소계 → 할인액 → 할인 후 금액 → 배송비·부가세 → 총액 순으로 `let`을 쌓고, 각 값은 단계 함수 호출로 구하세요. 마지막에 `Summary(...)`로 모읍니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn summarize(lines: List(Line), tier: Tier) -> Summary {
+        let sub = subtotal(lines)
+        let discount = member_discount(tier, sub)
+        let discounted = sub - discount
+        let shipping = todo
+        let tax = todo
+        Summary(sub, discount, shipping, tax, todo)
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: shipping-before-discount
+    mustFail: [summarize_shipping_after_discount_test]
+    errorTag: wrong_step_order
+  - key: vat-on-shipping
+    mustFail: [summarize_vat_excludes_shipping_test]
+    errorTag: taxes_shipping
+  - key: shipping-strict-threshold
+    mustFail: [shipping_fee_free_at_threshold_test]
+    errorTag: off_by_one

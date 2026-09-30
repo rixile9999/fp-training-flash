@@ -1,0 +1,33 @@
+kind: predict
+format: drill
+title: 파이프가 첫 번째 인자로 들어가는 규칙 예측하기
+difficulty: 1200
+estimatedMinutes: 3
+predict:
+  code: |
+    import gleam/int
+
+    10
+    |> int.subtract(3)
+    |> int.multiply(2)
+  acceptedAnswers: ["14"]
+hints:
+  - level: 1
+    kind: question
+    text: "`10 |> int.subtract(3)`에서 10은 `int.subtract`의 몇 번째 인자 자리에 들어갈까요?"
+  - level: 2
+    kind: concept
+    text: "`a |> f(b)`는 `f(a, b)`와 같습니다. 파이프 왼쪽 값은 오른쪽 함수 호출의 **첫 번째** 인자가 됩니다. `int.subtract(a, b)`는 `a - b`입니다."
+  - level: 3
+    kind: approach
+    text: 파이프를 모두 일반 함수 호출로 바꿔 써 보세요. 안쪽 호출부터 계산하면 됩니다.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      int.multiply(int.subtract(10, 3), 2)
+      // int.subtract(10, 3) = todo
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.

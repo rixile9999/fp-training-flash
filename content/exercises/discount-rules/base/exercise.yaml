@@ -1,0 +1,77 @@
+kind: implement
+format: drill
+module: discount
+difficulty: 1300
+estimatedMinutes: 5
+tests:
+  - fn: percent_off_test
+    name: percent_off(10)은 가격을 10% 깎는다
+    visibility: public
+    requirements: [R1]
+  - fn: percent_off_rounds_down_test
+    name: 퍼센트 할인 결과는 내림한다
+    visibility: hidden
+    errorTag: wrong_rounding
+    requirements: [R1]
+  - fn: amount_off_test
+    name: amount_off(1000)은 가격에서 1000을 뺀다
+    visibility: public
+    requirements: [R2]
+  - fn: amount_off_never_negative_test
+    name: 정액 할인 결과는 0보다 작아지지 않는다
+    visibility: hidden
+    errorTag: allows_negative_total
+    requirements: [R2]
+  - fn: apply_rules_in_order_test
+    name: 규칙을 목록 순서대로 적용한다
+    visibility: public
+    requirements: [R3]
+  - fn: apply_rules_order_matters_test
+    name: 규칙 순서를 바꾸면 결과도 바뀐다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [R3]
+  - fn: apply_rules_empty_test
+    name: 규칙이 없으면 가격이 그대로다
+    visibility: hidden
+    errorTag: wrong_fold_initial
+    requirements: [R3]
+requirements:
+  - id: R1
+    description: percent_off는 퍼센트 할인 함수를 만들어 돌려준다
+  - id: R2
+    description: amount_off는 0 아래로 내려가지 않는 정액 할인 함수를 돌려준다
+  - id: R3
+    description: apply_rules는 이전 규칙의 결과에 다음 규칙을 적용한다
+hints:
+  - level: 1
+    kind: question
+    text: "`percent_off(10)`이 돌려주는 값은 숫자일까요, 함수일까요? 그 값에 무엇을 넘기면 할인된 가격이 나오나요?"
+  - level: 2
+    kind: concept
+    text: "함수 안에서 `fn(price) { ... }`를 만들어 돌려주면, 그 익명 함수는 바깥 인자(`percent`)를 기억합니다(클로저). 목록의 함수를 차례로 적용할 때는 `list.fold`를 씁니다."
+  - level: 3
+    kind: approach
+    text: 누적값을 "지금까지 할인된 가격"으로 두고, 규칙 하나를 만날 때마다 그 규칙에 누적값을 넣은 결과를 새 누적값으로 삼으세요.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn amount_off(amount: Int) -> fn(Int) -> Int {
+        fn(price) { todo }
+      }
+
+      pub fn apply_rules(price: Int, rules: List(fn(Int) -> Int)) -> Int {
+        list.fold(rules, price, fn(current, rule) { todo })
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: fold-right
+    mustFail: [apply_rules_order_matters_test]
+    errorTag: reverses_order
+  - key: no-floor
+    mustFail: [amount_off_never_negative_test]
+    errorTag: allows_negative_total

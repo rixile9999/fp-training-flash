@@ -1,0 +1,79 @@
+kind: fix
+format: drill
+module: all_your_base
+title: 잘못된 자릿수를 버리는 진법 변환 고치기
+difficulty: 1300
+estimatedMinutes: 5
+tests:
+  - fn: valid_digits_convert_test
+    name: 올바른 자릿수는 지금처럼 변환한다
+    visibility: public
+    requirements: [R1]
+  - fn: digit_too_large_is_error_test
+    name: 진법 이상인 자릿수를 버리지 않고 InvalidDigit로 알린다
+    visibility: public
+    errorTag: drops_invalid_input
+    requirements: [R2]
+  - fn: negative_digit_is_error_test
+    name: 음수 자릿수를 버리지 않고 InvalidDigit로 알린다
+    visibility: hidden
+    errorTag: missing_range_check
+    requirements: [R2]
+  - fn: first_invalid_digit_test
+    name: 잘못된 자릿수가 여럿이면 가장 앞의 것을 알린다
+    visibility: hidden
+    errorTag: reports_last_error
+    requirements: [R3]
+  - fn: invalid_base_still_first_test
+    name: 진법 오류는 여전히 자릿수 오류보다 먼저 알린다
+    visibility: hidden
+    errorTag: wrong_check_order
+    requirements: [R1]
+  - fn: zero_value_still_works_test
+    name: 값이 0이면 여전히 [0]을 반환한다
+    visibility: hidden
+    errorTag: zero_as_empty_list
+    requirements: [R1]
+requirements:
+  - id: R1
+    description: 기존에 맞던 동작(변환, 진법 검사, 0 처리)을 유지
+  - id: R2
+    description: 범위를 벗어난 자릿수는 InvalidDigit
+  - id: R3
+    description: 첫 번째 잘못된 자릿수에서 멈춘다
+hints:
+  - level: 1
+    kind: question
+    text: "`rebase(digits: [1, 2, 1], input_base: 2, output_base: 10)`를 호출하면 지금 코드는 무엇을 반환하나요? 호출한 쪽은 입력이 잘못됐다는 것을 알 수 있나요?"
+  - level: 2
+    kind: concept
+    text: "`list.filter`는 조건에 맞지 않는 값을 흔적 없이 버립니다. 버린 값을 알려야 한다면, 각 원소에서 실패할 수 있는 `list.try_fold`나 `list.try_map`이 필요합니다."
+  - level: 3
+    kind: approach
+    text: "`filter`와 `fold` 두 단계를 하나의 `list.try_fold`로 합치세요. 범위를 벗어난 자릿수를 만나면 그 자리에서 `Error`를 돌려주고, 결과가 `Ok`일 때만 `to_digits`로 넘기세요."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      False, False ->
+        list.try_fold(digits, 0, fn(total, digit) {
+          case digit >= 0 && digit < input_base {
+            True -> todo
+            False -> todo
+          }
+        })
+        |> result.map(todo)
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: upper-bound-only
+    mustFail: [negative_digit_is_error_test]
+    errorTag: missing_range_check
+  - key: reports-last
+    mustFail: [first_invalid_digit_test]
+    errorTag: reports_last_error
+  - key: invalid-as-zero
+    mustFail: [digit_too_large_is_error_test, negative_digit_is_error_test]
+    errorTag: treats_invalid_as_zero

@@ -1,0 +1,65 @@
+kind: fix
+format: drill
+module: role_playing_game
+title: 마나 물약 버그 고치기
+difficulty: 1200
+estimatedMinutes: 4
+tests:
+  - fn: restores_mana_test
+    name: 마나가 있는 플레이어는 물약만큼 마나가 늘어난다
+    visibility: public
+    requirements: [R1]
+  - fn: caps_at_max_test
+    name: 마나는 100을 넘지 않는다
+    visibility: public
+    requirements: [R1]
+  - fn: no_mana_pool_returns_none_test
+    name: 마나가 None인 플레이어는 물약을 마실 수 없어 None을 반환한다
+    visibility: public
+    errorTag: mishandles_none
+    requirements: [R2]
+  - fn: empty_mana_can_drink_test
+    name: 마나가 Some(0)인 플레이어는 물약을 마실 수 있다
+    visibility: hidden
+    errorTag: confuses_none_with_zero
+    requirements: [R1]
+  - fn: keeps_other_fields_test
+    name: 물약을 마셔도 이름, 레벨, 체력은 그대로다
+    visibility: hidden
+    errorTag: drops_fields_on_update
+requirements:
+  - id: R1
+    description: 마나가 있으면 최대 100까지 회복
+  - id: R2
+    description: 마나가 없으면 None
+hints:
+  - level: 1
+    kind: question
+    text: "마나가 `None`인 플레이어를 넣으면 지금 코드는 무엇을 돌려주나요? `option.unwrap` 다음 줄에서 `None`이었다는 정보가 남아 있나요?"
+  - level: 2
+    kind: concept
+    text: "`option.map(opt, f)`는 `Some(x)`이면 `Some(f(x))`, `None`이면 `None`을 돌려줍니다. \"값이 있을 때만 바꾸고, 없으면 없음을 유지\"하는 모양입니다."
+  - level: 3
+    kind: approach
+    text: "기본값으로 꺼내지 말고 `player.mana`를 `Some`과 `None`으로 나누세요. `Some`일 때만 새 플레이어를 만들어 `Some`으로 감쌉니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn drink_potion(player: Player, amount: Int) -> Option(Player) {
+        case player.mana {
+          Some(mana) -> todo
+          None -> todo
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: zero-means-empty
+    mustFail: [empty_mana_can_drink_test]
+    errorTag: confuses_none_with_zero
+  - key: some-unchanged
+    mustFail: [no_mana_pool_returns_none_test]
+    errorTag: wraps_unchanged_in_some

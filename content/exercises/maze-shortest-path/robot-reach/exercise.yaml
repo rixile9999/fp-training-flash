@@ -1,0 +1,102 @@
+kind: implement
+format: drill
+module: robot
+title: 창고 로봇이 n번 안에 갈 수 있는 칸 세기
+difficulty: 1450
+estimatedMinutes: 6
+contextTags: [warehouse]
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: zero_steps_counts_start_test
+    name: 이동 한도가 0이면 출발 칸 하나만 센다
+    visibility: public
+    errorTag: off_by_one
+    requirements: [R1]
+  - fn: corridor_limit_test
+    name: 일자 통로에서는 한도만큼 떨어진 칸까지 센다
+    visibility: public
+    errorTag: off_by_one
+    requirements: [R1]
+  - fn: walls_block_test
+    name: 선반을 돌아가야 하는 칸은 돌아간 거리로 판단한다
+    visibility: public
+    requirements: [R1, R2]
+  - fn: counts_each_cell_once_test
+    name: 두 방향에서 닿는 칸도 한 번만 센다
+    visibility: hidden
+    errorTag: counts_duplicates
+    requirements: [R3]
+  - fn: open_floor_uses_shortest_distance_test
+    name: 넓은 바닥에서도 칸마다 최소 이동 횟수로 판단한다
+    visibility: hidden
+    errorTag: dfs_instead_of_bfs
+    requirements: [R1]
+  - fn: stays_inside_grid_test
+    name: 격자 밖의 칸은 세지 않는다
+    visibility: hidden
+    errorTag: leaves_grid
+    requirements: [R2]
+  - fn: walled_off_area_not_counted_test
+    name: 한도가 넉넉해도 막힌 구역의 칸은 세지 않는다
+    visibility: hidden
+    errorTag: leaves_grid
+    requirements: [R2]
+  - fn: no_robot_test
+    name: S가 없으면 0을 돌려준다
+    visibility: hidden
+    errorTag: ignores_missing_endpoint
+    requirements: [R4]
+requirements:
+  - id: R1
+    description: 출발 칸을 포함해 max_steps번 이하로 닿는 칸을 센다
+  - id: R2
+    description: 상하좌우로만, 선반과 격자 밖을 피해서 움직인다
+  - id: R3
+    description: 각 칸은 한 번만 센다
+  - id: R4
+    description: S가 없으면 0
+hints:
+  - level: 1
+    kind: question
+    text: 각 칸까지의 최소 이동 횟수를 안다면, 셀 칸은 어떤 조건을 만족하는 칸인가요? 최소 이동 횟수를 차례로 알아내려면 어떤 순서로 칸을 봐야 하나요?
+  - level: 2
+    kind: concept
+    text: 너비 우선 탐색은 가까운 칸부터 꺼내므로, 칸을 꺼낼 때 붙어 있는 거리가 그 칸의 최소 이동 횟수입니다. 같은 칸이 큐에 두 번 들어가지 않도록 큐에 넣을 때 방문 집합에 표시하세요.
+  - level: 3
+    kind: approach
+    text: "`explore(queue, seen, count)`를 재귀로 만드세요. 큐에서 `#(pos, dist)`를 꺼낼 때마다 count를 1 늘리고, `dist < max_steps`일 때만 아직 안 본 이웃을 `dist + 1`로 넣습니다. 큐가 비면 count를 돌려줍니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      fn explore(cells, max_steps, queue, seen, count) -> Int {
+        case pop(queue) {
+          Error(Nil) -> count
+          Ok(#(#(pos, dist), rest)) -> {
+            let next = case dist < max_steps {
+              True -> todo // seen에 없는 open_neighbors
+              False -> []
+            }
+            let seen = list.fold(next, seen, set.insert)
+            let queue = todo // next를 #(p, dist + 1)로 rest에 push
+            explore(cells, max_steps, queue, seen, count + 1)
+          }
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: one-step-extra
+    mustFail: [zero_steps_counts_start_test, corridor_limit_test]
+    errorTag: off_by_one
+  - key: marks-on-pop
+    mustFail: [counts_each_cell_once_test]
+    errorTag: counts_duplicates
+  - key: dfs-stack
+    mustFail: [open_floor_uses_shortest_distance_test]
+    errorTag: dfs_instead_of_bfs
+  - key: leaves-grid
+    mustFail: [stays_inside_grid_test, walled_off_area_not_counted_test]
+    errorTag: leaves_grid

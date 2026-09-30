@@ -1,0 +1,79 @@
+kind: implement
+format: drill
+module: signup
+title: 회원가입 폼의 오류를 모두 모아 알리기
+difficulty: 1450
+estimatedMinutes: 6
+tests:
+  - fn: valid_form_test
+    name: 모든 검사를 통과하면 NewUser를 반환한다
+    visibility: public
+    requirements: [R1]
+  - fn: single_error_is_a_list_test
+    name: 오류가 하나여도 목록으로 반환한다
+    visibility: public
+    requirements: [R2]
+  - fn: collects_two_errors_test
+    name: 아이디와 나이가 틀리면 두 오류를 모두 반환한다
+    visibility: public
+    errorTag: stops_at_first_error
+    requirements: [R2]
+  - fn: all_four_errors_in_field_order_test
+    name: 네 필드가 모두 틀리면 필드 순서대로 네 오류를 반환한다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [R3]
+  - fn: email_and_password_errors_test
+    name: 이메일과 비밀번호 오류를 순서대로 모은다
+    visibility: hidden
+    errorTag: stops_at_first_error
+    requirements: [R2, R3]
+  - fn: only_age_error_test
+    name: 마지막 검사인 나이만 틀려도 그 오류를 반환한다
+    visibility: hidden
+    errorTag: skips_validation_step
+    requirements: [R2]
+requirements:
+  - id: R1
+    description: 모두 통과하면 NewUser
+  - id: R2
+    description: 실패한 검사의 오류를 빠짐없이 모은다
+  - id: R3
+    description: 오류는 아이디, 이메일, 비밀번호, 나이 순서
+hints:
+  - level: 1
+    kind: question
+    text: "`use`와 `result.try`로 연결하면 첫 오류 뒤의 검사는 실행될까요? 모든 오류를 알려면 검사들이 서로를 기다려야 할까요?"
+  - level: 2
+    kind: concept
+    text: "네 검사는 서로 독립이므로 모두 먼저 실행해 둘 수 있습니다. 성공 값의 타입이 서로 달라(`String`, `Nil`, `Int`) 한 목록에 넣을 수는 없지만, 각 결과에서 오류만 꺼낸 `List(SignupError)`는 한 목록으로 합칠 수 있습니다."
+  - level: 3
+    kind: approach
+    text: 네 결과를 변수에 담고, 네 개를 한꺼번에 `case`로 매칭하세요. 모두 `Ok`인 경우만 `NewUser`를 만들고, 나머지 경우에는 결과마다 오류를 0개 또는 1개짜리 목록으로 바꿔 순서대로 이어 붙이세요.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      case username, email, password, age {
+        Ok(username), Ok(email), Ok(_), Ok(age) -> todo
+        _, _, _, _ ->
+          Error(list.flatten([errors_of(username), todo]))
+      }
+
+      fn errors_of(result: Result(a, e)) -> List(e) {
+        todo
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: stops-at-first
+    mustFail: [collects_two_errors_test, all_four_errors_in_field_order_test]
+    errorTag: stops_at_first_error
+  - key: prepends-errors
+    mustFail: [all_four_errors_in_field_order_test, email_and_password_errors_test]
+    errorTag: reverses_order
+  - key: drops-age-check
+    mustFail: [only_age_error_test]
+    errorTag: skips_validation_step

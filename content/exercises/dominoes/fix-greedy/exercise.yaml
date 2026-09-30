@@ -1,0 +1,75 @@
+kind: fix
+format: drill
+module: dominoes
+title: 도미노 사슬 고치기 - 막다른 길에서 되돌아가기
+difficulty: 1450
+estimatedMinutes: 5
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: three_elements_test
+    name: 세 돌을 순서를 바꿔 한 바퀴로 이을 수 있다
+    visibility: public
+    requirements: [R1]
+  - fn: needs_backtracking_test
+    name: 먼저 고른 돌이 막다른 길이면 다른 돌로 다시 시도한다
+    visibility: public
+    errorTag: greedy_without_backtracking
+    requirements: [R2]
+  - fn: cant_be_chained_test
+    name: 양 끝 수가 맞지 않으면 사슬이 되지 않는다
+    visibility: hidden
+    errorTag: ignores_chain_closure
+    requirements: [R1]
+  - fn: empty_input_test
+    name: 돌이 없으면 사슬이 된다
+    visibility: hidden
+    errorTag: ignores_empty_input
+    requirements: [R1]
+  - fn: doubles_need_backtracking_test
+    name: 양쪽 수가 같은 돌을 끼울 자리를 잘못 고르면 되돌아가 다시 고른다
+    visibility: hidden
+    errorTag: greedy_without_backtracking
+    requirements: [R2]
+  - fn: duplicate_stones_test
+    name: 같은 모양의 돌은 하나씩 따로 쓴다
+    visibility: hidden
+    errorTag: removes_all_duplicates
+    requirements: [R3]
+requirements:
+  - id: R1
+    description: 모든 돌을 한 번씩 써서 한 바퀴 도는 사슬을 만들 수 있는지 판단한다
+  - id: R2
+    description: 막히면 되돌아가 다른 돌을 시도한다
+  - id: R3
+    description: 같은 모양의 돌은 각각 따로 한 번씩 쓴다
+hints:
+  - level: 1
+    kind: question
+    text: "`[1|2]` 다음에 이을 수 있는 돌이 `[2|3]`과 `[2|4]` 두 개라면, 지금 코드는 어느 쪽을 시도하나요? 그 선택이 막다른 길이면 무슨 일이 생기나요?"
+  - level: 2
+    kind: concept
+    text: 백트래킹은 선택지 하나가 실패하면 다음 선택지를 시도합니다. `list.any(후보들, 끝까지_가는가)`는 참이 나올 때까지 후보를 차례로 시도하는 되돌아가기를 한 줄로 표현합니다.
+  - level: 3
+    kind: approach
+    text: "`next_steps`는 이미 모든 후보를 돌려줍니다. `extend`에서 첫 후보만 꺼내지 말고 모든 후보에 대해 재귀를 시도하세요. 시작 돌을 바꿔 가며 다시 시도하는 것만으로는 부족합니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      _ ->
+        next_steps(end, remaining)
+        |> list.any(fn(step) {
+          let #(new_end, rest) = step
+          todo
+        })
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: removes-all-copies
+    mustFail: [duplicate_stones_test]
+    errorTag: removes_all_duplicates
+  - key: restart-greedy
+    mustFail: [doubles_need_backtracking_test]
+    errorTag: greedy_without_backtracking

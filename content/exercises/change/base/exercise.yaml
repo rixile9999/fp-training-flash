@@ -1,0 +1,109 @@
+kind: implement
+format: drill
+module: change
+difficulty: 1550
+estimatedMinutes: 7
+limits: { timeMs: 6000, memoryMb: 256 }
+tests:
+  - fn: single_coin_test
+    name: 동전 하나로 되면 그 동전 하나를 돌려준다
+    visibility: public
+    requirements: [ R1 ]
+  - fn: multiple_coins_ascending_test
+    name: 여러 동전을 오름차순으로 돌려준다
+    visibility: public
+    errorTag: unsorted_output
+    requirements: [ R1, R3 ]
+  - fn: not_greedy_test
+    name: 큰 동전부터 고르는 것보다 적은 개수를 찾는다
+    visibility: public
+    errorTag: greedy_choice
+    requirements: [ R1 ]
+  - fn: impossible_target_test
+    name: 어떤 조합으로도 만들 수 없으면 ImpossibleTarget이다
+    visibility: public
+    errorTag: missing_impossible_case
+    requirements: [ R2 ]
+  - fn: unsorted_coins_test
+    name: 동전 목록이 정렬되어 있지 않아도 결과는 오름차순이다
+    visibility: hidden
+    errorTag: unsorted_output
+    requirements: [ R3 ]
+  - fn: greedy_dead_end_test
+    name: 큰 동전부터 고르면 막히는 금액도 만든다
+    visibility: hidden
+    errorTag: greedy_choice
+    requirements: [ R1 ]
+  - fn: zero_target_test
+    name: 0원은 동전 없이 거슬러 준다
+    visibility: hidden
+    errorTag: wrong_base_case
+    requirements: [ R1 ]
+  - fn: negative_target_test
+    name: 음수 금액은 ImpossibleTarget이다
+    visibility: hidden
+    errorTag: accepts_negative_target
+    requirements: [ R2 ]
+  - fn: large_target_test
+    name: 999원도 시간 제한 안에 계산한다
+    visibility: hidden
+    errorTag: exponential_recursion
+    requirements: [ R4 ]
+requirements:
+  - id: R1
+    description: 동전 개수가 가장 적은 조합
+  - id: R2
+    description: 만들 수 없거나 음수면 Error(ImpossibleTarget)
+  - id: R3
+    description: 결과는 오름차순
+  - id: R4
+    description: 금액 x 동전 종류 수에 비례하는 시간
+hints:
+  - level: 1
+    kind: question
+    text: "23원을 만드는 최소 조합의 마지막 동전이 4원이라면, 나머지 동전들은 몇 원을 만드는 최소 조합이어야 할까요?"
+  - level: 2
+    kind: concept
+    text: "금액 a의 최소 조합은 \"어떤 동전 c 하나 + 금액 a - c의 최소 조합\" 중 가장 짧은 것입니다. 같은 작은 금액의 답이
+      여러 번 필요하므로, 0원부터 차례로 계산해 표에 저장해 두고 꺼내 쓰면 각 금액을 한 번만 계산합니다."
+  - level: 3
+    kind: approach
+    text: "`Dict(Int, 조합)`을 0원 → `[]`로 시작해, 1원부터 target까지 차례로 채우세요. 금액마다 각 동전 c에 대해
+      `dict.get(표, 금액 - c)`가 있으면 후보를 만들고 가장 짧은 후보만 넣습니다. 후보가 없으면 그 금액은 표에 넣지
+      않습니다(만들 수 없음)."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      // 표의 값: #(동전 개수, 사용한 동전들)
+      fn best_for(coins: List(Int), table: Dict(Int, #(Int, List(Int))), amount: Int) -> Result(#(Int, List(Int)), Nil) {
+        list.fold(coins, Error(Nil), fn(best, coin) {
+          case dict.get(table, amount - coin), best {
+            Error(Nil), _ -> best
+            Ok(#(count, _)), Ok(#(best_count, _)) if count + 1 >= best_count -> best
+            Ok(#(count, used)), _ -> todo
+          }
+        })
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: greedy-largest-first
+    mustFail: [ not_greedy_test, greedy_dead_end_test ]
+    errorTag: greedy_choice
+  - key: recursion-without-table
+    mustFail: [ large_target_test ]
+    errorTag: exponential_recursion
+  - key: no-final-sort
+    mustFail: [ unsorted_coins_test ]
+    errorTag: unsorted_output
+performance:
+  module: change_perf
+  sizes: [ 250, 1000, 4000 ]
+  maxCostRatio: 10
+  referenceCost:
+    - 13093
+    - 54019
+    - 217688

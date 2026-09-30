@@ -1,0 +1,26 @@
+# Family-level defaults; each variant's exercise.yaml may override any of these.
+title: 거스름돈 동전 최소화
+primarySkill: dynamic-programming
+secondarySkills: [explicit-failure]
+contextTags: [payments]
+source:
+  kind: exercism
+  license: "MIT, Copyright (c) 2021 Exercism"
+  url: https://github.com/exercism/gleam/tree/main/exercises/practice/change
+  upstream: "exercism/gleam exercises/practice/change@34db02e"
+conceptNotes: [gleam-dict-set, gleam-option-result, gleam-recursion]
+theoryTopics: [dynamic-programming-subproblems, cost-model-immutable-structures, errors-as-values]
+rubric:
+  - id: R-07
+    title: 부분 문제의 답을 표에 저장해 재사용
+    description: 같은 금액에 대한 답을 두 번 계산하지 않도록 작은 금액부터 표(Dict 등)에 채우고 꺼내 쓴다.
+  - id: R-08
+    title: 만들 수 없는 금액을 값으로 표현
+    description: 만들 수 없는 금액을 0이나 큰 수 같은 특수값이 아니라 표에 없음(Error) 또는 Result로 표현한다.
+  - id: R-09
+    title: let assert와 panic을 쓰지 않음
+    description: 실패 가능성은 타입으로 표현한다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "\\blet assert\\b|\\bpanic\\b"
+      message: let assert 또는 panic을 사용했습니다.

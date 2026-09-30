@@ -1,0 +1,84 @@
+kind: implement
+format: drill
+module: waitlist
+title: 식당 대기 명단 관리하기
+contextTags: [restaurant]
+source:
+  kind: original
+difficulty: 1150
+estimatedMinutes: 5
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: add_vip_goes_first_test
+    name: VIP 손님은 명단 맨 앞에 들어간다
+    visibility: public
+    requirements: [R1]
+  - fn: add_guest_goes_last_test
+    name: 일반 손님은 명단 맨 뒤에 들어간다
+    visibility: public
+    errorTag: prepends_instead_of_appends
+    requirements: [R1]
+  - fn: seat_next_removes_first_test
+    name: seat_next는 맨 앞 손님을 명단에서 뺀다
+    visibility: public
+    requirements: [R2]
+  - fn: next_two_returns_first_two_test
+    name: next_two는 명단 앞의 두 명을 순서대로 돌려준다
+    visibility: public
+    requirements: [R3]
+  - fn: seat_next_on_empty_stays_empty_test
+    name: 빈 명단에서 seat_next는 빈 명단을 돌려준다
+    visibility: hidden
+    errorTag: ignores_empty_input
+    requirements: [R2]
+  - fn: next_two_with_one_guest_test
+    name: 손님이 한 명뿐이면 next_two는 그 한 명만 돌려준다
+    visibility: hidden
+    errorTag: ignores_short_list
+    requirements: [R3]
+  - fn: next_two_on_empty_test
+    name: 빈 명단에서 next_two는 빈 목록을 돌려준다
+    visibility: hidden
+    errorTag: ignores_empty_input
+    requirements: [R3]
+requirements:
+  - id: R1
+    description: VIP는 앞에, 일반 손님은 뒤에 추가
+  - id: R2
+    description: 맨 앞 손님 제거, 빈 명단은 그대로
+  - id: R3
+    description: 앞에서 최대 두 명, 부족하면 있는 만큼
+hints:
+  - level: 1
+    kind: question
+    text: 명단에 한 명만 있거나 아무도 없을 때 `seat_next`와 `next_two`는 무엇을 돌려줘야 하나요?
+  - level: 2
+    kind: concept
+    text: "목록 앞에 붙이기는 `[x, ..xs]`, 뒤에 붙이기는 `list.append(xs, [x])`입니다. `case`에서 `[_, ..rest]`는 첫 원소를 떼어 낸 나머지를 줍니다."
+  - level: 3
+    kind: approach
+    text: "`seat_next`와 `next_two`는 명단의 모양(빈 목록, 한 명, 두 명 이상)에 따라 `case`로 나누면 짧은 명단도 자연스럽게 처리됩니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn next_two(queue: List(String)) -> List(String) {
+        case queue {
+          [first, second, ..] -> [first, second]
+          short -> todo
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: drops-short-list
+    mustFail: [next_two_with_one_guest_test]
+    errorTag: ignores_short_list
+  - key: guest-prepended
+    mustFail: [add_guest_goes_last_test]
+    errorTag: prepends_instead_of_appends
+  - key: seat-next-crashes-on-empty
+    mustFail: [seat_next_on_empty_stays_empty_test]
+    errorTag: ignores_empty_input

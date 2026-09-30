@@ -1,0 +1,22 @@
+title: 가격 계산에서 출력과 부수 효과 떼어 내기
+primarySkill: function-decomposition
+secondarySkills: [data-transformation]
+contextTags: [pricing]
+source:
+  kind: original
+conceptNotes: [gleam-list-transform, gleam-custom-types, gleam-strings]
+theoryTopics: [separating-effects, referential-transparency]
+rubric:
+  - id: R-05
+    title: 계산 로직 분리
+    description: 가격 계산은 값을 받아 값을 돌려주는 함수에 있고, 출력이나 무작위 값 같은 효과는 호출하지 않는다.
+  - id: R-07
+    title: 효과는 가장자리에
+    description: io.println이나 int.random 같은 효과는 얇은 바깥 함수 한 곳에서만 쓰고, 그 함수는 순수 함수의 결과를 실행하기만 한다.
+  - id: R-09
+    title: let assert와 panic을 쓰지 않음
+    description: 실패 가능성은 타입으로 표현한다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "\\blet assert\\b|\\bpanic\\b"
+      message: let assert 또는 panic을 사용했습니다.

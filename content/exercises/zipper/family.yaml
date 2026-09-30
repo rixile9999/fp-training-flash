@@ -1,0 +1,26 @@
+# Family-level defaults; each variant's exercise.yaml may override any of these.
+title: 지퍼로 트리 안을 돌아다니기
+primarySkill: functional-data-structures
+secondarySkills: [recursive-algorithms]
+contextTags: []
+source:
+  kind: exercism
+  license: "MIT, Copyright (c) 2021 Exercism"
+  url: https://github.com/exercism/gleam/tree/main/exercises/practice/zipper
+  upstream: "exercism/gleam exercises/practice/zipper@34db02e"
+conceptNotes: [gleam-custom-types, gleam-case-patterns, gleam-option-result]
+theoryTopics: [persistent-data-structures, immutability-structural-sharing, algebraic-data-types]
+rubric:
+  - id: R-02
+    title: 경로 정보가 타입에 드러남
+    description: 부모로 돌아가는 데 필요한 정보(방향, 부모 값, 형제)를 crumb 하나에 담고, 이동 함수는 crumb을 쌓거나 꺼내는 일만 한다.
+  - id: R-05
+    title: 되돌리기를 재사용
+    description: 전체 트리 복원은 up을 반복하는 식으로 기존 이동 함수를 재사용한다.
+  - id: R-09
+    title: let assert와 panic을 쓰지 않음
+    description: 실패 가능성은 타입으로 표현한다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "\\blet assert\\b|\\bpanic\\b"
+      message: let assert 또는 panic을 사용했습니다.

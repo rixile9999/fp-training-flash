@@ -1,0 +1,84 @@
+kind: fix
+format: challenge
+module: tournament
+title: 리그 순위표 프로그램의 버그 고치기
+difficulty: 1550
+estimatedMinutes: 20
+tests:
+  - fn: empty_input_header_only_test
+    name: 입력이 비어 있으면 머리글만 돌려준다
+    visibility: public
+  - fn: record_draw_credits_both_test
+    name: 무승부는 두 팀 모두에게 기록한다
+    visibility: public
+    errorTag: updates_one_side
+    requirements: [R1]
+  - fn: points_test
+    name: 승점은 승리 3점, 무승부 1점이다
+    visibility: public
+    errorTag: wrong_formula
+    requirements: [R2]
+  - fn: format_row_test
+    name: 팀 이름과 전적을 정해진 너비의 한 행으로 만든다
+    visibility: public
+  - fn: sorted_by_points_desc_test
+    name: 승점이 높은 팀이 위에 온다
+    visibility: public
+    errorTag: wrong_sort_direction
+    requirements: [R3]
+  - fn: typical_input_test
+    name: 여러 경기로 전체 순위표를 만든다
+    visibility: hidden
+    errorTag: updates_one_side
+    requirements: [R1, R2, R3]
+  - fn: ties_broken_alphabetically_test
+    name: 승점이 같으면 팀 이름 오름차순이다
+    visibility: hidden
+    errorTag: ignores_tie_break
+    requirements: [R3]
+  - fn: more_than_one_winner_test
+    name: 같은 두 팀이 한 번씩 이기면 전적과 승점이 같다
+    visibility: hidden
+    errorTag: ignores_tie_break
+    requirements: [R3]
+requirements:
+  - id: R1
+    description: 경기 하나는 두 팀의 전적에 모두 반영된다
+  - id: R2
+    description: 승점은 승리 3, 무승부 1, 패배 0
+  - id: R3
+    description: 순위는 승점 내림차순, 같으면 이름 오름차순
+hints:
+  - level: 1
+    kind: question
+    text: 공개 테스트 중 실패하는 것들은 각각 어느 함수를 부르나요? 실패한 테스트마다 의심할 함수를 하나씩 짝지어 보세요.
+  - level: 2
+    kind: concept
+    text: "`list.sort`는 비교 함수가 `Lt`를 돌려줄 때 첫 인자를 앞에 둡니다. `order.reverse(비교함수)`는 동점 기준까지 포함해 비교 전체를 뒤집습니다."
+  - level: 3
+    kind: approach
+    text: 버그는 세 개이고 `record`, `points`, `compare_rows`에 하나씩 있습니다. 정렬을 고칠 때 이름 비교의 방향은 그대로 두어야 합니다.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      Draw ->
+        table
+        |> dict.upsert(match.home, add_result(_, Draw))
+        |> todo
+
+      fn compare_rows(a: #(String, Stats), b: #(String, Stats)) -> order.Order {
+        int.compare(todo, todo)
+        |> order.break_tie(string.compare(a.0, b.0))
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: reverse-whole-comparator
+    mustFail: [ties_broken_alphabetically_test]
+    errorTag: ignores_tie_break
+  - key: draw-still-one-sided
+    mustFail: [record_draw_credits_both_test, typical_input_test]
+    errorTag: updates_one_side

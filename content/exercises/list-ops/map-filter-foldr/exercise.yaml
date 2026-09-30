@@ -1,0 +1,99 @@
+kind: implement
+format: drill
+module: list_ops
+title: foldr로 map과 filter 만들기
+difficulty: 1350
+estimatedMinutes: 6
+limits: { timeMs: 6000, memoryMb: 256 }
+tests:
+  - fn: foldr_empty_returns_initial_test
+    name: 빈 목록을 오른쪽부터 접으면 초깃값을 그대로 반환한다
+    visibility: public
+    requirements: [ R1 ]
+  - fn: foldr_goes_right_to_left_test
+    name: foldr은 마지막 원소부터 차례로 누적한다
+    visibility: public
+    errorTag: folds_in_wrong_direction
+    requirements: [ R1 ]
+  - fn: map_test
+    name: map은 모든 원소에 함수를 적용하고 순서를 유지한다
+    visibility: public
+    errorTag: reverses_order
+    requirements: [ R2 ]
+  - fn: map_changes_type_test
+    name: map 결과 원소의 타입이 입력과 달라도 된다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [ R2 ]
+  - fn: filter_test
+    name: filter는 조건을 만족하는 원소만 남긴다
+    visibility: public
+    requirements: [ R3 ]
+  - fn: filter_keeps_order_test
+    name: filter 결과는 원래 순서를 유지한다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [ R3 ]
+  - fn: map_large_list_test
+    name: 원소 20만 개짜리 목록도 시간 제한 안에 map한다
+    visibility: hidden
+    errorTag: quadratic_append
+    requirements: [ R4 ]
+requirements:
+  - id: R1
+    description: foldr은 뒤에서부터 function(누적값, 원소)로 누적
+  - id: R2
+    description: map은 길이와 순서를 유지
+  - id: R3
+    description: filter는 조건을 만족하는 원소만, 순서 유지
+  - id: R4
+    description: 목록 길이에 비례하는 시간
+hints:
+  - level: 1
+    kind: question
+    text: "`[1, 2, 3]`을 `[f(1), f(2), f(3)]`으로 만들 때, 가장 먼저 완성되는 꼬리 부분은 어느 원소의 결과인가요?
+      결과 목록을 앞에 붙이기만으로 만들려면 어느 쪽부터 처리해야 할까요?"
+  - level: 2
+    kind: concept
+    text: "`foldr`은 나머지 목록을 먼저 접고 그 결과에 현재 원소를 합칩니다. 결과 목록을 만들 때 뒤 원소부터 앞에 붙여 나가므로
+      원래 순서가 그대로 유지됩니다."
+  - level: 3
+    kind: approach
+    text: "`foldr`을 먼저 만든 뒤, `map`은 빈 목록에서 시작해 변환한 원소를 앞에 붙이는 접기로, `filter`는 조건을 만족할
+      때만 앞에 붙이는 접기로 쓰세요."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn foldr(over list: List(a), from initial: b, with function: fn(b, a) -> b) -> b {
+        case list {
+          [] -> initial
+          [first, ..rest] -> function(todo, first)
+        }
+      }
+
+      pub fn map(list: List(a), function: fn(a) -> b) -> List(b) {
+        foldr(over: list, from: [], with: fn(acc, item) { todo })
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: map-with-foldl
+    mustFail: [ map_test, map_changes_type_test ]
+    errorTag: reverses_order
+  - key: map-appends-each
+    mustFail: [ map_large_list_test ]
+    errorTag: quadratic_append
+  - key: foldr-from-left
+    mustFail: [ foldr_goes_right_to_left_test ]
+    errorTag: folds_in_wrong_direction
+performance:
+  module: list_ops_perf
+  sizes: [ 2000, 8000, 32000 ]
+  maxCostRatio: 5
+  referenceCost:
+    - 10394
+    - 40555
+    - 162319

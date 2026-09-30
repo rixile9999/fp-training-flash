@@ -1,0 +1,30 @@
+# Family-level defaults; each variant's exercise.yaml may override any of these.
+title: DNA를 RNA로 전사하기
+primarySkill: explicit-failure
+secondarySkills: [data-transformation]
+contextTags: [biology]
+source:
+  kind: exercism
+  license: "MIT, Copyright (c) 2021 Exercism"
+  url: https://github.com/exercism/gleam/tree/main/exercises/practice/rna-transcription
+  upstream: "exercism/gleam exercises/practice/rna-transcription@34db02e"
+conceptNotes: [gleam-option-result, gleam-list-transform, gleam-strings]
+theoryTopics: [errors-as-values, total-vs-partial-functions]
+rubric:
+  - id: R-05
+    title: 계산 로직 분리
+    description: 염기 하나의 짝을 구하는 규칙을 이름 있는 작은 함수로 분리하면 따로 검증할 수 있다.
+  - id: R-07
+    title: 오류를 삼키지 않음
+    description: 잘못된 입력을 걸러내거나 기본값으로 바꾸지 않고, 첫 오류를 호출한 쪽까지 그대로 전달한다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "filter_map\\("
+      message: filter_map은 실패한 원소를 조용히 버립니다. 잘못된 입력이 오류로 전달되는지 확인하세요.
+  - id: R-09
+    title: let assert와 panic을 쓰지 않음
+    description: 실패 가능성은 타입으로 표현한다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "\\blet assert\\b|\\bpanic\\b"
+      message: let assert 또는 panic을 사용했습니다.

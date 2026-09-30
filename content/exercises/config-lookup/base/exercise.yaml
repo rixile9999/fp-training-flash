@@ -1,0 +1,87 @@
+kind: implement
+format: drill
+module: config
+difficulty: 1250
+estimatedMinutes: 5
+tests:
+  - fn: get_int_reads_number_test
+    name: get_int은 키의 값을 정수로 읽는다
+    visibility: public
+    requirements: [R1]
+  - fn: get_int_missing_key_test
+    name: 키가 없으면 MissingKey에 키를 담는다
+    visibility: public
+    requirements: [R1]
+  - fn: get_port_reads_port_test
+    name: get_port는 port 값을 정수로 반환한다
+    visibility: public
+    requirements: [R2]
+  - fn: get_int_not_a_number_test
+    name: 정수가 아닌 값은 MissingKey가 아니라 NotAnInt이다
+    visibility: hidden
+    errorTag: wrong_error_variant
+    requirements: [R1]
+  - fn: get_port_keeps_parse_error_test
+    name: get_port는 get_int의 오류를 그대로 전달한다
+    visibility: hidden
+    errorTag: swallows_error_with_default
+    requirements: [R2]
+  - fn: get_port_too_large_test
+    name: 65535보다 큰 포트는 OutOfRange이다
+    visibility: hidden
+    errorTag: missing_range_check
+    requirements: [R2]
+  - fn: get_port_zero_test
+    name: 포트 0은 OutOfRange이다
+    visibility: hidden
+    errorTag: missing_range_check
+    requirements: [R2]
+  - fn: get_port_upper_bound_test
+    name: 포트 65535는 허용한다
+    visibility: hidden
+    errorTag: off_by_one
+    requirements: [R2]
+requirements:
+  - id: R1
+    description: get_int은 없는 키와 정수가 아닌 값을 다른 오류로 구분
+  - id: R2
+    description: get_port는 get_int 결과를 이어 받아 1..65535 범위를 검사
+hints:
+  - level: 1
+    kind: question
+    text: 설정값 읽기가 실패하는 이유는 몇 가지인가요? 호출한 사람에게 두 이유를 구분해서 알려 줄 필요가 있을까요?
+  - level: 2
+    kind: concept
+    text: "`dict.get`과 `int.parse`는 둘 다 실패 이유 없이 `Error(Nil)`을 줍니다. `result.replace_error`로 단계마다 알맞은 오류로 바꾼 뒤 `use ... <- result.try(...)`로 연결할 수 있습니다."
+  - level: 3
+    kind: approach
+    text: "`get_int`은 키 찾기와 정수 변환을 따로 오류로 바꿔 연결하세요. `get_port`는 `get_int(config, \"port\")`의 성공 값만 받아 범위를 검사하고, 실패는 그대로 흘려보내세요."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn get_int(config: Dict(String, String), key: String) -> Result(Int, ConfigError) {
+        use value <- result.try(
+          dict.get(config, key) |> result.replace_error(todo),
+        )
+        int.parse(value) |> result.replace_error(todo)
+      }
+
+      pub fn get_port(config: Dict(String, String)) -> Result(Int, ConfigError) {
+        use port <- result.try(get_int(config, "port"))
+        todo
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: unwrap-default
+    mustFail: [get_port_keeps_parse_error_test]
+    errorTag: swallows_error_with_default
+  - key: missing-for-bad-int
+    mustFail: [get_int_not_a_number_test, get_port_keeps_parse_error_test]
+    errorTag: wrong_error_variant
+  - key: exclusive-upper
+    mustFail: [get_port_upper_bound_test]
+    errorTag: off_by_one

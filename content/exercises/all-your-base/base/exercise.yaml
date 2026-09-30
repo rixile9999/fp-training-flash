@@ -1,0 +1,96 @@
+kind: implement
+format: drill
+module: all_your_base
+difficulty: 1450
+estimatedMinutes: 7
+tests:
+  - fn: binary_to_decimal_test
+    name: 2진수 101010을 10진수 자릿수 [4, 2]로 바꾼다
+    visibility: public
+    requirements: [R1]
+  - fn: trinary_to_hexadecimal_test
+    name: 3진수 1120을 16진수 자릿수 [2, 10]으로 바꾼다
+    visibility: public
+    requirements: [R1]
+  - fn: input_base_one_is_error_test
+    name: 입력 진법이 1이면 InvalidBase(1)을 반환한다
+    visibility: public
+    requirements: [R2]
+  - fn: zero_value_test
+    name: 값이 0이면(빈 목록 포함) 결과는 빈 목록이 아니라 [0]이다
+    visibility: hidden
+    errorTag: zero_as_empty_list
+    requirements: [R1]
+  - fn: digit_too_large_test
+    name: 진법 이상인 자릿수는 InvalidDigit로 알린다
+    visibility: hidden
+    errorTag: missing_input_validation
+    requirements: [R3]
+  - fn: negative_digit_test
+    name: 음수 자릿수는 InvalidDigit로 알린다
+    visibility: hidden
+    errorTag: missing_range_check
+    requirements: [R3]
+  - fn: output_base_zero_is_error_test
+    name: 출력 진법이 0이면 InvalidBase(0)을 반환한다
+    visibility: hidden
+    errorTag: missing_input_validation
+    requirements: [R2]
+  - fn: input_base_checked_first_test
+    name: 두 진법이 모두 잘못되면 입력 진법의 오류를 먼저 알린다
+    visibility: hidden
+    errorTag: wrong_check_order
+    requirements: [R4]
+requirements:
+  - id: R1
+    description: 같은 수를 출력 진법의 자릿수 목록으로 표현
+  - id: R2
+    description: 2보다 작은 진법은 InvalidBase
+  - id: R3
+    description: 범위를 벗어난 자릿수는 InvalidDigit
+  - id: R4
+    description: 입력 진법, 출력 진법, 자릿수 순서로 검사
+hints:
+  - level: 1
+    kind: question
+    text: 자릿수 목록에서 곧바로 다른 진법의 자릿수 목록으로 가야 할까요, 아니면 중간에 거쳐 갈 값이 있을까요?
+  - level: 2
+    kind: concept
+    text: "`list.try_fold`는 `fold`처럼 누적하다가 함수가 `Error`를 돌려주는 순간 멈추고 그 오류를 결과로 냅니다."
+  - level: 3
+    kind: approach
+    text: 먼저 두 진법을 검사하고, 입력 자릿수를 검사하며 정수 하나로 모은 뒤, 그 정수를 출력 진법으로 나누면서 나머지를 모으세요. 값이 0일 때 무엇이 남는지 따로 확인해 보세요.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      fn to_value(digits: List(Int), base: Int) -> Result(Int, RebaseError) {
+        list.try_fold(digits, 0, fn(total, digit) {
+          case digit >= 0 && digit < base {
+            True -> todo
+            False -> todo
+          }
+        })
+      }
+
+      fn to_digits(value: Int, base: Int, acc: List(Int)) -> List(Int) {
+        let acc = [value % base, ..acc]
+        case value < base {
+          True -> acc
+          False -> todo
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: zero-as-empty
+    mustFail: [zero_value_test]
+    errorTag: zero_as_empty_list
+  - key: no-digit-check
+    mustFail: [digit_too_large_test, negative_digit_test]
+    errorTag: missing_input_validation
+  - key: output-base-first
+    mustFail: [input_base_checked_first_test]
+    errorTag: wrong_check_order

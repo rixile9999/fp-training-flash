@@ -1,0 +1,86 @@
+kind: fix
+format: drill
+module: queens
+title: 퀸 배치 세기 고치기 - 한 가지만 세는 버그
+difficulty: 1300
+estimatedMinutes: 4
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: four_queens_test
+    name: 4x4 판에는 배치가 2가지 있다
+    visibility: public
+    errorTag: ignores_accumulator
+    requirements: [ R1 ]
+  - fn: single_queen_board_test
+    name: 1x1 판에는 배치가 1가지 있다
+    visibility: public
+    errorTag: wrong_base_case
+    requirements: [ R1 ]
+  - fn: five_queens_test
+    name: 5x5 판에는 배치가 10가지 있다
+    visibility: hidden
+    errorTag: ignores_accumulator
+    requirements: [ R1 ]
+  - fn: boards_without_solution_test
+    name: 2x2와 3x3 판에는 배치가 없다
+    visibility: hidden
+    errorTag: wrong_base_case
+    requirements: [ R1 ]
+  - fn: six_queens_test
+    name: 6x6 판에는 배치가 4가지 있다
+    visibility: hidden
+    errorTag: ignores_accumulator
+    requirements: [ R1 ]
+  - fn: eight_queens_test
+    name: 8x8 판에는 배치가 92가지 있다
+    visibility: hidden
+    errorTag: forgets_to_extend_state
+    requirements: [ R1, R2 ]
+requirements:
+  - id: R1
+    description: n x n 판의 배치 수를 센다
+  - id: R2
+    description: 안전하지 않은 칸에서 탐색을 멈춘다(가지치기)
+hints:
+  - level: 1
+    kind: question
+    text: 4x4 판의 첫 행에서 안전한 열은 4개입니다. 각 열에서 시작하는 배치 수가 0, 1, 1, 0이라면 전체 답은 얼마여야 하고,
+      지금 코드는 무엇을 돌려주나요?
+  - level: 2
+    kind: concept
+    text: "`int.range`의 `run` 함수는 누적값(`total`)과 현재 값(`col`)을 받아 새 누적값을 돌려줍니다. 누적값을
+      쓰지 않고 새 값을 돌려주면 이전 열까지의 결과가 버려집니다."
+  - level: 3
+    kind: approach
+    text: 안전한 열에서는 지금까지의 합에 그 열에서 시작하는 배치 수를 더해야 합니다. `is_safe`와 기저 사례(`row == n`이면
+      1)는 올바르니 건드리지 마세요.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      int.range(from: 0, to: n, with: 0, run: fn(total, col) {
+        case is_safe(placed, col) {
+          True -> todo // total과 place(n, row + 1, [col, ..placed])
+          False -> total
+        }
+      })
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: stops-one-row-early
+    mustFail: [boards_without_solution_test]
+    errorTag: wrong_base_case
+  - key: forgets-new-queen
+    mustFail: [eight_queens_test]
+    errorTag: forgets_to_extend_state
+performance:
+  module: queens_perf
+  sizes: [ 6, 7, 8, 9 ]
+  maxCostRatio: 5
+  referenceCost:
+    - 8656
+    - 37989
+    - 179761
+    - 885078

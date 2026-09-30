@@ -1,0 +1,26 @@
+# Adapted from Exercism (MIT). The prompt is rewritten in Korean; tests are converted to gleeunit/should.
+title: 염기 개수 세기
+primarySkill: data-transformation
+secondarySkills: [explicit-failure]
+contextTags: [bioinformatics]
+source:
+  kind: exercism
+  license: "MIT, Copyright (c) 2021 Exercism"
+  url: https://github.com/exercism/gleam/tree/main/exercises/practice/nucleotide-count
+  upstream: "exercism/gleam exercises/practice/nucleotide-count@34db02e"
+conceptNotes: [gleam-dict-set, gleam-strings, gleam-option-result]
+theoryTopics: [fold-universality, errors-as-values]
+rubric:
+  - id: R-02
+    title: 파이프라인이 의도를 드러냄
+    description: 문자열을 글자 목록으로 바꾸고, 한 번의 접기로 세는 흐름이 읽는 순서대로 드러난다.
+  - id: R-05
+    title: 계산 로직 분리
+    description: 글자 하나를 반영하는 단계를 이름 있는 작은 함수로 분리하고, 네 염기를 0으로 채운 초기 딕셔너리가 "결과에 들어갈 키"와 "유효한 글자"를 한곳에서 정한다.
+  - id: R-09
+    title: let assert와 panic을 쓰지 않음
+    description: 잘못된 입력은 Error 값으로 돌려준다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "\\blet assert\\b|\\bpanic\\b"
+      message: let assert 또는 panic을 사용했습니다.

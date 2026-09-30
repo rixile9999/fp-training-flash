@@ -1,0 +1,94 @@
+kind: implement
+format: drill
+module: zipper
+title: 지퍼로 트리의 한 곳만 고치기
+difficulty: 1400
+estimatedMinutes: 5
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: set_value_test
+    name: 초점 노드의 값만 바꾸고 나머지 트리는 그대로다
+    visibility: public
+    requirements: [R1]
+  - fn: set_left_with_leaf_test
+    name: 초점 노드의 왼쪽 자식을 새 트리로 바꾼다
+    visibility: public
+    errorTag: updates_wrong_side
+    requirements: [R2]
+  - fn: set_right_with_empty_test
+    name: 오른쪽 자식을 Leaf로 바꾸면 그 가지가 사라진다
+    visibility: public
+    errorTag: updates_wrong_side
+    requirements: [R2]
+  - fn: set_value_after_traversing_up_test
+    name: 내려갔다 올라온 뒤에 바꿔도 제자리의 값이 바뀐다
+    visibility: hidden
+    errorTag: swaps_siblings_on_up
+    requirements: [R1]
+  - fn: set_right_with_subtree_test
+    name: 루트에서 오른쪽 자식을 여러 노드짜리 트리로 바꾼다
+    visibility: hidden
+    errorTag: updates_wrong_side
+    requirements: [R2]
+  - fn: set_value_on_leaf_creates_node_test
+    name: 초점이 Leaf면 set_value가 자식 없는 새 노드를 만든다
+    visibility: hidden
+    errorTag: ignores_leaf_focus
+    requirements: [R1]
+  - fn: set_child_on_leaf_fails_test
+    name: 초점이 Leaf면 set_left와 set_right는 Error(Nil)을 돌려준다
+    visibility: hidden
+    errorTag: ignores_leaf_focus
+    requirements: [R3]
+  - fn: focus_stays_after_edit_test
+    name: 바꾼 뒤에도 초점은 같은 자리에 있어 위로 올라갈 수 있다
+    visibility: hidden
+    errorTag: loses_focus_position
+    requirements: [R4]
+requirements:
+  - id: R1
+    description: set_value는 초점 노드의 값만 바꾼다. Leaf면 자식 없는 노드를 만든다
+  - id: R2
+    description: set_left, set_right는 초점 노드의 해당 자식만 바꾼다
+  - id: R3
+    description: Leaf 초점에서 set_left, set_right는 Error(Nil)
+  - id: R4
+    description: 초점의 위치(경로)는 그대로 두고 새 지퍼를 돌려준다
+hints:
+  - level: 1
+    kind: question
+    text: 초점 노드를 바꿀 때 경로(crumbs)도 바꿔야 할까요? 나중에 `to_tree`로 전체 트리를 만들 때 바뀐 초점은 어떻게 반영되나요?
+  - level: 2
+    kind: concept
+    text: >-
+      지퍼에서 초점은 "지금 고칠 수 있는 자리"입니다. 초점만 새 노드로 바꾸고 경로는 그대로 두면, 올라갈 때 경로가 바뀐 초점을 감싸 전체 트리를 다시 만듭니다. 레코드 갱신 `Zipper(..zipper, focus: ...)`이 그 뜻을 그대로 보여 줍니다.
+  - level: 3
+    kind: approach
+    text: 세 함수 모두 `case zipper.focus`로 `Leaf`와 `Node(value, left, right)`를 나누세요. `Node`일 때는 바꿀 부분만 새 값으로 넣은 `Node`를 초점으로 둡니다. `Leaf`일 때 `set_value`는 새 노드를 만들고, `set_left`/`set_right`는 `Error(Nil)`입니다.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn set_left(zipper: Zipper(a), tree: Tree(a)) -> Result(Zipper(a), Nil) {
+        case zipper.focus {
+          Leaf -> Error(Nil)
+          Node(value, _, right) -> Ok(Zipper(..zipper, focus: todo))
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: leaf-set-value-noop
+    mustFail: [set_value_on_leaf_creates_node_test]
+    errorTag: ignores_leaf_focus
+  - key: set-left-replaces-right
+    mustFail: [set_left_with_leaf_test]
+    errorTag: updates_wrong_side
+  - key: set-left-on-leaf-creates-node
+    mustFail: [set_child_on_leaf_fails_test]
+    errorTag: ignores_leaf_focus
+  - key: resets-to-root
+    mustFail: [focus_stays_after_edit_test]
+    errorTag: loses_focus_position

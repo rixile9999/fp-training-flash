@@ -1,0 +1,89 @@
+kind: implement
+format: drill
+module: coupon
+title: 최소 주문 금액과 할인 한도가 있는 쿠폰
+difficulty: 1450
+estimatedMinutes: 6
+conceptNotes: [gleam-list-transform, gleam-record-update, gleam-int-float]
+tests:
+  - fn: discounts_pending_test
+    name: 최소 금액 이상인 Pending 주문을 할인한다
+    visibility: public
+    requirements: [R1, R2]
+  - fn: skips_below_minimum_test
+    name: 최소 금액보다 적은 주문은 할인하지 않는다
+    visibility: public
+    errorTag: ignores_minimum_amount
+    requirements: [R1]
+  - fn: caps_discount_test
+    name: 할인액은 한도를 넘지 않는다
+    visibility: public
+    errorTag: ignores_discount_cap
+    requirements: [R3]
+  - fn: applies_at_exact_minimum_test
+    name: 금액이 최소 금액과 같으면 할인한다
+    visibility: hidden
+    errorTag: off_by_one
+    requirements: [R1]
+  - fn: rounds_discount_down_test
+    name: 할인액을 내림해서 뺀다
+    visibility: hidden
+    errorTag: wrong_rounding
+    requirements: [R2]
+  - fn: keeps_other_orders_test
+    name: Pending이 아닌 주문은 금액이 커도 그대로 두고 순서를 유지한다
+    visibility: hidden
+    errorTag: discounts_all_items
+    requirements: [R4]
+requirements:
+  - id: R1
+    description: Pending이고 amount가 min_amount 이상인 주문만 할인
+  - id: R2
+    description: 할인액은 amount * percent / 100 (내림)
+  - id: R3
+    description: 할인액은 max_discount를 넘지 않는다
+  - id: R4
+    description: 나머지 주문은 그대로, 순서 유지
+hints:
+  - level: 1
+    kind: question
+    text: 한 주문에 대해 먼저 "할인 대상인가"를, 그다음 "얼마를 뺄 것인가"를 따로 물어볼 수 있을까요? 할인액과 할인 후 금액 중 어느 쪽을 내림해야 하나요?
+  - level: 2
+    kind: concept
+    text: "`int.min(a, b)`는 둘 중 작은 값을 돌려줍니다. 할인액을 한도로 자를 때 쓸 수 있습니다. `case` 패턴 뒤의 `if` 가드로 상태와 금액 조건을 함께 검사할 수 있습니다."
+  - level: 3
+    kind: approach
+    text: "`fn discount(amount: Int, coupon: Coupon) -> Int`로 할인액만 계산하는 함수를 먼저 만드세요. 그다음 `list.map`에서 대상 주문의 금액을 `amount - discount(...)`로 바꿉니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn apply_coupon(orders: List(Order), coupon: Coupon) -> List(Order) {
+        list.map(orders, fn(order) {
+          case order.status {
+            Pending if order.amount >= coupon.min_amount -> todo
+            _ -> order
+          }
+        })
+      }
+
+      fn discount(amount: Int, coupon: Coupon) -> Int {
+        int.min(todo, coupon.max_discount)
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: strict-minimum
+    mustFail: [applies_at_exact_minimum_test]
+    errorTag: off_by_one
+  - key: rounds-final-amount
+    mustFail: [rounds_discount_down_test]
+    errorTag: wrong_rounding
+  - key: no-cap
+    mustFail: [caps_discount_test]
+    errorTag: ignores_discount_cap
+  - key: no-minimum
+    mustFail: [skips_below_minimum_test]
+    errorTag: ignores_minimum_amount

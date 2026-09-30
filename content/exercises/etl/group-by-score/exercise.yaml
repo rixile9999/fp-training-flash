@@ -1,0 +1,85 @@
+kind: implement
+format: drill
+module: legacy
+title: 점수표를 점수별 묶음으로 되돌리기
+difficulty: 1450
+estimatedMinutes: 6
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: single_letter_test
+    name: 타일 하나를 대문자로 바꿔 점수 묶음에 넣는다
+    visibility: public
+    errorTag: skips_normalization
+    requirements: [R1]
+  - fn: letters_with_same_score_are_grouped_test
+    name: 점수가 같은 타일은 한 묶음에 모인다
+    visibility: public
+    errorTag: overwrites_existing_key
+    requirements: [R1]
+  - fn: several_scores_test
+    name: 점수마다 따로 묶음을 만든다
+    visibility: public
+    errorTag: overwrites_existing_key
+    requirements: [R1]
+  - fn: empty_table_test
+    name: 빈 점수표는 빈 dict가 된다
+    visibility: hidden
+    errorTag: ignores_empty_input
+  - fn: group_is_sorted_alphabetically_test
+    name: 묶음 안의 타일은 사전순이다
+    visibility: hidden
+    errorTag: unsorted_output
+    requirements: [R2]
+  - fn: full_table_test
+    name: 전체 점수표를 일곱 개 묶음으로 되돌린다
+    visibility: hidden
+    errorTag: unsorted_output
+    requirements: [R1, R2]
+  - fn: large_table_is_sorted_test
+    name: 두 글자 타일이 섞인 큰 점수표에서도 묶음 안은 사전순이다
+    visibility: hidden
+    errorTag: relies_on_dict_order
+    requirements: [R2]
+requirements:
+  - id: R1
+    description: 점수마다 그 점수의 대문자 타일을 모음
+  - id: R2
+    description: 묶음 안은 string.compare 기준 오름차순
+hints:
+  - level: 1
+    kind: question
+    text: 이미 묶음이 있는 점수에 타일이 하나 더 오면 어떻게 해야 하나요? 아직 묶음이 없는 점수라면요?
+  - level: 2
+    kind: concept
+    text: "`dict.upsert(dict, key, fn(Option(v)) -> v)`는 키가 있으면 `Some(기존값)`, 없으면 `None`을 받아 새 값을 정합니다. dict의 순회 순서는 보장되지 않으므로 순서가 필요하면 직접 정렬해야 합니다."
+  - level: 3
+    kind: approach
+    text: "`dict.fold`로 타일마다 해당 점수 묶음에 대문자 타일을 추가하고, 다 모은 뒤 `dict.map_values`로 각 묶음을 정렬하세요."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      scores
+      |> dict.fold(dict.new(), fn(groups, letter, score) {
+        dict.upsert(groups, score, fn(existing) {
+          case existing {
+            Some(letters) -> todo
+            None -> todo
+          }
+        })
+      })
+      |> dict.map_values(fn(_score, letters) { todo })
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: unsorted-groups
+    mustFail: [group_is_sorted_alphabetically_test, full_table_test]
+    errorTag: unsorted_output
+  - key: appends-without-sort
+    mustFail: [large_table_is_sorted_test]
+    errorTag: relies_on_dict_order
+  - key: overwrites-group
+    mustFail: [letters_with_same_score_are_grouped_test, several_scores_test, full_table_test]
+    errorTag: overwrites_existing_key

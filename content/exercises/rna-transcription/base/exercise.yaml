@@ -1,0 +1,76 @@
+kind: implement
+format: drill
+module: rna_transcription
+difficulty: 1100
+estimatedMinutes: 4
+tests:
+  - fn: empty_strand_test
+    name: 빈 가닥은 빈 RNA를 Ok로 반환한다
+    visibility: public
+    requirements: [R1]
+  - fn: each_nucleotide_complement_test
+    name: G, C, T, A는 각각 C, G, A, U로 바뀐다
+    visibility: public
+    requirements: [R1]
+  - fn: long_strand_test
+    name: 긴 가닥도 순서를 유지하며 변환한다
+    visibility: public
+    requirements: [R1]
+  - fn: invalid_strand_test
+    name: 염기가 아닌 문자가 섞여 있으면 Error(Nil)을 반환한다
+    visibility: public
+    errorTag: drops_invalid_input
+    requirements: [R2]
+  - fn: invalid_at_end_test
+    name: 마지막 글자만 잘못되어도 Error(Nil)을 반환한다
+    visibility: hidden
+    errorTag: drops_invalid_input
+    requirements: [R2]
+  - fn: lowercase_rejected_test
+    name: 소문자 염기는 잘못된 입력이다
+    visibility: hidden
+    errorTag: accepts_lowercase
+    requirements: [R2]
+requirements:
+  - id: R1
+    description: 각 염기를 짝 염기로 바꿈
+  - id: R2
+    description: 잘못된 글자가 하나라도 있으면 Error(Nil)
+hints:
+  - level: 1
+    kind: question
+    text: 글자 하나를 변환하는 일은 실패할 수 있을까요? 하나라도 실패하면 전체 결과는 어떻게 되어야 하나요?
+  - level: 2
+    kind: concept
+    text: "`list.try_map(list, f)`는 `f`가 `Result`를 돌려줄 때 쓰는 `map`입니다. 모두 `Ok`면 `Ok(결과 목록)`, 하나라도 `Error`면 첫 `Error`를 반환합니다."
+  - level: 3
+    kind: approach
+    text: "염기 하나를 받아 `Result(String, Nil)`을 돌려주는 도우미 함수를 먼저 만드세요. 그다음 `string.to_graphemes`로 글자를 나누고, `try_map`으로 변환한 뒤 `result.map`으로 다시 이어 붙입니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn to_rna(dna: String) -> Result(String, Nil) {
+        dna
+        |> string.to_graphemes
+        |> list.try_map(complement)
+        |> todo
+      }
+
+      fn complement(nucleotide: String) -> Result(String, Nil) {
+        case nucleotide {
+          "G" -> Ok("C")
+          _ -> todo
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: filter-invalid
+    mustFail: [invalid_strand_test, invalid_at_end_test]
+    errorTag: drops_invalid_input
+  - key: uppercase-first
+    mustFail: [lowercase_rejected_test]
+    errorTag: accepts_lowercase

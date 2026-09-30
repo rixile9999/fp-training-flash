@@ -1,0 +1,25 @@
+title: 긴 청구서 계산을 이름 있는 단계로 나누기
+primarySkill: function-decomposition
+secondarySkills: [data-transformation]
+contextTags: [invoices]
+source:
+  kind: original
+conceptNotes: [gleam-list-transform, gleam-pipe-operator, gleam-case-patterns]
+theoryTopics: [referential-transparency, function-composition-pipelines]
+rubric:
+  - id: R-02
+    title: 파이프라인이 의도를 드러냄
+    description: 합계 함수는 단계 함수를 차례로 부르기만 하고, 읽는 순서가 계산 순서와 같다.
+  - id: R-05
+    title: 계산 로직 분리
+    description: 할인, 배송비, 부가세 같은 규칙은 이름 있는 작은 함수 한 곳에만 있고 다른 함수는 그것을 호출한다.
+    automatedCheck:
+      kind: max_function_lines
+      max: 14
+  - id: R-09
+    title: let assert와 panic을 쓰지 않음
+    description: 실패 가능성은 타입으로 표현한다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "\\blet assert\\b|\\bpanic\\b"
+      message: let assert 또는 panic을 사용했습니다.

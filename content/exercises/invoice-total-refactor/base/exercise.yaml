@@ -1,0 +1,92 @@
+kind: implement
+format: drill
+module: invoice
+difficulty: 1300
+estimatedMinutes: 7
+tests:
+  - fn: line_amount_bulk_test
+    name: 10개 이상 주문한 줄은 10% 할인한다
+    visibility: public
+    requirements: [R1]
+  - fn: line_amount_bulk_boundary_test
+    name: 정확히 10개도 대량 할인 대상이다
+    visibility: hidden
+    errorTag: off_by_one
+    requirements: [R1]
+  - fn: subtotal_test
+    name: 소계는 할인이 반영된 줄 금액의 합이다
+    visibility: public
+    errorTag: duplicated_rule_diverges
+    requirements: [R2]
+  - fn: shipping_fee_under_threshold_test
+    name: 소계가 5만 원 미만이면 배송비 3000원
+    visibility: public
+    requirements: [R3]
+  - fn: shipping_fee_free_at_threshold_test
+    name: 소계가 정확히 5만 원이면 배송비가 없다
+    visibility: hidden
+    errorTag: off_by_one
+    requirements: [R3]
+  - fn: shipping_fee_empty_test
+    name: 소계가 0원이면 배송비가 없다
+    visibility: hidden
+    errorTag: ignores_empty_input
+    requirements: [R3]
+  - fn: vat_test
+    name: 부가세는 10%이고 원 단위 미만은 버린다
+    visibility: public
+    requirements: [R4]
+  - fn: invoice_total_test
+    name: 총액은 소계, 부가세, 배송비의 합이다
+    visibility: public
+    errorTag: duplicated_rule_diverges
+    requirements: [R5]
+requirements:
+  - id: R1
+    description: line_amount는 줄 금액과 대량 할인을 계산한다
+  - id: R2
+    description: subtotal은 line_amount를 재사용한다
+  - id: R3
+    description: shipping_fee는 배송비 규칙만 담는다
+  - id: R4
+    description: vat는 부가세 규칙만 담는다
+  - id: R5
+    description: invoice_total은 단계 함수를 조합한다
+hints:
+  - level: 1
+    kind: question
+    text: 기존 `invoice_total` 안에서 서로 다른 규칙은 몇 가지인가요? 각 규칙에 이름을 붙인다면 무엇일까요?
+  - level: 2
+    kind: concept
+    text: 순수한 계산은 같은 입력에 늘 같은 값을 돌려주므로, 식의 일부를 함수로 떼어 내고 그 자리를 호출로 바꿔도 결과가 변하지 않습니다.
+  - level: 3
+    kind: approach
+    text: 줄 하나의 금액 → 소계 → 배송비·부가세 순으로 안쪽 규칙부터 함수로 옮기고, 마지막에 `invoice_total`이 그 함수들만 호출하도록 바꾸세요. 테스트는 각 함수를 따로 부릅니다.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn subtotal(lines: List(Line)) -> Int {
+        lines
+        |> list.map(line_amount)
+        |> todo
+      }
+
+      pub fn invoice_total(lines: List(Line)) -> Int {
+        let amount = subtotal(lines)
+        amount + todo + todo
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: subtotal-skips-helper
+    mustFail: [subtotal_test, invoice_total_test]
+    errorTag: duplicated_rule_diverges
+  - key: bulk-strict
+    mustFail: [line_amount_bulk_boundary_test]
+    errorTag: off_by_one
+  - key: shipping-on-empty
+    mustFail: [shipping_fee_empty_test]
+    errorTag: ignores_empty_input

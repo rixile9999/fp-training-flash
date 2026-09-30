@@ -1,0 +1,30 @@
+# Family-level defaults; each variant's exercise.yaml may override any of these.
+title: 미로의 최단 경로를 너비 우선 탐색으로 구하기
+primarySkill: search-and-graphs
+secondarySkills: [functional-data-structures]
+contextTags: []
+source:
+  kind: original
+conceptNotes: [gleam-dict-set, gleam-recursion, gleam-use-expressions]
+theoryTopics: [search-space-backtracking, cost-model-immutable-structures, amortized-analysis]
+rubric:
+  - id: R-02
+    title: 탐색 상태가 드러남
+    description: 큐(앞으로 볼 칸), 방문 집합, 거리를 재귀 함수의 인자로 명시해 한 단계에서 무엇이 바뀌는지 보인다.
+  - id: R-05
+    title: 이웃 계산 분리
+    description: 이동 가능한 이웃 칸을 구하는 규칙을 이름 있는 작은 함수로 분리한다.
+  - id: R-08
+    title: 방문 확인이 빠른 자료구조
+    description: 방문한 칸은 Set이나 Dict로 관리한다. 리스트에서 찾으면 칸 수에 비례해 느려진다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "list\\.contains\\("
+      message: list.contains로 방문 여부를 확인하면 격자가 클 때 느립니다. set을 쓰세요.
+  - id: R-09
+    title: let assert와 panic을 쓰지 않음
+    description: 실패 가능성은 타입으로 표현한다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "\\blet assert\\b|\\bpanic\\b"
+      message: let assert 또는 panic을 사용했습니다.

@@ -1,0 +1,75 @@
+kind: implement
+format: drill
+module: honor_roll
+title: 우등생 명단 뽑기 - 경계의 동점자 포함
+difficulty: 1500
+estimatedMinutes: 6
+tests:
+  - fn: empty_class_test
+    name: 학생이 없으면 빈 명단을 반환한다
+    visibility: public
+  - fn: top_n_test
+    name: 점수가 높은 순서로 n명의 이름을 뽑는다
+    visibility: public
+    errorTag: wrong_sort_direction
+    requirements: [R1]
+  - fn: includes_ties_at_cutoff_test
+    name: n번째 학생과 점수가 같은 학생은 모두 명단에 넣는다
+    visibility: public
+    errorTag: cuts_ties_at_boundary
+    requirements: [R2]
+  - fn: zero_limit_test
+    name: n이 0이면 빈 명단을 반환한다
+    visibility: hidden
+    errorTag: ignores_zero_limit
+    requirements: [R3]
+  - fn: limit_exceeds_count_test
+    name: n이 학생 수보다 크면 모든 학생을 뽑는다
+    visibility: hidden
+    errorTag: empty_when_limit_exceeds
+    requirements: [R3]
+  - fn: tied_names_in_order_test
+    name: 점수가 같은 학생은 이름 가나다순으로 나열한다
+    visibility: hidden
+    errorTag: ignores_tie_break
+    requirements: [R1]
+requirements:
+  - id: R1
+    description: 점수 내림차순, 동점이면 이름 오름차순으로 나열한다
+  - id: R2
+    description: n번째 학생과 동점인 학생은 n명을 넘어도 포함한다
+  - id: R3
+    description: n이 0 이하면 빈 명단, 학생 수보다 크면 전원
+hints:
+  - level: 1
+    kind: question
+    text: "`list.take`로 n명을 자르면, n번째와 (n+1)번째 학생의 점수가 같을 때 무슨 일이 생기나요?"
+  - level: 2
+    kind: concept
+    text: "`list.take_while`은 조건이 참인 동안 앞에서부터 원소를 가져오다가, 처음 거짓이 되는 곳에서 멈춥니다. `list.last`는 목록의 마지막 원소를 `Result`로 줍니다."
+  - level: 3
+    kind: approach
+    text: 정렬한 뒤 앞의 n명을 잘라 그중 마지막 학생의 점수를 기준 점수로 삼으세요. 그다음 정렬된 전체 목록에서 기준 점수 이상인 동안 가져옵니다. 잘라 낸 목록이 비어 있는 경우를 먼저 처리하세요.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      let sorted = list.sort(students, by_rank_order)
+      case list.last(list.take(sorted, n)) {
+        Error(Nil) -> []
+        Ok(cutoff) ->
+          sorted
+          |> list.take_while(fn(student) { todo })
+          |> list.map(fn(student) { student.name })
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: take-only
+    mustFail: [includes_ties_at_cutoff_test]
+    errorTag: cuts_ties_at_boundary
+  - key: cutoff-by-index
+    mustFail: [zero_limit_test, limit_exceeds_count_test]
+    errorTag: empty_when_limit_exceeds

@@ -1,0 +1,97 @@
+kind: implement
+format: drill
+module: list_ops
+title: 목록 이어 붙이기와 평탄화
+difficulty: 1400
+estimatedMinutes: 6
+limits: { timeMs: 6000, memoryMb: 256 }
+tests:
+  - fn: append_empty_lists_test
+    name: 빈 목록 두 개를 이어 붙이면 빈 목록이다
+    visibility: public
+    requirements: [ R1 ]
+  - fn: append_keeps_order_test
+    name: append는 첫 목록 뒤에 둘째 목록을 순서대로 붙인다
+    visibility: public
+    errorTag: reverses_order
+    requirements: [ R1 ]
+  - fn: append_to_empty_first_test
+    name: 첫 목록이 비어 있으면 둘째 목록을 그대로 반환한다
+    visibility: hidden
+    errorTag: ignores_empty_input
+    requirements: [ R1 ]
+  - fn: concat_lists_test
+    name: concat은 여러 목록을 순서대로 하나로 합친다
+    visibility: public
+    requirements: [ R2 ]
+  - fn: concat_empty_test
+    name: 합칠 목록이 없으면 빈 목록을 반환한다
+    visibility: hidden
+    errorTag: ignores_empty_input
+    requirements: [ R2 ]
+  - fn: concat_keeps_inner_lists_test
+    name: 원소가 목록이어도 한 단계만 합친다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [ R2 ]
+  - fn: concat_many_small_lists_test
+    name: 작은 목록 10만 개도 시간 제한 안에 합친다
+    visibility: hidden
+    errorTag: quadratic_append
+    requirements: [ R3 ]
+requirements:
+  - id: R1
+    description: append(first, second)는 first 뒤에 second를 순서대로 붙인다
+  - id: R2
+    description: concat은 모든 목록을 순서대로 합친다
+  - id: R3
+    description: 전체 원소 수에 비례하는 시간
+hints:
+  - level: 1
+    kind: question
+    text: "`append(first, second)`에서 결과를 만들 때 복사해야 하는 목록은 어느 쪽인가요? `second`는 복사하지 않고
+      그대로 꼬리로 쓸 수 있을까요?"
+  - level: 2
+    kind: concept
+    text: "불변 목록은 앞에만 원소를 싸게 붙일 수 있습니다. `append(a, b)`의 비용은 `a`의 길이에 비례하고 `b`의 길이와는
+      상관없습니다."
+  - level: 3
+    kind: approach
+    text: "`concat`을 앞에서부터 누적하면 누적 결과가 점점 길어지는데 매번 그것을 `append`의 첫 인자로 복사하게 됩니다.
+      목록들을 뒤에서부터 합치면 각 목록을 한 번씩만 복사합니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn append(first first: List(a), second second: List(a)) -> List(a) {
+        case first {
+          [] -> second
+          [x, ..rest] -> todo
+        }
+      }
+
+      pub fn concat(lists: List(List(a))) -> List(a) {
+        case lists {
+          [] -> []
+          [list, ..rest] -> append(first: list, second: todo)
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: concat-appends-to-accumulator
+    mustFail: [ concat_many_small_lists_test ]
+    errorTag: quadratic_append
+  - key: append-reversed-first
+    mustFail: [ append_keeps_order_test ]
+    errorTag: reverses_order
+performance:
+  module: list_ops_perf
+  sizes: [ 1000, 4000, 16000 ]
+  maxCostRatio: 5
+  referenceCost:
+    - 9382
+    - 34073
+    - 132226

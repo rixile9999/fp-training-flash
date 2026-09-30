@@ -1,0 +1,90 @@
+kind: implement
+format: drill
+module: word_count
+difficulty: 1400
+estimatedMinutes: 7
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: one_word_test
+    name: 단어 하나를 1번으로 센다
+    visibility: public
+    requirements: [R1]
+  - fn: repeated_words_test
+    name: 같은 단어가 여러 번 나오면 횟수를 더한다
+    visibility: public
+    requirements: [R1]
+  - fn: ignores_case_test
+    name: 대소문자가 달라도 같은 단어로 센다
+    visibility: public
+    errorTag: case_sensitive_keys
+    requirements: [R2]
+  - fn: punctuation_separates_words_test
+    name: 문장 부호는 단어를 나누고 결과에 남지 않는다
+    visibility: public
+    errorTag: splits_only_on_spaces
+    requirements: [R3]
+  - fn: cramped_list_test
+    name: 공백 없이 쉼표로만 붙은 단어도 나눈다
+    visibility: hidden
+    errorTag: splits_only_on_spaces
+    requirements: [R3]
+  - fn: repeated_whitespace_is_not_a_word_test
+    name: 연속된 공백, 줄바꿈, 탭 사이에서 빈 단어를 세지 않는다
+    visibility: hidden
+    errorTag: counts_empty_words
+    requirements: [R3]
+  - fn: numbers_are_words_test
+    name: 숫자도 단어로 센다
+    visibility: hidden
+    errorTag: drops_digits
+    requirements: [R1]
+  - fn: empty_input_test
+    name: 빈 문자열이면 빈 dict다
+    visibility: hidden
+    errorTag: counts_empty_words
+    requirements: [R3]
+requirements:
+  - id: R1
+    description: 단어별 등장 횟수
+  - id: R2
+    description: 대소문자 구분 없음
+  - id: R3
+    description: 영문자와 숫자가 아닌 모든 문자는 구분자이며 빈 단어는 없음
+hints:
+  - level: 1
+    kind: question
+    text: "`\"one,two\"`와 `\"one  two\"`는 각각 몇 단어인가요? 공백으로만 나누면 어떤 결과가 나오나요?"
+  - level: 2
+    kind: concept
+    text: "`string.to_graphemes`로 글자 목록을 얻고, 구분자 글자를 모두 공백 하나로 바꾸면 `string.split(\" \")` 한 번으로 나눌 수 있습니다. 연속된 구분자는 빈 문자열 조각을 만듭니다."
+  - level: 3
+    kind: approach
+    text: 소문자로 바꾸기, 구분자를 공백으로 바꾸기, 나누기, 빈 조각 거르기, dict에 세기를 파이프라인의 다섯 단계로 이어 보세요. 세기는 `list.fold`와 `dict.upsert`로 합니다.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      input
+      |> string.lowercase
+      |> string.to_graphemes
+      |> list.map(fn(g) { todo })
+      |> string.concat
+      |> string.split(" ")
+      |> list.filter(todo)
+      |> list.fold(dict.new(), fn(counts, word) {
+        dict.upsert(counts, word, fn(previous) { todo })
+      })
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: split-on-space
+    mustFail: [punctuation_separates_words_test, cramped_list_test]
+    errorTag: splits_only_on_spaces
+  - key: keeps-empty-words
+    mustFail: [repeated_whitespace_is_not_a_word_test, empty_input_test]
+    errorTag: counts_empty_words
+  - key: case-sensitive
+    mustFail: [ignores_case_test]
+    errorTag: case_sensitive_keys

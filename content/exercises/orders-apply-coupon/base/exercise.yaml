@@ -23,7 +23,7 @@ tests:
     errorTag: reorders_items
     requirements: [R3]
   - fn: rounds_down_test
-    name: 할인 금액은 내림한다
+    name: 할인 후 금액은 내림한다
     visibility: hidden
     errorTag: wrong_rounding
 requirements:

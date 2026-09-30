@@ -1,0 +1,26 @@
+# Family-level defaults; each variant's exercise.yaml may override any of these.
+title: 이진 탐색 트리
+primarySkill: recursive-algorithms
+secondarySkills: [functional-data-structures]
+contextTags: []
+source:
+  kind: exercism
+  license: "MIT, Copyright (c) 2021 Exercism"
+  url: https://github.com/exercism/gleam/tree/main/exercises/practice/binary-search-tree
+  upstream: "exercism/gleam exercises/practice/binary-search-tree@34db02e"
+conceptNotes: [gleam-custom-types, gleam-recursion, gleam-case-patterns]
+theoryTopics: [structural-recursion-induction, immutability-structural-sharing, algebraic-data-types]
+rubric:
+  - id: R-01
+    title: 트리 패턴으로 모양을 드러냄
+    description: "`Empty`와 `Node` 두 경우를 `case`로 나누고, 재귀는 서브트리에만 적용한다."
+  - id: R-05
+    title: 삽입과 순회를 분리
+    description: 원소 하나를 넣는 함수와 트리를 목록으로 펼치는 함수를 따로 두면 각각을 재사용하고 검증할 수 있다.
+  - id: R-09
+    title: let assert와 panic을 쓰지 않음
+    description: 실패 가능성은 타입으로 표현한다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "\\blet assert\\b|\\bpanic\\b"
+      message: let assert 또는 panic을 사용했습니다.

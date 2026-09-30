@@ -1,0 +1,92 @@
+kind: implement
+format: drill
+module: fifo
+difficulty: 1400
+estimatedMinutes: 6
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: pop_empty_queue_test
+    name: 빈 큐에서 pop하면 Error(Nil)을 돌려준다
+    visibility: public
+    requirements: [ R2 ]
+  - fn: pops_in_insertion_order_test
+    name: 넣은 순서대로 꺼낸다
+    visibility: public
+    errorTag: reverses_order
+    requirements: [ R1 ]
+  - fn: to_list_front_to_back_test
+    name: to_list는 먼저 넣은 것부터 나열한다
+    visibility: public
+    errorTag: forgets_to_reverse_back
+    requirements: [ R3 ]
+  - fn: old_version_unchanged_test
+    name: push와 pop을 해도 원래 큐는 그대로다
+    visibility: public
+    requirements: [ R4 ]
+  - fn: interleaved_push_pop_test
+    name: 꺼내는 중간에 넣어도 순서가 유지된다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [ R1 ]
+  - fn: to_list_after_pop_test
+    name: pop한 뒤 더 넣은 큐의 to_list도 순서가 맞다
+    visibility: hidden
+    errorTag: forgets_to_reverse_back
+    requirements: [ R3 ]
+requirements:
+  - id: R1
+    description: 먼저 넣은 원소를 먼저 꺼낸다 (FIFO)
+  - id: R2
+    description: 빈 큐의 pop은 Error(Nil)
+  - id: R3
+    description: to_list는 꺼낼 순서대로 나열
+  - id: R4
+    description: 연산은 새 큐를 돌려주고 원래 큐를 바꾸지 않는다
+  - id: R5
+    description: n번 push, n번 pop의 전체 비용이 O(n)
+hints:
+  - level: 1
+    kind: question
+    text: 리스트의 맨 앞에 붙이기와 맨 뒤에 붙이기는 각각 비용이 얼마인가요? 큐는 어느 쪽 끝에서 넣고 어느 쪽 끝에서 꺼내야 하나요?
+  - level: 2
+    kind: concept
+    text: 리스트는 맨 앞에서만 O(1)로 붙이고 뗄 수 있습니다. 넣을 때는 `back`의 앞에 붙이고, 꺼낼 때는 `front`의 앞에서
+      떼면 두 연산 모두 앞쪽만 씁니다. `back`은 넣은 순서의 역순이라는 점을 기억하세요.
+  - level: 3
+    kind: approach
+    text: "`pop`에서 `front`가 비어 있으면 `back`을 한 번 뒤집어 새 `front`로 옮긴 뒤 다시 꺼내세요. 둘 다 비었을
+      때만 `Error(Nil)`입니다. `to_list`도 `back`을 뒤집어 뒤에 이어야 합니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn push(queue: Queue(a), item: a) -> Queue(a) {
+        Queue(..queue, back: [item, ..queue.back])
+      }
+
+      pub fn pop(queue: Queue(a)) -> Result(#(a, Queue(a)), Nil) {
+        case queue.front, queue.back {
+          [first, ..rest], back -> todo
+          [], [] -> Error(Nil)
+          [], back -> todo
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: no-reverse
+    mustFail: [ pops_in_insertion_order_test, interleaved_push_pop_test ]
+    errorTag: reverses_order
+  - key: unreversed-to-list
+    mustFail: [ to_list_front_to_back_test, to_list_after_pop_test ]
+    errorTag: forgets_to_reverse_back
+performance:
+  module: fifo_perf
+  sizes: [ 1000, 4000, 16000 ]
+  maxCostRatio: 5
+  referenceCost:
+    - 7152
+    - 27680
+    - 112914

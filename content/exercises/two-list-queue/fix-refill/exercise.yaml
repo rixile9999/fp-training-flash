@@ -1,0 +1,91 @@
+kind: fix
+format: drill
+module: fifo
+title: 큐 고치기 - 나중에 넣은 것이 먼저 나오는 버그
+difficulty: 1300
+estimatedMinutes: 4
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: first_pop_returns_oldest_test
+    name: 처음 pop하면 가장 먼저 넣은 원소가 나온다
+    visibility: public
+    errorTag: reverses_order
+    requirements: [ R1 ]
+  - fn: drains_each_item_once_test
+    name: 모두 꺼내면 넣은 순서 그대로 한 번씩 나온다
+    visibility: public
+    errorTag: reverses_order
+    requirements: [ R1 ]
+  - fn: to_list_without_pop_test
+    name: pop하지 않은 큐의 to_list는 넣은 순서다
+    visibility: public
+    errorTag: breaks_queue_invariant
+    requirements: [ R2 ]
+  - fn: to_list_after_pop_test
+    name: pop한 뒤 남은 큐의 to_list도 넣은 순서다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [ R2 ]
+  - fn: pop_after_emptied_test
+    name: 모두 꺼낸 큐에서 pop하면 Error(Nil)을 돌려준다
+    visibility: hidden
+    errorTag: ignores_empty_input
+    requirements: [ R1 ]
+  - fn: refill_twice_test
+    name: back을 두 번 옮겨 담아도 순서가 맞다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [ R1 ]
+  - fn: keeps_order_when_mixed_test
+    name: 꺼내는 중간에 넣은 원소는 기존 원소 뒤에 나온다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [ R1 ]
+requirements:
+  - id: R1
+    description: 먼저 넣은 원소를 먼저 꺼낸다 (FIFO)
+  - id: R2
+    description: to_list는 꺼낼 순서대로 나열
+  - id: R3
+    description: n번 push, n번 pop의 전체 비용이 O(n)
+hints:
+  - level: 1
+    kind: question
+    text: 1, 2, 3을 차례로 push하면 `back`에는 어떤 순서로 들어 있나요? 그 리스트를 그대로 `front`로 쓰면 무엇이 먼저
+      나오나요?
+  - level: 2
+    kind: concept
+    text: "`back`은 넣은 순서의 역순입니다. `front`는 꺼낼 순서여야 하므로, `back`을 `front`로 옮길 때는 순서를
+      바꿔야 합니다."
+  - level: 3
+    kind: approach
+    text: "`push`와 `to_list`는 이미 이 약속을 지킵니다. `pop`에서 `front`가 비었을 때 `back`을 옮기는 한 줄만
+      고치세요. `push`를 바꾸면 `to_list`가 깨집니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      case queue.front, queue.back {
+        [first, ..rest], back -> Ok(#(first, Queue(front: rest, back: back)))
+        [], [] -> Error(Nil)
+        [], back -> pop(Queue(front: todo, back: []))
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: newest-first
+    mustFail: [ first_pop_returns_oldest_test, refill_twice_test ]
+    errorTag: reverses_order
+  - key: append-back
+    mustFail: [ to_list_without_pop_test ]
+    errorTag: breaks_queue_invariant
+performance:
+  module: fifo_perf
+  sizes: [ 1000, 4000, 16000 ]
+  maxCostRatio: 5
+  referenceCost:
+    - 7152
+    - 27680
+    - 112914

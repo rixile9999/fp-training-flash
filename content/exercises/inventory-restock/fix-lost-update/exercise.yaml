@@ -1,0 +1,77 @@
+kind: fix
+format: drill
+module: shelf
+title: 진열대 채우기 - 사라진 갱신 고치기
+difficulty: 1200
+estimatedMinutes: 4
+contextTags: [retail]
+tests:
+  - fn: refills_empty_shelf_test
+    name: 최소 수량보다 적은 진열대는 최대 용량까지 채운다
+    visibility: public
+    errorTag: lost_update
+    requirements: [R1]
+  - fn: keeps_stocked_shelf_test
+    name: 충분히 찬 진열대는 그대로 둔다
+    visibility: public
+    requirements: [R2]
+  - fn: mixed_shelves_test
+    name: 채울 진열대와 그대로 둘 진열대가 섞여 있어도 모두 남긴다
+    visibility: public
+    errorTag: drops_items_with_filter
+    requirements: [R1, R2]
+  - fn: fills_to_capacity_not_adds_test
+    name: 남은 수량에 더하지 않고 최대 용량으로 맞춘다
+    visibility: hidden
+    errorTag: adds_instead_of_sets
+    requirements: [R1]
+  - fn: at_minimum_not_refilled_test
+    name: 수량이 최소 수량과 같으면 채우지 않는다
+    visibility: hidden
+    errorTag: off_by_one
+    requirements: [R2]
+  - fn: keeps_order_test
+    name: 진열대 순서를 유지한다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [R3]
+requirements:
+  - id: R1
+    description: on_hand가 minimum보다 적으면 on_hand를 capacity로 바꾼 새 진열대를 결과에 넣는다
+  - id: R2
+    description: 그 밖의 진열대는 그대로 결과에 넣는다
+  - id: R3
+    description: 순서를 유지한다
+hints:
+  - level: 1
+    kind: question
+    text: "`list.each` 안에서 만든 새 `Shelf` 값은 어디로 가나요? 함수가 마지막에 돌려주는 값은 무엇인가요?"
+  - level: 2
+    kind: concept
+    text: "Gleam의 값은 바뀌지 않습니다. 레코드 갱신은 새 값을 만들 뿐이고, `list.each`는 함수의 결과를 버리고 `Nil`을 돌려줍니다. 결과를 모으려면 `list.map`을 씁니다."
+  - level: 3
+    kind: approach
+    text: 조건 판단과 새 레코드를 만드는 부분은 이미 맞습니다. 그 결과가 반환값이 되도록 순회 방식만 바꾸세요.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn refill(shelves: List(Shelf)) -> List(Shelf) {
+        list.map(shelves, fn(shelf) {
+          todo
+        })
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: filter-drops
+    mustFail: [mixed_shelves_test, keeps_order_test]
+    errorTag: drops_items_with_filter
+  - key: fold-reversed
+    mustFail: [mixed_shelves_test, keeps_order_test]
+    errorTag: reverses_order
+  - key: adds-capacity
+    mustFail: [fills_to_capacity_not_adds_test, keeps_order_test]
+    errorTag: adds_instead_of_sets

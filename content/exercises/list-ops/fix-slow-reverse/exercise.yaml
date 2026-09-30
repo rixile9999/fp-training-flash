@@ -1,0 +1,85 @@
+kind: fix
+format: drill
+module: list_ops
+title: 느린 reverse 고치기
+contextTags: [ logs ]
+difficulty: 1300
+estimatedMinutes: 4
+limits: { timeMs: 6000, memoryMb: 256 }
+tests:
+  - fn: reverse_small_test
+    name: reverse는 원소 순서를 뒤집는다
+    visibility: public
+    errorTag: keeps_original_order
+    requirements: [ R1 ]
+  - fn: reverse_large_list_test
+    name: 원소 20만 개짜리 목록도 시간 제한 안에 뒤집는다
+    visibility: public
+    errorTag: quadratic_append
+    requirements: [ R2 ]
+  - fn: reverse_empty_test
+    name: 빈 목록을 뒤집으면 빈 목록이다
+    visibility: hidden
+    errorTag: ignores_empty_input
+    requirements: [ R1 ]
+  - fn: reverse_log_lines_test
+    name: 문자열 로그 목록도 최신 줄이 맨 앞에 오도록 뒤집는다
+    visibility: hidden
+    errorTag: drops_accumulator
+    requirements: [ R1 ]
+  - fn: append_still_works_test
+    name: append는 고친 뒤에도 두 목록을 순서대로 이어 붙인다
+    visibility: hidden
+    errorTag: breaks_other_functions
+    requirements: [ R3 ]
+  - fn: foldl_still_works_test
+    name: foldl은 고친 뒤에도 앞 원소부터 누적한다
+    visibility: hidden
+    errorTag: breaks_other_functions
+    requirements: [ R3 ]
+requirements:
+  - id: R1
+    description: reverse는 순서를 뒤집은 목록
+  - id: R2
+    description: 목록 길이에 비례하는 시간
+  - id: R3
+    description: append와 foldl의 동작 유지
+hints:
+  - level: 1
+    kind: question
+    text: "`reverse`가 원소 하나를 처리할 때마다 `append`는 몇 개의 원소를 복사하나요? 원소가 n개면 전체 복사량은
+      얼마인가요?"
+  - level: 2
+    kind: concept
+    text: "불변 목록에서 앞에 붙이기 `[x, ..acc]`는 O(1)이고, 뒤에 이어 붙이기는 앞쪽 목록 길이만큼 복사합니다. 앞에서부터
+      읽으며 앞에 쌓으면 자연스럽게 순서가 뒤집힙니다."
+  - level: 3
+    kind: approach
+    text: 이미 있는 `foldl`을 활용하세요. 빈 목록에서 시작해 원소를 하나씩 누적값 앞에 붙이면 됩니다. `append`와
+      `foldl`은 건드리지 않아도 됩니다.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn reverse(list: List(a)) -> List(a) {
+        foldl(over: list, from: [], with: fn(reversed, item) { todo })
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: fold-appends-to-accumulator
+    mustFail: [ reverse_small_test, reverse_large_list_test ]
+    errorTag: keeps_original_order
+  - key: loop-returns-empty
+    mustFail: [ reverse_small_test, reverse_log_lines_test ]
+    errorTag: drops_accumulator
+performance:
+  module: list_ops_perf
+  sizes: [ 2000, 8000, 32000 ]
+  maxCostRatio: 5
+  referenceCost:
+    - 6751
+    - 27084
+    - 103771

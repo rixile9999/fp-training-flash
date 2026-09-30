@@ -1,0 +1,95 @@
+kind: implement
+format: challenge
+module: league_table
+title: 골득실을 반영한 리그 순위표 만들기
+difficulty: 1750
+estimatedMinutes: 30
+tests:
+  - fn: parse_line_test
+    name: 경기 한 줄에서 두 팀과 득점을 파싱한다
+    visibility: public
+    requirements: [R1]
+  - fn: record_updates_both_teams_test
+    name: 경기 결과와 득실점을 두 팀에 각자의 관점으로 반영한다
+    visibility: public
+    requirements: [R2]
+  - fn: compare_rows_goal_difference_test
+    name: 승점이 같으면 골득실이 큰 팀이 앞선다
+    visibility: public
+    errorTag: ignores_tie_break
+    requirements: [R3]
+  - fn: compare_rows_name_tiebreak_test
+    name: 승점과 골득실이 같으면 팀 이름 오름차순이다
+    visibility: hidden
+    errorTag: ignores_tie_break
+    requirements: [R3]
+  - fn: format_row_signed_goal_difference_test
+    name: 양수 골득실은 + 부호를 붙여 출력한다
+    visibility: public
+    errorTag: wrong_sign_format
+    requirements: [R4]
+  - fn: format_row_zero_goal_difference_test
+    name: 골득실 0은 부호 없이 출력한다
+    visibility: hidden
+    errorTag: adds_sign_to_zero
+    requirements: [R4]
+  - fn: standings_test
+    name: 여러 경기로 승점, 골득실, 이름 순의 순위표를 만든다
+    visibility: public
+    requirements: [R3, R4]
+  - fn: standings_skips_invalid_lines_test
+    name: 빈 줄과 점수 형식이 틀린 줄은 건너뛴다
+    visibility: hidden
+    errorTag: accepts_invalid_input
+    requirements: [R1]
+requirements:
+  - id: R1
+    description: parse_line은 "홈;원정;홈득점-원정득점" 형식만 받아들인다
+  - id: R2
+    description: record는 승무패와 득점·실점을 두 팀에 모두 반영한다
+  - id: R3
+    description: 순위는 승점 내림차순, 골득실 내림차순, 이름 오름차순
+  - id: R4
+    description: format_row는 골득실을 부호와 함께 3칸 오른쪽 정렬로 출력한다
+hints:
+  - level: 1
+    kind: question
+    text: 경기 한 줄은 두 팀에게 각각 어떤 정보(승무패, 넣은 골, 먹은 골)를 남기나요? 홈 팀과 원정 팀의 관점은 어떻게 다른가요?
+  - level: 2
+    kind: concept
+    text: "정렬 기준이 셋이면 `order.break_tie`를 두 번 이어 붙입니다. 내림차순 기준은 `int.compare(b쪽, a쪽)`처럼 인자 순서를 바꿉니다. 득점 비교 결과(`int.compare(scored, conceded)`)로 승무패를 가를 수 있습니다."
+  - level: 3
+    kind: approach
+    text: "`record`에서 팀 하나의 전적에 `(넣은 골, 먹은 골)`을 더하는 도우미를 만들고, 홈 팀에는 `(홈득점, 원정득점)`, 원정 팀에는 `(원정득점, 홈득점)`으로 두 번 호출하세요. 골득실 부호 붙이기도 작은 함수로 따로 두세요."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      fn add_game(stats: Stats, scored: Int, conceded: Int) -> Stats {
+        let stats = Stats(..stats, goals_for: todo, goals_against: todo)
+        case int.compare(scored, conceded) {
+          order.Gt -> todo
+          order.Eq -> todo
+          order.Lt -> todo
+        }
+      }
+
+      pub fn compare_rows(a: #(String, Stats), b: #(String, Stats)) -> Order {
+        int.compare(points(b.1), points(a.1))
+        |> order.break_tie(todo)
+        |> order.break_tie(string.compare(a.0, b.0))
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: gd-without-plus
+    mustFail: [format_row_signed_goal_difference_test]
+    errorTag: wrong_sign_format
+  - key: points-only-sort
+    mustFail: [compare_rows_goal_difference_test, standings_test]
+    errorTag: ignores_tie_break
+  - key: plus-on-zero
+    mustFail: [format_row_zero_goal_difference_test]
+    errorTag: adds_sign_to_zero

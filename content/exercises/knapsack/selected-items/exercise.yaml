@@ -1,0 +1,103 @@
+kind: implement
+format: drill
+module: knapsack
+title: 실을 화물 목록까지 구하는 배낭 문제
+contextTags: [ shipping ]
+difficulty: 1700
+estimatedMinutes: 7
+limits: { timeMs: 6000, memoryMb: 256 }
+tests:
+  - fn: picks_best_pair_test
+    name: 가치 합이 가장 큰 화물들의 id를 입력 순서대로 돌려준다
+    visibility: public
+    errorTag: reverses_order
+    requirements: [ R1, R3 ]
+  - fn: not_greedy_test
+    name: 무게당 가치가 큰 화물부터 싣는 것보다 나은 조합을 고른다
+    visibility: public
+    errorTag: greedy_choice
+    requirements: [ R1 ]
+  - fn: ids_in_input_order_test
+    name: 여러 화물을 고르면 id는 입력 목록의 순서를 따른다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [ R3 ]
+  - fn: empty_cargo_test
+    name: 화물이 없으면 가치 0과 빈 목록이다
+    visibility: hidden
+    errorTag: ignores_empty_input
+    requirements: [ R2 ]
+  - fn: nothing_fits_test
+    name: 실을 수 있는 화물이 없으면 가치 0과 빈 목록이다
+    visibility: hidden
+    errorTag: exceeds_capacity
+    requirements: [ R2 ]
+  - fn: uses_each_once_test
+    name: 같은 화물을 두 번 고르지 않는다
+    visibility: hidden
+    errorTag: reuses_items
+    requirements: [ R1 ]
+  - fn: many_cargo_test
+    name: 화물 40개도 시간 제한 안에 고른다
+    visibility: hidden
+    errorTag: exponential_recursion
+    requirements: [ R4 ]
+requirements:
+  - id: R1
+    description: 무게 합이 한도 이하이고 가치 합이 최대인 조합
+  - id: R2
+    description: 고를 것이 없으면 Selection(0, [])
+  - id: R3
+    description: ids는 입력 목록 순서
+  - id: R4
+    description: 화물 수 x 무게 한도에 비례하는 시간
+hints:
+  - level: 1
+    kind: question
+    text: 최대 가치만 구하는 표에서, 각 칸이 "어떤 화물을 골라서" 그 가치가 되었는지도 함께 들고 있으면 마지막 칸에서 무엇을 알 수
+      있을까요?
+  - level: 2
+    kind: concept
+    text: "DP 표의 칸에 가치뿐 아니라 그 가치를 만든 선택(고른 id 목록)을 같이 저장할 수 있습니다. 불변 목록의 앞에 id를 붙이면
+      이전 칸의 목록은 복사되지 않고 공유됩니다."
+  - level: 3
+    kind: approach
+    text: "표를 `Dict(무게 한도, #(가치 합, 고른 id들))`로 두고, 화물을 하나씩 접으며 이전 표에서 읽어 새 표를 만드세요. 이
+      화물을 넣는 쪽이 더 크면 `#(가치 + 화물 가치, [화물 id, ..이전 id들])`을 넣습니다. id를 앞에 붙였으니 마지막에
+      한 번 뒤집습니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      fn add_cargo(previous: Dict(Int, #(Int, List(String))), item: Cargo, max_weight: Int) {
+        int.range(from: item.weight, to: max_weight + 1, with: previous, run: fn(table, capacity) {
+          let #(rest_value, rest_ids) = entry(previous, capacity - item.weight)
+          let #(skip_value, _) = entry(previous, capacity)
+          case rest_value + item.value > skip_value {
+            True -> todo
+            False -> table
+          }
+        })
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: ids-reversed
+    mustFail: [ picks_best_pair_test, ids_in_input_order_test ]
+    errorTag: reverses_order
+  - key: plain-recursion
+    mustFail: [ many_cargo_test ]
+    errorTag: exponential_recursion
+  - key: greedy-by-ratio
+    mustFail: [ not_greedy_test ]
+    errorTag: greedy_choice
+performance:
+  module: knapsack_perf
+  sizes: [ 20, 40, 80 ]
+  maxCostRatio: 10
+  referenceCost:
+    - 36594
+    - 156421
+    - 654505

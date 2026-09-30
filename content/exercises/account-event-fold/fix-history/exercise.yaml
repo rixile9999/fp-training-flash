@@ -1,0 +1,68 @@
+kind: fix
+format: drill
+module: balance_history
+title: 잔액 기록 함수의 버그 고치기
+difficulty: 1400
+estimatedMinutes: 5
+tests:
+  - fn: apply_event_deposit_test
+    name: 입금하면 잔액이 늘어난다
+    visibility: public
+  - fn: apply_event_rejects_overdraft_test
+    name: 잔액보다 큰 출금은 무시한다
+    visibility: public
+  - fn: history_single_event_test
+    name: 이벤트 하나를 반영한 뒤의 잔액을 기록한다
+    visibility: public
+    errorTag: off_by_one
+    requirements: [R1]
+  - fn: history_in_event_order_test
+    name: 잔액 기록은 이벤트 순서와 같다
+    visibility: public
+    errorTag: reverses_order
+    requirements: [R2]
+  - fn: history_empty_test
+    name: 이벤트가 없으면 기록도 비어 있다
+    visibility: hidden
+    errorTag: ignores_empty_input
+    requirements: [R1]
+  - fn: history_keeps_balance_on_rejected_test
+    name: 무시된 출금에도 그 시점의 잔액을 기록한다
+    visibility: hidden
+    errorTag: drops_items_with_filter
+    requirements: [R1]
+requirements:
+  - id: R1
+    description: 이벤트마다 그 이벤트를 반영한 뒤의 잔액을 하나씩 기록한다
+  - id: R2
+    description: 기록은 이벤트와 같은 순서다
+hints:
+  - level: 1
+    kind: question
+    text: "`history([Deposited(100)])`를 손으로 따라가 보세요. fold 안에서 목록에 붙는 값은 반영 전 잔액인가요, 반영 후 잔액인가요?"
+  - level: 2
+    kind: concept
+    text: "목록 앞에 붙이기(`[x, ..xs]`)로 모으면 마지막에 넣은 값이 맨 앞에 옵니다. 누적 결과를 모두 기록하는 fold는 `list.scan`으로도 쓸 수 있습니다."
+  - level: 3
+    kind: approach
+    text: 버그는 `history` 안에 두 개 있습니다. 기록하는 값과, fold가 끝난 뒤 목록의 순서를 확인하세요. `apply_event`는 올바릅니다.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      list.fold(events, #(0, []), fn(acc, event) {
+        let #(balance, balances) = acc
+        let next = apply_event(balance, event)
+        #(next, todo)
+      })
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: reverse-only
+    mustFail: [history_single_event_test, history_in_event_order_test]
+    errorTag: off_by_one
+  - key: next-without-reverse
+    mustFail: [history_in_event_order_test]
+    errorTag: reverses_order

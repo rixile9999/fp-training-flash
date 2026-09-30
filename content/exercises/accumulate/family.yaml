@@ -1,0 +1,30 @@
+# Family-level defaults; each variant's exercise.yaml may override any of these.
+title: map 직접 만들기
+primarySkill: data-transformation
+secondarySkills: [recursive-algorithms]
+contextTags: []
+source:
+  kind: exercism
+  license: "MIT, Copyright (c) 2021 Exercism"
+  url: https://github.com/exercism/gleam/tree/main/exercises/practice/accumulate
+  upstream: "exercism/gleam exercises/practice/accumulate@34db02e"
+conceptNotes: [gleam-recursion, gleam-list-transform, gleam-anonymous-functions]
+theoryTopics: [functor-structure-preservation, structural-recursion-induction, accumulators-and-tail-recursion]
+rubric:
+  - id: R-04
+    title: 표준 map 없이 직접 구현
+    description: 이 문제의 목적은 map의 동작을 재귀로 직접 만드는 것이다. `list.map`, `list.index_map`을 쓰지 않는다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "\\blist\\.(map|index_map|map_fold)\\b"
+      message: list.map 계열 함수를 사용했습니다. 재귀로 직접 구현하세요.
+  - id: R-06
+    title: 누적자를 쓰면 마지막에 한 번 뒤집음
+    description: 누적자에 앞으로 쌓으면 순서가 거꾸로 된다. 끝에서 `list.reverse`를 한 번만 호출한다.
+  - id: R-09
+    title: let assert와 panic을 쓰지 않음
+    description: 실패 가능성은 타입으로 표현한다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "\\blet assert\\b|\\bpanic\\b"
+      message: let assert 또는 panic을 사용했습니다.

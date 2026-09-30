@@ -1,0 +1,91 @@
+kind: implement
+format: drill
+module: change
+title: 금액을 만드는 동전 조합의 수
+contextTags: [ payments ]
+difficulty: 1600
+estimatedMinutes: 6
+limits: { timeMs: 6000, memoryMb: 256 }
+tests:
+  - fn: small_amount_test
+    name: 5원을 1, 2, 5원 동전으로 만드는 조합은 4가지다
+    visibility: public
+    errorTag: counts_permutations
+    requirements: [ R1 ]
+  - fn: order_does_not_matter_test
+    name: 순서만 다른 동전 배열은 한 가지로 센다
+    visibility: public
+    errorTag: counts_permutations
+    requirements: [ R1 ]
+  - fn: zero_target_test
+    name: 0원을 만드는 방법은 동전을 하나도 쓰지 않는 한 가지다
+    visibility: hidden
+    errorTag: wrong_base_case
+    requirements: [ R2 ]
+  - fn: impossible_target_test
+    name: 만들 수 없는 금액이면 0이다
+    visibility: hidden
+    errorTag: missing_impossible_case
+    requirements: [ R2 ]
+  - fn: negative_target_test
+    name: 음수 금액이면 0이다
+    visibility: hidden
+    errorTag: accepts_negative_target
+    requirements: [ R2 ]
+  - fn: large_target_test
+    name: 동전 8종으로 2000원을 만드는 조합 수도 시간 제한 안에 센다
+    visibility: hidden
+    errorTag: exponential_recursion
+    requirements: [ R3 ]
+requirements:
+  - id: R1
+    description: 쓰인 동전의 개수 구성이 다를 때만 다른 조합
+  - id: R2
+    description: 0원은 1가지, 음수나 불가능한 금액은 0가지
+  - id: R3
+    description: 금액 x 동전 종류 수에 비례하는 시간
+hints:
+  - level: 1
+    kind: question
+    text: "4원을 1원과 2원으로 만들 때 1+1+2, 1+2+1, 2+1+1은 같은 조합입니다. 동전을 \"한 종류씩 차례로\" 쓰도록
+      순서를 강제하면 이런 중복을 어떻게 피할 수 있을까요?"
+  - level: 2
+    kind: concept
+    text: "\"첫 k종류의 동전만 써서 금액 a를 만드는 방법 수\"를 부분 문제로 잡으세요. k번째 동전을 하나도 안 쓰는 경우와 한 개
+      이상 쓰는 경우로 나누면 겹치지 않고 빠짐없이 셀 수 있습니다."
+  - level: 3
+    kind: approach
+    text: "금액별 방법 수를 담는 표를 `0원 -> 1`로 시작하고, 동전 종류를 하나씩 추가할 때마다 표를 갱신하세요. 동전을 추가하는
+      반복과 금액을 훑는 반복 중 어느 쪽을 바깥에 두느냐가 조합과 순열을 가릅니다. 두 순서로 `[1, 2]`, 3원을 손으로 따라가
+      보세요."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      let start = dict.from_list([#(0, 1)])
+      let table =
+        list.fold(coins, start, fn(table, coin) {
+          int.range(from: coin, to: target + 1, with: table, run: fn(table, amount) {
+            let with_coin = get(table, amount - coin)
+            todo
+          })
+        })
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: counts-permutations
+    mustFail: [ small_amount_test, order_does_not_matter_test ]
+    errorTag: counts_permutations
+  - key: recursion-without-table
+    mustFail: [ large_target_test ]
+    errorTag: exponential_recursion
+performance:
+  module: change_perf
+  sizes: [ 250, 1000, 4000 ]
+  maxCostRatio: 10
+  referenceCost:
+    - 29209
+    - 142249
+    - 613842

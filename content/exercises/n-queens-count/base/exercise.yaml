@@ -1,0 +1,105 @@
+kind: implement
+format: drill
+module: queens
+difficulty: 1450
+estimatedMinutes: 7
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: same_column_is_unsafe_test
+    name: 위쪽 퀸과 같은 열은 안전하지 않다
+    visibility: public
+    requirements: [ R1 ]
+  - fn: diagonal_next_row_is_unsafe_test
+    name: 바로 윗 행 퀸의 양쪽 대각선 칸은 안전하지 않다
+    visibility: public
+    errorTag: misses_diagonal_check
+    requirements: [ R1 ]
+  - fn: four_queens_test
+    name: 4x4 판에는 배치가 2가지 있다
+    visibility: public
+    requirements: [ R2 ]
+  - fn: nearest_queen_first_test
+    name: 목록 맨 앞의 퀸을 바로 윗 행으로 보고 대각선을 확인한다
+    visibility: hidden
+    errorTag: wrong_traversal_order
+    requirements: [ R1 ]
+  - fn: far_diagonal_is_unsafe_test
+    name: 두 행 위에 있는 퀸의 대각선도 확인한다
+    visibility: hidden
+    errorTag: checks_only_adjacent_row
+    requirements: [ R1 ]
+  - fn: single_queen_board_test
+    name: 1x1 판에는 배치가 1가지 있다
+    visibility: hidden
+    errorTag: wrong_base_case
+    requirements: [ R2 ]
+  - fn: boards_without_solution_test
+    name: 2x2와 3x3 판에는 배치가 없다
+    visibility: hidden
+    errorTag: misses_diagonal_check
+    requirements: [ R2 ]
+  - fn: eight_queens_test
+    name: 8x8 판에는 배치가 92가지 있다
+    visibility: hidden
+    errorTag: checks_only_adjacent_row
+    requirements: [ R2, R3 ]
+requirements:
+  - id: R1
+    description: is_safe는 같은 열과 두 방향 대각선을 모든 위쪽 퀸에 대해 확인한다
+  - id: R2
+    description: count_solutions는 n x n 판의 배치 수를 센다
+  - id: R3
+    description: 안전하지 않은 칸에서 탐색을 멈춘다(가지치기)
+hints:
+  - level: 1
+    kind: question
+    text: 각 행에 퀸이 정확히 하나씩 있어야 한다면, 배치는 "행마다 열 하나"를 고르는 문제로 바꿀 수 있을까요? 위에서부터 한 행씩
+      채운다면 무엇을 확인하며 내려가야 할까요?
+  - level: 2
+    kind: concept
+    text: "백트래킹은 부분 해를 한 단계씩 늘리다가 규칙을 어기는 순간 그 가지를 버립니다. 행 차이가 d인 두 퀸은 열 차이의 절댓값이
+      d이면 대각선으로 공격합니다."
+  - level: 3
+    kind: approach
+    text: "`is_safe`는 `placed`를 앞에서부터 보며 행 거리를 1, 2, 3, ...으로 늘려 가는 보조 재귀로 만드세요.
+      `count_solutions`는 `place(n, row, placed)`를 만들어, row가 n이면 1을 돌려주고 아니면 안전한
+      열마다 다음 행을 세어 더합니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      fn place(n: Int, row: Int, placed: List(Int)) -> Int {
+        case row == n {
+          True -> 1
+          False ->
+            int.range(from: 0, to: n, with: 0, run: fn(total, col) {
+              case is_safe(placed, col) {
+                True -> todo
+                False -> total
+              }
+            })
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: one-diagonal
+    mustFail: [ diagonal_next_row_is_unsafe_test, four_queens_test ]
+    errorTag: misses_diagonal_check
+  - key: reads-top-row-first
+    mustFail: [ nearest_queen_first_test, far_diagonal_is_unsafe_test ]
+    errorTag: wrong_traversal_order
+  - key: adjacent-row-only
+    mustFail: [ far_diagonal_is_unsafe_test, eight_queens_test ]
+    errorTag: checks_only_adjacent_row
+performance:
+  module: queens_perf
+  sizes: [ 6, 7, 8, 9 ]
+  maxCostRatio: 5
+  referenceCost:
+    - 8656
+    - 37989
+    - 179761
+    - 885078

@@ -1,0 +1,87 @@
+kind: implement
+format: drill
+module: order_line
+difficulty: 1350
+estimatedMinutes: 6
+tests:
+  - fn: parses_valid_line_test
+    name: 올바른 줄을 OrderLine으로 바꾼다
+    visibility: public
+    requirements: [R1]
+  - fn: trims_fields_test
+    name: 각 필드의 앞뒤 공백을 제거하고 해석한다
+    visibility: public
+    errorTag: missing_trim
+    requirements: [R1]
+  - fn: wrong_field_count_test
+    name: 필드가 3개가 아니면 WrongFieldCount에 실제 개수를 담는다
+    visibility: public
+    requirements: [R2]
+  - fn: invalid_order_id_test
+    name: 주문 번호가 정수가 아니면 InvalidOrderId에 그 필드를 담는다
+    visibility: public
+    requirements: [R2]
+  - fn: empty_sku_test
+    name: 공백뿐인 상품 코드는 EmptySku이다
+    visibility: hidden
+    errorTag: accepts_empty_field
+    requirements: [R2]
+  - fn: zero_quantity_test
+    name: 수량 0은 InvalidQuantity이다
+    visibility: hidden
+    errorTag: missing_range_check
+    requirements: [R2]
+  - fn: non_numeric_quantity_test
+    name: 숫자가 아닌 수량은 공백을 제거한 필드를 InvalidQuantity에 담는다
+    visibility: hidden
+    errorTag: wrong_error_payload
+    requirements: [R2]
+  - fn: first_error_wins_test
+    name: 여러 필드가 잘못되면 주문 번호, 상품 코드, 수량 순으로 첫 오류만 알린다
+    visibility: hidden
+    errorTag: wrong_check_order
+    requirements: [R3]
+requirements:
+  - id: R1
+    description: 쉼표로 나눈 세 필드를 공백 제거 후 OrderLine으로 해석
+  - id: R2
+    description: 필드마다 정해진 오류 값을 반환
+  - id: R3
+    description: 필드 개수, 주문 번호, 상품 코드, 수량 순으로 검사해 첫 오류만 반환
+hints:
+  - level: 1
+    kind: question
+    text: 필드 하나하나는 각각 어떤 이유로 실패할 수 있나요? 실패하면 그 뒤 필드를 볼 필요가 있을까요?
+  - level: 2
+    kind: concept
+    text: "`use x <- result.try(r)`는 `r`이 `Ok(x)`이면 다음 줄로 진행하고, `Error(e)`이면 함수 전체의 결과를 `Error(e)`로 끝냅니다. `result.replace_error`로 `int.parse`의 `Error(Nil)`을 원하는 오류로 바꿀 수 있습니다."
+  - level: 3
+    kind: approach
+    text: 쉼표로 나누고 공백을 제거한 목록을 `case`로 `[a, b, c]` 패턴과 나머지로 나누세요. 필드마다 `Result(값, ParseError)`를 돌려주는 작은 함수를 만들고 `use`로 차례로 연결하세요.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      case line |> string.split(",") |> list.map(string.trim) {
+        [id_field, sku_field, quantity_field] -> {
+          use order_id <- result.try(parse_order_id(id_field))
+          use sku <- result.try(todo)
+          use quantity <- result.try(todo)
+          Ok(OrderLine(order_id:, sku:, quantity:))
+        }
+        fields -> todo
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: no-trim
+    mustFail: [trims_fields_test]
+    errorTag: missing_trim
+  - key: allows-zero-quantity
+    mustFail: [zero_quantity_test]
+    errorTag: missing_range_check
+  - key: sku-not-checked
+    mustFail: [empty_sku_test]
+    errorTag: accepts_empty_field

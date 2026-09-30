@@ -1,0 +1,69 @@
+kind: fix
+format: drill
+module: coupon
+title: 쿠폰 적용 - 사라진 주문 되살리기
+difficulty: 1150
+estimatedMinutes: 4
+tests:
+  - fn: discounts_pending_test
+    name: Pending 주문의 금액을 할인한다
+    visibility: public
+    requirements: [R1]
+  - fn: keeps_shipped_orders_test
+    name: Shipped 주문도 결과에 그대로 남는다
+    visibility: public
+    errorTag: drops_items_with_filter
+    requirements: [R2]
+  - fn: keeps_cancelled_orders_test
+    name: Cancelled 주문도 결과에 그대로 남는다
+    visibility: hidden
+    errorTag: drops_items_with_filter
+    requirements: [R2]
+  - fn: does_not_discount_others_test
+    name: Pending이 아닌 주문의 금액은 바꾸지 않는다
+    visibility: hidden
+    errorTag: discounts_all_items
+    requirements: [R1]
+  - fn: keeps_order_test
+    name: 주문의 원래 순서를 유지한다
+    visibility: hidden
+    errorTag: reorders_items
+    requirements: [R3]
+requirements:
+  - id: R1
+    description: Pending 주문만 금액 변경
+  - id: R2
+    description: 대상 외 주문 보존
+  - id: R3
+    description: 순서 유지
+hints:
+  - level: 1
+    kind: question
+    text: 입력 주문이 3개면 결과 주문은 몇 개여야 하나요? 지금 코드의 결과는 몇 개인가요?
+  - level: 2
+    kind: concept
+    text: "`list.filter`는 조건에 맞지 않는 원소를 버리고, `list.map`은 모든 원소를 하나씩 바꿔 길이를 유지합니다."
+  - level: 3
+    kind: approach
+    text: 대상을 먼저 골라내지 말고, 모든 주문을 돌면서 주문마다 할인할지 말지를 결정하세요.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      list.map(orders, fn(o) {
+        case o.status {
+          Pending -> todo
+          Shipped | Cancelled -> o
+        }
+      })
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: discount-all
+    mustFail: [does_not_discount_others_test, keeps_shipped_orders_test]
+    errorTag: discounts_all_items
+  - key: append-others
+    mustFail: [keeps_order_test]
+    errorTag: reorders_items

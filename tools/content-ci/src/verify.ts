@@ -32,7 +32,11 @@ function describe(e: Evaluation): string {
   return `${e.outcome}${failing.length ? ` failing=[${failing.join("; ")}]` : ""}`;
 }
 
-async function evaluate(input: VerifyInput, files: ExerciseDetail["starterFiles"]): Promise<Evaluation> {
+async function evaluate(input: VerifyInput, allFiles: ExerciseDetail["starterFiles"]): Promise<Evaluation> {
+  // Starter files include the exercise's support modules so learners can see them; the grader adds support
+  // files itself, so pass only learner-owned files.
+  const supportPaths = new Set(input.spec.supportFiles.map((f) => f.path));
+  const files = allFiles.filter((f) => !supportPaths.has(f.path));
   const rejections = staticChecks(input.spec, files);
   if (rejections.length) {
     return {

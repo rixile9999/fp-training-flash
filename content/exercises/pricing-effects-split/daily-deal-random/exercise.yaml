@@ -1,0 +1,75 @@
+kind: implement
+format: drill
+module: pricing
+title: 무작위 선택과 할인 계산 분리하기
+contextTags: [pricing, promotions]
+difficulty: 1400
+estimatedMinutes: 6
+tests:
+  - fn: deal_price_test
+    name: 특가는 30% 할인한 가격이다
+    visibility: public
+    requirements: [R1]
+  - fn: deal_price_rounds_to_hundreds_test
+    name: 특가는 100원 단위로 내림한다
+    visibility: hidden
+    errorTag: wrong_rounding
+    requirements: [R1]
+  - fn: apply_deal_test
+    name: 지정한 위치의 상품만 특가로 바꾼다
+    visibility: public
+    errorTag: off_by_one
+    requirements: [R2]
+  - fn: apply_deal_first_index_test
+    name: 위치 0은 첫 번째 상품이다
+    visibility: hidden
+    errorTag: off_by_one
+    requirements: [R2]
+  - fn: apply_deal_out_of_range_test
+    name: 목록 길이 이상의 위치면 목록을 그대로 돌려준다
+    visibility: hidden
+    errorTag: mishandles_out_of_range_index
+    requirements: [R2]
+  - fn: apply_deal_negative_index_test
+    name: 음수 위치면 목록을 그대로 돌려준다
+    visibility: hidden
+    errorTag: mishandles_out_of_range_index
+    requirements: [R2]
+requirements:
+  - id: R1
+    description: deal_price는 할인 규칙만 담은 순수 함수다
+  - id: R2
+    description: apply_deal은 무작위 값 대신 위치를 인자로 받는다
+hints:
+  - level: 1
+    kind: question
+    text: 기존 `pick_daily_deal`을 테스트할 때 결과를 미리 알 수 없는 이유는 무엇인가요? 그 원인을 함수 밖으로 빼려면 무엇을 인자로 받아야 할까요?
+  - level: 2
+    kind: concept
+    text: 무작위 값 생성도 호출할 때마다 결과가 달라지는 효과입니다. 무작위로 고른 결과(위치)를 인자로 받으면 나머지 계산은 순수 함수가 됩니다.
+  - level: 3
+    kind: approach
+    text: "`list.index_map`으로 각 상품과 위치를 함께 보면서, 위치가 인자와 같은 상품만 `deal_price`로 바꾸세요. 범위를 벗어난 위치는 어떤 상품과도 같지 않으므로 따로 처리하지 않아도 됩니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn apply_deal(products: List(Product), index: Int) -> List(Product) {
+        list.index_map(products, fn(product, i) {
+          case i == index {
+            True -> todo
+            False -> product
+          }
+        })
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: one-based-index
+    mustFail: [apply_deal_test, apply_deal_first_index_test]
+    errorTag: off_by_one
+  - key: no-hundreds-rounding
+    mustFail: [deal_price_rounds_to_hundreds_test]
+    errorTag: wrong_rounding

@@ -1,0 +1,23 @@
+# Family-level defaults; each variant's exercise.yaml may override any of these.
+title: 설정값 조회와 오류 구분하기
+primarySkill: explicit-failure
+secondarySkills: [data-transformation]
+contextTags: [config]
+source:
+  kind: original
+conceptNotes: [gleam-option-result, gleam-dict-set, gleam-use-expressions]
+theoryTopics: [errors-as-values, chaining-results-monads, total-vs-partial-functions]
+rubric:
+  - id: R-09
+    title: let assert와 panic을 쓰지 않음
+    description: 실패 가능성은 타입으로 표현한다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "\\blet assert\\b|\\bpanic\\b"
+      message: let assert 또는 panic을 사용했습니다.
+  - id: R-07
+    title: 오류를 삼키지 않음
+    description: 없는 값과 잘못된 값은 다른 상황이다. result.unwrap이나 option.from_result로 잘못된 값까지 기본값으로 바꾸지 않는다.
+  - id: R-11
+    title: 중첩 case 대신 use로 연결
+    description: 여러 단계의 Result를 use와 result.try로 이어 쓰면 성공 경로가 위에서 아래로 읽힌다.

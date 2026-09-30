@@ -1,0 +1,63 @@
+kind: fix
+format: drill
+module: invoice
+title: 복사된 규칙 때문에 틀린 청구서 총액 고치기
+difficulty: 1250
+estimatedMinutes: 5
+tests:
+  - fn: line_amount_bulk_test
+    name: 10개 이상 주문한 줄은 10% 할인한다
+    visibility: public
+  - fn: shipping_fee_threshold_test
+    name: 소계가 정확히 5만 원이면 배송비가 없다
+    visibility: public
+  - fn: invoice_total_small_test
+    name: 할인 없는 작은 주문의 총액
+    visibility: public
+  - fn: invoice_total_bulk_test
+    name: 대량 할인이 총액에도 반영된다
+    visibility: public
+    errorTag: duplicated_rule_diverges
+    requirements: [R1]
+  - fn: invoice_total_threshold_test
+    name: 소계가 정확히 5만 원이면 총액에 배송비가 없다
+    visibility: hidden
+    errorTag: duplicated_rule_diverges
+    requirements: [R1]
+  - fn: invoice_total_empty_test
+    name: 빈 청구서의 총액은 0원이다
+    visibility: hidden
+    errorTag: ignores_empty_input
+    requirements: [R1]
+requirements:
+  - id: R1
+    description: invoice_total은 규칙을 다시 쓰지 않고 단계 함수를 호출한다
+hints:
+  - level: 1
+    kind: question
+    text: 단계 함수들의 테스트는 통과하는데 `invoice_total`만 틀립니다. `invoice_total`은 그 함수들을 실제로 호출하고 있나요?
+  - level: 2
+    kind: concept
+    text: 같은 규칙이 두 곳에 있으면 한쪽만 고쳐지거나 한쪽이 조금 다르게 쓰여 결과가 어긋납니다. 규칙은 한 함수에만 두고 나머지는 호출해야 합니다.
+  - level: 3
+    kind: approach
+    text: "`invoice_total` 안의 계산식을 하나씩 살펴보고, 같은 일을 하는 단계 함수가 있으면 그 호출로 바꾸세요. 새 규칙을 추가할 필요는 없습니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn invoice_total(lines: List(Line)) -> Int {
+        let amount = todo
+        amount + vat(amount) + todo
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: patch-discount-only
+    mustFail: [invoice_total_threshold_test, invoice_total_empty_test]
+    errorTag: duplicated_rule_diverges
+  - key: patch-shipping-only
+    mustFail: [invoice_total_bulk_test]
+    errorTag: duplicated_rule_diverges

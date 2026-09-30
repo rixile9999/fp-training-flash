@@ -1,0 +1,66 @@
+kind: fix
+format: drill
+module: high_school_sweetheart
+title: 순서가 뒤바뀐 이니셜 파이프라인 고치기
+difficulty: 1100
+estimatedMinutes: 4
+tests:
+  - fn: first_letter_test
+    name: 이름의 첫 글자를 돌려준다
+    visibility: public
+  - fn: initial_test
+    name: 첫 글자 뒤에 마침표를 붙인다
+    visibility: public
+    errorTag: wrong_step_order
+    requirements: [R1]
+  - fn: initials_test
+    name: 이름과 성의 이니셜을 공백으로 잇는다
+    visibility: public
+    errorTag: wrong_step_order
+    requirements: [R2]
+  - fn: initial_lowercase_test
+    name: 소문자 이름도 대문자 이니셜이 된다
+    visibility: hidden
+    errorTag: missing_uppercase
+    requirements: [R1]
+  - fn: initial_trims_whitespace_test
+    name: 앞뒤 공백이 있어도 이니셜은 글자 하나와 마침표다
+    visibility: hidden
+    errorTag: ignores_surrounding_whitespace
+    requirements: [R1]
+requirements:
+  - id: R1
+    description: initial은 first_letter 결과를 대문자로 바꾸고 마침표를 붙인다
+  - id: R2
+    description: initials는 initial을 재사용한다
+hints:
+  - level: 1
+    kind: question
+    text: "`initial(\"Betty\")`를 파이프라인 단계마다 손으로 따라가 보세요. 마침표는 어느 단계에서 사라지나요?"
+  - level: 2
+    kind: concept
+    text: 파이프라인은 위에서 아래로 차례대로 실행됩니다. 앞 단계의 결과가 다음 단계의 입력이 되므로, 같은 함수들이라도 순서가 바뀌면 결과가 달라집니다.
+  - level: 3
+    kind: approach
+    text: 세 단계를 "글자 수를 줄이는 단계"와 "글자를 꾸미는 단계"로 나눠 보세요. 꾸민 뒤에 줄이면 꾸민 결과가 잘려 나갈 수 있습니다.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn initial(name: String) -> String {
+        name
+        |> first_letter
+        |> todo
+        |> todo
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: drops-uppercase
+    mustFail: [initial_lowercase_test]
+    errorTag: missing_uppercase
+  - key: slice-without-trim
+    mustFail: [initial_trims_whitespace_test]
+    errorTag: ignores_surrounding_whitespace

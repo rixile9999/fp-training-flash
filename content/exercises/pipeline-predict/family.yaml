@@ -1,0 +1,9 @@
+# Family-level defaults; each variant's exercise.yaml may override any of these.
+title: 파이프라인 결과 예측하기
+primarySkill: function-decomposition
+secondarySkills: [data-transformation]
+contextTags: [reading-code]
+source:
+  kind: original
+conceptNotes: [gleam-pipe-operator, gleam-list-transform, gleam-anonymous-functions]
+theoryTopics: [function-composition-pipelines, referential-transparency]

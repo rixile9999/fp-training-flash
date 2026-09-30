@@ -1,0 +1,101 @@
+kind: implement
+format: drill
+module: edit_distance
+title: 편집 종류마다 비용이 다른 편집 거리
+contextTags: [ search ]
+difficulty: 1650
+estimatedMinutes: 7
+limits: { timeMs: 6000, memoryMb: 256 }
+tests:
+  - fn: unit_costs_test
+    name: 모든 비용이 1이면 보통의 편집 거리와 같다
+    visibility: public
+    requirements: [ R1 ]
+  - fn: expensive_substitution_test
+    name: 바꾸기가 비싸면 삭제와 삽입으로 대신한다
+    visibility: public
+    errorTag: assumes_unit_costs
+    requirements: [ R1 ]
+  - fn: insert_direction_test
+    name: from에 글자를 넣는 편집은 삽입 비용으로 센다
+    visibility: public
+    errorTag: swaps_insert_delete
+    requirements: [ R2 ]
+  - fn: delete_direction_test
+    name: from에서 글자를 빼는 편집은 삭제 비용으로 센다
+    visibility: hidden
+    errorTag: swaps_insert_delete
+    requirements: [ R2 ]
+  - fn: insert_cost_base_case_test
+    name: 빈 문자열에서 만들 때 글자마다 삽입 비용이 든다
+    visibility: hidden
+    errorTag: wrong_base_case
+    requirements: [ R3 ]
+  - fn: delete_cost_base_case_test
+    name: 빈 문자열로 만들 때 글자마다 삭제 비용이 든다
+    visibility: hidden
+    errorTag: wrong_base_case
+    requirements: [ R3 ]
+  - fn: long_strings_test
+    name: 200글자 문자열끼리도 시간 제한 안에 계산한다
+    visibility: hidden
+    errorTag: exponential_recursion
+    requirements: [ R4 ]
+requirements:
+  - id: R1
+    description: 삽입, 삭제, 바꾸기 비용을 따로 적용한 최소 비용
+  - id: R2
+    description: 삽입은 from에 넣기, 삭제는 from에서 빼기
+  - id: R3
+    description: 한쪽이 비면 글자 수 x 해당 비용
+  - id: R4
+    description: 두 문자열 길이의 곱에 비례하는 시간
+hints:
+  - level: 1
+    kind: question
+    text: "비용이 모두 1일 때의 점화식에서 `+ 1`이 세 군데 있습니다. 각각은 어떤 편집에 해당하나요? 빈 문자열이 끼는 첫 행과 첫
+      열의 값은 어떤 편집을 몇 번 한 것인가요?"
+  - level: 2
+    kind: concept
+    text: "d(i, j)를 \"from의 앞 i글자를 to의 앞 j글자로 바꾸는 최소 비용\"으로 두면, d(i-1, j)에서 오는 것은
+      from의 i번째 글자 삭제, d(i, j-1)에서 오는 것은 to의 j번째 글자 삽입, d(i-1, j-1)에서 오는 것은
+      바꾸기(같으면 0)입니다."
+  - level: 3
+    kind: approach
+    text: "첫 행은 `[0, insert, 2 * insert, ...]`, 각 행의 첫 칸은 `i * delete`입니다. 윗행에서 다음
+      행을 만드는 fold는 그대로 두고, 세 후보에 각각의 비용을 더하세요. 바꾸기가 삭제 + 삽입보다 비싸면 min이 알아서 삭제 +
+      삽입 경로를 고릅니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      [diagonal, above, ..rest], [t, ..ts] -> {
+        let replace = case t == char {
+          True -> diagonal
+          False -> diagonal + costs.substitute
+        }
+        let value = int.min(replace, int.min(todo, todo))
+        fill([above, ..rest], ts, char, costs, value, [value, ..acc])
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: swapped-insert-delete
+    mustFail: [ insert_direction_test, delete_direction_test ]
+    errorTag: swaps_insert_delete
+  - key: unit-base-cases
+    mustFail: [ insert_cost_base_case_test, delete_cost_base_case_test ]
+    errorTag: wrong_base_case
+  - key: substitute-cost-one
+    mustFail: [ expensive_substitution_test ]
+    errorTag: assumes_unit_costs
+performance:
+  module: edit_distance_perf
+  sizes: [ 20, 80, 320 ]
+  maxCostRatio: 10
+  referenceCost:
+    - 2709
+    - 35003
+    - 537103

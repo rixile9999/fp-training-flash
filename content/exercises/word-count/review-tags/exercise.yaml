@@ -1,0 +1,95 @@
+kind: implement
+format: drill
+module: review_tags
+title: 리뷰 태그를 리뷰 수로 집계하기
+contextTags: [reviews]
+source:
+  kind: original
+difficulty: 1450
+estimatedMinutes: 6
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: tags_of_single_review_test
+    name: 리뷰 한 건의 태그를 쉼표로 나눠 원래 순서대로 돌려준다
+    visibility: public
+    errorTag: reorders_items
+    requirements: [R1]
+  - fn: counts_across_reviews_test
+    name: 태그마다 그 태그가 달린 리뷰 수를 센다
+    visibility: public
+    requirements: [R3]
+  - fn: normalizes_spaces_and_case_test
+    name: 태그 앞뒤 공백과 대소문자를 정리해서 센다
+    visibility: public
+    errorTag: skips_normalization
+    requirements: [R1]
+  - fn: duplicate_tag_in_one_review_counts_once_test
+    name: 한 리뷰에 같은 태그가 여러 번 있어도 1로 센다
+    visibility: public
+    errorTag: counts_duplicates_within_group
+    requirements: [R2]
+  - fn: duplicates_after_normalizing_count_once_test
+    name: 정리하고 나서 같아지는 태그도 중복으로 본다
+    visibility: hidden
+    errorTag: dedupes_before_normalizing
+    requirements: [R1, R2]
+  - fn: skips_blank_tags_test
+    name: 빈 태그와 빈 리뷰는 세지 않는다
+    visibility: hidden
+    errorTag: keeps_blank_entries
+    requirements: [R1]
+  - fn: no_reviews_test
+    name: 리뷰가 없으면 빈 dict다
+    visibility: hidden
+    errorTag: ignores_empty_input
+requirements:
+  - id: R1
+    description: 태그는 앞뒤 공백 제거와 소문자 변환 후 비어 있으면 제외
+  - id: R2
+    description: 한 리뷰 안의 중복 태그는 한 번만
+  - id: R3
+    description: 태그별로 그 태그가 달린 리뷰 수
+hints:
+  - level: 1
+    kind: question
+    text: "리뷰 `\"Fast, fast\"` 하나에서 `fast`는 몇 번으로 세야 하나요? 중복인지 판단하려면 먼저 무엇을 해야 하나요?"
+  - level: 2
+    kind: concept
+    text: "`list.unique`는 처음 나온 순서를 유지하며 중복을 없앱니다. `list.flat_map`은 원소마다 목록을 만들고 그 목록들을 하나로 이어 붙입니다."
+  - level: 3
+    kind: approach
+    text: "리뷰 한 건을 처리하는 `tags_of`를 나누기, 정리, 빈 태그 거르기, 중복 제거 순서의 파이프라인으로 만들고, `count_tags`는 모든 리뷰의 태그를 이어 붙여 dict로 세세요."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn tags_of(review: String) -> List(String) {
+        review
+        |> string.split(",")
+        |> list.map(todo)
+        |> list.filter(todo)
+        |> list.unique
+      }
+
+      pub fn count_tags(reviews: List(String)) -> Dict(String, Int) {
+        reviews
+        |> list.flat_map(tags_of)
+        |> list.fold(dict.new(), todo)
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: counts-duplicates
+    mustFail: [duplicate_tag_in_one_review_counts_once_test, duplicates_after_normalizing_count_once_test]
+    errorTag: counts_duplicates_within_group
+  - key: keeps-blank-tags
+    mustFail: [skips_blank_tags_test]
+    errorTag: keeps_blank_entries
+  - key: dedupe-before-normalize
+    mustFail: [duplicates_after_normalizing_count_once_test]
+    errorTag: dedupes_before_normalizing
+  - key: dedupes-with-set
+    mustFail: [tags_of_single_review_test]
+    errorTag: reorders_items

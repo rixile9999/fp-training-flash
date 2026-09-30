@@ -1,0 +1,78 @@
+kind: implement
+format: drill
+module: cart_discount
+title: 조건부 할인 규칙을 적용하고 적용 내역 남기기
+difficulty: 1550
+theoryTopics: [higher-order-modularity, separating-effects]
+estimatedMinutes: 7
+tests:
+  - fn: try_rule_applies_test
+    name: 조건을 만족하면 할인된 장바구니를 Ok로 돌려준다
+    visibility: public
+    requirements: [R1]
+  - fn: try_rule_skips_test
+    name: 조건을 만족하지 않으면 Error를 돌려준다
+    visibility: public
+    requirements: [R1]
+  - fn: run_rules_test
+    name: 적용된 규칙 이름과 최종 장바구니를 돌려준다
+    visibility: public
+    requirements: [R2]
+  - fn: run_rules_checks_current_total_test
+    name: 조건은 앞 규칙이 적용된 뒤의 금액으로 판단한다
+    visibility: hidden
+    errorTag: uses_stale_state
+    requirements: [R2]
+  - fn: run_rules_names_in_order_test
+    name: 적용 내역은 적용한 순서대로 나열한다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [R3]
+  - fn: run_rules_none_apply_test
+    name: 적용되는 규칙이 없으면 장바구니가 그대로이고 내역은 비어 있다
+    visibility: hidden
+    errorTag: applies_skipped_rule
+    requirements: [R2, R3]
+requirements:
+  - id: R1
+    description: try_rule은 조건을 확인한 뒤 금액만 바꾼 장바구니를 돌려준다
+  - id: R2
+    description: run_rules는 규칙을 순서대로 적용하며, 조건은 현재 장바구니로 판단한다
+  - id: R3
+    description: 적용 내역은 적용된 규칙 이름을 적용 순서대로 담는다
+hints:
+  - level: 1
+    kind: question
+    text: 두 번째 규칙의 조건을 확인할 때 쓰는 장바구니는 원래 장바구니인가요, 첫 번째 규칙이 적용된 장바구니인가요?
+  - level: 2
+    kind: concept
+    text: "`list.fold`의 누적값은 무엇이든 될 수 있습니다. `#(Cart, List(String))`처럼 현재 상태와 기록을 함께 들고 다닐 수 있습니다. 레코드 일부만 바꿀 때는 `Cart(..cart, total: ...)`를 씁니다."
+  - level: 3
+    kind: approach
+    text: "`try_rule`을 먼저 완성하고, `run_rules`에서는 규칙마다 `try_rule`의 결과(`Ok`/`Error`)에 따라 누적값을 갱신하세요. 이름은 앞에 붙이고 마지막에 뒤집으면 됩니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn run_rules(cart: Cart, rules: List(Rule)) -> #(Cart, List(String)) {
+        let #(final, applied) =
+          list.fold(rules, #(cart, []), fn(acc, rule) {
+            let #(current, names) = acc
+            case try_rule(current, rule) {
+              Ok(next) -> todo
+              Error(Nil) -> todo
+            }
+          })
+        todo
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: stale-condition
+    mustFail: [run_rules_checks_current_total_test]
+    errorTag: uses_stale_state
+  - key: reversed-names
+    mustFail: [run_rules_names_in_order_test]
+    errorTag: reverses_order

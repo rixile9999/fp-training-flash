@@ -1,0 +1,85 @@
+kind: implement
+format: drill
+module: competition
+title: 동점자에게 같은 순위 주기
+difficulty: 1600
+estimatedMinutes: 7
+contextTags: [education, competition]
+theoryTopics: [higher-order-modularity, fold-universality]
+tests:
+  - fn: empty_class_test
+    name: 학생이 없으면 빈 목록을 반환한다
+    visibility: public
+  - fn: distinct_scores_test
+    name: 점수가 모두 다르면 1부터 차례로 순위를 붙인다
+    visibility: public
+    errorTag: off_by_one
+    requirements: [R1]
+  - fn: tie_shares_rank_test
+    name: 점수가 같은 학생은 같은 순위를 받는다
+    visibility: public
+    errorTag: ignores_ties
+    requirements: [R2]
+  - fn: rank_after_tie_skips_test
+    name: 동점 다음 순위는 동점자 수만큼 건너뛴다
+    visibility: hidden
+    errorTag: dense_rank_instead_of_competition
+    requirements: [R3]
+  - fn: three_way_tie_test
+    name: 세 명이 동점이면 셋 다 같은 순위이고 다음 순위는 세 칸 뒤다
+    visibility: hidden
+    errorTag: dense_rank_instead_of_competition
+    requirements: [R2, R3]
+  - fn: tied_names_in_order_test
+    name: 같은 순위 안에서는 이름 가나다순으로 나열한다
+    visibility: hidden
+    errorTag: ignores_tie_break
+    requirements: [R4]
+requirements:
+  - id: R1
+    description: 점수 내림차순으로 정렬해 순위를 붙인다
+  - id: R2
+    description: 같은 점수는 같은 순위
+  - id: R3
+    description: 동점 다음 순위는 (앞에 있는 학생 수 + 1)
+  - id: R4
+    description: 같은 순위 안에서는 이름 오름차순
+hints:
+  - level: 1
+    kind: question
+    text: 정렬된 목록에서 어떤 학생의 순위를 정하려면 무엇을 알아야 할까요? 바로 앞 학생의 점수와 순위만으로 충분할까요?
+  - level: 2
+    kind: concept
+    text: "`list.index_fold`는 누적값, 원소, 0부터 시작하는 위치를 함께 넘겨 줍니다. 누적값에 \"직전 학생의 점수와 순위\"를 들고 다닐 수 있습니다."
+  - level: 3
+    kind: approach
+    text: "정렬한 뒤 앞에서부터 접으세요. 직전 학생과 점수가 같으면 직전 순위를 그대로 쓰고, 다르면 `위치 + 1`을 순위로 씁니다. 결과는 앞에 붙여 모았다가 마지막에 뒤집습니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      let #(_, ranked) =
+        students
+        |> list.sort(by_rank_order)
+        |> list.index_fold(#(None, []), fn(state, student, index) {
+          let #(previous, acc) = state
+          let score = student.score
+          let this_rank = case previous {
+            Some(#(previous_score, previous_rank)) if previous_score == score ->
+              todo
+            _ -> todo
+          }
+          #(Some(#(score, this_rank)), [#(this_rank, student.name), ..acc])
+        })
+      list.reverse(ranked)
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: dense-rank
+    mustFail: [rank_after_tie_skips_test, three_way_tie_test]
+    errorTag: dense_rank_instead_of_competition
+  - key: no-sharing
+    mustFail: [tie_shares_rank_test, three_way_tie_test]
+    errorTag: ignores_ties

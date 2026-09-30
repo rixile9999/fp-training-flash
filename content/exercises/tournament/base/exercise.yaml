@@ -1,0 +1,102 @@
+kind: implement
+format: challenge
+module: tournament
+difficulty: 1650
+estimatedMinutes: 25
+tests:
+  - fn: empty_input_header_only_test
+    name: 입력이 비어 있으면 머리글만 돌려준다
+    visibility: public
+    requirements: [R4]
+  - fn: parse_line_test
+    name: 경기 한 줄을 Match로 파싱한다
+    visibility: public
+    requirements: [R1]
+  - fn: record_win_test
+    name: 경기 결과를 두 팀의 전적에 모두 반영한다
+    visibility: public
+    requirements: [R2]
+  - fn: format_row_test
+    name: 팀 이름과 전적을 정해진 너비의 한 행으로 만든다
+    visibility: public
+    errorTag: wrong_padding
+    requirements: [R3]
+  - fn: typical_input_test
+    name: 여러 경기로 승점 내림차순 순위표를 만든다
+    visibility: public
+    requirements: [R4]
+  - fn: loss_credits_away_team_test
+    name: loss는 원정 팀의 승리로 기록한다
+    visibility: hidden
+    errorTag: wrong_perspective
+    requirements: [R2]
+  - fn: ties_broken_alphabetically_test
+    name: 승점이 같으면 팀 이름 오름차순이다
+    visibility: hidden
+    errorTag: ignores_tie_break
+    requirements: [R4]
+  - fn: many_teams_tied_sorted_by_name_test
+    name: 팀이 많아도 승점이 같으면 팀 이름 오름차순이다
+    visibility: hidden
+    errorTag: ignores_tie_break
+    requirements: [R4]
+  - fn: skips_invalid_lines_test
+    name: 빈 줄과 형식이 틀린 줄은 건너뛴다
+    visibility: hidden
+    errorTag: treats_unknown_as_draw
+    requirements: [R1, R4]
+requirements:
+  - id: R1
+    description: parse_line은 "홈;원정;win|draw|loss" 형식만 받아들인다
+  - id: R2
+    description: record는 한 경기를 두 팀의 전적에 각자의 관점으로 반영한다
+  - id: R3
+    description: format_row는 팀 이름 30칸, 숫자 2칸 오른쪽 정렬로 한 행을 만든다
+  - id: R4
+    description: tally는 승점 내림차순, 같으면 이름 오름차순으로 순위표를 만든다
+hints:
+  - level: 1
+    kind: question
+    text: 입력 문자열이 순위표 문자열이 되기까지 데이터는 어떤 모양들을 거치나요? 단계마다 타입을 적어 보세요.
+  - level: 2
+    kind: concept
+    text: "`list.filter_map`으로 파싱에 실패한 줄을 버리고, `list.fold`와 `dict.upsert`로 팀별 전적을 모읍니다. 정렬 기준이 둘이면 `order.break_tie`로 잇습니다. 칸 맞추기는 `string.pad_end`와 `string.pad_start`입니다."
+  - level: 3
+    kind: approach
+    text: "`record`에서는 경기 결과를 홈 팀 관점과 원정 팀 관점의 결과 한 쌍으로 바꾼 뒤, 두 팀에 같은 도우미 함수로 반영하세요. `tally`는 split → filter_map(parse_line) → fold(record) → to_list → sort → map(format_row) 순서로 연결합니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn record(table: Dict(String, Stats), match: Match) -> Dict(String, Stats) {
+        let #(home_result, away_result) = case match.outcome {
+          Win -> #(Win, Loss)
+          Draw -> todo
+          Loss -> todo
+        }
+        table
+        |> dict.upsert(match.home, fn(current) { todo })
+        |> dict.upsert(match.away, fn(current) { todo })
+      }
+
+      fn compare_rows(a: #(String, Stats), b: #(String, Stats)) -> order.Order {
+        int.compare(points(b.1), points(a.1))
+        |> order.break_tie(todo)
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: unknown-as-draw
+    mustFail: [skips_invalid_lines_test]
+    errorTag: treats_unknown_as_draw
+  - key: pad-start-team
+    mustFail: [format_row_test, typical_input_test]
+    errorTag: wrong_padding
+  - key: points-only-sort
+    mustFail: [many_teams_tied_sorted_by_name_test]
+    errorTag: ignores_tie_break
+  - key: loss-copy-paste
+    mustFail: [loss_credits_away_team_test]
+    errorTag: wrong_perspective

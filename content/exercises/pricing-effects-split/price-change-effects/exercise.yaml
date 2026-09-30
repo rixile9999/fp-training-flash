@@ -1,0 +1,82 @@
+kind: implement
+format: drill
+module: pricing
+title: 가격 변경의 효과를 값으로 돌려주기
+contextTags: [pricing, notifications]
+difficulty: 1500
+estimatedMinutes: 7
+tests:
+  - fn: drop_percent_test
+    name: 인하율은 내린 금액을 원래 가격으로 나눈 백분율이다
+    visibility: public
+    requirements: [R1]
+  - fn: drop_percent_increase_test
+    name: 가격이 오르면 인하율은 0이다
+    visibility: hidden
+    errorTag: allows_negative_result
+    requirements: [R1]
+  - fn: change_price_updates_product_test
+    name: 새 가격이 반영된 상품을 돌려준다
+    visibility: public
+    requirements: [R2]
+  - fn: change_price_small_drop_logs_only_test
+    name: 인하율이 20% 미만이면 기록만 남긴다
+    visibility: public
+    requirements: [R2]
+  - fn: change_price_notifies_watchers_test
+    name: 크게 내리면 기록 뒤에 관심 고객마다 알림을 만든다
+    visibility: public
+    errorTag: reverses_order
+    requirements: [R2]
+  - fn: change_price_threshold_test
+    name: 정확히 20% 내려도 알림을 만든다
+    visibility: hidden
+    errorTag: off_by_one
+    requirements: [R2]
+  - fn: change_price_watcher_order_test
+    name: 알림은 관심 고객 목록 순서를 따른다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [R2]
+requirements:
+  - id: R1
+    description: drop_percent는 순수한 계산만 한다
+  - id: R2
+    description: change_price는 효과를 실행하지 않고 효과 목록을 돌려준다
+hints:
+  - level: 1
+    kind: question
+    text: 기존 `update_price`가 "누구에게 어떤 알림을 보냈는지" 테스트에서 확인할 방법이 있나요? 알림을 보내는 대신 무엇을 돌려주면 될까요?
+  - level: 2
+    kind: concept
+    text: 효과를 바로 실행하지 않고 "무엇을 할지"를 나타내는 값(`Log`, `Notify`)의 목록으로 돌려주면, 계산은 순수 함수가 되고 실행은 바깥 함수가 맡습니다.
+  - level: 3
+    kind: approach
+    text: "`drop_percent`로 인하율을 구한 뒤, 기록 하나와 (조건이 맞으면) `list.map`으로 만든 알림 목록을 이어 붙이세요. 조건이 맞지 않으면 알림 목록은 빈 목록입니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn change_price(product, new_price, watchers) {
+        let percent = drop_percent(product.price, new_price)
+        let log = Log(todo)
+        let notices = case percent >= 20 {
+          True -> list.map(watchers, fn(customer) { todo })
+          False -> []
+        }
+        #(Product(..product, price: new_price), [log, ..notices])
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: threshold-strict
+    mustFail: [change_price_threshold_test]
+    errorTag: off_by_one
+  - key: no-clamp
+    mustFail: [drop_percent_increase_test]
+    errorTag: allows_negative_result
+  - key: fold-prepend
+    mustFail: [change_price_notifies_watchers_test, change_price_watcher_order_test]
+    errorTag: reverses_order

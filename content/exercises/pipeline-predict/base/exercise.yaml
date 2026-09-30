@@ -1,0 +1,36 @@
+kind: predict
+format: drill
+title: filter, map, fold 파이프라인의 결과 예측하기
+difficulty: 1100
+estimatedMinutes: 3
+predict:
+  code: |
+    import gleam/list
+
+    [1, 2, 3, 4, 5]
+    |> list.filter(fn(x) { x % 2 == 1 })
+    |> list.map(fn(x) { x * 10 })
+    |> list.fold(0, fn(acc, x) { acc + x })
+  acceptedAnswers: ["90"]
+hints:
+  - level: 1
+    kind: question
+    text: 파이프라인은 위에서 아래로 한 단계씩 값이 흘러갑니다. 첫 단계가 끝난 뒤 목록은 어떤 모양인가요?
+  - level: 2
+    kind: concept
+    text: "`list.filter`는 조건이 `True`인 원소만 남기고, `list.map`은 모든 원소를 바꾸고, `list.fold`는 목록을 값 하나로 접습니다."
+  - level: 3
+    kind: approach
+    text: 각 단계의 결과를 종이에 한 줄씩 적어 보세요. 중간 값을 적으면 다음 단계는 그 값에만 집중하면 됩니다.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      [1, 2, 3, 4, 5]
+      |> list.filter(...)  // [1, 3, 5]
+      |> list.map(...)     // todo
+      |> list.fold(...)    // todo
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.

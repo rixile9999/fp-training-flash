@@ -1,0 +1,87 @@
+kind: implement
+format: drill
+module: shelf_index
+title: 선반별 상품 코드를 코드별 위치로 옮기기
+contextTags: [inventory, data-migration]
+source:
+  kind: original
+difficulty: 1350
+estimatedMinutes: 6
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: single_code_test
+    name: 상품 코드를 대문자 키로 바꿔 선반 이름을 값으로 넣는다
+    visibility: public
+    requirements: [R1, R2]
+  - fn: several_shelves_test
+    name: 여러 선반의 모든 코드를 한 dict로 합친다
+    visibility: public
+    errorTag: keeps_only_first_item
+    requirements: [R1]
+  - fn: trims_spaces_test
+    name: 코드 앞뒤 공백을 없앤다
+    visibility: public
+    errorTag: skips_normalization
+    requirements: [R2]
+  - fn: skips_blank_codes_test
+    name: 공백뿐이거나 빈 코드는 건너뛴다
+    visibility: hidden
+    errorTag: keeps_blank_entries
+    requirements: [R3]
+  - fn: shelf_without_codes_adds_nothing_test
+    name: 코드가 없는 선반은 결과에 아무것도 더하지 않는다
+    visibility: hidden
+    errorTag: mishandles_empty_group
+    requirements: [R1]
+  - fn: empty_input_test
+    name: 선반이 하나도 없으면 빈 dict다
+    visibility: hidden
+    errorTag: ignores_empty_input
+  - fn: shelf_name_is_kept_as_is_test
+    name: 선반 이름은 공백과 대소문자를 바꾸지 않고 그대로 값으로 쓴다
+    visibility: hidden
+    errorTag: normalizes_wrong_field
+    requirements: [R2]
+requirements:
+  - id: R1
+    description: 코드마다 선반 이름 항목 하나
+  - id: R2
+    description: 코드는 앞뒤 공백 제거 후 대문자, 선반 이름은 그대로
+  - id: R3
+    description: 정리 후 빈 코드는 제외
+hints:
+  - level: 1
+    kind: question
+    text: "`\"   \"`는 빈 코드인가요? 빈 코드인지 판단하는 시점은 정리(공백 제거) 전인가요, 후인가요?"
+  - level: 2
+    kind: concept
+    text: "`string.trim`은 앞뒤 공백을, `string.uppercase`는 대소문자를 정리합니다. `dict.fold` 안에서 `list.fold`를 돌리면 선반마다 여러 코드를 넣을 수 있습니다."
+  - level: 3
+    kind: approach
+    text: 코드 하나를 정리하는 `normalize` 함수를 먼저 만들고, 정리한 결과가 빈 문자열이면 누적값을 그대로, 아니면 `dict.insert`로 추가하세요.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      dict.fold(shelves, dict.new(), fn(index, shelf, codes) {
+        list.fold(codes, index, fn(acc, raw) {
+          case normalize(raw) {
+            "" -> todo
+            code -> todo
+          }
+        })
+      })
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: no-trim
+    mustFail: [trims_spaces_test]
+    errorTag: skips_normalization
+  - key: blank-check-before-trim
+    mustFail: [skips_blank_codes_test]
+    errorTag: keeps_blank_entries
+  - key: normalizes-shelf-too
+    mustFail: [shelf_name_is_kept_as_is_test]
+    errorTag: normalizes_wrong_field

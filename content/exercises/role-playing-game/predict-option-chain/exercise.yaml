@@ -1,0 +1,50 @@
+kind: predict
+format: drill
+title: Option 연쇄 결과 예측하기
+difficulty: 1150
+estimatedMinutes: 3
+predict:
+  code: |
+    import gleam/option.{type Option, None, Some}
+
+    fn spell_power(mana: Option(Int)) -> Option(Int) {
+      mana
+      |> option.map(fn(m) { m * 2 })
+      |> option.then(fn(power) {
+        case power >= 10 {
+          True -> Some(power)
+          False -> None
+        }
+      })
+    }
+
+    pub fn main() {
+      let a = spell_power(Some(8)) |> option.unwrap(0)
+      let b = spell_power(Some(4)) |> option.unwrap(0)
+      let c = spell_power(None) |> option.unwrap(-1)
+      #(a, b, c)
+    }
+  acceptedAnswers:
+    - "#(16, 0, -1)"
+    - "#(16,0,-1)"
+hints:
+  - level: 1
+    kind: question
+    text: "`spell_power(None)`에서 `option.map`에 넘긴 함수는 실행될까요?"
+  - level: 2
+    kind: concept
+    text: "`option.map`은 `Some` 안의 값만 바꾸고 `None`은 그대로 둡니다. `option.then`은 `Some(x)`일 때 함수를 부르고, 그 함수가 돌려준 `Option`을 그대로 결과로 씁니다. 그래서 `Some`이 `None`으로 바뀔 수 있습니다."
+  - level: 3
+    kind: approach
+    text: "`a`, `b`, `c`를 하나씩 따라가세요. 각 단계에서 값이 `Some(...)`인지 `None`인지 적어 두고, 마지막 `unwrap`에서 어떤 기본값이 쓰이는지 확인합니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      // a: Some(8) -> map -> Some(16) -> then(16 >= 10) -> Some(16) -> unwrap -> 16
+      // b: Some(4) -> map -> Some(8)  -> then(8 >= 10)  -> ?        -> unwrap -> ?
+      // c: None    -> map -> ?        -> then           -> ?        -> unwrap -> ?
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.

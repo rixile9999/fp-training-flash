@@ -1,0 +1,70 @@
+kind: fix
+format: drill
+module: exciting
+title: 신나는 언어 목록 판별 버그 고치기
+difficulty: 1150
+estimatedMinutes: 4
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: single_gleam_is_exciting_test
+    name: Gleam 하나만 있는 목록은 신나는 목록이다
+    visibility: public
+    errorTag: misses_single_element_case
+    requirements: [R1]
+  - fn: gleam_second_of_three_is_exciting_test
+    name: 세 개짜리 목록의 두 번째가 Gleam이면 신나는 목록이다
+    visibility: public
+    errorTag: off_by_one
+    requirements: [R2]
+  - fn: gleam_second_of_four_is_not_exciting_test
+    name: 네 개짜리 목록의 두 번째가 Gleam이면 신나는 목록이 아니다
+    visibility: public
+    errorTag: ignores_length_condition
+    requirements: [R2]
+  - fn: empty_list_is_not_exciting_test
+    name: 빈 목록은 신나는 목록이 아니다
+    visibility: hidden
+    errorTag: ignores_empty_input
+  - fn: single_other_language_is_not_exciting_test
+    name: Gleam이 아닌 언어 하나만 있으면 신나는 목록이 아니다
+    visibility: hidden
+    requirements: [R1]
+  - fn: gleam_first_of_five_is_exciting_test
+    name: 첫 번째가 Gleam이면 다섯 개짜리 목록도 신나는 목록이다
+    visibility: hidden
+    errorTag: applies_length_limit_to_first
+requirements:
+  - id: R1
+    description: 길이 1인 목록도 첫 번째 원소 규칙을 따름
+  - id: R2
+    description: 두 번째 원소 규칙은 길이 2 또는 3에서만 적용
+hints:
+  - level: 1
+    kind: question
+    text: "`[\"Gleam\"]`과 `[\"Elm\", \"Gleam\", \"C#\", \"Scheme\"]`을 넣으면 지금 코드는 무엇을 반환하나요? 각각 어느 분기로 가나요?"
+  - level: 2
+    kind: concept
+    text: "`[first, second, ..]`는 길이가 2 이상인 모든 목록에 맞습니다. 그 분기 안의 `list.length(languages) >= 2`는 항상 참이라 아무것도 걸러 내지 못합니다."
+  - level: 3
+    kind: approach
+    text: 길이 조건을 불리언 식으로 검사하기보다, 참이 되는 모양을 `[_, "Gleam"]`처럼 길이가 고정된 패턴으로 적어 보세요.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      case languages {
+        ["Gleam", ..] -> True
+        [_, "Gleam"] | todo -> True
+        _ -> False
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: single-fixed-only
+    mustFail: [gleam_second_of_four_is_not_exciting_test]
+    errorTag: ignores_length_condition
+  - key: length-off-by-one
+    mustFail: [gleam_second_of_three_is_exciting_test]
+    errorTag: off_by_one

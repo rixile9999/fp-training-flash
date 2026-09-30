@@ -1,0 +1,84 @@
+kind: implement
+format: drill
+module: high_school_sweetheart
+title: 여러 단어 이름의 이니셜과 모노그램
+difficulty: 1350
+estimatedMinutes: 6
+tests:
+  - fn: name_parts_test
+    name: 이름을 공백 기준으로 단어 목록으로 나눈다
+    visibility: public
+    requirements: [R1]
+  - fn: name_parts_extra_spaces_test
+    name: 연속 공백과 앞뒤 공백은 빈 단어를 만들지 않는다
+    visibility: hidden
+    errorTag: keeps_empty_segments
+    requirements: [R1]
+  - fn: initials_three_parts_test
+    name: 세 단어 이름은 이니셜 세 개가 된다
+    visibility: public
+    errorTag: assumes_two_parts
+    requirements: [R2]
+  - fn: initials_extra_spaces_test
+    name: 공백이 여러 개여도 이니셜 사이는 공백 하나다
+    visibility: hidden
+    errorTag: keeps_empty_segments
+    requirements: [R2]
+  - fn: initials_blank_test
+    name: 공백뿐인 이름의 이니셜은 빈 문자열이다
+    visibility: hidden
+    errorTag: ignores_empty_input
+    requirements: [R2]
+  - fn: monogram_test
+    name: 모노그램은 대문자 첫 글자를 붙여 쓴다
+    visibility: public
+    requirements: [R3]
+  - fn: monogram_single_name_test
+    name: 한 단어 이름의 모노그램은 한 글자다
+    visibility: hidden
+    errorTag: assumes_two_parts
+    requirements: [R3]
+requirements:
+  - id: R1
+    description: name_parts는 빈 단어 없이 순서대로 단어를 돌려준다
+  - id: R2
+    description: initials는 name_parts와 initial을 재사용한다
+  - id: R3
+    description: monogram은 name_parts를 재사용한다
+hints:
+  - level: 1
+    kind: question
+    text: "`\"  mary   jane \"`을 공백 하나로 `split`하면 어떤 목록이 나올까요? 그중 어떤 원소가 문제일까요?"
+  - level: 2
+    kind: concept
+    text: "`list.filter`로 필요 없는 원소를 걸러 내고, `list.map`으로 남은 원소를 하나씩 바꿀 수 있습니다. 목록 길이를 가정하는 패턴 매칭은 필요 없습니다."
+  - level: 3
+    kind: approach
+    text: 빈 단어를 걸러 내는 일은 `name_parts` 한 곳에서만 하세요. `initials`와 `monogram`은 `name_parts`의 결과를 받아 각 단어를 바꾸고 합치기만 하면 됩니다.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn name_parts(full_name: String) -> List(String) {
+        full_name
+        |> string.split(" ")
+        |> list.filter(todo)
+      }
+
+      pub fn monogram(full_name: String) -> String {
+        full_name
+        |> name_parts
+        |> list.map(todo)
+        |> string.concat
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: split-no-filter
+    mustFail: [name_parts_extra_spaces_test, initials_extra_spaces_test, initials_blank_test]
+    errorTag: keeps_empty_segments
+  - key: assumes-two-parts
+    mustFail: [initials_three_parts_test, monogram_test, monogram_single_name_test]
+    errorTag: assumes_two_parts

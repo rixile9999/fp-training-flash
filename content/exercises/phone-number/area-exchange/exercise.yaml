@@ -1,0 +1,96 @@
+kind: implement
+format: drill
+module: phone_number
+title: 지역 번호와 교환 번호 검사 단계 추가하기
+difficulty: 1550
+estimatedMinutes: 6
+tests:
+  - fn: area_code_zero_test
+    name: 지역 번호가 0으로 시작하면 InvalidAreaCode("0")을 반환한다
+    visibility: public
+    requirements: [R1]
+  - fn: area_code_one_test
+    name: 지역 번호가 1로 시작해도 InvalidAreaCode("1")을 반환한다
+    visibility: hidden
+    errorTag: missing_range_check
+    requirements: [R1]
+  - fn: exchange_code_one_test
+    name: 교환 번호(4번째 숫자)가 1로 시작하면 InvalidExchangeCode("1")을 반환한다
+    visibility: public
+    errorTag: off_by_one
+    requirements: [R2]
+  - fn: clean_valid_test
+    name: clean은 정리와 두 검사를 모두 통과한 10자리 번호를 반환한다
+    visibility: public
+    requirements: [R3]
+  - fn: exchange_code_zero_test
+    name: 교환 번호가 0으로 시작해도 InvalidExchangeCode("0")을 반환한다
+    visibility: hidden
+    errorTag: missing_range_check
+    requirements: [R2]
+  - fn: area_after_country_code_test
+    name: 국가 번호 1은 지역 번호 검사 전에 제거된다
+    visibility: hidden
+    errorTag: checks_before_normalizing
+    requirements: [R3]
+  - fn: area_error_before_exchange_error_test
+    name: 지역 번호와 교환 번호가 모두 잘못되면 지역 번호 오류를 반환한다
+    visibility: hidden
+    errorTag: wrong_check_order
+    requirements: [R3]
+  - fn: normalize_error_first_test
+    name: 정리 단계의 오류가 지역 번호 오류보다 먼저다
+    visibility: hidden
+    errorTag: checks_before_normalizing
+    requirements: [R3]
+requirements:
+  - id: R1
+    description: 지역 번호 첫 숫자 검사
+  - id: R2
+    description: 교환 번호 첫 숫자 검사
+  - id: R3
+    description: 정리, 지역 번호, 교환 번호 순서로 검사
+hints:
+  - level: 1
+    kind: question
+    text: "`check_area_code`와 `check_exchange_code`는 어떤 모양의 입력을 받는다고 가정해도 될까요? 그 가정이 성립하려면 `clean`에서 무엇을 먼저 해야 하나요?"
+  - level: 2
+    kind: concept
+    text: "`string.slice(s, i, 1)`은 위치 `i`(0부터)의 글자 하나를 돌려줍니다. `result.try(r, f)`는 `r`이 `Ok(x)`일 때만 `f(x)`를 부르므로, 같은 모양 `fn(String) -> Result(String, PhoneError)`의 검사들을 파이프로 이을 수 있습니다."
+  - level: 3
+    kind: approach
+    text: "두 검사 함수는 번호의 특정 위치 숫자를 꺼내 `\"0\"` 또는 `\"1\"`이면 오류, 아니면 번호를 그대로 `Ok`로 돌려줍니다. `clean`은 `normalize`의 결과에 두 검사를 차례로 `result.try`로 붙입니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn check_area_code(number: String) -> Result(String, PhoneError) {
+        let first = string.slice(number, 0, 1)
+        case first {
+          "0" | "1" -> todo
+          _ -> Ok(number)
+        }
+      }
+
+      pub fn clean(input: String) -> Result(String, PhoneError) {
+        normalize(input)
+        |> result.try(todo)
+        |> result.try(todo)
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: exchange-index-off
+    mustFail: [exchange_code_one_test, exchange_code_zero_test]
+    errorTag: off_by_one
+  - key: raw-before-normalize
+    mustFail: [area_after_country_code_test, normalize_error_first_test]
+    errorTag: checks_before_normalizing
+  - key: exchange-first
+    mustFail: [area_error_before_exchange_error_test]
+    errorTag: wrong_check_order
+  - key: partial-digit-check
+    mustFail: [area_code_one_test, exchange_code_zero_test]
+    errorTag: missing_range_check

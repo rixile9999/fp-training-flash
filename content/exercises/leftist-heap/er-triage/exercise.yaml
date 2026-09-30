@@ -1,0 +1,90 @@
+kind: implement
+format: drill
+module: triage
+title: 응급실 진료 순서를 힙으로 정하기
+difficulty: 1600
+estimatedMinutes: 7
+contextTags: [healthcare]
+conceptNotes: [gleam-custom-types, gleam-case-patterns, gleam-sorting-order]
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: higher_severity_goes_first_test
+    name: 중증도가 높은 환자가 먼저다
+    visibility: public
+    errorTag: wrong_sort_direction
+    requirements: [R1]
+  - fn: earlier_arrival_breaks_tie_test
+    name: 중증도가 같으면 먼저 온 환자가 먼저다
+    visibility: public
+    errorTag: ignores_tie_break
+    requirements: [R1]
+  - fn: treatment_order_by_severity_test
+    name: 진료 순서는 중증도가 높은 순이다
+    visibility: public
+    errorTag: wrong_sort_direction
+    requirements: [R2]
+  - fn: empty_waiting_room_test
+    name: 대기 환자가 없으면 빈 목록을 돌려준다
+    visibility: hidden
+    errorTag: ignores_empty_input
+    requirements: [R2]
+  - fn: same_severity_in_arrival_order_test
+    name: 중증도가 모두 같으면 도착 순서대로 진료한다
+    visibility: hidden
+    errorTag: ignores_tie_break
+    requirements: [R1, R2]
+  - fn: mixed_severity_and_arrival_test
+    name: 중증도와 도착 순서가 섞여 있어도 규칙대로 정렬된다
+    visibility: hidden
+    errorTag: ignores_tie_break
+    requirements: [R1, R2]
+  - fn: merge_two_waiting_rooms_test
+    name: 두 대기열을 merge해도 가장 급한 환자가 맨 앞에 온다
+    visibility: hidden
+    errorTag: ignores_tie_break
+    requirements: [R3]
+requirements:
+  - id: R1
+    description: 중증도 내림차순, 같으면 도착 시각 오름차순
+  - id: R2
+    description: treatment_order는 모든 환자의 이름을 진료 순서대로 돌려준다
+  - id: R3
+    description: merge는 goes_first 기준의 레프티스트 힙을 만든다
+hints:
+  - level: 1
+    kind: question
+    text: 두 환자 중 누가 먼저인지 정하는 규칙을 한 함수로 떼어 내면, 힙의 merge는 그 함수에 무엇을 물어보면 될까요?
+  - level: 2
+    kind: concept
+    text: 레프티스트 힙의 merge는 "먼저 나올 루트"를 고른 뒤 그 루트의 오른쪽 자식과 다른 힙을 재귀로 합칩니다. 비교 기준만 `<=`에서 `goes_first`로 바뀌면 나머지 구조는 정수 힙과 같습니다.
+  - level: 3
+    kind: approach
+    text: "`goes_first`는 중증도가 다르면 중증도로, 같으면 도착 시각으로 비교합니다. `merge`는 `goes_first(p, q)`가 참이면 `make(p, left_a, merge(right_a, b))`, 아니면 인자를 바꿔 다시 부릅니다. `treatment_order`는 `add`로 모두 넣은 뒤 `next`가 `Error`를 줄 때까지 꺼냅니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn merge(a: Queue, b: Queue) -> Queue {
+        case a, b {
+          Empty, queue | queue, Empty -> queue
+          Node(patient: p, left: left_a, right: right_a, ..), Node(patient: q, ..) ->
+            case goes_first(p, q) {
+              True -> todo
+              False -> todo
+            }
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: low-severity-first
+    mustFail: [higher_severity_goes_first_test, treatment_order_by_severity_test]
+    errorTag: wrong_sort_direction
+  - key: ignores-arrival
+    mustFail: [earlier_arrival_breaks_tie_test, same_severity_in_arrival_order_test]
+    errorTag: ignores_tie_break
+  - key: merge-by-severity-only
+    mustFail: [same_severity_in_arrival_order_test, merge_two_waiting_rooms_test]
+    errorTag: ignores_tie_break

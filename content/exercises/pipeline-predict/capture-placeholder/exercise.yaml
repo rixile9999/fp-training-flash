@@ -1,0 +1,35 @@
+kind: predict
+format: drill
+title: 함수 캡처의 자리 표시자 예측하기
+difficulty: 1350
+estimatedMinutes: 4
+predict:
+  code: |
+    import gleam/int
+    import gleam/list
+
+    [1, 2, 3]
+    |> list.map(int.subtract(10, _))
+    |> list.map(int.subtract(_, 1))
+  acceptedAnswers: ["[8, 7, 6]", "[8,7,6]"]
+hints:
+  - level: 1
+    kind: question
+    text: "`int.subtract(10, _)`에서 목록의 원소는 `_` 자리에 들어갑니다. 그러면 원소 2에 대해 계산되는 식은 무엇인가요?"
+  - level: 2
+    kind: concept
+    text: "함수 캡처 `f(a, _)`는 `fn(x) { f(a, x) }`의 줄임말입니다. `int.subtract(a, b)`는 `a - b`입니다."
+  - level: 3
+    kind: approach
+    text: 두 캡처를 각각 `fn(x) { ... }` 형태의 익명 함수로 풀어 쓴 뒤 원소마다 계산해 보세요.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      [1, 2, 3]
+      |> list.map(fn(x) { 10 - x })  // todo
+      |> list.map(fn(x) { todo })
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.

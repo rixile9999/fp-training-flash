@@ -1,0 +1,22 @@
+title: 로그 레벨별로 세기
+primarySkill: data-transformation
+secondarySkills: []
+contextTags: [logging]
+source:
+  kind: original
+conceptNotes: [gleam-dict-set, gleam-strings, gleam-list-transform]
+theoryTopics: [fold-universality]
+rubric:
+  - id: R-02
+    title: 파이프라인이 의도를 드러냄
+    description: 한 줄을 해석하는 일과 여러 줄을 접어 모으는 일이 나뉘어 읽힌다.
+  - id: R-05
+    title: 계산 로직 분리
+    description: 한 줄에서 레벨을 뽑는 해석 로직을 이름 있는 작은 함수로 분리하면 따로 검증할 수 있다.
+  - id: R-09
+    title: let assert와 panic을 쓰지 않음
+    description: 형식에 맞지 않는 줄은 Result로 표현해 건너뛴다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "\\blet assert\\b|\\bpanic\\b"
+      message: let assert 또는 panic을 사용했습니다.

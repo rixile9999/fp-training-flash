@@ -1,0 +1,104 @@
+kind: implement
+format: drill
+module: edit_distance
+difficulty: 1550
+estimatedMinutes: 7
+limits: { timeMs: 6000, memoryMb: 256 }
+tests:
+  - fn: identical_test
+    name: 같은 문자열의 거리는 0이다
+    visibility: public
+    requirements: [ R1 ]
+  - fn: empty_source_test
+    name: 빈 문자열에서 만들려면 글자 수만큼 삽입한다
+    visibility: public
+    errorTag: wrong_base_case
+    requirements: [ R2 ]
+  - fn: one_substitution_test
+    name: 한 글자만 다르면 거리는 1이다
+    visibility: public
+    errorTag: missing_substitution
+    requirements: [ R1 ]
+  - fn: mixed_edits_test
+    name: 여러 글자가 다르면 가장 적은 편집 횟수를 센다
+    visibility: public
+    requirements: [ R1 ]
+  - fn: empty_target_test
+    name: 빈 문자열로 만들려면 글자 수만큼 삭제한다
+    visibility: hidden
+    errorTag: wrong_base_case
+    requirements: [ R2 ]
+  - fn: substitution_counts_once_test
+    name: 글자 바꾸기는 삭제와 삽입 두 번이 아니라 한 번으로 센다
+    visibility: hidden
+    errorTag: missing_substitution
+    requirements: [ R1 ]
+  - fn: korean_graphemes_test
+    name: 한글도 한 글자를 한 번의 편집으로 센다
+    visibility: hidden
+    errorTag: counts_bytes_not_graphemes
+    requirements: [ R3 ]
+  - fn: long_strings_test
+    name: 300글자 문자열끼리도 시간 제한 안에 계산한다
+    visibility: hidden
+    errorTag: exponential_recursion
+    requirements: [ R4 ]
+requirements:
+  - id: R1
+    description: 삽입, 삭제, 바꾸기 각 1회 비용 1의 최소 횟수
+  - id: R2
+    description: 한쪽이 비면 다른 쪽 글자 수
+  - id: R3
+    description: 글자(grapheme) 단위
+  - id: R4
+    description: 두 문자열 길이의 곱에 비례하는 시간
+hints:
+  - level: 1
+    kind: question
+    text: "`from`의 마지막 글자를 `to`의 마지막 글자로 맞추는 방법은 몇 가지인가요? 각 방법을 쓰고 나면 남는 문제는 어떤 두
+      문자열 사이의 거리인가요?"
+  - level: 2
+    kind: concept
+    text: "부분 문제는 \"`from`의 앞 i글자를 `to`의 앞 j글자로 바꾸는 최소 횟수\" d(i, j)입니다. d(i, j) =
+      min(d(i-1, j) + 1, d(i, j-1) + 1, d(i-1, j-1) + (두 글자가 같으면 0, 다르면 1)).
+      d(0, j) = j, d(i, 0) = i입니다."
+  - level: 3
+    kind: approach
+    text: "d(i, ·)의 한 행은 바로 윗행 d(i-1, ·)만 있으면 계산됩니다. 첫 행 `[0, 1, ..., m]`에서 시작해
+      `from`의 글자마다 다음 행을 만드는 fold를 쓰고, 마지막 행의 마지막 값을 답으로 하세요."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      // previous: 윗행 [d(i-1, 0), d(i-1, 1), ...], left: 지금 행에서 방금 계산한 값
+      fn fill(previous: List(Int), target: List(String), char: String, left: Int, acc: List(Int)) -> List(Int) {
+        case previous, target {
+          [diagonal, above, ..rest], [t, ..ts] -> {
+            let value = todo
+            fill([above, ..rest], ts, char, value, [value, ..acc])
+          }
+          _, _ -> list.reverse(acc)
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: plain-recursion
+    mustFail: [ long_strings_test ]
+    errorTag: exponential_recursion
+  - key: insert-delete-only
+    mustFail: [ one_substitution_test, substitution_counts_once_test ]
+    errorTag: missing_substitution
+  - key: zero-first-row
+    mustFail: [ empty_source_test ]
+    errorTag: wrong_base_case
+performance:
+  module: edit_distance_perf
+  sizes: [ 20, 80, 320 ]
+  maxCostRatio: 10
+  referenceCost:
+    - 2683
+    - 35147
+    - 537094

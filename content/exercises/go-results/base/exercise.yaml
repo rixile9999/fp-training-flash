@@ -1,0 +1,75 @@
+kind: implement
+format: drill
+module: go
+difficulty: 1300
+estimatedMinutes: 6
+tests:
+  - fn: change_player_if_all_rules_pass_test
+    name: 모든 규칙을 통과하면 차례가 상대에게 넘어간다
+    visibility: public
+    requirements: [R1]
+  - fn: first_rule_failure_records_error_test
+    name: 첫 규칙이 실패하면 원래 게임에 오류만 기록하고 차례는 그대로다
+    visibility: public
+    errorTag: changes_state_on_error
+    requirements: [R2]
+  - fn: keep_capture_changes_test
+    name: 모든 규칙을 통과하면 포획 규칙이 바꾼 내용이 남는다
+    visibility: public
+    requirements: [R1]
+  - fn: last_rule_failure_records_error_test
+    name: 마지막 규칙이 실패해도 원래 게임에 오류만 기록하고 차례는 그대로다
+    visibility: hidden
+    errorTag: changes_state_on_error
+    requirements: [R2]
+  - fn: discard_capture_changes_on_later_failure_test
+    name: 포획 규칙 뒤의 규칙이 실패하면 포획 변경을 버린다
+    visibility: hidden
+    errorTag: keeps_partial_changes_on_error
+    requirements: [R2]
+  - fn: first_error_wins_test
+    name: 여러 규칙이 실패하면 가장 먼저 실패한 규칙의 오류를 기록한다
+    visibility: hidden
+    errorTag: reports_last_error
+    requirements: [R3]
+requirements:
+  - id: R1
+    description: 모두 통과하면 변경을 유지하고 차례를 넘김
+  - id: R2
+    description: 실패하면 원래 게임에 오류만 기록
+  - id: R3
+    description: 첫 오류에서 멈춤
+hints:
+  - level: 1
+    kind: question
+    text: 규칙 하나가 실패하면 그 뒤의 규칙은 실행할 필요가 있을까요? 실패했을 때 돌려줄 게임은 어느 시점의 게임인가요?
+  - level: 2
+    kind: concept
+    text: "`result.try(r, f)`는 `r`이 `Ok(x)`일 때만 `f(x)`를 부르고, `Error`면 그대로 통과시킵니다. 실패하지 않는 함수를 끼울 때는 `result.map`을 씁니다."
+  - level: 3
+    kind: approach
+    text: "먼저 네 규칙을 파이프라인으로 이어 `Result(Game, String)` 하나를 만드세요. 그다음 그 결과를 `case`로 나눠 `Ok`면 차례를 바꾸고, `Error`면 처음 받은 `game`에 오류를 기록합니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      let outcome =
+        game
+        |> rule1
+        |> result.map(rule2)
+        |> todo
+      case outcome {
+        Ok(updated) -> todo
+        Error(message) -> Game(..game, error: message)
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: keep-partial
+    mustFail: [discard_capture_changes_on_later_failure_test]
+    errorTag: keeps_partial_changes_on_error
+  - key: switch-on-error
+    mustFail: [first_rule_failure_records_error_test, last_rule_failure_records_error_test]
+    errorTag: changes_state_on_error

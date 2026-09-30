@@ -1,0 +1,95 @@
+kind: implement
+format: drill
+module: merge_sort
+title: 같은 우선순위의 순서를 지키는 정렬
+contextTags: [ shipping ]
+difficulty: 1650
+estimatedMinutes: 7
+limits: { timeMs: 6000, memoryMb: 256 }
+conceptNotes: [ gleam-recursion, gleam-sorting-order, gleam-anonymous-functions ]
+tests:
+  - fn: sorts_by_priority_test
+    name: 비교 함수 기준으로 오름차순 정렬한다
+    visibility: public
+    requirements: [ R1 ]
+  - fn: keeps_input_order_on_ties_test
+    name: 우선순위가 같은 배송은 원래 순서를 유지한다
+    visibility: public
+    errorTag: unstable_sort
+    requirements: [ R2 ]
+  - fn: empty_list_test
+    name: 빈 목록은 빈 목록을 반환한다
+    visibility: hidden
+    errorTag: ignores_empty_input
+    requirements: [ R1 ]
+  - fn: follows_compare_function_test
+    name: 내림차순 비교 함수를 주면 내림차순으로 정렬한다
+    visibility: hidden
+    errorTag: ignores_compare_function
+    requirements: [ R1 ]
+  - fn: many_ties_stay_in_order_test
+    name: 같은 우선순위가 여러 그룹이어도 그룹마다 원래 순서를 유지한다
+    visibility: hidden
+    errorTag: unstable_sort
+    requirements: [ R2 ]
+  - fn: sort_large_list_test
+    name: 원소 15만 개짜리 목록도 시간 제한 안에 정렬한다
+    visibility: hidden
+    errorTag: quadratic_sort
+    requirements: [ R3 ]
+requirements:
+  - id: R1
+    description: compare 기준 오름차순
+  - id: R2
+    description: 안정 정렬 (compare가 Eq면 원래 순서 유지)
+  - id: R3
+    description: O(n log n)
+hints:
+  - level: 1
+    kind: question
+    text: 합치기 단계에서 두 머리 원소의 비교 결과가 `Eq`일 때, 어느 쪽 원소가 원래 목록에서 더 앞에 있었나요?
+  - level: 2
+    kind: concept
+    text: "안정 정렬은 비교 결과가 같은 원소들의 원래 순서를 유지합니다. 목록을 앞 절반과 뒤 절반으로 나누면 왼쪽의 원소는 모두 오른쪽
+      원소보다 원래 앞에 있었습니다."
+  - level: 3
+    kind: approach
+    text: "앞뒤 절반으로 나누고(`list.split`), 각각 재귀로 정렬한 뒤 합치세요. 합치기에서 `compare(x, y)`가 `Eq`인 경우를
+      `Lt`와 `Gt` 중 어느 쪽과 같이 처리해야 원래 순서가 유지되는지 정하세요."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      fn merge(left: List(a), right: List(a), compare: fn(a, a) -> Order) -> List(a) {
+        case left, right {
+          [], _ -> right
+          _, [] -> left
+          [x, ..xs], [y, ..ys] ->
+            case compare(x, y) {
+              order.Gt -> todo
+              order.Lt | order.Eq -> todo
+            }
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: prefers-right-on-tie
+    mustFail: [ keeps_input_order_on_ties_test, many_ties_stay_in_order_test ]
+    errorTag: unstable_sort
+  - key: alternating-split
+    mustFail: [ many_ties_stay_in_order_test ]
+    errorTag: unstable_sort
+  - key: insertion-sort-by
+    mustFail: [ sort_large_list_test ]
+    errorTag: quadratic_sort
+performance:
+  module: merge_sort_perf
+  sizes: [ 1000, 4000, 16000 ]
+  maxCostRatio: 5
+  referenceCost:
+    - 51751
+    - 245116
+    - 1132338

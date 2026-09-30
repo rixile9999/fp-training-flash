@@ -1,0 +1,85 @@
+kind: implement
+format: drill
+module: config
+title: 없는 설정과 잘못된 설정 구분하기
+difficulty: 1350
+estimatedMinutes: 5
+tests:
+  - fn: get_int_or_reads_value_test
+    name: get_int_or는 있는 값을 정수로 읽는다
+    visibility: public
+    requirements: [R2]
+  - fn: get_int_or_uses_default_when_missing_test
+    name: get_int_or는 키가 없으면 기본값을 쓴다
+    visibility: public
+    requirements: [R2]
+  - fn: get_optional_int_missing_is_none_test
+    name: get_optional_int는 키가 없으면 Ok(None)이다
+    visibility: public
+    requirements: [R1]
+  - fn: get_optional_int_present_is_some_test
+    name: get_optional_int는 있는 값을 Ok(Some(정수))로 반환한다
+    visibility: public
+    requirements: [R1]
+  - fn: get_int_or_invalid_is_error_test
+    name: get_int_or는 잘못된 값을 기본값으로 바꾸지 않고 NotAnInt를 반환한다
+    visibility: hidden
+    errorTag: swallows_error_with_default
+    requirements: [R3]
+  - fn: get_optional_int_invalid_is_error_test
+    name: get_optional_int는 잘못된 값을 None으로 바꾸지 않고 NotAnInt를 반환한다
+    visibility: hidden
+    errorTag: swallows_error_with_default
+    requirements: [R3]
+  - fn: empty_value_is_not_missing_test
+    name: 값이 빈 문자열이면 없는 키가 아니라 NotAnInt이다
+    visibility: hidden
+    errorTag: treats_empty_as_missing
+    requirements: [R3]
+requirements:
+  - id: R1
+    description: 없는 키는 Ok(None), 있는 정수는 Ok(Some)
+  - id: R2
+    description: 없는 키에만 기본값을 사용
+  - id: R3
+    description: 키가 있는데 정수가 아니면 항상 NotAnInt
+hints:
+  - level: 1
+    kind: question
+    text: "`workers` 설정이 아예 없을 때와 `\"many\"`로 적혀 있을 때, 운영자에게 같은 결과를 보여 줘도 될까요?"
+  - level: 2
+    kind: concept
+    text: "`Result(Option(Int), e)`는 세 경우를 구분합니다. `Ok(Some(n))`은 값이 있음, `Ok(None)`은 값이 없음(정상), `Error(e)`는 값이 잘못됨입니다. `option.unwrap(opt, 기본값)`은 `None`일 때만 기본값을 씁니다."
+  - level: 3
+    kind: approach
+    text: "`get_optional_int`에서 `dict.get`의 결과를 `case`로 나눠 없는 키만 `Ok(None)`으로 보내세요. `get_int_or`는 `get_optional_int`를 호출하고 `Ok` 안의 `Option`에만 기본값을 적용하면 됩니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      case dict.get(config, key) {
+        Error(Nil) -> todo
+        Ok(value) ->
+          case int.parse(value) {
+            Ok(number) -> todo
+            Error(Nil) -> todo
+          }
+      }
+
+      // get_int_or
+      get_optional_int(config, key)
+      |> result.map(todo)
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: unwrap-everything
+    mustFail: [get_int_or_invalid_is_error_test, empty_value_is_not_missing_test]
+    errorTag: swallows_error_with_default
+  - key: from-result
+    mustFail: [get_optional_int_invalid_is_error_test, get_int_or_invalid_is_error_test]
+    errorTag: swallows_error_with_default
+  - key: empty-as-missing
+    mustFail: [empty_value_is_not_missing_test]
+    errorTag: treats_empty_as_missing

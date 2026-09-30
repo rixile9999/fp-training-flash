@@ -1,0 +1,26 @@
+# Family-level defaults; each variant's exercise.yaml may override any of these.
+title: 배우고 싶은 언어 목록 다루기
+primarySkill: data-transformation
+secondarySkills: []
+contextTags: [learning-plan]
+source:
+  kind: exercism
+  license: "MIT, Copyright (c) 2021 Exercism"
+  url: https://github.com/exercism/gleam/tree/main/exercises/concept/tracks-on-tracks-on-tracks
+  upstream: "exercism/gleam exercises/concept/tracks-on-tracks-on-tracks@34db02e"
+conceptNotes: [gleam-list-transform, gleam-case-patterns]
+theoryTopics: [structural-recursion-induction, algebraic-data-types]
+rubric:
+  - id: R-01
+    title: 목록 패턴으로 모양을 드러냄
+    description: 목록의 앞부분과 길이 조건은 `[first, ..rest]`, `[_, x]` 같은 패턴으로 직접 표현하면 조건이 한눈에 보인다.
+  - id: R-03
+    title: 표준 함수 재사용
+    description: 길이 세기, 뒤집기처럼 표준 라이브러리에 있는 연산은 직접 다시 만들지 않고 `list` 모듈 함수를 쓴다.
+  - id: R-09
+    title: let assert와 panic을 쓰지 않음
+    description: 실패 가능성은 타입으로 표현한다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "\\blet assert\\b|\\bpanic\\b"
+      message: let assert 또는 panic을 사용했습니다.

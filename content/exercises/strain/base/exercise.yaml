@@ -1,0 +1,82 @@
+kind: implement
+format: drill
+module: strain
+difficulty: 1200
+estimatedMinutes: 6
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: keep_on_empty_list_test
+    name: 빈 목록에서 keep하면 빈 목록이다
+    visibility: public
+    requirements: [R1]
+  - fn: keeps_odd_numbers_test
+    name: keep은 조건이 참인 원소만 남긴다
+    visibility: public
+    errorTag: reverses_order
+    requirements: [R1, R3]
+  - fn: discards_odd_numbers_test
+    name: discard는 조건이 참인 원소를 버린다
+    visibility: public
+    errorTag: keeps_instead_of_discards
+    requirements: [R2]
+  - fn: keeps_words_starting_with_z_test
+    name: 남긴 문자열이 원래 순서를 유지한다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [R3]
+  - fn: keeps_nothing_test
+    name: 조건이 항상 거짓이면 keep 결과는 빈 목록이다
+    visibility: hidden
+    requirements: [R1]
+  - fn: discards_nothing_test
+    name: 조건이 항상 거짓이면 discard는 모두 남긴다
+    visibility: hidden
+    errorTag: keeps_instead_of_discards
+    requirements: [R2, R3]
+  - fn: discards_lists_containing_five_test
+    name: 목록의 목록에서도 discard가 순서를 유지한다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [R2, R3]
+requirements:
+  - id: R1
+    description: keep은 조건이 참인 원소만 남김
+  - id: R2
+    description: discard는 조건이 참인 원소를 버림
+  - id: R3
+    description: 남은 원소의 원래 순서 유지
+hints:
+  - level: 1
+    kind: question
+    text: "`keep`과 `discard`는 무엇이 다른가요? 한 함수를 다른 함수로 표현할 수 있을까요?"
+  - level: 2
+    kind: concept
+    text: 목록을 `[]`와 `[first, ..rest]`로 나눠 재귀하되, `first`를 결과에 넣을지 말지는 조건 함수의 결과로 정합니다. 함수를 받아 새 함수를 만드는 것도 가능합니다.
+  - level: 3
+    kind: approach
+    text: "`keep`을 재귀로 먼저 완성하고, `discard`는 조건을 뒤집은 익명 함수를 `keep`에 넘기세요. 누적자를 쓴다면 마지막에 순서를 되돌려야 합니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn keep(items: List(t), predicate: fn(t) -> Bool) -> List(t) {
+        case items {
+          [] -> []
+          [first, ..rest] ->
+            case predicate(first) {
+              True -> todo
+              False -> keep(rest, predicate)
+            }
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: accumulator-no-reverse
+    mustFail: [keeps_odd_numbers_test, keeps_words_starting_with_z_test]
+    errorTag: reverses_order
+  - key: discard-not-negated
+    mustFail: [discards_odd_numbers_test, discards_nothing_test]
+    errorTag: keeps_instead_of_discards

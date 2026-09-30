@@ -1,0 +1,88 @@
+kind: implement
+format: drill
+module: isbn_verifier
+title: ISBN이 틀린 이유 알려 주기
+difficulty: 1550
+estimatedMinutes: 7
+tests:
+  - fn: valid_returns_values_test
+    name: 올바른 ISBN은 글자 값 목록을 Ok로 반환하고 X는 10이다
+    visibility: public
+    requirements: [R4]
+  - fn: wrong_length_test
+    name: 하이픈을 뺀 글자 수가 10이 아니면 그 글자 수를 담은 WrongLength를 반환한다
+    visibility: public
+    requirements: [R1]
+  - fn: invalid_character_position_test
+    name: 잘못된 글자는 하이픈을 뺀 위치(0부터)와 함께 알려 준다
+    visibility: public
+    errorTag: counts_separators_in_position
+    requirements: [R2]
+  - fn: checksum_mismatch_test
+    name: 가중합이 11로 나누어떨어지지 않으면 ChecksumMismatch를 반환한다
+    visibility: public
+    requirements: [R3]
+  - fn: x_in_middle_test
+    name: 마지막이 아닌 자리의 X는 잘못된 글자다
+    visibility: hidden
+    errorTag: accepts_x_anywhere
+    requirements: [R2]
+  - fn: length_checked_before_characters_test
+    name: 길이와 글자가 모두 틀리면 길이 오류를 먼저 반환한다
+    visibility: hidden
+    errorTag: wrong_check_order
+    requirements: [R1]
+  - fn: lowercase_x_rejected_test
+    name: 소문자 x는 검사 숫자로 인정하지 않는다
+    visibility: hidden
+    errorTag: accepts_lowercase
+    requirements: [R2]
+requirements:
+  - id: R1
+    description: 길이를 먼저 검사
+  - id: R2
+    description: 잘못된 글자의 위치와 글자를 보고
+  - id: R3
+    description: 가중합 검사
+  - id: R4
+    description: 성공하면 글자 값 목록 반환
+hints:
+  - level: 1
+    kind: question
+    text: 세 가지 검사(길이, 글자, 가중합)는 각각 앞 단계의 결과가 있어야 할 수 있나요? 가중합을 계산하려면 무엇이 먼저 준비되어야 하나요?
+  - level: 2
+    kind: concept
+    text: "`use x <- result.try(step)`은 `step`이 `Error`면 그 오류로 함수를 끝내고, `Ok(x)`면 다음 줄을 계속합니다. `result.replace_error(r, e)`로 `Error(Nil)`을 더 자세한 오류로 바꿀 수 있습니다."
+  - level: 3
+    kind: approach
+    text: "하이픈을 먼저 지우세요. 그다음 `check_length`, `parse_values`, 가중합 검사를 차례로 `use`로 잇습니다. `parse_values`에서는 `list.index_map`으로 하이픈을 뺀 위치를 붙이고 `list.try_map`으로 값을 구합니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn validate(isbn: String) -> Result(List(Int), IsbnError) {
+        let chars =
+          isbn
+          |> string.to_graphemes
+          |> list.filter(fn(char) { char != "-" })
+        use chars <- result.try(check_length(chars))
+        use values <- result.try(parse_values(chars))
+        case checksum(values) % 11 {
+          0 -> todo
+          _ -> todo
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: x-anywhere
+    mustFail: [x_in_middle_test]
+    errorTag: accepts_x_anywhere
+  - key: chars-before-length
+    mustFail: [length_checked_before_characters_test]
+    errorTag: wrong_check_order
+  - key: position-with-dashes
+    mustFail: [invalid_character_position_test, x_in_middle_test]
+    errorTag: counts_separators_in_position

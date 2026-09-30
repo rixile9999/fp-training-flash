@@ -1,0 +1,26 @@
+# Family-level defaults; each variant's exercise.yaml may override any of these.
+title: 매출 리포트를 파싱·집계·출력 함수로 나누기
+primarySkill: function-decomposition
+secondarySkills: [data-transformation, explicit-failure]
+contextTags: [sales, reports]
+source:
+  kind: original
+conceptNotes: [gleam-pipe-operator, gleam-strings, gleam-dict-set, gleam-sorting-order]
+theoryTopics: [function-composition-pipelines, referential-transparency]
+rubric:
+  - id: R-02
+    title: 파이프라인이 의도를 드러냄
+    description: 최상위 함수는 파싱, 집계, 출력 단계를 순서대로 연결하기만 하고, 세부 계산은 각 단계 함수에 있다.
+  - id: R-05
+    title: 단계별 함수 분리
+    description: 한 함수가 파싱과 집계와 문자열 조립을 함께 하지 않는다. 각 단계는 따로 호출해 확인할 수 있는 작은 함수다.
+    automatedCheck:
+      kind: max_function_lines
+      max: 20
+  - id: R-09
+    title: let assert와 panic을 쓰지 않음
+    description: 잘못된 줄은 Result로 표현하고 건너뛴다. 입력이 이상하다고 프로그램을 멈추지 않는다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "\\blet assert\\b|\\bpanic\\b"
+      message: let assert 또는 panic을 사용했습니다.

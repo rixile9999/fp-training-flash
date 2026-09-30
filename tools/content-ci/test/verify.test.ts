@@ -56,6 +56,22 @@ const source = (job: RunJob) => job.sourceFiles[0]?.content ?? "";
 const now = () => "2026-09-30T00:00:00.000Z";
 
 describe("verifyExercise", () => {
+  it("does not pass support files as learner files", async () => {
+    const withSupport = { ...spec, supportFiles: [{ path: "src/shared.gleam", content: "pub type T { T }" }] } as unknown as GradingSpec;
+    const detailWithSupport = { ...detail, starterFiles: [...file("STARTER"), { path: "src/shared.gleam", content: "pub type T { T }" }] } as unknown as ExerciseDetail;
+    const seen: string[][] = [];
+    const runner = fakeRunner((job): Statuses => {
+      seen.push(job.sourceFiles.map((f) => f.path));
+      const s = source(job);
+      if (s === "WRONG") return { b_test: "failed" };
+      if (s === "STARTER") return { a_test: "failed", b_test: "failed" };
+      return {};
+    });
+    const r = await verifyExercise({ detail: detailWithSupport, spec: withSupport, reference, runner, now });
+    expect(r.problems).toEqual([]);
+    expect(seen.every((paths) => !paths.includes("src/shared.gleam"))).toBe(true);
+  });
+
   it("accepts a consistent exercise", async () => {
     const runner = fakeRunner((job): Statuses => {
       const s = source(job);

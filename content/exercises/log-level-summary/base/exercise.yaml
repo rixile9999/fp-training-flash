@@ -1,0 +1,84 @@
+kind: implement
+format: drill
+module: log_summary
+difficulty: 1300
+estimatedMinutes: 6
+tests:
+  - fn: empty_lines_test
+    name: 줄이 없으면 빈 딕셔너리를 반환한다
+    visibility: public
+  - fn: counts_single_level_test
+    name: 같은 레벨의 줄 수를 센다
+    visibility: public
+    errorTag: overwrites_existing_key
+    requirements: [R1]
+  - fn: counts_several_levels_test
+    name: 여러 레벨이 섞여 있으면 레벨별로 따로 센다
+    visibility: public
+    errorTag: overwrites_existing_key
+    requirements: [R1]
+  - fn: normalizes_case_test
+    name: 레벨의 대소문자가 달라도 대문자로 합쳐 센다
+    visibility: hidden
+    errorTag: case_sensitive_keys
+    requirements: [R2]
+  - fn: skips_malformed_lines_test
+    name: 형식에 맞지 않는 줄은 세지 않는다
+    visibility: hidden
+    errorTag: counts_malformed_lines
+    requirements: [R3]
+  - fn: level_without_space_test
+    name: 레벨 바로 뒤에 공백이 없어도 레벨을 읽는다
+    visibility: hidden
+    errorTag: splits_on_wrong_delimiter
+    requirements: [R1]
+requirements:
+  - id: R1
+    description: 첫 [와 첫 ] 사이의 글자를 레벨로 보고 레벨별 줄 수를 센다
+  - id: R2
+    description: 레벨은 대문자로 바꿔서 센다
+  - id: R3
+    description: "[로 시작하지 않거나 ]가 없는 줄은 세지 않는다"
+hints:
+  - level: 1
+    kind: question
+    text: 한 줄에서 레벨을 뽑는 일과, 여러 줄의 레벨을 세는 일을 따로 생각해 볼 수 있을까요? 레벨을 뽑을 수 없는 줄은 어떻게 표현할까요?
+  - level: 2
+    kind: concept
+    text: "`string.split_once(s, \"]\")`는 첫 `]`에서 한 번만 나눈 `Ok(#(앞, 뒤))`를, `]`가 없으면 `Error(Nil)`을 줍니다. `dict.upsert`는 키가 없을 때 `None`을 받아 새 값을 넣습니다."
+  - level: 3
+    kind: approach
+    text: "`fn level_of(line: String) -> Result(String, Nil)`을 먼저 만드세요. 그다음 `list.fold`로 줄을 돌며 `Ok(level)`이면 개수를 1 늘리고 `Error`면 누적값을 그대로 둡니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      fn level_of(line: String) -> Result(String, Nil) {
+        case line {
+          "[" <> rest -> todo
+          _ -> Error(Nil)
+        }
+      }
+
+      pub fn count_levels(lines: List(String)) -> Dict(String, Int) {
+        list.fold(lines, dict.new(), fn(counts, line) {
+          case level_of(line) {
+            Ok(level) -> todo
+            Error(Nil) -> counts
+          }
+        })
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: case-sensitive
+    mustFail: [normalizes_case_test]
+    errorTag: case_sensitive_keys
+  - key: overwrites-count
+    mustFail: [counts_single_level_test, counts_several_levels_test]
+    errorTag: overwrites_existing_key
+  - key: split-on-space
+    mustFail: [level_without_space_test]
+    errorTag: splits_on_wrong_delimiter

@@ -1,0 +1,26 @@
+import gleam/int
+import gleam/list
+import gleam/result
+
+pub type Coupon {
+  Percent(Int)
+  Fixed(Int)
+}
+
+pub fn apply_coupon(price: Int, coupon: Coupon) -> Int {
+  case coupon {
+    Percent(percent) -> price * { 100 - percent } / 100
+    Fixed(amount) -> int.max(price - amount, 0)
+  }
+}
+
+pub fn apply_all(price: Int, coupons: List(Coupon)) -> Int {
+  list.fold(coupons, price, fn(total, coupon) { apply_coupon(total, coupon) })
+}
+
+pub fn best_single(price: Int, coupons: List(Coupon)) -> Int {
+  coupons
+  |> list.map(apply_coupon(price, _))
+  |> list.reduce(int.min)
+  |> result.unwrap(0)
+}

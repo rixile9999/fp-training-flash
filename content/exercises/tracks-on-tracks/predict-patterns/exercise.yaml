@@ -1,0 +1,47 @@
+kind: predict
+format: drill
+title: 목록 패턴 결과 예측하기
+difficulty: 1200
+estimatedMinutes: 3
+predict:
+  code: |
+    import gleam/int
+    import gleam/list
+
+    fn describe(languages: List(String)) -> String {
+      case languages {
+        [] -> "없음"
+        ["Gleam", ..] -> "Gleam 먼저"
+        [_, "Gleam"] | [_, "Gleam", _] -> "Gleam 두 번째"
+        [first, ..rest] -> first <> " 외 " <> int.to_string(list.length(rest))
+      }
+    }
+
+    pub fn main() {
+      [["Lua", "Gleam", "Go", "Elm"], ["Elm", "Gleam"], [], ["Gleam"]]
+      |> list.map(describe)
+    }
+  acceptedAnswers:
+    - '["Lua 외 3", "Gleam 두 번째", "없음", "Gleam 먼저"]'
+    - '["Lua 외 3","Gleam 두 번째","없음","Gleam 먼저"]'
+hints:
+  - level: 1
+    kind: question
+    text: "`case`는 위에서부터 패턴을 검사합니다. 네 개짜리 목록은 어느 패턴에 처음으로 맞나요?"
+  - level: 2
+    kind: concept
+    text: "`[_, \"Gleam\"]`은 길이 2, `[_, \"Gleam\", _]`은 길이 3인 목록에만 맞습니다. `..`가 없으면 길이가 고정됩니다."
+  - level: 3
+    kind: approach
+    text: 입력 목록 네 개를 하나씩 위 패턴부터 대 보고, `list.map`은 순서를 그대로 유지한다는 점을 기억하세요.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      // ["Lua", "Gleam", "Go", "Elm"]은 길이 4라서 두 번째 패턴에 맞지 않는다
+      // [first, ..rest]: first = "Lua", rest = ["Gleam", "Go", "Elm"]
+      ["Lua 외 ?", todo, todo, todo]
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.

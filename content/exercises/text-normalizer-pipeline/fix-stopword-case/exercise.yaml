@@ -1,0 +1,63 @@
+kind: fix
+format: drill
+module: query
+title: 대문자 불용어가 남는 검색어 정규화 고치기
+contextTags: [text, search]
+difficulty: 1250
+estimatedMinutes: 4
+tests:
+  - fn: split_words_test
+    name: 검색어를 빈 단어 없이 단어 목록으로 나눈다
+    visibility: public
+  - fn: remove_stopwords_test
+    name: 소문자 불용어를 목록에서 뺀다
+    visibility: public
+  - fn: normalize_query_lowercase_test
+    name: 검색어 단어를 소문자로 바꾼다
+    visibility: public
+  - fn: normalize_query_capital_stopword_test
+    name: 첫 글자가 대문자인 불용어도 뺀다
+    visibility: public
+    errorTag: case_sensitive_comparison
+    requirements: [R1]
+  - fn: normalize_query_all_caps_test
+    name: 모두 대문자인 불용어도 뺀다
+    visibility: hidden
+    errorTag: case_sensitive_comparison
+    requirements: [R1]
+  - fn: normalize_query_only_stopwords_test
+    name: 불용어만 있으면 빈 목록이다
+    visibility: hidden
+    errorTag: case_sensitive_comparison
+    requirements: [R1]
+requirements:
+  - id: R1
+    description: 불용어 비교는 대소문자와 관계없이 이루어진다
+hints:
+  - level: 1
+    kind: question
+    text: "`\"The Art of War\"`가 파이프라인의 각 단계를 지날 때 `\"The\"`는 어떤 모양인가요? `remove_stopwords`가 그것을 볼 때는 대문자인가요, 소문자인가요?"
+  - level: 2
+    kind: concept
+    text: 파이프라인의 각 단계는 앞 단계가 넘겨준 값만 봅니다. 뒤 단계가 기대하는 입력 형태(여기서는 소문자)를 앞 단계가 먼저 만들어 줘야 합니다.
+  - level: 3
+    kind: approach
+    text: 불용어 목록에 대문자 형태를 추가하는 대신, 단계의 순서를 바꿔 `remove_stopwords`가 항상 소문자 단어를 받게 하세요.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn normalize_query(text: String) -> List(String) {
+        text
+        |> split_words
+        |> todo
+        |> todo
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: add-capitalized-stopwords
+    mustFail: [normalize_query_all_caps_test, normalize_query_only_stopwords_test]
+    errorTag: case_sensitive_comparison

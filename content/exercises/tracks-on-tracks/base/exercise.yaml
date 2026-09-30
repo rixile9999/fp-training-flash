@@ -1,0 +1,85 @@
+kind: implement
+format: drill
+module: language_list
+difficulty: 1050
+estimatedMinutes: 5
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: add_language_prepends_test
+    name: 새 언어를 목록 맨 앞에 추가한다
+    visibility: public
+    errorTag: appends_instead_of_prepends
+    requirements: [R1]
+  - fn: count_languages_test
+    name: 목록에 든 언어 수를 센다
+    visibility: public
+    requirements: [R2]
+  - fn: reverse_list_test
+    name: 목록 순서를 뒤집는다
+    visibility: public
+    requirements: [R2]
+  - fn: gleam_first_is_exciting_test
+    name: 첫 번째가 Gleam이면 신나는 목록이다
+    visibility: public
+    requirements: [R3]
+  - fn: gleam_second_of_two_is_exciting_test
+    name: 두 개짜리 목록의 두 번째가 Gleam이면 신나는 목록이다
+    visibility: public
+    requirements: [R3]
+  - fn: gleam_third_is_not_exciting_test
+    name: Gleam이 세 번째에 있으면 신나는 목록이 아니다
+    visibility: hidden
+    errorTag: checks_any_position
+    requirements: [R3]
+  - fn: gleam_second_of_four_is_not_exciting_test
+    name: 네 개짜리 목록의 두 번째가 Gleam이면 신나는 목록이 아니다
+    visibility: hidden
+    errorTag: ignores_length_condition
+    requirements: [R3]
+  - fn: gleam_first_of_four_is_exciting_test
+    name: 첫 번째가 Gleam이면 목록 길이와 상관없이 신나는 목록이다
+    visibility: hidden
+    errorTag: applies_length_limit_to_first
+    requirements: [R3]
+requirements:
+  - id: R1
+    description: 새 언어는 맨 앞에 추가
+  - id: R2
+    description: 표준 목록 연산으로 개수 세기와 뒤집기
+  - id: R3
+    description: 위치와 길이 조건으로 신나는 목록 판별
+hints:
+  - level: 1
+    kind: question
+    text: "`exciting_list`가 True가 되는 경우는 몇 가지인가요? 각 경우에 목록의 길이는 어떤 조건을 가지나요?"
+  - level: 2
+    kind: concept
+    text: "`case`에서 목록 패턴 `[x, ..rest]`는 길이가 1 이상인 목록 전부와, `[a, b]`는 길이가 정확히 2인 목록과 맞춰집니다."
+  - level: 3
+    kind: approach
+    text: 추가는 `[새 값, ..기존 목록]`으로, 개수와 뒤집기는 `gleam/list`의 함수로 해결하세요. 판별은 참이 되는 모양을 패턴으로 나열하고 나머지는 모두 False로 보내면 됩니다.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn exciting_list(languages: List(String)) -> Bool {
+        case languages {
+          ["Gleam", ..] -> True
+          // 두 번째가 Gleam이고 길이가 2 또는 3인 경우
+          _ -> todo
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: contains-anywhere
+    mustFail: [gleam_third_is_not_exciting_test, gleam_second_of_four_is_not_exciting_test]
+    errorTag: checks_any_position
+  - key: ignores-length
+    mustFail: [gleam_second_of_four_is_not_exciting_test]
+    errorTag: ignores_length_condition
+  - key: appends-language
+    mustFail: [add_language_prepends_test]
+    errorTag: appends_instead_of_prepends

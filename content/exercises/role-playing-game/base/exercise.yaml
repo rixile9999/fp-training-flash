@@ -1,0 +1,79 @@
+kind: implement
+format: drill
+module: role_playing_game
+difficulty: 1150
+estimatedMinutes: 5
+tests:
+  - fn: introduce_with_name_test
+    name: 이름이 있으면 그 이름으로 소개한다
+    visibility: public
+    requirements: [R1]
+  - fn: introduce_without_name_test
+    name: 이름이 없으면 Mighty Magician으로 소개한다
+    visibility: public
+    requirements: [R1]
+  - fn: revive_alive_returns_none_test
+    name: 체력이 남아 있는 플레이어는 되살리지 않고 None을 반환한다
+    visibility: public
+    errorTag: wraps_unchanged_in_some
+    requirements: [R2]
+  - fn: revive_low_level_test
+    name: 레벨 10 미만은 체력만 100으로 채우고 마나는 그대로 둔다
+    visibility: public
+    requirements: [R3]
+  - fn: revive_level_ten_restores_mana_test
+    name: 레벨이 정확히 10이면 마나도 100으로 채운다
+    visibility: hidden
+    errorTag: off_by_one
+    requirements: [R3]
+  - fn: revive_high_level_without_mana_pool_test
+    name: 레벨 10 이상이면 마나가 None이어도 Some(100)이 된다
+    visibility: hidden
+    errorTag: mishandles_none
+    requirements: [R3]
+  - fn: revive_keeps_name_and_level_test
+    name: 되살린 뒤에도 이름과 레벨은 그대로다
+    visibility: hidden
+    errorTag: drops_fields_on_update
+requirements:
+  - id: R1
+    description: 이름이 없을 때 기본 소개말 사용
+  - id: R2
+    description: 체력이 0인 플레이어만 되살림
+  - id: R3
+    description: 레벨 10 이상이면 마나를 100으로 채움
+hints:
+  - level: 1
+    kind: question
+    text: "`revive`가 \"되살릴 수 없음\"을 알리려면 어떤 값을 돌려줘야 할까요? 이 함수의 반환 타입을 다시 보세요."
+  - level: 2
+    kind: concept
+    text: "`Option(a)`는 `Some(값)` 또는 `None`입니다. `case`로 두 경우를 나누거나, `option.unwrap(opt, 기본값)`으로 없을 때의 값을 정할 수 있습니다."
+  - level: 3
+    kind: approach
+    text: "`introduce`는 기본값 하나로 끝납니다. `revive`는 체력이 0인지, 레벨이 10 이상인지를 순서대로 `case`와 가드(`if`)로 나눠 보세요. 새 플레이어는 레코드 갱신 문법으로 만듭니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn revive(player: Player) -> Option(Player) {
+        case player.health, player.level {
+          0, level if level >= 10 -> todo
+          0, _ -> Some(Player(..player, health: 100))
+          _, _ -> todo
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: level-over-ten
+    mustFail: [revive_level_ten_restores_mana_test]
+    errorTag: off_by_one
+  - key: some-for-alive
+    mustFail: [revive_alive_returns_none_test]
+    errorTag: wraps_unchanged_in_some
+  - key: map-mana
+    mustFail: [revive_high_level_without_mana_pool_test]
+    errorTag: mishandles_none

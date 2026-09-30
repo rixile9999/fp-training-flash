@@ -1,0 +1,87 @@
+kind: implement
+format: drill
+module: queens
+title: 사전순으로 가장 앞선 퀸 배치 찾기
+difficulty: 1550
+estimatedMinutes: 6
+conceptNotes: [gleam-recursion, gleam-option-result]
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: four_queens_test
+    name: 4x4 판의 첫 배치는 [1, 3, 0, 2]다
+    visibility: public
+    errorTag: reverses_order
+    requirements: [R1, R2]
+  - fn: single_queen_test
+    name: 1x1 판의 첫 배치는 [0]이다
+    visibility: public
+    requirements: [R1]
+  - fn: no_solution_test
+    name: 배치가 없는 2x2와 3x3 판은 Error(Nil)을 돌려준다
+    visibility: public
+    requirements: [R3]
+  - fn: five_queens_test
+    name: 5x5 판의 첫 배치를 위쪽 행부터 나열한다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [R1, R2]
+  - fn: six_queens_needs_backtracking_test
+    name: 막히면 윗 행으로 돌아가 다음 열을 시도한다
+    visibility: hidden
+    errorTag: greedy_without_backtracking
+    requirements: [R2]
+  - fn: eight_queens_test
+    name: 8x8 판의 첫 배치는 [0, 4, 7, 5, 2, 6, 1, 3]이다
+    visibility: hidden
+    errorTag: wrong_search_order
+    requirements: [R1, R2]
+requirements:
+  - id: R1
+    description: 결과는 위쪽 행부터 각 행의 열 번호
+  - id: R2
+    description: 사전순으로 가장 앞선 배치를 돌려준다
+  - id: R3
+    description: 배치가 없으면 Error(Nil)
+hints:
+  - level: 1
+    kind: question
+    text: 각 행에서 왼쪽 열부터 시도하고, 끝까지 채우는 순간 멈추면 어떤 배치를 먼저 찾게 되나요? 어떤 행에서 놓을 곳이 없으면 무엇을 해야 하나요?
+  - level: 2
+    kind: concept
+    text: "백트래킹에서 \"첫 해 찾기\"는 결과를 `Result`로 돌려주는 재귀로 표현할 수 있습니다. 아래 행 탐색이 `Error(Nil)`이면 이 행의 다음 열을 시도하고, `Ok`면 더 보지 않고 그대로 돌려줍니다."
+  - level: 3
+    kind: approach
+    text: "`search(n, row, placed)`는 row가 n이면 `Ok(placed)`, 아니면 `try_columns(n, row, placed, 0)`을 부릅니다. `try_columns`는 col이 n에 닿으면 `Error(Nil)`, 안전한 열이면 `search(n, row + 1, [col, ..placed])`를 시도하고 실패하면 col + 1로 넘어갑니다. `placed`는 아래 행이 앞이므로 마지막에 뒤집어야 합니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      fn try_columns(n: Int, row: Int, placed: List(Int), col: Int) -> Result(List(Int), Nil) {
+        case col >= n {
+          True -> Error(Nil)
+          False -> {
+            let found = case is_safe(placed, col) {
+              True -> todo
+              False -> Error(Nil)
+            }
+            case found {
+              Ok(solution) -> Ok(solution)
+              Error(Nil) -> todo
+            }
+          }
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: not-reversed
+    mustFail: [four_queens_test, five_queens_test]
+    errorTag: reverses_order
+  - key: no-backtrack
+    mustFail: [six_queens_needs_backtracking_test]
+    errorTag: greedy_without_backtracking
+  - key: right-to-left
+    mustFail: [eight_queens_test]
+    errorTag: wrong_search_order

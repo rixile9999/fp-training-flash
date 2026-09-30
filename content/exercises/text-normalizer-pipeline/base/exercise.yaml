@@ -1,0 +1,81 @@
+kind: implement
+format: drill
+module: normalizer
+difficulty: 1200
+estimatedMinutes: 5
+tests:
+  - fn: strip_punctuation_test
+    name: 마침표, 쉼표, 느낌표, 물음표를 지운다
+    visibility: public
+    requirements: [R1]
+  - fn: collapse_spaces_test
+    name: 연속 공백을 공백 하나로 줄인다
+    visibility: public
+    errorTag: keeps_empty_segments
+    requirements: [R2]
+  - fn: collapse_spaces_edges_test
+    name: 앞뒤 공백은 남기지 않는다
+    visibility: hidden
+    errorTag: keeps_empty_segments
+    requirements: [R2]
+  - fn: normalize_test
+    name: 공백 정리, 소문자 변환, 문장부호 제거를 모두 적용한다
+    visibility: public
+    requirements: [R3]
+  - fn: normalize_punctuation_between_spaces_test
+    name: 공백 사이의 문장부호를 지운 뒤에도 공백은 하나다
+    visibility: hidden
+    errorTag: wrong_step_order
+    requirements: [R3]
+  - fn: normalize_trims_tabs_newlines_test
+    name: 앞뒤의 탭과 줄바꿈도 없앤다
+    visibility: hidden
+    errorTag: ignores_surrounding_whitespace
+    requirements: [R3]
+requirements:
+  - id: R1
+    description: strip_punctuation은 네 가지 문장부호만 지운다
+  - id: R2
+    description: collapse_spaces는 빈 조각 없이 공백 하나로 잇는다
+  - id: R3
+    description: normalize는 정해진 순서로 단계 함수를 조합한다
+hints:
+  - level: 1
+    kind: question
+    text: "`\"Wait , what ?\"`에서 문장부호를 지우면 공백은 어떻게 되나요? 공백 정리를 문장부호 제거보다 먼저 하면 어떤 결과가 나올까요?"
+  - level: 2
+    kind: concept
+    text: "`string.split`은 연속된 구분자 사이에 빈 문자열을 만듭니다. `string.to_graphemes`로 글자 목록을 만들면 `list.filter`로 글자를 거를 수 있습니다."
+  - level: 3
+    kind: approach
+    text: 각 단계 함수를 먼저 따로 완성하고, `normalize`는 앞뒤 공백 제거 → 소문자 → 문장부호 제거 → 공백 정리 순서로 파이프에 연결만 하세요.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn collapse_spaces(text: String) -> String {
+        text
+        |> string.split(" ")
+        |> list.filter(todo)
+        |> string.join(" ")
+      }
+
+      pub fn normalize(text: String) -> String {
+        text
+        |> string.trim
+        |> todo
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: collapse-before-strip
+    mustFail: [normalize_punctuation_between_spaces_test]
+    errorTag: wrong_step_order
+  - key: split-no-filter
+    mustFail: [collapse_spaces_test, collapse_spaces_edges_test]
+    errorTag: keeps_empty_segments
+  - key: no-trim
+    mustFail: [normalize_trims_tabs_newlines_test]
+    errorTag: ignores_surrounding_whitespace

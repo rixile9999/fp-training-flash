@@ -1,0 +1,82 @@
+kind: implement
+format: drill
+module: restock
+title: 조건 함수를 조립해 재입고 대상 고르기
+contextTags: [inventory]
+source:
+  kind: original
+difficulty: 1350
+estimatedMinutes: 6
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: both_requires_both_conditions_test
+    name: both로 만든 조건은 두 조건이 모두 참일 때만 참이다
+    visibility: public
+    errorTag: uses_or_instead_of_and
+    requirements: [R1]
+  - fn: negate_flips_condition_test
+    name: negate로 만든 조건은 원래 조건의 반대다
+    visibility: public
+    requirements: [R1]
+  - fn: needs_restock_finds_low_stock_test
+    name: 재고가 기준보다 적은 판매 중 상품을 순서대로 고른다
+    visibility: public
+    requirements: [R2]
+  - fn: discontinued_finds_inactive_test
+    name: 판매 중지 상품만 고른다
+    visibility: public
+    requirements: [R3]
+  - fn: threshold_is_exclusive_test
+    name: 재고가 기준과 같으면 재입고 대상이 아니다
+    visibility: hidden
+    errorTag: off_by_one
+    requirements: [R2]
+  - fn: needs_restock_skips_inactive_test
+    name: 판매 중지 상품은 재고가 적어도 재입고 대상이 아니다
+    visibility: hidden
+    errorTag: ignores_filter_condition
+    requirements: [R2]
+  - fn: both_is_false_when_only_second_holds_test
+    name: 두 번째 조건만 참이면 both 결과는 거짓이다
+    visibility: hidden
+    errorTag: uses_or_instead_of_and
+    requirements: [R1]
+requirements:
+  - id: R1
+    description: 조건 함수를 받아 새 조건 함수를 반환
+  - id: R2
+    description: 판매 중이고 재고가 기준 미만인 상품만 재입고 대상
+  - id: R3
+    description: 판매 중지 상품 목록
+hints:
+  - level: 1
+    kind: question
+    text: "`both`의 반환 타입 `fn(t) -> Bool`은 값이 아니라 함수입니다. 그 함수는 원소 하나를 받아 무엇을 계산해야 하나요?"
+  - level: 2
+    kind: concept
+    text: 익명 함수 `fn(item) { ... }`는 바깥 함수의 인자 `p`, `q`를 그대로 사용할 수 있습니다. 이렇게 만든 함수를 반환값으로 돌려줄 수 있습니다.
+  - level: 3
+    kind: approach
+    text: "`both`, `negate`를 먼저 완성한 뒤, 재입고 대상은 `keep`에 `both(판매 중인가, 재고가 기준 미만인가)`를 넘겨 구하세요. 판매 중지 목록은 `negate`로 만듭니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn both(p: fn(t) -> Bool, q: fn(t) -> Bool) -> fn(t) -> Bool {
+        fn(item) { todo }
+      }
+
+      pub fn needs_restock(products: List(Product), threshold: Int) -> List(Product) {
+        keep(products, both(fn(p) { p.active }, todo))
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: threshold-inclusive
+    mustFail: [threshold_is_exclusive_test]
+    errorTag: off_by_one
+  - key: both-uses-or
+    mustFail: [both_requires_both_conditions_test, needs_restock_skips_inactive_test, both_is_false_when_only_second_holds_test]
+    errorTag: uses_or_instead_of_and

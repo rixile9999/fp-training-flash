@@ -1,0 +1,23 @@
+# Family-level defaults; each variant's exercise.yaml may override any of these.
+title: 레프티스트 힙으로 만드는 영속 우선순위 큐
+primarySkill: functional-data-structures
+secondarySkills: [recursive-algorithms]
+contextTags: []
+source:
+  kind: original
+conceptNotes: [gleam-custom-types, gleam-case-patterns, gleam-recursion]
+theoryTopics: [persistent-data-structures, cost-model-immutable-structures, structural-recursion-induction]
+rubric:
+  - id: R-02
+    title: 불변식을 한 곳에서 지킴
+    description: 자식 배치와 rank 계산은 make 한 함수에서만 하고, merge와 다른 연산은 make를 거쳐 노드를 만든다.
+  - id: R-05
+    title: 연산을 merge로 환원
+    description: insert와 delete_min은 merge를 한 번 부르는 짧은 함수로 표현한다.
+  - id: R-09
+    title: let assert와 panic을 쓰지 않음
+    description: 실패 가능성은 타입으로 표현한다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "\\blet assert\\b|\\bpanic\\b"
+      message: let assert 또는 panic을 사용했습니다.

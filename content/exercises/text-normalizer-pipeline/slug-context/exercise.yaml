@@ -1,0 +1,87 @@
+kind: implement
+format: drill
+module: slug
+title: 상품명으로 URL 슬러그 만들기
+contextTags: [text, catalog]
+difficulty: 1400
+estimatedMinutes: 6
+tests:
+  - fn: clean_word_test
+    name: 단어를 소문자로 바꾸고 영문자와 숫자만 남긴다
+    visibility: public
+    requirements: [R1]
+  - fn: to_words_test
+    name: 문장을 정리된 단어 목록으로 바꾼다
+    visibility: public
+    requirements: [R2]
+  - fn: to_words_drops_symbol_only_test
+    name: 기호만 있던 단어는 정리 후 목록에서 빠진다
+    visibility: hidden
+    errorTag: wrong_step_order
+    requirements: [R2]
+  - fn: to_words_multiple_spaces_test
+    name: 연속 공백과 앞뒤 공백은 빈 단어를 만들지 않는다
+    visibility: hidden
+    errorTag: keeps_empty_segments
+    requirements: [R2]
+  - fn: slugify_test
+    name: 단어를 하이픈으로 잇는다
+    visibility: public
+    errorTag: wrong_step_order
+    requirements: [R3]
+  - fn: short_slug_test
+    name: 앞에서부터 지정한 개수의 단어만 쓴다
+    visibility: public
+    requirements: [R4]
+  - fn: short_slug_skips_symbol_words_test
+    name: 기호만 있던 단어는 단어 개수에 세지 않는다
+    visibility: hidden
+    errorTag: wrong_step_order
+    requirements: [R4]
+requirements:
+  - id: R1
+    description: clean_word는 단어 하나만 정리한다
+  - id: R2
+    description: to_words는 clean_word를 재사용하고 빈 단어를 버린다
+  - id: R3
+    description: slugify는 to_words를 재사용한다
+  - id: R4
+    description: short_slug는 to_words 결과에서 단어를 고른다
+hints:
+  - level: 1
+    kind: question
+    text: "`\"tea - cup\"`에서 `\"-\"`는 정리하고 나면 무엇이 되나요? 빈 단어를 버리는 일은 정리 전과 후 중 언제 해야 할까요?"
+  - level: 2
+    kind: concept
+    text: 파이프라인에서 거르기(`list.filter`)의 위치가 바뀌면 결과가 달라집니다. 어떤 값이 "비었는지"는 그 값을 만드는 단계가 끝난 뒤에야 알 수 있습니다.
+  - level: 3
+    kind: approach
+    text: "`clean_word`를 먼저 완성하세요. `to_words`는 나누기 → 단어마다 `clean_word` → 빈 단어 버리기 순서입니다. `slugify`와 `short_slug`는 `to_words`의 결과만 쓰면 됩니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn to_words(text: String) -> List(String) {
+        text
+        |> string.split(" ")
+        |> todo
+        |> list.filter(fn(word) { word != "" })
+      }
+
+      pub fn short_slug(text: String, max_words: Int) -> String {
+        text
+        |> to_words
+        |> todo
+        |> string.join("-")
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: filter-before-clean
+    mustFail: [to_words_drops_symbol_only_test, slugify_test]
+    errorTag: wrong_step_order
+  - key: take-before-clean
+    mustFail: [short_slug_skips_symbol_words_test]
+    errorTag: wrong_step_order

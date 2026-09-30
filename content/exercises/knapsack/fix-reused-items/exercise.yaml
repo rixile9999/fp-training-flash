@@ -1,0 +1,75 @@
+kind: fix
+format: drill
+module: knapsack
+title: 같은 화물을 두 번 싣는 적재 계산 고치기
+contextTags: [shipping]
+difficulty: 1500
+estimatedMinutes: 5
+tests:
+  - fn: single_item_once_test
+    name: 화물이 하나면 한 번만 싣는다
+    visibility: public
+    errorTag: reuses_items
+    requirements: [R1]
+  - fn: example_test
+    name: 무게 한도 안에서 가치 합이 가장 큰 조합을 고른다
+    visibility: public
+    errorTag: reuses_items
+    requirements: [R1, R2]
+  - fn: two_items_each_once_test
+    name: 가벼운 화물을 여러 번 싣지 않는다
+    visibility: hidden
+    errorTag: reuses_items
+    requirements: [R1]
+  - fn: no_items_test
+    name: 화물이 없으면 가치 합은 0이다
+    visibility: hidden
+    errorTag: ignores_empty_input
+    requirements: [R2]
+  - fn: too_heavy_test
+    name: 한도보다 무거운 화물은 싣지 않는다
+    visibility: hidden
+    errorTag: exceeds_capacity
+    requirements: [R2]
+  - fn: greedy_by_value_test
+    name: 가벼운 화물 여러 개를 함께 실어 비싼 화물 하나보다 큰 가치를 얻는다
+    visibility: hidden
+    errorTag: loses_table_updates
+    requirements: [R2]
+requirements:
+  - id: R1
+    description: 각 화물은 최대 한 번
+  - id: R2
+    description: 무게 합이 한도 이하인 조합 중 가치 합 최대
+hints:
+  - level: 1
+    kind: question
+    text: "화물 `Item(value: 10, weight: 3)` 하나, 한도 9로 `add_item`을 손으로 따라가 보세요. 한도 6칸을 계산할 때 읽는 한도 3칸의 값은 이 화물을 넣기 전의 값인가요, 넣은 뒤의 값인가요?"
+  - level: 2
+    kind: concept
+    text: "0/1 배낭에서 새 표의 w칸은 \"이 화물을 고려하기 전\" 표의 값으로만 계산해야 합니다. 이번 화물을 이미 넣은 칸을 다시 읽으면 같은 화물을 또 넣는 셈입니다."
+  - level: 3
+    kind: approach
+    text: "`add_item`에는 이전 표 `previous`와 만들고 있는 표 `table`이 둘 다 있습니다. 읽는 곳과 쓰는 곳이 각각 어느 표여야 하는지 확인하세요."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      run: fn(table, capacity) {
+        let take = best(todo, capacity - item.weight) + item.value
+        case take > best(todo, capacity) {
+          True -> dict.insert(todo, capacity, take)
+          False -> table
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: reads-old-for-skip-only
+    mustFail: [single_item_once_test, two_items_each_once_test]
+    errorTag: reuses_items
+  - key: inserts-into-old-table
+    mustFail: [example_test, greedy_by_value_test]
+    errorTag: loses_table_updates

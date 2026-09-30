@@ -1,0 +1,23 @@
+# Family-level defaults; each variant's exercise.yaml may override any of these.
+title: 이벤트를 fold해서 계좌 상태 만들기
+primarySkill: function-decomposition
+secondarySkills: [data-transformation]
+contextTags: [banking, events]
+source:
+  kind: original
+conceptNotes: [gleam-custom-types, gleam-case-patterns, gleam-list-transform, gleam-record-update]
+theoryTopics: [fold-universality, referential-transparency, algebraic-data-types]
+rubric:
+  - id: R-02
+    title: 상태 전이와 반복을 분리
+    description: 이벤트 하나를 처리하는 순수한 상태 전이 함수와, 그 함수를 이벤트 목록에 fold하는 함수가 따로 있다.
+  - id: R-05
+    title: 이벤트마다 한 갈래
+    description: 상태 전이 함수는 이벤트 종류별로 case 한 갈래씩 처리하고, 반복이나 기록 관리를 섞지 않는다.
+  - id: R-09
+    title: let assert와 panic을 쓰지 않음
+    description: 거절된 이벤트도 값으로 처리한다. 잔액 부족으로 프로그램을 멈추지 않는다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "\\blet assert\\b|\\bpanic\\b"
+      message: let assert 또는 panic을 사용했습니다.

@@ -39,6 +39,10 @@ variant's files change. Never reuse a family id for different content.
 | theoryTopics | no | ids under theory/ |
 | rubric | no | list of `{id, title, description, automatedCheck?}`; ids like `R-02` |
 
+Rubric ids are scoped to their family: coaching only cites the rubric of the exercise at hand, so `R-07` may mean
+different things in different families. Reuse the sample's meanings for R-02 (pipeline shows intent), R-05 (extract
+calculations) and R-09 (no `let assert`/`panic`) when the same idea applies.
+
 `automatedCheck` is one of `{kind: forbid_pattern, pattern, message}`, `{kind: require_pattern, pattern, message}`,
 `{kind: max_function_lines, max}`. Patterns are JavaScript regular expressions applied to the learner's source.
 
@@ -108,7 +112,8 @@ furtherReading:         # theory only
     url: https://...
     verified: false     # true only after a human checked the bibliographic data
 ---
-Body in Korean. Gleam code blocks must compile (content CI extracts ```gleam blocks marked `run`).
+Body in Korean. Gleam code blocks must compile on the grader's pinned versions. Content CI does not compile note
+code yet, so authors and reviewers compile them by hand in a copy of the grader template.
 ```
 
 Theory notes explain *why*; each ends with a short "이 개념이 쓰이는 곳" section instead of exercise-specific

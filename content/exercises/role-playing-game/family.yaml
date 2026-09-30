@@ -1,0 +1,26 @@
+# Family-level defaults; each variant's exercise.yaml may override any of these.
+title: 롤플레잉 게임으로 익히는 Option
+primarySkill: explicit-failure
+secondarySkills: [data-transformation]
+contextTags: [game]
+source:
+  kind: exercism
+  license: "MIT, Copyright (c) 2021 Exercism"
+  url: https://github.com/exercism/gleam/tree/main/exercises/concept/role-playing-game
+  upstream: "exercism/gleam exercises/concept/role-playing-game@34db02e"
+conceptNotes: [gleam-option-result, gleam-case-patterns, gleam-record-update]
+theoryTopics: [total-vs-partial-functions, algebraic-data-types]
+rubric:
+  - id: R-06
+    title: 없음과 기본값을 구분함
+    description: None을 0이나 빈 문자열 같은 기본값으로 먼저 뭉개지 않고, case나 option 함수로 없는 경우를 따로 다룬다.
+  - id: R-02
+    title: 분기가 규칙을 드러냄
+    description: case 가지 하나가 규칙 하나에 대응해서, 읽는 사람이 규칙 목록과 코드를 한 줄씩 맞춰 볼 수 있다.
+  - id: R-09
+    title: let assert와 panic을 쓰지 않음
+    description: 실패 가능성은 타입으로 표현한다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "\\blet assert\\b|\\bpanic\\b"
+      message: let assert 또는 panic을 사용했습니다.

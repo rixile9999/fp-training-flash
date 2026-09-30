@@ -1,0 +1,70 @@
+kind: implement
+format: drill
+module: accumulate
+difficulty: 1150
+estimatedMinutes: 5
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: empty_list_test
+    name: 빈 목록은 빈 목록을 반환한다
+    visibility: public
+    requirements: [R1]
+  - fn: squares_test
+    name: 각 정수를 제곱한 목록을 반환한다
+    visibility: public
+    errorTag: reverses_order
+    requirements: [R1, R2]
+  - fn: uppercases_strings_test
+    name: 문자열에도 같은 방식으로 함수를 적용한다
+    visibility: public
+    requirements: [R1]
+  - fn: changes_element_type_test
+    name: 결과 원소의 타입이 입력과 달라도 된다
+    visibility: hidden
+    requirements: [R1]
+  - fn: keeps_order_of_long_list_test
+    name: 긴 목록에서도 원래 순서를 유지한다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [R2]
+  - fn: nested_accumulate_test
+    name: 함수 안에서 accumulate를 다시 호출해도 동작한다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [R2]
+requirements:
+  - id: R1
+    description: 모든 원소에 함수를 적용하고 길이를 유지
+  - id: R2
+    description: 원래 순서를 유지
+hints:
+  - level: 1
+    kind: question
+    text: 빈 목록에 accumulate를 적용하면 무엇이 나와야 하나요? 원소가 하나 이상이면, 첫 원소와 나머지 목록으로 나눠 생각할 수 있나요?
+  - level: 2
+    kind: concept
+    text: "목록은 `[]` 또는 `[first, ..rest]` 두 모양뿐입니다. 두 모양을 `case`로 나누고, `rest`는 같은 함수로 처리하는 것이 구조적 재귀입니다."
+  - level: 3
+    kind: approach
+    text: "`fun(first)`를 결과의 맨 앞에 두고, 그 뒤에는 나머지 목록을 재귀로 변환한 결과를 이어 붙이세요."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn accumulate(list: List(a), fun: fn(a) -> b) -> List(b) {
+        case list {
+          [] -> []
+          [first, ..rest] -> todo
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: accumulator-no-reverse
+    mustFail: [squares_test, keeps_order_of_long_list_test]
+    errorTag: reverses_order
+  - key: append-reversed
+    mustFail: [squares_test, nested_accumulate_test]
+    errorTag: reverses_order

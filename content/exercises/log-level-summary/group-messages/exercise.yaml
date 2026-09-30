@@ -1,0 +1,86 @@
+kind: implement
+format: drill
+module: log_groups
+title: 로그 메시지를 레벨별로 모으기
+difficulty: 1450
+estimatedMinutes: 7
+tests:
+  - fn: empty_lines_test
+    name: 줄이 없으면 빈 딕셔너리를 반환한다
+    visibility: public
+  - fn: groups_by_level_test
+    name: 메시지를 레벨별 목록으로 모으고 앞쪽 공백을 뗀다
+    visibility: public
+    errorTag: untrimmed_message
+    requirements: [R1, R2]
+  - fn: keeps_order_within_level_test
+    name: 같은 레벨의 메시지는 로그에 나온 순서를 유지한다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [R3]
+  - fn: message_with_bracket_test
+    name: 메시지 안에 ]가 있어도 첫 ] 뒤 전체가 메시지다
+    visibility: hidden
+    errorTag: splits_on_every_delimiter
+    requirements: [R2]
+  - fn: normalizes_case_test
+    name: 레벨의 대소문자가 달라도 대문자 키 하나로 모은다
+    visibility: hidden
+    errorTag: case_sensitive_keys
+    requirements: [R1]
+  - fn: skips_malformed_lines_test
+    name: 형식에 맞지 않는 줄은 어느 목록에도 넣지 않는다
+    visibility: hidden
+    errorTag: counts_malformed_lines
+    requirements: [R4]
+  - fn: keeps_trailing_spaces_test
+    name: 메시지 뒤쪽 공백은 떼지 않고 그대로 둔다
+    visibility: hidden
+    errorTag: trims_both_ends
+    requirements: [R2]
+requirements:
+  - id: R1
+    description: 첫 [와 첫 ] 사이의 글자를 대문자로 바꾼 것이 레벨이다
+  - id: R2
+    description: 첫 ] 뒤의 글자에서 앞쪽 공백만 뗀 것이 메시지다
+  - id: R3
+    description: 레벨별 메시지는 원래 순서를 유지한다
+  - id: R4
+    description: "[로 시작하지 않거나 ]가 없는 줄은 제외한다"
+hints:
+  - level: 1
+    kind: question
+    text: "`list.fold`로 목록 앞에 원소를 붙여 가며 모으면, 다 모은 목록은 어떤 순서가 될까요?"
+  - level: 2
+    kind: concept
+    text: "`string.split_once`는 첫 구분자에서 한 번만 나눕니다. `string.trim_start`는 앞쪽 공백만 뗍니다. `dict.map_values`는 딕셔너리의 모든 값을 한 번에 바꿉니다."
+  - level: 3
+    kind: approach
+    text: "한 줄을 `Result(#(레벨, 메시지), Nil)`로 해석하는 함수를 먼저 만드세요. 접을 때는 `[메시지, ..기존]`로 앞에 붙이고, 끝에서 각 목록을 한 번 뒤집으면 순서가 맞습니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      lines
+      |> list.fold(dict.new(), fn(groups, line) {
+        case parse_line(line) {
+          Ok(#(level, message)) ->
+            dict.upsert(groups, level, fn(existing) { todo })
+          Error(Nil) -> groups
+        }
+      })
+      |> dict.map_values(fn(_level, messages) { todo })
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: prepend-no-reverse
+    mustFail: [keeps_order_within_level_test]
+    errorTag: reverses_order
+  - key: split-every-bracket
+    mustFail: [message_with_bracket_test]
+    errorTag: splits_on_every_delimiter
+  - key: trim-both
+    mustFail: [keeps_trailing_spaces_test]
+    errorTag: trims_both_ends

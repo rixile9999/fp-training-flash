@@ -1,0 +1,23 @@
+# Family-level defaults; each variant's exercise.yaml may override any of these.
+title: 할인 규칙 함수를 순서대로 적용하기
+primarySkill: function-decomposition
+secondarySkills: [data-transformation]
+contextTags: [pricing, orders]
+source:
+  kind: original
+conceptNotes: [gleam-anonymous-functions, gleam-list-transform, gleam-custom-types]
+theoryTopics: [higher-order-modularity, function-composition-pipelines]
+rubric:
+  - id: R-02
+    title: 규칙 적용 순서가 드러남
+    description: 규칙 목록을 한 번의 fold로 차례차례 적용하고, 이전 결과가 다음 규칙의 입력이 된다.
+  - id: R-05
+    title: 규칙은 독립된 함수
+    description: 각 할인 규칙은 값 하나를 받아 값 하나를 돌려주는 작은 함수이고, 규칙을 적용하는 코드는 규칙의 내용을 몰라도 된다.
+  - id: R-09
+    title: let assert와 panic을 쓰지 않음
+    description: 빈 목록 같은 경우도 값으로 처리한다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "\\blet assert\\b|\\bpanic\\b"
+      message: let assert 또는 panic을 사용했습니다.

@@ -1,0 +1,81 @@
+kind: implement
+format: drill
+module: team_signup
+title: 단체 가입에서 틀린 사람을 모두 알리기
+contextTags: [signup, validation, teams]
+difficulty: 1650
+estimatedMinutes: 7
+tests:
+  - fn: all_valid_team_test
+    name: 모두 올바르면 NewUser 목록을 입력 순서대로 반환한다
+    visibility: public
+    errorTag: reverses_order
+    requirements: [R1]
+  - fn: reports_invalid_member_with_number_test
+    name: 틀린 사람의 번호(1부터)와 오류 목록을 반환한다
+    visibility: public
+    requirements: [R2]
+  - fn: empty_team_test
+    name: 빈 명단은 Ok([])이다
+    visibility: hidden
+    errorTag: rejects_empty_input
+    requirements: [R1]
+  - fn: keeps_member_order_test
+    name: 세 명 이상이어도 명단 순서를 유지한다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [R1]
+  - fn: reports_every_invalid_member_test
+    name: 틀린 사람이 여럿이면 모두 명단 순서대로 알린다
+    visibility: hidden
+    errorTag: stops_at_first_error
+    requirements: [R2, R3]
+  - fn: first_member_is_number_one_test
+    name: 첫 번째 사람의 번호는 1이다
+    visibility: hidden
+    errorTag: off_by_one
+    requirements: [R2]
+requirements:
+  - id: R1
+    description: 모두 통과하면 입력 순서대로 NewUser 목록
+  - id: R2
+    description: 실패한 사람마다 1부터 센 번호와 validate_all의 오류 목록
+  - id: R3
+    description: 실패한 사람을 빠짐없이 명단 순서대로
+hints:
+  - level: 1
+    kind: question
+    text: 두 번째 사람이 틀렸을 때 세 번째 사람을 검사할 필요가 있을까요? 결과에서 올바른 사람의 정보는 언제 필요할까요?
+  - level: 2
+    kind: concept
+    text: "`result.partition(results)`는 `#(성공 값 목록, 오류 목록)`을 돌려줍니다. 문서에 적혀 있듯이 두 목록은 원래 순서의 **역순**입니다. `list.index_map`의 인덱스는 0부터 시작합니다."
+  - level: 3
+    kind: approach
+    text: 사람마다 `validate_all`을 실행하고 오류에 번호를 붙여 `Result(NewUser, #(Int, List(SignupError)))` 목록을 만드세요. 그 목록을 성공과 실패로 나눈 뒤, 실패가 없을 때만 `Ok`를 반환하세요. 순서를 확인하세요.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      let results =
+        list.index_map(forms, fn(form, index) {
+          validate_all(form)
+          |> result.map_error(fn(errors) { todo })
+        })
+      case result.partition(results) {
+        #(users, []) -> todo
+        #(_, failures) -> todo
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: partition-reversed
+    mustFail: [keeps_member_order_test, reports_every_invalid_member_test]
+    errorTag: reverses_order
+  - key: zero-based-index
+    mustFail: [first_member_is_number_one_test]
+    errorTag: off_by_one
+  - key: stops-at-first-form
+    mustFail: [reports_every_invalid_member_test]
+    errorTag: stops_at_first_error

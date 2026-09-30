@@ -1,0 +1,76 @@
+kind: implement
+format: drill
+module: indexed
+title: 위치 번호를 함께 넘기는 map 직접 만들기
+source:
+  kind: original
+difficulty: 1350
+estimatedMinutes: 6
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: empty_list_test
+    name: 빈 목록은 빈 목록을 반환한다
+    visibility: public
+    requirements: [R1]
+  - fn: index_starts_at_zero_test
+    name: 첫 원소의 위치 번호는 0이다
+    visibility: public
+    errorTag: off_by_one
+    requirements: [R2]
+  - fn: numbers_lines_test
+    name: 위치 번호로 항목에 순번을 붙일 수 있다
+    visibility: public
+    requirements: [R1, R2]
+  - fn: single_element_gets_zero_test
+    name: 원소가 하나면 위치 번호 0으로 한 번 호출한다
+    visibility: hidden
+    errorTag: off_by_one
+    requirements: [R2]
+  - fn: combines_value_and_index_test
+    name: 같은 값이어도 위치마다 다른 번호를 받는다
+    visibility: hidden
+    errorTag: off_by_one
+    requirements: [R2]
+  - fn: keeps_order_of_long_list_test
+    name: 긴 목록에서도 원래 순서를 유지한다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [R3]
+requirements:
+  - id: R1
+    description: 모든 원소에 함수를 적용하고 길이를 유지
+  - id: R2
+    description: 0부터 1씩 증가하는 위치 번호를 전달
+  - id: R3
+    description: 원래 순서를 유지
+hints:
+  - level: 1
+    kind: question
+    text: 재귀로 한 칸씩 내려갈 때 "지금 몇 번째 원소인가"라는 정보는 어디에 보관할 수 있을까요?
+  - level: 2
+    kind: concept
+    text: 공개 함수의 인자에는 위치 번호가 없습니다. 번호를 인자로 받는 보조 함수를 따로 만들고, 공개 함수는 시작값 0으로 그 함수를 호출하는 방식이 흔합니다.
+  - level: 3
+    kind: approach
+    text: "보조 함수 `go(list, fun, index, acc)`가 원소 하나를 처리할 때마다 `index + 1`로 재귀하게 하세요. 결과를 `acc` 앞에 쌓았다면 끝에서 뒤집어야 합니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      fn go(items: List(a), fun: fn(a, Int) -> b, index: Int, acc: List(b)) -> List(b) {
+        case items {
+          [] -> todo
+          [first, ..rest] -> go(rest, fun, index + 1, todo)
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: index-from-one
+    mustFail: [index_starts_at_zero_test, single_element_gets_zero_test, combines_value_and_index_test]
+    errorTag: off_by_one
+  - key: accumulator-no-reverse
+    mustFail: [index_starts_at_zero_test, keeps_order_of_long_list_test]
+    errorTag: reverses_order

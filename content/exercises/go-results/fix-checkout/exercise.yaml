@@ -1,0 +1,75 @@
+kind: fix
+format: drill
+module: checkout
+title: 재고 오류를 삼키는 결제 처리 고치기
+contextTags: [orders]
+difficulty: 1300
+estimatedMinutes: 5
+tests:
+  - fn: successful_checkout_test
+    name: 모든 단계를 통과하면 포인트가 적용된 주문을 Paid 상태로 반환한다
+    visibility: public
+    requirements: [R1]
+  - fn: charge_failure_test
+    name: 결제가 실패하면 결제 오류를 반환한다
+    visibility: public
+    requirements: [R2]
+  - fn: stock_failure_test
+    name: 재고 확인이 실패하면 재고 오류를 반환한다
+    visibility: public
+    errorTag: swallows_error_with_default
+    requirements: [R2]
+  - fn: stock_error_wins_over_charge_error_test
+    name: 재고와 결제가 모두 실패하면 먼저 실행된 재고 오류를 반환한다
+    visibility: hidden
+    errorTag: reports_last_error
+    requirements: [R2]
+  - fn: charge_sees_discounted_amount_test
+    name: 결제 단계는 포인트가 적용된 금액을 받는다
+    visibility: hidden
+    errorTag: wrong_step_order
+    requirements: [R3]
+  - fn: points_use_stock_checked_order_test
+    name: 포인트는 재고 확인 단계가 돌려준 주문에 적용한다
+    visibility: hidden
+    errorTag: uses_stale_state
+    requirements: [R3]
+requirements:
+  - id: R1
+    description: 성공하면 Paid 상태의 주문을 Ok로 반환
+  - id: R2
+    description: 먼저 발생한 오류를 그대로 반환
+  - id: R3
+    description: 재고 확인, 포인트 적용, 결제 순서로 진행
+hints:
+  - level: 1
+    kind: question
+    text: "`check_stock`이 `Error`를 돌려주면 지금 코드에서 그 오류는 어디로 가나요?"
+  - level: 2
+    kind: concept
+    text: "`result.unwrap(r, 기본값)`은 `Error`를 기본값으로 바꿔 버립니다. 오류를 호출한 쪽까지 전달하려면 `result.try`나 `use x <- result.try(...)`를 씁니다."
+  - level: 3
+    kind: approach
+    text: "재고 확인 결과가 `Ok`일 때만 다음 단계로 진행하도록 바꾸세요. 포인트 적용은 실패하지 않으므로 그대로 두고, 결제 결과는 `Paid` 상태로 바꿔 반환합니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      use checked <- result.try(check_stock(order))
+      let discounted = apply_points(checked)
+      use charged <- result.try(todo)
+      todo
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: later-error-first
+    mustFail: [stock_error_wins_over_charge_error_test]
+    errorTag: reports_last_error
+  - key: charge-before-points
+    mustFail: [charge_sees_discounted_amount_test]
+    errorTag: wrong_step_order
+  - key: ignores-checked-order
+    mustFail: [points_use_stock_checked_order_test]
+    errorTag: uses_stale_state

@@ -1,0 +1,95 @@
+kind: implement
+format: challenge
+module: subtitle_words
+title: 축약형과 따옴표를 구분해 자막 단어 세기
+difficulty: 1600
+estimatedMinutes: 12
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: trim_quotes_keeps_inner_apostrophe_test
+    name: 앞뒤 작은따옴표는 모두 없애고 가운데 작은따옴표는 남긴다
+    visibility: public
+    errorTag: keeps_surrounding_quotes
+    requirements: [R2]
+  - fn: tokens_split_on_non_word_chars_test
+    name: 작은따옴표는 조각에 남기고 다른 구분자로만 나눈다
+    visibility: public
+    errorTag: splits_contractions
+    requirements: [R1]
+  - fn: contractions_are_single_words_test
+    name: 축약형은 한 단어로 센다
+    visibility: public
+    errorTag: splits_contractions
+    requirements: [R1, R3]
+  - fn: quotes_around_word_are_removed_test
+    name: 따옴표로 감싼 단어는 따옴표 없는 단어와 같이 센다
+    visibility: public
+    errorTag: keeps_surrounding_quotes
+    requirements: [R2, R3]
+  - fn: quoted_contraction_test
+    name: 따옴표로 감싼 축약형도 축약형 그대로 센다
+    visibility: hidden
+    errorTag: keeps_surrounding_quotes
+    requirements: [R1, R2]
+  - fn: alternating_separators_test
+    name: 구분자가 여러 종류로 섞여도 빈 단어를 세지 않는다
+    visibility: hidden
+    errorTag: counts_empty_words
+    requirements: [R3]
+  - fn: lone_quotes_are_not_words_test
+    name: 작은따옴표만 있는 조각은 단어가 아니다
+    visibility: hidden
+    errorTag: counts_empty_words
+    requirements: [R2]
+  - fn: full_subtitle_test
+    name: 큰따옴표, 숫자, 줄바꿈이 섞인 자막 전체를 센다
+    visibility: hidden
+    errorTag: keeps_surrounding_quotes
+    requirements: [R1, R2, R3]
+requirements:
+  - id: R1
+    description: 작은따옴표는 단어를 나누지 않음
+  - id: R2
+    description: 단어 앞뒤의 작은따옴표는 제거하고, 남은 것이 없으면 단어가 아님
+  - id: R3
+    description: 소문자 기준 단어별 등장 횟수
+hints:
+  - level: 1
+    kind: question
+    text: "`'can't'`에서 작은따옴표 세 개 중 어느 것이 단어의 일부이고 어느 것이 인용 부호인가요? 두 종류는 위치로 구별할 수 있나요?"
+  - level: 2
+    kind: concept
+    text: 작은따옴표를 일단 단어 글자로 취급해 나눈 뒤, 조각의 앞뒤에 붙은 작은따옴표만 떼어 내면 가운데의 작은따옴표는 자연스럽게 남습니다. `list.drop_while`은 앞에서부터 조건이 참인 동안 원소를 버립니다.
+  - level: 3
+    kind: approach
+    text: "`tokens`로 나누고, 각 조각에 `trim_quotes`를 적용하고, 빈 문자열을 버린 다음 dict로 세세요. `trim_quotes`는 글자 목록의 앞에서 한 번, 뒤집어서 한 번 `drop_while`을 적용하면 됩니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn trim_quotes(token: String) -> String {
+        token
+        |> string.to_graphemes
+        |> list.drop_while(fn(g) { g == "'" })
+        |> todo
+        |> string.concat
+      }
+
+      pub fn count_words(input: String) -> Dict(String, Int) {
+        input
+        |> string.lowercase
+        |> tokens
+        |> list.map(trim_quotes)
+        |> todo
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: keeps-quotes
+    mustFail: [trim_quotes_keeps_inner_apostrophe_test, quotes_around_word_are_removed_test, quoted_contraction_test, lone_quotes_are_not_words_test]
+    errorTag: keeps_surrounding_quotes
+  - key: apostrophe-splits
+    mustFail: [tokens_split_on_non_word_chars_test, contractions_are_single_words_test, quoted_contraction_test]
+    errorTag: splits_contractions

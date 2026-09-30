@@ -1,0 +1,37 @@
+kind: predict
+format: drill
+title: 누적 방향이 드러나는 fold 결과 예측하기
+difficulty: 1450
+estimatedMinutes: 4
+theoryTopics: [fold-universality, function-composition-pipelines]
+predict:
+  code: |
+    import gleam/list
+    import gleam/string
+
+    ["a", "b", "c"]
+    |> list.index_map(fn(s, i) { string.repeat(s, i + 1) })
+    |> list.fold("", fn(acc, s) { s <> acc })
+  acceptedAnswers: ["\"cccbba\"", "cccbba"]
+hints:
+  - level: 1
+    kind: question
+    text: "`list.fold`의 함수 안에서 새 원소 `s`는 누적값 `acc`의 앞에 붙나요, 뒤에 붙나요?"
+  - level: 2
+    kind: concept
+    text: "`list.index_map`의 인덱스는 0부터 시작합니다. `list.fold`는 목록을 앞에서부터 훑고, 함수가 돌려준 값이 다음 누적값이 됩니다."
+  - level: 3
+    kind: approach
+    text: 먼저 `index_map`의 결과 목록을 적고, 그다음 fold의 누적값이 원소마다 어떻게 바뀌는지 표로 적어 보세요.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      ["a", "b", "c"]
+      |> list.index_map(...)  // ["a", "bb", "ccc"]
+      |> list.fold("", ...)
+      // acc: "" -> "a" -> todo -> todo
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.

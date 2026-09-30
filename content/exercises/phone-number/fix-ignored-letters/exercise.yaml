@@ -1,0 +1,84 @@
+kind: fix
+format: drill
+module: phone_number
+title: 영문자를 조용히 지우는 번호 정리 고치기
+contextTags: [messaging, signup]
+difficulty: 1300
+estimatedMinutes: 5
+tests:
+  - fn: cleans_punctuation_test
+    name: 점으로 구분된 번호를 10자리 숫자로 정리한다
+    visibility: public
+    requirements: [R1]
+  - fn: strips_country_code_test
+    name: 국가 번호 1이 붙은 번호는 1을 떼고 정리한다
+    visibility: public
+    requirements: [R1]
+  - fn: too_few_digits_test
+    name: 숫자가 10개보다 적으면 TooFewDigits를 반환한다
+    visibility: public
+    requirements: [R1]
+  - fn: letters_rejected_test
+    name: 영문자가 섞여 있으면 그 글자를 담은 InvalidCharacter를 반환한다
+    visibility: public
+    errorTag: drops_invalid_input
+    requirements: [R2]
+  - fn: unknown_symbol_rejected_test
+    name: 허용되지 않은 기호도 InvalidCharacter로 알려 준다
+    visibility: hidden
+    errorTag: drops_invalid_input
+    requirements: [R2]
+  - fn: separators_still_allowed_test
+    name: 공백, 괄호, 하이픈, +는 여전히 구분 기호로 허용한다
+    visibility: hidden
+    errorTag: rejects_valid_separators
+    requirements: [R1]
+  - fn: character_check_before_length_test
+    name: 짧은 번호에 잘못된 글자가 있으면 길이 오류보다 글자 오류가 먼저다
+    visibility: hidden
+    errorTag: wrong_check_order
+    requirements: [R2]
+requirements:
+  - id: R1
+    description: 허용된 구분 기호는 지우고 길이와 국가 번호 규칙 적용
+  - id: R2
+    description: 허용되지 않은 글자는 길이 검사보다 먼저 InvalidCharacter로 보고
+hints:
+  - level: 1
+    kind: question
+    text: "`list.filter(is_digit)`를 지나면 `\"223-45a6-7890\"`의 `a`는 어떻게 되나요? 그 뒤의 코드가 `a`가 있었다는 것을 알 수 있나요?"
+  - level: 2
+    kind: concept
+    text: "`list.filter`는 조건에 맞지 않는 원소를 버립니다. 버리는 대신 알리려면 원소마다 `Result`를 돌려주고 `list.try_map`으로 모읍니다."
+  - level: 3
+    kind: approach
+    text: "먼저 허용된 구분 기호만 지우세요. 남은 글자는 모두 숫자여야 하므로, 숫자가 아니면 `InvalidCharacter`를 돌려주는 단계로 검사합니다. 이 단계가 성공했을 때만 기존 길이 검사로 넘어갑니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn clean(input: String) -> Result(String, PhoneError) {
+        use digits <- result.try(extract_digits(input))
+        normalize_length(digits)
+      }
+
+      fn extract_digits(input: String) -> Result(List(String), PhoneError) {
+        input
+        |> string.to_graphemes
+        |> list.filter(fn(char) { !is_separator(char) })
+        |> list.try_map(todo)
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: letters-only
+    mustFail: [unknown_symbol_rejected_test]
+    errorTag: drops_invalid_input
+  - key: no-separators
+    mustFail: [separators_still_allowed_test, strips_country_code_test]
+    errorTag: rejects_valid_separators
+  - key: length-first
+    mustFail: [character_check_before_length_test]
+    errorTag: wrong_check_order

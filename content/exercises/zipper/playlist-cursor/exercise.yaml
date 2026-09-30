@@ -1,0 +1,112 @@
+kind: implement
+format: drill
+module: playlist
+title: 재생 목록 커서를 리스트 지퍼로 만들기
+difficulty: 1450
+estimatedMinutes: 6
+contextTags: [ media ]
+source:
+  kind: original
+theoryTopics: [persistent-data-structures, amortized-analysis, cost-model-immutable-structures]
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: next_moves_forward_test
+    name: next는 다음 곡으로 옮긴다
+    visibility: public
+    requirements: [ R1 ]
+  - fn: previous_at_first_song_fails_test
+    name: 첫 곡에서 previous하면 Error(Nil)을 돌려준다
+    visibility: public
+    requirements: [ R1 ]
+  - fn: to_list_after_moves_test
+    name: 커서를 옮겨도 to_list는 원래 곡 순서다
+    visibility: public
+    errorTag: reverses_order
+    requirements: [ R2 ]
+  - fn: next_at_last_song_fails_test
+    name: 마지막 곡에서 next하면 Error(Nil)을 돌려준다
+    visibility: hidden
+    errorTag: moves_past_end
+    requirements: [ R1 ]
+  - fn: previous_returns_to_earlier_song_test
+    name: previous로 돌아가도 곡이 사라지지 않는다
+    visibility: hidden
+    errorTag: loses_current_item
+    requirements: [ R1, R2 ]
+  - fn: remove_moves_to_next_song_test
+    name: 지금 곡을 지우면 다음 곡이 지금 곡이 된다
+    visibility: hidden
+    errorTag: loses_current_item
+    requirements: [ R3 ]
+  - fn: remove_last_song_moves_back_test
+    name: 마지막 곡을 지우면 앞 곡이 지금 곡이 된다
+    visibility: hidden
+    errorTag: ignores_fallback
+    requirements: [ R3 ]
+  - fn: remove_only_song_fails_test
+    name: 곡이 하나뿐이면 지울 수 없어 Error(Nil)을 돌려준다
+    visibility: hidden
+    errorTag: ignores_empty_input
+    requirements: [ R3 ]
+requirements:
+  - id: R1
+    description: next, previous는 커서를 한 칸 옮기고, 끝에서는 Error(Nil)
+  - id: R2
+    description: to_list는 원래 곡 순서
+  - id: R3
+    description: remove_current는 다음 곡, 없으면 앞 곡으로 옮기고, 둘 다 없으면 Error(Nil)
+  - id: R4
+    description: next, previous, remove_current가 O(1)
+hints:
+  - level: 1
+    kind: question
+    text: 지금 곡 바로 앞의 곡을 O(1)로 꺼내려면 `before` 리스트의 어느 끝에 그 곡이 있어야 할까요?
+  - level: 2
+    kind: concept
+    text: 리스트 지퍼는 "초점 앞"과 "초점 뒤"를 두 리스트로 나눕니다. 앞쪽은 가까운 원소가 맨 앞에 오도록 역순으로 두면, 커서를 옮길
+      때 한 리스트의 머리를 떼어 다른 리스트의 머리에 붙이기만 하면 됩니다. 전체 목록이 필요할 때만 앞쪽을 뒤집습니다.
+  - level: 3
+    kind: approach
+    text: "`next`는 `after`의 첫 곡을 새 `current`로, 옛 `current`를 `before` 앞에 붙입니다.
+      `previous`는 그 반대입니다. `to_list`는 `list.reverse(before)` 뒤에 `current`와
+      `after`를 잇습니다. `remove_current`는 `after`, `before` 순서로 새 `current`를 찾습니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn next(cursor: Cursor(a)) -> Result(Cursor(a), Nil) {
+        case cursor.after {
+          [] -> Error(Nil)
+          [song, ..rest] -> Ok(Cursor(before: todo, current: song, after: rest))
+        }
+      }
+
+      pub fn remove_current(cursor: Cursor(a)) -> Result(Cursor(a), Nil) {
+        case cursor.after, cursor.before {
+          [song, ..rest], _ -> todo
+          [], [song, ..rest] -> todo
+          [], [] -> Error(Nil)
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: unreversed-before
+    mustFail: [ to_list_after_moves_test ]
+    errorTag: reverses_order
+  - key: remove-no-fallback
+    mustFail: [ remove_last_song_moves_back_test ]
+    errorTag: ignores_fallback
+  - key: previous-drops-current
+    mustFail: [ previous_returns_to_earlier_song_test ]
+    errorTag: loses_current_item
+performance:
+  module: playlist_perf
+  sizes: [ 1000, 4000, 16000 ]
+  maxCostRatio: 5
+  referenceCost:
+    - 10875
+    - 45241
+    - 176246

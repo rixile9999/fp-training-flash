@@ -1,0 +1,87 @@
+kind: fix
+format: drill
+module: edit_distance
+title: 끝나지 않는 상품명 비교 고치기
+contextTags: [ catalog ]
+difficulty: 1500
+estimatedMinutes: 6
+limits: { timeMs: 6000, memoryMb: 256 }
+conceptNotes: [ gleam-dict-set, gleam-recursion, gleam-strings ]
+tests:
+  - fn: similar_names_test
+    name: 한 글자만 다른 상품명의 거리는 1이다
+    visibility: public
+    requirements: [ R1 ]
+  - fn: long_names_test
+    name: 250글자 상품명끼리도 시간 제한 안에 비교한다
+    visibility: public
+    errorTag: exponential_recursion
+    requirements: [ R2 ]
+  - fn: identical_names_test
+    name: 같은 상품명의 거리는 0이다
+    visibility: hidden
+    errorTag: wrong_base_case
+    requirements: [ R1 ]
+  - fn: empty_name_test
+    name: 빈 상품명과의 거리는 다른 쪽 글자 수다
+    visibility: hidden
+    errorTag: wrong_base_case
+    requirements: [ R1 ]
+  - fn: korean_names_test
+    name: 한글 상품명도 글자 단위로 비교한다
+    visibility: hidden
+    errorTag: counts_bytes_not_graphemes
+    requirements: [ R1 ]
+  - fn: different_names_test
+    name: 글자 순서가 섞인 상품명도 최소 편집 횟수를 센다
+    visibility: hidden
+    errorTag: wrong_memo_key
+    requirements: [ R1 ]
+requirements:
+  - id: R1
+    description: 삽입, 삭제, 바꾸기 각 1회 비용 1의 최소 횟수
+  - id: R2
+    description: 두 이름 길이의 곱에 비례하는 시간
+hints:
+  - level: 1
+    kind: question
+    text: "`go`가 받는 두 목록은 항상 원래 두 이름의 \"뒷부분\"입니다. 서로 다른 (뒷부분, 뒷부분) 쌍은 몇 개뿐인가요? 지금
+      코드는 같은 쌍을 몇 번이나 계산하나요?"
+  - level: 2
+    kind: concept
+    text: "한 번 계산한 부분 문제의 답을 저장해 두고 다시 필요할 때 꺼내 쓰는 것을 메모이제이션이라고 합니다. 불변 Dict에 저장하려면,
+      갱신된 Dict를 결과와 함께 돌려주고 다음 호출에 넘겨야 합니다."
+  - level: 3
+    kind: approach
+    text: "뒷부분은 남은 길이 두 개 `#(la, lb)`로 식별할 수 있습니다. `go`가 `(a, la, b, lb, memo)`를 받아
+      `#(거리, 새 memo)`를 돌려주게 바꾸고, 세 번의 재귀 호출에서 memo를 차례로 이어 받으세요."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      [_, ..xs], [_, ..ys] -> {
+        let #(replace, memo) = go(xs, la - 1, ys, lb - 1, memo)
+        let #(delete, memo) = go(xs, la - 1, b, lb, memo)
+        let #(insert, memo) = go(a, la, ys, lb - 1, memo)
+        let value = 1 + int.min(replace, int.min(delete, insert))
+        todo
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: memo-not-threaded
+    mustFail: [ long_names_test ]
+    errorTag: drops_memo_updates
+  - key: memo-key-source-only
+    mustFail: [ different_names_test ]
+    errorTag: wrong_memo_key
+performance:
+  module: edit_distance_perf
+  sizes: [ 20, 80, 320 ]
+  maxCostRatio: 10
+  referenceCost:
+    - 9760
+    - 139759
+    - 2211294

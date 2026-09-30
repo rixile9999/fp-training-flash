@@ -1,0 +1,76 @@
+kind: implement
+format: drill
+module: deploy_monitor
+title: 배포 로그 요약하기
+difficulty: 1400
+estimatedMinutes: 6
+contextTags: [logging, deployment]
+conceptNotes: [gleam-custom-types, gleam-record-update, gleam-option-result]
+theoryTopics: [fold-universality, algebraic-data-types]
+tests:
+  - fn: empty_entries_test
+    name: 로그가 없으면 모든 개수가 0이고 첫 치명 메시지는 None이다
+    visibility: public
+    requirements: [R1]
+  - fn: counts_by_level_test
+    name: 전체, 경고, 치명 로그 수를 센다
+    visibility: public
+    errorTag: miscounts_total
+    requirements: [R1]
+  - fn: records_critical_message_test
+    name: 치명 로그의 메시지를 기록한다
+    visibility: public
+    requirements: [R2]
+  - fn: keeps_first_critical_test
+    name: 치명 로그가 여럿이면 가장 먼저 나온 메시지를 기록한다
+    visibility: hidden
+    errorTag: keeps_last_instead_of_first
+    requirements: [R2]
+  - fn: total_includes_debug_test
+    name: 디버그 로그도 전체 수에 포함한다
+    visibility: hidden
+    errorTag: miscounts_total
+    requirements: [R1]
+  - fn: no_critical_is_none_test
+    name: 치명 로그가 없으면 첫 치명 메시지는 None이다
+    visibility: hidden
+    errorTag: wrong_default_value
+    requirements: [R2]
+requirements:
+  - id: R1
+    description: total은 모든 로그, warnings는 Warn, criticals는 Critical 로그 수
+  - id: R2
+    description: first_critical은 처음 나온 Critical 로그의 메시지, 없으면 None
+hints:
+  - level: 1
+    kind: question
+    text: 로그를 하나씩 볼 때마다 요약의 어느 필드가 바뀌나요? 치명 메시지가 이미 기록되어 있다면 새 치명 로그를 만났을 때 어떻게 해야 할까요?
+  - level: 2
+    kind: concept
+    text: "`list.fold`의 누적값은 레코드여도 됩니다. `Summary(..summary, warnings: summary.warnings + 1)`처럼 레코드 갱신으로 필드 하나만 바꾼 새 요약을 만드세요."
+  - level: 3
+    kind: approach
+    text: "빈 요약 `Summary(0, 0, 0, None)`에서 시작해, 모든 로그마다 `total`을 늘리고, `case entry.level`로 레벨별 필드를 늘리세요. `first_critical`은 아직 `None`일 때만 채웁니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      list.fold(entries, Summary(0, 0, 0, None), fn(summary, entry) {
+        let summary = Summary(..summary, total: summary.total + 1)
+        case entry.level {
+          Debug | Info -> summary
+          Warn -> todo
+          Critical -> todo
+        }
+      })
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: last-critical-wins
+    mustFail: [keeps_first_critical_test]
+    errorTag: keeps_last_instead_of_first
+  - key: debug-not-counted
+    mustFail: [counts_by_level_test, total_includes_debug_test]
+    errorTag: miscounts_total

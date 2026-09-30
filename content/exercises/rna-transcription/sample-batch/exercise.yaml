@@ -1,0 +1,70 @@
+kind: implement
+format: drill
+module: rna_transcription
+title: 시료 묶음을 한꺼번에 전사하기
+contextTags: [biology, lab]
+difficulty: 1400
+estimatedMinutes: 6
+tests:
+  - fn: empty_batch_test
+    name: 시료가 없으면 Ok([])를 반환한다
+    visibility: public
+    requirements: [R1]
+  - fn: all_valid_test
+    name: 모든 시료가 올바르면 시료 번호와 RNA 쌍을 원래 순서대로 반환한다
+    visibility: public
+    requirements: [R1]
+  - fn: invalid_sample_test
+    name: 잘못된 시료가 있으면 그 시료 번호를 Error로 반환한다
+    visibility: public
+    errorTag: drops_invalid_input
+    requirements: [R2]
+  - fn: first_invalid_sample_test
+    name: 잘못된 시료가 여럿이면 목록에서 가장 앞의 시료 번호를 반환한다
+    visibility: hidden
+    errorTag: reports_last_error
+    requirements: [R2]
+  - fn: empty_dna_sample_is_valid_test
+    name: DNA가 빈 시료는 올바른 시료로 보고 빈 RNA를 준다
+    visibility: hidden
+    errorTag: rejects_empty_input
+    requirements: [R1]
+requirements:
+  - id: R1
+    description: 모든 시료가 올바르면 순서를 지켜 변환 결과를 반환
+  - id: R2
+    description: 첫 번째 잘못된 시료 번호를 Error로 반환
+hints:
+  - level: 1
+    kind: question
+    text: "`to_rna`는 이미 있습니다. 시료 하나의 결과가 `Error(Nil)`일 때, 호출한 쪽에 알려야 하는 정보는 무엇인가요?"
+  - level: 2
+    kind: concept
+    text: "`result.replace_error(r, e)`는 `Error(_)`를 `Error(e)`로 바꾸고 `Ok`는 그대로 둡니다. `list.try_map`은 모두 성공하면 `Ok(목록)`, 아니면 첫 `Error`를 반환합니다."
+  - level: 3
+    kind: approach
+    text: "시료 하나를 `Result(#(String, String), String)`으로 바꾸는 함수를 만든 뒤 `list.try_map`에 넘기세요. 성공하면 `#(id, rna)`, 실패하면 `id`가 오류 값입니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn transcribe_samples(
+        samples: List(Sample),
+      ) -> Result(List(#(String, String)), String) {
+        list.try_map(samples, fn(sample) {
+          to_rna(sample.dna)
+          |> result.map(todo)
+          |> result.replace_error(todo)
+        })
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: skip-invalid
+    mustFail: [invalid_sample_test, first_invalid_sample_test]
+    errorTag: drops_invalid_input
+  - key: last-invalid
+    mustFail: [first_invalid_sample_test]
+    errorTag: reports_last_error

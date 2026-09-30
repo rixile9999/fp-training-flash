@@ -1,0 +1,23 @@
+# Family-level defaults; each variant's exercise.yaml may override any of these.
+title: 편집 거리 (레벤슈타인 거리)
+primarySkill: dynamic-programming
+secondarySkills: [recursive-algorithms]
+contextTags: [search]
+source:
+  kind: original
+conceptNotes: [gleam-strings, gleam-recursion, gleam-list-transform]
+theoryTopics: [dynamic-programming-subproblems, cost-model-immutable-structures, structural-recursion-induction]
+rubric:
+  - id: R-07
+    title: 부분 문제의 답을 표에 저장해 재사용
+    description: "\"앞 i글자를 앞 j글자로 바꾸는 비용\"을 표(이전 행 목록 또는 Dict)에 저장하고 꺼내 쓴다."
+  - id: R-13
+    title: 문자열을 글자(grapheme) 단위로 다룸
+    description: 한글처럼 여러 바이트인 글자도 한 글자로 세도록 `string.to_graphemes`로 나눈다.
+  - id: R-09
+    title: let assert와 panic을 쓰지 않음
+    description: 실패 가능성은 타입으로 표현한다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "\\blet assert\\b|\\bpanic\\b"
+      message: let assert 또는 panic을 사용했습니다.

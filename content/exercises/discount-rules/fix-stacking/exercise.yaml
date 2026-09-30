@@ -1,0 +1,78 @@
+kind: fix
+format: drill
+module: coupon_stack
+title: 쿠폰 중복 적용 코드의 버그 고치기
+contextTags: [coupons, pricing]
+difficulty: 1350
+estimatedMinutes: 5
+tests:
+  - fn: apply_coupon_percent_test
+    name: 퍼센트 쿠폰은 가격을 비율만큼 깎는다
+    visibility: public
+  - fn: apply_coupon_fixed_floor_test
+    name: 정액 쿠폰 결과는 0보다 작아지지 않는다
+    visibility: public
+  - fn: apply_all_stacks_test
+    name: 여러 쿠폰을 겹쳐 적용하면 할인이 누적된다
+    visibility: public
+    errorTag: ignores_accumulator
+    requirements: [R1]
+  - fn: apply_all_order_test
+    name: 쿠폰은 목록 순서대로 적용한다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [R1]
+  - fn: apply_all_empty_test
+    name: 쿠폰이 없으면 가격이 그대로다
+    visibility: hidden
+    errorTag: wrong_fold_initial
+    requirements: [R1]
+  - fn: best_single_test
+    name: 쿠폰 하나만 쓸 때 가장 낮은 가격을 찾는다
+    visibility: public
+    errorTag: wrong_fold_initial
+    requirements: [R2]
+  - fn: best_single_no_coupons_test
+    name: 쿠폰이 없으면 원래 가격이 가장 낮은 가격이다
+    visibility: hidden
+    errorTag: ignores_empty_input
+    requirements: [R2]
+requirements:
+  - id: R1
+    description: apply_all은 앞 쿠폰의 결과에 다음 쿠폰을 목록 순서대로 적용한다
+  - id: R2
+    description: best_single은 쿠폰을 하나만 쓸 때의 최저가를 돌려주고, 쿠폰이 없으면 원래 가격이다
+hints:
+  - level: 1
+    kind: question
+    text: "`apply_all`의 fold 안에서 쿠폰에 넘기는 가격은 어디에서 오나요? 누적값은 실제로 쓰이고 있나요?"
+  - level: 2
+    kind: concept
+    text: "`list.fold(목록, 초기값, fn(누적값, 원소) { ... })`에서 함수가 돌려준 값이 다음 단계의 누적값이 됩니다. 최솟값을 구하는 fold의 초기값은 결과에 영향을 주지 않는 값이어야 합니다."
+  - level: 3
+    kind: approach
+    text: 버그는 `apply_all`과 `best_single`에 하나씩 있습니다. 컴파일러 경고(사용하지 않는 변수)도 단서입니다. 쿠폰을 하나도 쓰지 않는 것도 선택지라는 점을 떠올리세요.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn apply_all(price: Int, coupons: List(Coupon)) -> Int {
+        list.fold(coupons, price, fn(total, coupon) { todo })
+      }
+
+      pub fn best_single(price: Int, coupons: List(Coupon)) -> Int {
+        coupons
+        |> list.map(apply_coupon(price, _))
+        |> list.fold(todo, int.min)
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: fold-right
+    mustFail: [apply_all_order_test]
+    errorTag: reverses_order
+  - key: reduce-unwrap-zero
+    mustFail: [best_single_no_coupons_test]
+    errorTag: ignores_empty_input

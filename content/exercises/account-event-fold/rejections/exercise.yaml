@@ -1,0 +1,81 @@
+kind: implement
+format: drill
+module: ledger
+title: 거절된 이벤트를 기록하며 계좌 상태 만들기
+difficulty: 1500
+theoryTopics: [fold-universality, algebraic-data-types, separating-effects]
+estimatedMinutes: 7
+tests:
+  - fn: apply_event_deposit_test
+    name: 열린 계좌에 입금하면 Ok로 새 계좌를 돌려준다
+    visibility: public
+    requirements: [R1]
+  - fn: apply_event_insufficient_test
+    name: 잔액보다 큰 출금은 요청액과 잔액을 담아 거절한다
+    visibility: public
+    requirements: [R1]
+  - fn: apply_event_closed_first_test
+    name: 해지된 계좌의 출금은 잔액과 상관없이 AccountClosed로 거절한다
+    visibility: hidden
+    errorTag: wrong_error_variant
+    requirements: [R2]
+  - fn: replay_collects_rejections_test
+    name: 거절된 이벤트를 모으고 나머지는 반영한다
+    visibility: public
+    requirements: [R3]
+  - fn: replay_continues_after_rejection_test
+    name: 거절 뒤에도 다음 이벤트를 계속 반영한다
+    visibility: hidden
+    errorTag: stops_at_first_error
+    requirements: [R3]
+  - fn: replay_rejections_in_order_test
+    name: 거절 목록은 발생 순서대로다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [R3]
+requirements:
+  - id: R1
+    description: apply_event는 성공하면 Ok(새 계좌), 규칙 위반이면 Error(사유)를 돌려준다
+  - id: R2
+    description: 해지된 계좌에 대한 모든 이벤트는 AccountClosed로 거절한다
+  - id: R3
+    description: replay는 거절된 이벤트를 건너뛰며 계속 진행하고, 거절 사유를 순서대로 모은다
+hints:
+  - level: 1
+    kind: question
+    text: 이벤트 하나를 처리한 결과는 "새 계좌" 또는 "거절 사유" 둘 중 하나입니다. 이 둘을 한 타입으로 표현하려면 무엇이 필요할까요?
+  - level: 2
+    kind: concept
+    text: "`Result(Account, Rejection)`으로 성공과 거절을 나누고, `list.fold`의 누적값을 `#(Account, List(Rejection))`로 두면 계좌와 거절 기록을 함께 들고 갈 수 있습니다."
+  - level: 3
+    kind: approach
+    text: "`apply_event`에서 해지 여부를 가장 먼저 확인하세요. `replay`는 `apply_event`의 결과가 `Ok`이면 계좌를 바꾸고, `Error`이면 계좌는 그대로 두고 사유만 기록합니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn replay(events: List(Event)) -> #(Account, List(Rejection)) {
+        let #(account, rejections) =
+          list.fold(events, #(Account(0, True), []), fn(acc, event) {
+            let #(account, rejections) = acc
+            case apply_event(account, event) {
+              Ok(next) -> todo
+              Error(reason) -> todo
+            }
+          })
+        todo
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: reversed-rejections
+    mustFail: [replay_rejections_in_order_test]
+    errorTag: reverses_order
+  - key: funds-check-first
+    mustFail: [apply_event_closed_first_test]
+    errorTag: wrong_error_variant
+  - key: stop-at-first-error
+    mustFail: [replay_continues_after_rejection_test]
+    errorTag: stops_at_first_error

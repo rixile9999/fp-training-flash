@@ -1,0 +1,65 @@
+kind: fix
+format: drill
+module: rna_transcription
+title: 잘못된 염기를 조용히 버리는 전사 고치기
+difficulty: 1150
+estimatedMinutes: 4
+tests:
+  - fn: valid_strand_test
+    name: 올바른 가닥은 RNA로 변환해 Ok로 반환한다
+    visibility: public
+    requirements: [R1]
+  - fn: empty_strand_test
+    name: 빈 가닥은 Ok("")이다
+    visibility: public
+    errorTag: rejects_empty_input
+    requirements: [R1]
+  - fn: invalid_in_middle_test
+    name: 가운데에 잘못된 글자가 있으면 Error(Nil)을 반환한다
+    visibility: public
+    errorTag: drops_invalid_input
+    requirements: [R2]
+  - fn: all_invalid_test
+    name: 모든 글자가 잘못되어도 Ok("")가 아니라 Error(Nil)이다
+    visibility: hidden
+    errorTag: drops_invalid_input
+    requirements: [R2]
+  - fn: rna_base_rejected_test
+    name: DNA에 없는 U가 섞여 있으면 Error(Nil)을 반환한다
+    visibility: hidden
+    errorTag: passes_invalid_through
+    requirements: [R2]
+requirements:
+  - id: R1
+    description: 올바른 가닥은 변환 결과를 Ok로 반환
+  - id: R2
+    description: 잘못된 글자가 하나라도 있으면 Error(Nil)
+hints:
+  - level: 1
+    kind: question
+    text: "`\"ACXT\"`를 넣으면 지금 코드는 무엇을 돌려주나요? 결과 길이가 입력 길이와 같은가요?"
+  - level: 2
+    kind: concept
+    text: "`list.filter_map`은 `Error`가 나온 원소를 버리고 계속 진행합니다. `list.try_map`은 `Error`가 나오면 멈추고 그 `Error`를 돌려줍니다."
+  - level: 3
+    kind: approach
+    text: "버리는 함수 대신 실패를 전달하는 함수로 바꾸고, 무조건 `Ok`로 감싸는 마지막 단계를 성공한 경우에만 이어 붙이도록 바꾸세요."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      dna
+      |> string.to_graphemes
+      |> list.try_map(complement)
+      |> todo
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: empty-means-invalid
+    mustFail: [invalid_in_middle_test, empty_strand_test]
+    errorTag: drops_invalid_input
+  - key: pass-through
+    mustFail: [invalid_in_middle_test, all_invalid_test, rna_base_rejected_test]
+    errorTag: passes_invalid_through

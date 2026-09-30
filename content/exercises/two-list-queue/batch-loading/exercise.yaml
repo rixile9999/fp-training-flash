@@ -1,0 +1,89 @@
+kind: implement
+format: drill
+module: fifo
+title: 택배 상차 대기열에서 n개씩 꺼내기
+difficulty: 1450
+estimatedMinutes: 6
+contextTags: [logistics]
+theoryTopics: [amortized-analysis, accumulators-and-tail-recursion]
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: pop_returns_oldest_parcel_test
+    name: pop은 가장 먼저 도착한 택배와 나머지 대기열을 돌려준다
+    visibility: public
+    errorTag: reverses_order
+    requirements: [R1]
+  - fn: pop_empty_queue_test
+    name: 빈 대기열에서 pop하면 Error(Nil)을 돌려준다
+    visibility: public
+    requirements: [R1]
+  - fn: takes_batch_in_arrival_order_test
+    name: take는 앞에서부터 n개를 도착 순서대로 꺼낸다
+    visibility: public
+    errorTag: reverses_order
+    requirements: [R2]
+  - fn: takes_everything_when_short_test
+    name: 대기 택배가 n개보다 적으면 남은 것을 모두 꺼낸다
+    visibility: hidden
+    errorTag: ignores_empty_input
+    requirements: [R3]
+  - fn: take_zero_keeps_queue_test
+    name: n이 0이면 아무것도 꺼내지 않는다
+    visibility: hidden
+    errorTag: off_by_one
+    requirements: [R3]
+  - fn: take_negative_keeps_queue_test
+    name: n이 음수면 아무것도 꺼내지 않는다
+    visibility: hidden
+    errorTag: mishandles_negative_count
+    requirements: [R3]
+  - fn: consecutive_batches_test
+    name: 꺼낸 뒤 새로 도착한 택배는 다음 묶음의 뒤쪽에 실린다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [R2]
+requirements:
+  - id: R1
+    description: pop은 가장 먼저 넣은 원소를 꺼내고, 빈 큐면 Error(Nil)
+  - id: R2
+    description: take는 앞에서부터 최대 n개를 도착 순서대로 꺼낸다
+  - id: R3
+    description: n이 0 이하이거나 원소가 부족한 경우를 처리한다
+hints:
+  - level: 1
+    kind: question
+    text: "`take(queue, n)`을 `pop` 한 번과 `take(나머지, n - 1)`로 나눠 생각할 수 있을까요? 언제 멈춰야 하나요?"
+  - level: 2
+    kind: concept
+    text: 반복을 재귀로 쓸 때 꺼낸 원소를 누적자 리스트의 앞에 붙이면 역순으로 쌓입니다. 멈출 때 한 번 뒤집으면 됩니다. `front`가 비었을 때 `back`을 뒤집어 옮기는 것도 같은 원리입니다.
+  - level: 3
+    kind: approach
+    text: 먼저 `pop`을 완성하세요. 그다음 `take_loop(queue, n, taken)`을 만들어 `n > 0`이고 `pop`이 성공하는 동안 반복하고, 둘 중 하나가 아니면 `#(list.reverse(taken), queue)`를 돌려주세요.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      fn take_loop(queue: Queue(a), n: Int, taken: List(a)) -> #(List(a), Queue(a)) {
+        case n > 0 {
+          False -> #(list.reverse(taken), queue)
+          True ->
+            case pop(queue) {
+              Ok(#(item, rest)) -> todo
+              Error(Nil) -> todo
+            }
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: reversed-batch
+    mustFail: [takes_batch_in_arrival_order_test, consecutive_batches_test]
+    errorTag: reverses_order
+  - key: takes-one-extra
+    mustFail: [take_zero_keeps_queue_test]
+    errorTag: off_by_one
+  - key: zero-only-stop
+    mustFail: [take_negative_keeps_queue_test]
+    errorTag: mishandles_negative_count

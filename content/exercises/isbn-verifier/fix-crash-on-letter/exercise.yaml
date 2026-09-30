@@ -1,0 +1,82 @@
+kind: fix
+format: drill
+module: isbn_verifier
+title: 잘못 읽힌 바코드에 멈추는 ISBN 검사 고치기
+contextTags: [books, library]
+difficulty: 1250
+estimatedMinutes: 4
+tests:
+  - fn: valid_isbn_test
+    name: 올바른 ISBN은 True다
+    visibility: public
+    requirements: [R2]
+  - fn: valid_with_x_check_digit_test
+    name: 마지막 글자 X는 10으로 계산한다
+    visibility: public
+    requirements: [R2]
+  - fn: invalid_check_digit_test
+    name: 검사 숫자가 틀리면 False다
+    visibility: public
+    requirements: [R2]
+  - fn: letter_does_not_crash_test
+    name: 숫자 자리에 영문자가 있으면 멈추지 않고 False를 반환한다
+    visibility: public
+    errorTag: crashes_on_invalid_input
+    requirements: [R1]
+  - fn: invalid_character_not_zero_test
+    name: 잘못된 글자를 0으로 바꿔 계산하지 않는다
+    visibility: hidden
+    errorTag: treats_invalid_as_zero
+    requirements: [R1]
+  - fn: x_in_middle_test
+    name: 마지막이 아닌 자리의 X는 False다
+    visibility: hidden
+    errorTag: accepts_x_anywhere
+    requirements: [R1]
+  - fn: lowercase_x_test
+    name: 소문자 x로 끝나면 멈추지 않고 False를 반환한다
+    visibility: hidden
+    errorTag: crashes_on_invalid_input
+    requirements: [R1]
+requirements:
+  - id: R1
+    description: 잘못된 글자가 있으면 멈추지 않고 False
+  - id: R2
+    description: 올바른 입력의 판정은 그대로 유지
+hints:
+  - level: 1
+    kind: question
+    text: "`char_value(\"A\", 5)`를 부르면 무슨 일이 일어나나요? 이 함수의 반환 타입은 \"변환 실패\"를 표현할 수 있나요?"
+  - level: 2
+    kind: concept
+    text: "`let assert`는 패턴이 맞지 않으면 프로그램을 멈춥니다. 실패할 수 있는 변환은 `Result`를 그대로 돌려주고, `result.all(list)`로 `List(Result(a, e))`를 `Result(List(a), e)`로 모을 수 있습니다."
+  - level: 3
+    kind: approach
+    text: "`char_value`의 반환 타입을 `Result(Int, Nil)`로 바꾸세요. `is_valid`에서는 모든 글자의 결과를 모아 하나라도 `Error`면 `False`, 모두 `Ok`면 기존 가중합 검사를 합니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      fn char_value(char: String, index: Int) -> Result(Int, Nil) {
+        case char, index {
+          "X", 9 -> Ok(10)
+          _, _ -> todo
+        }
+      }
+
+      // is_valid 안에서
+      case chars |> list.index_map(char_value) |> result.all {
+        Ok(values) -> todo
+        Error(Nil) -> todo
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: invalid-as-zero
+    mustFail: [invalid_character_not_zero_test]
+    errorTag: treats_invalid_as_zero
+  - key: x-anywhere
+    mustFail: [x_in_middle_test]
+    errorTag: accepts_x_anywhere

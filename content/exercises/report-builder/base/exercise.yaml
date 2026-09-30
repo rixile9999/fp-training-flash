@@ -1,0 +1,96 @@
+kind: implement
+format: drill
+module: sales_report
+difficulty: 1400
+estimatedMinutes: 7
+tests:
+  - fn: parse_line_valid_test
+    name: 올바른 줄은 Sale로 파싱된다
+    visibility: public
+    requirements: [R1]
+  - fn: parse_line_rejects_non_number_test
+    name: 금액이 정수가 아니면 Error를 반환한다
+    visibility: hidden
+    errorTag: treats_invalid_as_zero
+    requirements: [R1]
+  - fn: parse_line_rejects_wrong_field_count_test
+    name: 쉼표로 나눈 조각이 두 개가 아니면 Error를 반환한다
+    visibility: hidden
+    errorTag: ignores_extra_fields
+    requirements: [R1]
+  - fn: total_by_category_sums_same_category_test
+    name: 같은 카테고리의 금액을 합친다
+    visibility: public
+    requirements: [R2]
+  - fn: total_by_category_sorted_by_name_test
+    name: 집계 결과는 카테고리 이름 오름차순이다
+    visibility: hidden
+    errorTag: wrong_sort_order
+    requirements: [R2]
+  - fn: total_by_category_many_categories_sorted_test
+    name: 카테고리가 많아도 이름 오름차순으로 정렬한다
+    visibility: hidden
+    errorTag: wrong_sort_order
+    requirements: [R2]
+  - fn: format_row_test
+    name: '한 행을 "카테고리: 금액" 문자열로 만든다'
+    visibility: public
+    requirements: [R3]
+  - fn: build_report_test
+    name: 여러 줄 입력으로 카테고리별 리포트를 만든다
+    visibility: public
+    requirements: [R4]
+  - fn: build_report_skips_invalid_lines_test
+    name: 잘못된 줄은 리포트에 나타나지 않는다
+    visibility: hidden
+    errorTag: treats_invalid_as_zero
+    requirements: [R4]
+requirements:
+  - id: R1
+    description: parse_line은 "카테고리,금액" 형식만 받아들인다
+  - id: R2
+    description: total_by_category는 카테고리별 합계를 이름순으로 돌려준다
+  - id: R3
+    description: format_row는 한 행을 정해진 형식의 문자열로 만든다
+  - id: R4
+    description: build_report는 세 단계를 합성하고 잘못된 줄은 건너뛴다
+hints:
+  - level: 1
+    kind: question
+    text: 리포트 한 줄이 만들어지기까지 데이터는 어떤 모양들을 거치나요? 문자열, 레코드, 합계 목록, 다시 문자열 순서로 적어 보세요.
+  - level: 2
+    kind: concept
+    text: "`list.filter_map`은 `Ok`인 값만 남기고 `Error`는 버립니다. 같은 키로 값을 모을 때는 `dict.upsert`와 `list.fold`를 함께 씁니다."
+  - level: 3
+    kind: approach
+    text: 세 도우미 함수를 먼저 각각 완성하고, `build_report`는 파이프(`|>`)로 세 함수를 연결하기만 하세요.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn parse_line(line: String) -> Result(Sale, Nil) {
+        case string.split(line, ",") {
+          [category, amount] -> todo
+          _ -> Error(Nil)
+        }
+      }
+
+      pub fn build_report(lines: List(String)) -> List(String) {
+        lines
+        |> list.filter_map(parse_line)
+        |> todo
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: first-seen-order
+    mustFail: [total_by_category_sorted_by_name_test]
+    errorTag: wrong_sort_order
+  - key: dict-order-unsorted
+    mustFail: [total_by_category_many_categories_sorted_test]
+    errorTag: wrong_sort_order
+  - key: invalid-as-zero
+    mustFail: [parse_line_rejects_non_number_test, build_report_skips_invalid_lines_test]
+    errorTag: treats_invalid_as_zero

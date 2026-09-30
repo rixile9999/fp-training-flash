@@ -1,0 +1,95 @@
+kind: fix
+format: drill
+module: checkout
+title: 장바구니 계산 도우미 함수들의 let assert 없애기
+contextTags: [orders, checkout]
+difficulty: 1500
+estimatedMinutes: 7
+tests:
+  - fn: line_total_multiplies_price_test
+    name: line_total은 단가와 수량을 곱한다
+    visibility: public
+    requirements: [R1]
+  - fn: unknown_sku_is_error_test
+    name: 가격표에 없는 상품은 크래시 대신 UnknownSku를 반환한다
+    visibility: public
+    errorTag: crashes_on_invalid_input
+    requirements: [R2]
+  - fn: cart_total_sums_lines_test
+    name: cart_total은 모든 줄의 금액을 더한다
+    visibility: public
+    requirements: [R1]
+  - fn: line_without_separator_is_bad_line_test
+    name: 구분자 " x "가 없는 줄은 BadLine에 줄 전체를 담는다
+    visibility: hidden
+    errorTag: crashes_on_invalid_input
+    requirements: [R2]
+  - fn: non_numeric_quantity_test
+    name: 정수가 아닌 수량은 BadQuantity에 수량 부분을 담는다
+    visibility: hidden
+    errorTag: crashes_on_invalid_input
+    requirements: [R2]
+  - fn: zero_quantity_test
+    name: 수량 0은 BadQuantity이다
+    visibility: hidden
+    errorTag: missing_range_check
+    requirements: [R2]
+  - fn: cart_total_reports_first_bad_line_test
+    name: cart_total은 잘못된 줄을 건너뛰지 않고 첫 번째 오류를 반환한다
+    visibility: hidden
+    errorTag: drops_invalid_input
+    requirements: [R3]
+  - fn: empty_cart_is_zero_test
+    name: 빈 장바구니의 합계는 0이다
+    visibility: hidden
+    errorTag: rejects_empty_input
+    requirements: [R1]
+requirements:
+  - id: R1
+    description: 올바른 입력의 결과는 그대로 유지
+  - id: R2
+    description: 도우미 함수의 실패를 CheckoutError 값으로 반환
+  - id: R3
+    description: cart_total은 첫 번째 실패한 줄의 오류를 전달
+hints:
+  - level: 1
+    kind: question
+    text: "`parse_line`과 `price_of`가 실패할 수 있다는 사실이 지금 그 함수들의 반환 타입에 드러나 있나요? 드러나지 않으면 `line_total`은 어떻게 알 수 있을까요?"
+  - level: 2
+    kind: concept
+    text: "실패를 호출한 쪽까지 전하려면 도우미 함수의 반환 타입부터 `Result(값, CheckoutError)`로 바꿔야 합니다. 그러면 호출하는 곳에서 `use x <- result.try(도우미(...))`로 이어 쓸 수 있습니다. 목록을 누적하다 실패할 수 있으면 `list.try_fold`를 씁니다."
+  - level: 3
+    kind: approach
+    text: 가장 안쪽부터 고치세요. `price_of`와 `parse_line`의 반환 타입을 `Result`로 바꾸고 `let assert`마다 알맞은 오류를 돌려주게 한 뒤, `line_total`을 `use`로 연결하고, 마지막으로 `cart_total`의 `fold`를 `try_fold`로 바꾸세요.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      fn parse_line(line: String) -> Result(#(String, Int), CheckoutError) {
+        case string.split(line, " x ") {
+          [sku, quantity_text] -> todo
+          _ -> Error(BadLine(line))
+        }
+      }
+
+      fn price_of(prices: Dict(String, Int), sku: String) -> Result(Int, CheckoutError) {
+        todo
+      }
+
+      pub fn cart_total(prices: Dict(String, Int), lines: List(String)) -> Result(Int, CheckoutError) {
+        list.try_fold(lines, 0, fn(sum, line) { todo })
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: unknown-as-zero
+    mustFail: [unknown_sku_is_error_test, cart_total_reports_first_bad_line_test]
+    errorTag: swallows_error_with_default
+  - key: skips-bad-lines
+    mustFail: [cart_total_reports_first_bad_line_test]
+    errorTag: drops_invalid_input
+  - key: no-positive-check
+    mustFail: [zero_quantity_test]
+    errorTag: missing_range_check

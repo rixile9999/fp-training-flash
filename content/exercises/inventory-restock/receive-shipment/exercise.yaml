@@ -1,0 +1,80 @@
+kind: implement
+format: drill
+module: receiving
+title: 입고 내역 반영하기
+difficulty: 1450
+estimatedMinutes: 7
+conceptNotes: [gleam-record-update, gleam-list-transform, gleam-dict-set]
+theoryTopics: [immutability-structural-sharing, fold-universality]
+tests:
+  - fn: no_deliveries_test
+    name: 입고 내역이 없으면 품목이 그대로다
+    visibility: public
+  - fn: single_delivery_test
+    name: 입고된 수량만큼 해당 품목의 재고가 늘어난다
+    visibility: public
+    requirements: [R1]
+  - fn: keeps_undelivered_items_test
+    name: 입고되지 않은 품목도 결과에 그대로 남는다
+    visibility: public
+    errorTag: drops_items_with_filter
+    requirements: [R3]
+  - fn: sums_repeated_deliveries_test
+    name: 같은 품목의 입고가 여러 번이면 모두 더한다
+    visibility: hidden
+    errorTag: loses_duplicate_keys
+    requirements: [R2]
+  - fn: ignores_unknown_sku_test
+    name: 목록에 없는 품목의 입고는 무시한다
+    visibility: hidden
+    errorTag: adds_unknown_items
+    requirements: [R4]
+  - fn: keeps_order_and_reserved_test
+    name: 품목 순서와 예약 수량은 바뀌지 않는다
+    visibility: hidden
+    errorTag: reorders_items
+    requirements: [R3]
+requirements:
+  - id: R1
+    description: 입고 수량을 해당 sku의 on_hand에 더한다
+  - id: R2
+    description: 같은 sku의 입고는 합산한다
+  - id: R3
+    description: 모든 품목을 원래 순서대로 남기고 reserved는 그대로 둔다
+  - id: R4
+    description: 목록에 없는 sku의 입고는 무시한다
+hints:
+  - level: 1
+    kind: question
+    text: 입고 내역을 품목마다 매번 처음부터 훑어야 할까요? 같은 sku가 두 번 들어오면 어떻게 되어야 하나요?
+  - level: 2
+    kind: concept
+    text: "`dict.upsert`는 키가 없으면 `None`, 있으면 `Some(기존값)`을 받아 새 값을 넣습니다. `list.fold`로 입고 내역을 sku별 합계 딕셔너리로 접을 수 있습니다."
+  - level: 3
+    kind: approach
+    text: 두 단계로 나눠 보세요. 먼저 입고 내역을 sku별 총수량 딕셔너리로 만들고, 그다음 품목 목록을 `list.map`으로 돌면서 딕셔너리에서 찾은 수량을 더합니다.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      let totals =
+        list.fold(deliveries, dict.new(), fn(acc, delivery) {
+          dict.upsert(acc, delivery.sku, fn(existing) { todo })
+        })
+      list.map(items, fn(item) {
+        case dict.get(totals, item.sku) {
+          Ok(quantity) -> todo
+          Error(Nil) -> item
+        }
+      })
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: last-delivery-wins
+    mustFail: [sums_repeated_deliveries_test]
+    errorTag: loses_duplicate_keys
+  - key: drops-undelivered
+    mustFail: [keeps_undelivered_items_test, keeps_order_and_reserved_test]
+    errorTag: drops_items_with_filter

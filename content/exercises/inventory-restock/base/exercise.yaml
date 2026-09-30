@@ -1,0 +1,76 @@
+kind: implement
+format: drill
+module: restock
+difficulty: 1300
+estimatedMinutes: 5
+tests:
+  - fn: empty_list_test
+    name: 빈 목록은 빈 목록을 반환한다
+    visibility: public
+  - fn: restocks_low_item_test
+    name: 재고가 재주문 기준보다 적으면 보충 수량만큼 더한다
+    visibility: public
+    errorTag: sets_instead_of_adds
+    requirements: [R1]
+  - fn: keeps_other_items_test
+    name: 보충하지 않는 품목도 그대로 결과에 남긴다
+    visibility: public
+    errorTag: drops_items_with_filter
+    requirements: [R2]
+  - fn: restocks_at_reorder_point_test
+    name: 재고가 재주문 기준과 같아도 보충한다
+    visibility: hidden
+    errorTag: off_by_one
+    requirements: [R1]
+  - fn: keeps_other_fields_test
+    name: 재고 수량 외의 필드는 바뀌지 않는다
+    visibility: hidden
+    errorTag: changes_other_fields
+    requirements: [R3]
+  - fn: keeps_order_test
+    name: 원래 순서를 유지한다
+    visibility: hidden
+    errorTag: reorders_items
+    requirements: [R2]
+requirements:
+  - id: R1
+    description: on_hand가 reorder_point 이하인 품목만 reorder_qty만큼 늘린다
+  - id: R2
+    description: 모든 품목을 원래 순서대로 남긴다
+  - id: R3
+    description: on_hand 외의 필드는 그대로 둔다
+hints:
+  - level: 1
+    kind: question
+    text: 바꿔야 하는 값은 `Item` 안의 어디에 있나요? 바깥 레코드와 안쪽 레코드 중 새로 만들어야 하는 것은 무엇일까요?
+  - level: 2
+    kind: concept
+    text: "레코드 갱신 문법 `Stock(..stock, on_hand: 새값)`은 한 필드만 바꾼 새 레코드를 만듭니다. 안쪽을 바꾸면 그것을 담은 바깥 레코드도 새로 만들어야 합니다."
+  - level: 3
+    kind: approach
+    text: "`list.map`으로 모든 품목을 돌면서, 보충 조건이 맞으면 새 `Stock`을 만들고 그것으로 새 `Item`을 만드세요. 조건은 \"이하\"입니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      list.map(items, fn(item) {
+        let stock = item.stock
+        case stock.on_hand <= stock.reorder_point {
+          True -> Item(..item, stock: todo)
+          False -> item
+        }
+      })
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: strict-less-than
+    mustFail: [restocks_at_reorder_point_test]
+    errorTag: off_by_one
+  - key: filter-drops
+    mustFail: [keeps_other_items_test]
+    errorTag: drops_items_with_filter
+  - key: sets-quantity
+    mustFail: [restocks_low_item_test, keeps_other_fields_test]
+    errorTag: sets_instead_of_adds

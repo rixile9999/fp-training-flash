@@ -1,0 +1,108 @@
+kind: implement
+format: drill
+module: maze
+difficulty: 1550
+estimatedMinutes: 7
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: straight_corridor_test
+    name: 일자 통로에서는 칸 사이 거리가 답이다
+    visibility: public
+    errorTag: off_by_one
+    requirements: [ R1 ]
+  - fn: goes_around_walls_test
+    name: 벽을 돌아가는 최단 이동 횟수를 구한다
+    visibility: public
+    requirements: [ R1, R2 ]
+  - fn: unreachable_goal_test
+    name: 벽에 막혀 G에 갈 수 없으면 Error(Nil)을 돌려준다
+    visibility: public
+    requirements: [ R3 ]
+  - fn: picks_shortest_of_many_routes_test
+    name: 여러 경로 중 가장 짧은 경로의 길이를 돌려준다
+    visibility: hidden
+    errorTag: dfs_instead_of_bfs
+    requirements: [ R1 ]
+  - fn: no_diagonal_moves_test
+    name: 대각선으로는 움직일 수 없다
+    visibility: hidden
+    errorTag: allows_diagonal_moves
+    requirements: [ R2 ]
+  - fn: missing_start_or_goal_test
+    name: S나 G가 없으면 Error(Nil)을 돌려준다
+    visibility: hidden
+    errorTag: ignores_missing_endpoint
+    requirements: [ R3 ]
+  - fn: goal_next_to_start_test
+    name: G가 S 바로 옆이면 1을 돌려준다
+    visibility: hidden
+    errorTag: off_by_one
+    requirements: [ R1 ]
+  - fn: open_room_test
+    name: 벽 없는 10x10 방의 대각선 끝까지 18번 이동한다
+    visibility: hidden
+    errorTag: dfs_instead_of_bfs
+    requirements: [ R1, R4 ]
+requirements:
+  - id: R1
+    description: S에서 G까지 최소 이동 횟수를 구한다
+  - id: R2
+    description: 상하좌우로만, 벽과 격자 밖을 피해서 움직인다
+  - id: R3
+    description: S나 G가 없거나 갈 수 없으면 Error(Nil)
+  - id: R4
+    description: 칸 수 V에 대해 O(V log V) 안에 끝난다
+hints:
+  - level: 1
+    kind: question
+    text: S에서 1번 만에 갈 수 있는 칸을 모두 본 뒤에 2번 만에 갈 수 있는 칸을 보면, G를 처음 만났을 때의 이동 횟수는 어떤
+      값인가요?
+  - level: 2
+    kind: concept
+    text: 먼저 발견한 칸을 먼저 처리하는 너비 우선 탐색(BFS)에는 선입선출 큐가 필요합니다. 불변 리스트로는 `front`(꺼낼 순서)와
+      `back`(넣은 역순) 두 리스트로 큐를 만들 수 있습니다. 새 칸을 `front`의 앞에 붙이면 스택이 되어 깊이 우선 탐색이
+      됩니다.
+  - level: 3
+    kind: approach
+    text: "`search(front, back, seen)` 재귀를 만드세요. 큐에는 `#(위치, 거리)`를 넣습니다. 꺼낸 칸이 G면 거리를
+      돌려주고, 아니면 벽이 아니고 아직 `seen`에 없는 상하좌우 이웃을 `seen`에 추가하면서 `back`에 거리 + 1로
+      넣습니다. `front`가 비면 `back`을 뒤집어 옮깁니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      fn search(cells, goal, front, back, seen) -> Result(Int, Nil) {
+        case front, back {
+          [], [] -> Error(Nil)
+          [], _ -> search(cells, goal, list.reverse(back), [], seen)
+          [#(pos, dist), ..], _ if pos == goal -> Ok(dist)
+          [#(pos, dist), ..rest], _ -> {
+            let next = todo // 벽이 아니고 seen에 없는 이웃
+            let seen = list.fold(next, seen, set.insert)
+            let back = todo // next를 #(p, dist + 1)로 back 앞에 붙이기
+            search(cells, goal, rest, back, seen)
+          }
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: dfs-stack
+    mustFail: [ picks_shortest_of_many_routes_test, open_room_test ]
+    errorTag: dfs_instead_of_bfs
+  - key: diagonal-moves
+    mustFail: [ no_diagonal_moves_test ]
+    errorTag: allows_diagonal_moves
+  - key: counts-cells
+    mustFail: [ straight_corridor_test, goal_next_to_start_test ]
+    errorTag: off_by_one
+performance:
+  module: maze_perf
+  sizes: [ 20, 40, 80 ]
+  maxCostRatio: 5
+  referenceCost:
+    - 47721
+    - 190331
+    - 763975

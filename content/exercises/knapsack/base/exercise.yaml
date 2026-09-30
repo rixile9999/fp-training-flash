@@ -1,0 +1,101 @@
+kind: implement
+format: drill
+module: knapsack
+difficulty: 1550
+estimatedMinutes: 7
+limits: { timeMs: 6000, memoryMb: 256 }
+tests:
+  - fn: no_items_test
+    name: 물건이 없으면 최대 가치는 0이다
+    visibility: public
+    requirements: [ R1 ]
+  - fn: example_test
+    name: 무게 한도 안에서 가치 합이 가장 큰 조합을 고른다
+    visibility: public
+    requirements: [ R1 ]
+  - fn: eight_items_test
+    name: 물건 여덟 개 중에서 최대 가치를 찾는다
+    visibility: public
+    requirements: [ R1 ]
+  - fn: one_item_too_heavy_test
+    name: 한도보다 무거운 물건은 넣지 않는다
+    visibility: hidden
+    errorTag: exceeds_capacity
+    requirements: [ R2 ]
+  - fn: greedy_by_weight_test
+    name: 가볍거나 무게당 가치가 큰 물건부터 넣는 것보다 나은 조합을 찾는다
+    visibility: hidden
+    errorTag: greedy_choice
+    requirements: [ R1 ]
+  - fn: greedy_by_value_test
+    name: 비싼 물건부터 넣는 것보다 나은 조합을 찾는다
+    visibility: hidden
+    errorTag: greedy_choice
+    requirements: [ R1 ]
+  - fn: item_used_once_test
+    name: 같은 물건을 두 번 넣지 않는다
+    visibility: hidden
+    errorTag: reuses_items
+    requirements: [ R2 ]
+  - fn: many_items_test
+    name: 물건 50개도 시간 제한 안에 계산한다
+    visibility: hidden
+    errorTag: exponential_recursion
+    requirements: [ R3 ]
+requirements:
+  - id: R1
+    description: 무게 합이 한도 이하인 조합 중 가치 합 최대
+  - id: R2
+    description: 물건마다 넣거나 안 넣거나 (최대 한 번)
+  - id: R3
+    description: 물건 수 x 무게 한도에 비례하는 시간
+hints:
+  - level: 1
+    kind: question
+    text: 마지막 물건 하나만 보면 선택지는 "넣는다"와 "안 넣는다" 둘뿐입니다. 각 경우에 나머지 물건들로 풀어야 하는 문제는 무엇인가요?
+      무게 한도는 어떻게 바뀌나요?
+  - level: 2
+    kind: concept
+    text: "부분 문제는 \"첫 k개 물건으로, 무게 한도 w 안에서 얻는 최대 가치\"입니다. 서로 다른 (k, w) 쌍은 물건 수 x (한도
+      + 1)개뿐이므로, 표에 저장하면 같은 부분 문제를 다시 풀지 않습니다."
+  - level: 3
+    kind: approach
+    text: "표 `Dict(무게 한도, 최대 가치)`를 빈 표(모든 한도에서 0)로 시작해, 물건을 하나씩 접으며(`list.fold`) 새
+      표를 만드세요. 새 표의 w칸은 max(이전 표의 w칸, 이전 표의 w - 무게 칸 + 가치)입니다. 읽기는 반드시 **이전
+      표**에서 합니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      fn add_item(previous: Dict(Int, Int), item: Item, maximum_weight: Int) -> Dict(Int, Int) {
+        int.range(from: item.weight, to: maximum_weight + 1, with: previous, run: fn(table, capacity) {
+          let take = best(previous, capacity - item.weight) + item.value
+          todo
+        })
+      }
+
+      fn best(table: Dict(Int, Int), capacity: Int) -> Int {
+        dict.get(table, capacity) |> result.unwrap(0)
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: greedy-by-ratio
+    mustFail: [ greedy_by_weight_test ]
+    errorTag: greedy_choice
+  - key: reuses-items
+    mustFail: [ item_used_once_test ]
+    errorTag: reuses_items
+  - key: plain-recursion
+    mustFail: [ many_items_test ]
+    errorTag: exponential_recursion
+performance:
+  module: knapsack_perf
+  sizes: [ 20, 40, 80 ]
+  maxCostRatio: 10
+  referenceCost:
+    - 35229
+    - 151791
+    - 634196

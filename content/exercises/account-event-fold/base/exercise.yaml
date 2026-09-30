@@ -1,0 +1,78 @@
+kind: implement
+format: drill
+module: account
+difficulty: 1300
+estimatedMinutes: 5
+tests:
+  - fn: apply_deposit_test
+    name: 입금하면 잔액이 늘어난다
+    visibility: public
+    requirements: [R1]
+  - fn: apply_withdraw_test
+    name: 잔액 이내의 출금은 잔액을 줄인다
+    visibility: public
+    requirements: [R1]
+  - fn: apply_withdraw_insufficient_test
+    name: 잔액보다 큰 출금은 무시한다
+    visibility: hidden
+    errorTag: allows_negative_balance
+    requirements: [R1]
+  - fn: apply_after_close_test
+    name: 해지된 계좌는 어떤 이벤트에도 바뀌지 않는다
+    visibility: hidden
+    errorTag: ignores_closed_state
+    requirements: [R2]
+  - fn: replay_test
+    name: 이벤트 목록을 차례로 반영한 계좌를 돌려준다
+    visibility: public
+    requirements: [R3]
+  - fn: replay_order_matters_test
+    name: 이벤트는 목록의 앞에서부터 반영한다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [R3]
+  - fn: replay_empty_test
+    name: 이벤트가 없으면 잔액 0인 열린 계좌다
+    visibility: hidden
+    errorTag: wrong_fold_initial
+    requirements: [R3]
+requirements:
+  - id: R1
+    description: 입금은 더하고, 잔액 이내의 출금만 뺀다
+  - id: R2
+    description: Closed 이후에는 모든 이벤트를 무시한다
+  - id: R3
+    description: replay는 Account(0, True)에서 시작해 이벤트를 순서대로 반영한다
+hints:
+  - level: 1
+    kind: question
+    text: 이벤트 하나만 주어졌을 때 계좌가 어떻게 바뀌는지 정할 수 있다면, 이벤트가 여러 개일 때는 그 규칙을 어떻게 반복하면 될까요?
+  - level: 2
+    kind: concept
+    text: "`list.fold(목록, 초기 상태, 전이 함수)`는 상태를 들고 목록을 앞에서부터 한 번 훑습니다. `apply_event`의 타입 `fn(Account, Event) -> Account`는 fold가 원하는 함수 모양과 같습니다."
+  - level: 3
+    kind: approach
+    text: "`apply_event`에서 먼저 계좌가 열려 있는지 확인하고, 열려 있을 때만 이벤트 종류별로 `case`를 나누세요. `replay`는 `apply_event`를 fold에 넘기기만 하면 됩니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn apply_event(account: Account, event: Event) -> Account {
+        case account.open, event {
+          False, _ -> account
+          True, Deposited(amount) -> todo
+          True, Withdrawn(amount) -> todo
+          True, Closed -> todo
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: fold-right
+    mustFail: [replay_order_matters_test]
+    errorTag: reverses_order
+  - key: allows-overdraft
+    mustFail: [apply_withdraw_insufficient_test]
+    errorTag: allows_negative_balance

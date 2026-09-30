@@ -1,0 +1,70 @@
+kind: implement
+format: drill
+module: go
+title: 규칙 목록을 차례로 적용하기
+difficulty: 1450
+estimatedMinutes: 6
+tests:
+  - fn: no_rules_changes_player_test
+    name: 규칙이 없으면 차례만 넘긴 게임을 Ok로 반환한다
+    visibility: public
+    requirements: [R1]
+  - fn: all_rules_pass_test
+    name: 모든 규칙을 통과하면 규칙이 바꾼 게임에서 차례를 넘겨 Ok로 반환한다
+    visibility: public
+    requirements: [R1]
+  - fn: failing_rule_returns_error_test
+    name: 규칙 하나가 실패하면 그 메시지를 Error로 반환한다
+    visibility: public
+    errorTag: swallows_error_with_default
+    requirements: [R2]
+  - fn: each_rule_sees_previous_result_test
+    name: 각 규칙은 앞 규칙이 돌려준 게임을 받는다
+    visibility: hidden
+    errorTag: uses_stale_state
+    requirements: [R3]
+  - fn: rules_apply_in_list_order_test
+    name: 규칙은 목록 순서대로 적용된다
+    visibility: hidden
+    errorTag: reverses_order
+    requirements: [R3]
+  - fn: first_error_wins_test
+    name: 여러 규칙이 실패하면 목록에서 가장 앞선 규칙의 오류를 반환한다
+    visibility: hidden
+    errorTag: reports_last_error
+    requirements: [R2]
+requirements:
+  - id: R1
+    description: 모두 통과하면 차례를 넘긴 게임을 Ok로 반환
+  - id: R2
+    description: 첫 오류를 Error로 반환
+  - id: R3
+    description: 규칙을 목록 순서대로 이어서 적용
+hints:
+  - level: 1
+    kind: question
+    text: 규칙이 몇 개인지 미리 모를 때, "지금까지의 결과"로 무엇을 들고 다니며 규칙을 하나씩 적용해야 할까요?
+  - level: 2
+    kind: concept
+    text: "`list.try_fold(list, 초기값, fn(acc, x) { ... })`는 `list.fold`와 같지만 함수가 `Result`를 돌려줍니다. `Error`가 나오면 거기서 멈추고 그 `Error`를 반환합니다."
+  - level: 3
+    kind: approach
+    text: "누적값을 게임으로 두고, 각 규칙을 누적 게임에 적용하세요. 전체가 `Ok`로 끝나면 `result.map`으로 차례를 넘깁니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      rules
+      |> list.try_fold(game, fn(current, rule) { todo })
+      |> result.map(todo)
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: skip-failing
+    mustFail: [failing_rule_returns_error_test, first_error_wins_test]
+    errorTag: swallows_error_with_default
+  - key: not-threaded
+    mustFail: [each_rule_sees_previous_result_test]
+    errorTag: uses_stale_state

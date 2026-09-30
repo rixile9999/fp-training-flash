@@ -1,0 +1,94 @@
+kind: implement
+format: drill
+module: merge_sort
+difficulty: 1450
+estimatedMinutes: 7
+limits: { timeMs: 6000, memoryMb: 256 }
+tests:
+  - fn: split_even_test
+    name: split은 짝수 길이 목록을 같은 길이의 앞뒤 절반으로 나눈다
+    visibility: public
+    requirements: [ R1 ]
+  - fn: split_odd_test
+    name: 홀수 길이면 뒤쪽 절반이 하나 더 길다
+    visibility: hidden
+    errorTag: off_by_one
+    requirements: [ R1 ]
+  - fn: merge_test
+    name: merge는 정렬된 두 목록을 오름차순으로 합친다
+    visibility: public
+    requirements: [ R2 ]
+  - fn: sort_test
+    name: sort는 목록을 오름차순으로 정렬한다
+    visibility: public
+    errorTag: missing_base_case
+    requirements: [ R3 ]
+  - fn: sort_single_test
+    name: 원소가 하나인 목록은 그대로 반환한다
+    visibility: hidden
+    errorTag: missing_base_case
+    requirements: [ R3 ]
+  - fn: sort_duplicates_and_negatives_test
+    name: 중복과 음수가 있어도 모두 남기고 정렬한다
+    visibility: hidden
+    errorTag: drops_duplicates
+    requirements: [ R3 ]
+  - fn: sort_large_list_test
+    name: 원소 15만 개짜리 목록도 시간 제한 안에 정렬한다
+    visibility: hidden
+    errorTag: quadratic_sort
+    requirements: [ R4 ]
+requirements:
+  - id: R1
+    description: split은 앞쪽 length/2개와 나머지로 나눈다
+  - id: R2
+    description: merge는 정렬된 두 목록을 합친다
+  - id: R3
+    description: sort는 오름차순 정렬, 원소 보존
+  - id: R4
+    description: O(n log n)
+hints:
+  - level: 1
+    kind: question
+    text: 원소가 0개나 1개인 목록은 이미 정렬되어 있습니다. 그보다 긴 목록을 반으로 나눠 각각 정렬할 수 있다면, 정렬된 두 절반으로 전체
+      정렬 결과를 어떻게 만들 수 있을까요?
+  - level: 2
+    kind: concept
+    text: "분할 정복은 문제를 같은 모양의 작은 문제로 나누고(split), 각각 재귀로 풀고, 결과를 합칩니다(merge). 재귀가 끝나려면
+      더 나눌 수 없는 크기(0개, 1개)를 기본 경우로 처리해야 합니다."
+  - level: 3
+    kind: approach
+    text: "`split`은 `list.length`와 `list.split`으로 만들 수 있습니다. `merge`는 두 머리 원소를 비교해
+      작거나 같은 쪽을 먼저 꺼냅니다. `sort`는 `[]`와 `[_]`이면 그대로, 아니면 나눠서 각각 정렬한 뒤 합칩니다."
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn sort(items: List(Int)) -> List(Int) {
+        case items {
+          [] | [_] -> items
+          _ -> {
+            let #(front, back) = split(items)
+            todo
+          }
+        }
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: insertion-sort
+    mustFail: [ sort_large_list_test ]
+    errorTag: quadratic_sort
+  - key: missing-single-base-case
+    mustFail: [ sort_test, sort_single_test ]
+    errorTag: missing_base_case
+performance:
+  module: merge_sort_perf
+  sizes: [ 1000, 4000, 16000 ]
+  maxCostRatio: 5
+  referenceCost:
+    - 34199
+    - 159170
+    - 726576

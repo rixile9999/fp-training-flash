@@ -1,0 +1,29 @@
+# Family-level defaults; each variant's exercise.yaml may override any of these.
+title: 리그 순위표 만들기
+primarySkill: function-decomposition
+secondarySkills: [data-transformation, explicit-failure]
+contextTags: [sports, reports]
+source:
+  kind: exercism
+  license: "MIT, Copyright (c) 2021 Exercism"
+  url: https://github.com/exercism/gleam/tree/main/exercises/practice/tournament
+  upstream: "exercism/gleam exercises/practice/tournament@34db02e"
+conceptNotes: [gleam-strings, gleam-dict-set, gleam-sorting-order, gleam-custom-types, gleam-pipe-operator]
+theoryTopics: [function-composition-pipelines, fold-universality, algebraic-data-types]
+rubric:
+  - id: R-02
+    title: 파이프라인이 의도를 드러냄
+    description: 최상위 함수는 줄 나누기, 파싱, 집계, 정렬, 출력 단계를 순서대로 연결하기만 한다.
+  - id: R-05
+    title: 단계별 함수 분리
+    description: 파싱, 전적 갱신, 정렬 기준, 행 출력이 각각 이름 있는 작은 함수이며 따로 테스트할 수 있다.
+    automatedCheck:
+      kind: max_function_lines
+      max: 25
+  - id: R-09
+    title: let assert와 panic을 쓰지 않음
+    description: 형식이 틀린 줄은 Result로 표현하고 건너뛴다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "\\blet assert\\b|\\bpanic\\b"
+      message: let assert 또는 panic을 사용했습니다.

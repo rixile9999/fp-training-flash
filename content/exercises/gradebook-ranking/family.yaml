@@ -1,0 +1,22 @@
+title: 성적 순위 매기기
+primarySkill: data-transformation
+secondarySkills: []
+contextTags: [education]
+source:
+  kind: original
+conceptNotes: [gleam-sorting-order, gleam-list-transform, gleam-anonymous-functions]
+theoryTopics: [higher-order-modularity, functor-structure-preservation]
+rubric:
+  - id: R-02
+    title: 파이프라인이 의도를 드러냄
+    description: 정렬하고, 순위를 붙이고, 필요한 모양으로 바꾸는 단계가 읽는 순서대로 드러난다.
+  - id: R-05
+    title: 계산 로직 분리
+    description: 정렬 기준(점수 내림차순, 이름 오름차순)을 이름 있는 비교 함수로 분리하면 따로 검증할 수 있다.
+  - id: R-09
+    title: let assert와 panic을 쓰지 않음
+    description: 실패 가능성은 타입으로 표현한다.
+    automatedCheck:
+      kind: forbid_pattern
+      pattern: "\\blet assert\\b|\\bpanic\\b"
+      message: let assert 또는 panic을 사용했습니다.

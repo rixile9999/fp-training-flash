@@ -1,0 +1,75 @@
+kind: fix
+format: drill
+module: sales_ranking
+title: 판매 순위 리포트의 버그 고치기
+difficulty: 1350
+estimatedMinutes: 6
+tests:
+  - fn: parse_line_test
+    name: '"상품,수량" 줄을 튜플로 파싱한다'
+    visibility: public
+  - fn: total_by_product_test
+    name: 상품별 수량을 합친다
+    visibility: public
+  - fn: rank_orders_by_quantity_desc_test
+    name: 수량이 많은 상품이 앞에 온다
+    visibility: public
+    errorTag: wrong_sort_direction
+    requirements: [R1]
+  - fn: rank_breaks_ties_by_name_test
+    name: 수량이 같으면 상품 이름 오름차순이다
+    visibility: hidden
+    errorTag: ignores_tie_break
+    requirements: [R1]
+  - fn: format_row_test
+    name: 순위와 상품을 한 줄 문자열로 만든다
+    visibility: public
+  - fn: build_ranking_numbers_from_one_test
+    name: 순위 번호는 1부터 시작한다
+    visibility: public
+    errorTag: off_by_one
+    requirements: [R2]
+  - fn: build_ranking_full_test
+    name: 잘못된 줄을 건너뛰고 전체 순위표를 만든다
+    visibility: hidden
+    errorTag: off_by_one
+    requirements: [R1, R2]
+requirements:
+  - id: R1
+    description: 순위는 수량 내림차순, 같으면 이름 오름차순
+  - id: R2
+    description: 순위 번호는 1부터 매긴다
+hints:
+  - level: 1
+    kind: question
+    text: 각 도우미 함수를 따로 호출해 보면 어느 단계의 출력이 기대와 다른가요?
+  - level: 2
+    kind: concept
+    text: "`list.sort`의 비교 함수가 `Lt`를 돌려주면 첫 번째 인자가 앞에 옵니다. `order.break_tie`는 첫 비교가 `Eq`일 때만 두 번째 비교를 씁니다. `list.index_map`의 인덱스는 0부터 시작합니다."
+  - level: 3
+    kind: approach
+    text: 버그는 `rank`와 `build_ranking` 두 곳에 있습니다. 다른 함수는 고칠 필요가 없습니다.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      pub fn rank(totals: List(#(String, Int))) -> List(#(String, Int)) {
+        list.sort(totals, fn(a, b) {
+          int.compare(todo, todo)
+          |> order.break_tie(todo)
+        })
+      }
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: desc-without-tiebreak
+    mustFail: [rank_breaks_ties_by_name_test]
+    errorTag: ignores_tie_break
+  - key: ascending-then-reverse
+    mustFail: [rank_breaks_ties_by_name_test]
+    errorTag: ignores_tie_break
+  - key: still-zero-based
+    mustFail: [build_ranking_numbers_from_one_test, build_ranking_full_test]
+    errorTag: off_by_one
