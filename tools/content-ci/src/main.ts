@@ -5,7 +5,8 @@
  *        [--image <tag>] [--template <dir>] [--jobs N] [--write-baselines] [--json]
  * Exit code 1 when any check fails.
  */
-import { readFileSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
@@ -31,14 +32,39 @@ const { values } = parseArgs({
 });
 
 const contentDir = resolve(values.content);
+const families = new Set(values.family ?? []);
+
+/**
+ * With --family, validate an isolated copy holding only the shared files and the selected families, so that
+ * unfinished work in other families (e.g. parallel authors) cannot fail this run.
+ */
+function scopedContentDir(): { dir: string; cleanup: () => void } {
+  if (families.size === 0) return { dir: contentDir, cleanup: () => {} };
+  const tmp = mkdtempSync(join(tmpdir(), "fp-content-ci-"));
+  for (const shared of ["skills.yaml", "concepts", "theory", "LICENSES"]) {
+    const from = join(contentDir, shared);
+    if (existsSync(from)) cpSync(from, join(tmp, shared), { recursive: true });
+  }
+  for (const f of families) {
+    const from = join(contentDir, "exercises", f);
+    if (!existsSync(from)) {
+      console.error(`unknown family: ${f}`);
+      process.exit(2);
+    }
+    cpSync(from, join(tmp, "exercises", f), { recursive: true });
+  }
+  return { dir: tmp, cleanup: () => rmSync(tmp, { recursive: true, force: true }) };
+}
+const scoped = scopedContentDir();
 const db = await createPgliteDb();
 await runMigrations(db, "content", contentMigrations);
 const content = createContentModule({ db, clock: systemClock, events: new InMemoryEventBus(silentLogger), logger: silentLogger });
 
-const loaded = await content.admin.loadDirectory(contentDir);
+const loaded = await content.admin.loadDirectory(scoped.dir);
 if (!loaded.ok) {
   console.error(`content validation failed (${loaded.error.length} issues):`);
   for (const i of loaded.error) console.error(`  ${i.path}: ${i.message}`);
+  scoped.cleanup();
   process.exit(1);
 }
 const imported = await content.admin.importBundle(loaded.value);
@@ -52,7 +78,6 @@ const runner =
     ? createLocalGleamRunner({ templateDir: resolve(values.template) })
     : createDockerGleamRunner({ image: values.image });
 
-const families = new Set(values.family ?? []);
 const exercises = (await content.catalog.listExercises()).filter((e) => families.size === 0 || families.has(e.familyId));
 const results: ExerciseCheck[] = [];
 const queue = [...exercises];
@@ -87,5 +112,6 @@ await Promise.all(
 const failed = results.filter((r) => r.problems.length);
 if (values.json) console.log(JSON.stringify({ checked: results.length, failed: failed.length, results }, null, 2));
 else console.log(`\n${results.length - failed.length}/${results.length} exercises passed content CI`);
+scoped.cleanup();
 await db.close();
 process.exit(failed.length ? 1 : 0);
