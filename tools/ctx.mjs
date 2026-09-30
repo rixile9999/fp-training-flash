@@ -26,7 +26,8 @@ function contractFiles(p) {
 
 export function contextFor(pkg) {
   const files = new Set(GUIDES.map((g) => join(ROOT, g)).filter(existsSync));
-  for (const f of walk(pkg.dir, (f) => TEXT.test(f) && !f.endsWith("pnpm-lock.yaml"))) files.add(f);
+  // Generated data (e.g. reference tables) is read by code, not by people working on the package.
+  for (const f of walk(pkg.dir, (f) => TEXT.test(f) && !f.endsWith("pnpm-lock.yaml") && !f.includes("/generated/"))) files.add(f);
   const composition = pkg.group === "apps" || pkg.group === "tools";
   const seen = new Set();
   const queue = Object.keys(pkg.deps).filter((d) => byName.has(d));

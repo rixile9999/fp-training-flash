@@ -1,0 +1,12 @@
+{
+  "name": "@fp/gleam-reference",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": { "fp-gleam-reference": "./src/main.ts" },
+  "fp": {
+    "kind": "tool",
+    "description": "Generates the coach's Gleam stdlib reference (signatures + one-line docs) from the grader's pinned gleam_stdlib via `gleam export package-interface`."
+  },
+  "dependencies": {}
+}
