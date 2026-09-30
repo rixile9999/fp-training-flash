@@ -1,7 +1,25 @@
 /** Composition-root entry. Only apps/* and tools/* may import this file. */
-import type { Clock, Db, EventBus, Logger, Migration } from "@fp/kernel";
-import type { ContentCatalog, FileContent, GradingSpec } from "@fp/content/contract";
-import type { CodeRunner, Evaluation, GradingService, RunJob, RunOutput } from "./contract/index.ts";
+import type { Clock, Db, EventBus, Logger } from "@fp/kernel";
+import type { ContentCatalog } from "@fp/content/contract";
+import type { CodeRunner, GradingService } from "./contract/index.ts";
+import { createGradingService } from "./service/service.ts";
+
+export { migrations } from "./service/migrations.ts";
+export { createDockerGleamRunner, type DockerGleamRunnerOptions } from "./runner/docker.ts";
+export {
+  createLocalGleamRunner,
+  GLEAM_RUNNER_DIR,
+  GLEAM_TEMPLATE_DIR,
+  type LocalGleamRunnerOptions,
+} from "./runner/local.ts";
+export { buildRunJob } from "./grading/run-job.ts";
+export { staticChecks } from "./grading/static-checks.ts";
+export { interpretRunOutput } from "./grading/interpret.ts";
+export { rubricChecks } from "./grading/rubric.ts";
+export { normalizeAnswer } from "./grading/predict.ts";
+
+/** Default Docker image tag built by runners/gleam/build-image.sh. */
+export const DEFAULT_GLEAM_IMAGE = "fp-gleam-runner:1.18.1";
 
 export interface GradingModuleDeps {
   readonly db: Db;
@@ -10,7 +28,7 @@ export interface GradingModuleDeps {
   readonly logger: Logger;
   readonly catalog: ContentCatalog;
   readonly runner: CodeRunner;
-  /** Max concurrent runner jobs. */
+  /** Max concurrent runner jobs (default 2). */
   readonly concurrency?: number;
 }
 
@@ -18,45 +36,7 @@ export interface GradingModule {
   readonly service: GradingService;
 }
 
-export const migrations: readonly Migration[] = [];
-
-export function createGradingModule(_deps: GradingModuleDeps): GradingModule {
-  throw new Error("not implemented");
-}
-
-export interface DockerGleamRunnerOptions {
-  /** Docker image tag built from runners/gleam/Dockerfile. */
-  readonly image: string;
-  readonly cpus?: number;
-}
-
-/** Production runner: no network, read-only root, tmpfs work dir, memory/pids/cpu limits, non-root user. */
-export function createDockerGleamRunner(_opts: DockerGleamRunnerOptions): CodeRunner {
-  throw new Error("not implemented");
-}
-
-export interface LocalGleamRunnerOptions {
-  /** Directory with the pre-built template project (deps downloaded). */
-  readonly templateDir: string;
-  readonly workRoot?: string;
-}
-
-/** DEVELOPMENT ONLY: runs learner code as the current OS user without a sandbox. */
-export function createLocalGleamRunner(_opts: LocalGleamRunnerOptions): CodeRunner {
-  throw new Error("not implemented");
-}
-
-/** Build the runner job for learner files. `includeHidden=false` for trial runs. */
-export function buildRunJob(_spec: GradingSpec, _sourceFiles: readonly FileContent[], _includeHidden: boolean): RunJob {
-  throw new Error("not implemented");
-}
-
-/** Static pre-checks (e.g. @external, forbidden imports). Returns rejection reasons; empty means OK. */
-export function staticChecks(_spec: GradingSpec, _sourceFiles: readonly FileContent[]): readonly string[] {
-  throw new Error("not implemented");
-}
-
-/** Pure mapping from runner output to an Evaluation. */
-export function interpretRunOutput(_spec: GradingSpec, _output: RunOutput, _evaluatedAt: string): Evaluation {
-  throw new Error("not implemented");
+/** Run `migrations` (schema "grading") before using the service. */
+export function createGradingModule(deps: GradingModuleDeps): GradingModule {
+  return { service: createGradingService(deps) };
 }

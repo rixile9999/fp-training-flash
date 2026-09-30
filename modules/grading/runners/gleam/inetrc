@@ -1,0 +1,4 @@
+% Resolver config for jobs: file lookup only. With --network none the default resolver makes every
+% BEAM start (gleam build and the harness) wait ~5 s for DNS timeouts.
+{lookup, [file]}.
+{resolv_conf, ""}.
