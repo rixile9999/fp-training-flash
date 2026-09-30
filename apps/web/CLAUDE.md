@@ -13,7 +13,7 @@ Nested module types are derived from the DTOs in `src/api/types.ts`.
 
 ## Layout
 
-- `main.tsx` wires `apiFactoryFromEnv(import.meta.env)`, `browserStore()` and the wall clock into `App`.
+- `main.tsx` awaits `loadApiFactory(import.meta.env)` (the fake API is a lazily loaded chunk, absent from production bundles), then wires it, `browserStore()` and the wall clock into `App`.
 - `App.tsx` owns auth (localStorage key `fp.auth`), the active session, the active item index, the UI phase
   (`work` | `feedback`), the completed-session summary and recent sessions (`fp.recentSessions`).
 - `session.ts` maps session items + phase onto the 5-step stepper (복습, 집중 훈련, 피드백·재제출, 변형 적용, 마무리).

@@ -5,7 +5,7 @@ import { parseExpectedActual } from "../src/screens/FeedbackView.tsx";
 import { formatClock, relativeDay } from "../src/ui/labels.ts";
 import { AUTH_KEY, memoryStore, readAuth } from "../src/storage.ts";
 import { parseBlocks } from "../src/ui/Markdown.tsx";
-import { apiFactoryFromEnv, errorMessage } from "../src/api/client.ts";
+import { errorMessage, loadApiFactory } from "../src/api/client.ts";
 import { ApiError } from "@fp/api-contract";
 
 const item = (index: number, kind: Session["items"][number]["kind"]) =>
@@ -58,13 +58,13 @@ describe("helpers", () => {
     const orig = globalThis.fetch;
     globalThis.fetch = fetchStub;
     try {
-      await apiFactoryFromEnv({})(undefined).health();
-      await apiFactoryFromEnv({ VITE_API_URL: "http://api.test/" })("tok").health();
+      await (await loadApiFactory({}))(undefined).health();
+      await (await loadApiFactory({ VITE_API_URL: "http://api.test/" }))("tok").health();
     } finally {
       globalThis.fetch = orig;
     }
     expect(calls).toEqual(["http://localhost:8787/v1/health", "http://api.test/v1/health"]);
-    const fake = apiFactoryFromEnv({ VITE_FAKE_API: "1" });
+    const fake = await loadApiFactory({ VITE_FAKE_API: "1" });
     expect(fake(undefined)).toBe(fake("x"));
     expect(errorMessage(new ApiError(401, { code: "unauthorized", message: "x" }))).toContain("다시 로그인");
     expect(errorMessage(new TypeError("fetch failed"))).toContain("네트워크");

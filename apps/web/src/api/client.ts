@@ -1,6 +1,5 @@
 import { ApiError, createApiClient } from "@fp/api-contract";
 import type { ApiClient } from "@fp/api-contract";
-import { createFakeApi } from "./fake.ts";
 
 export type { ApiClient };
 
@@ -12,8 +11,13 @@ export interface ApiEnv {
   readonly VITE_FAKE_API?: string;
 }
 
-export function apiFactoryFromEnv(env: ApiEnv): ApiFactory {
+/**
+ * Resolves the API factory for this build. The fake API (and its sample data) is loaded with a dynamic import
+ * only when VITE_FAKE_API=1, so production bundles do not contain it.
+ */
+export async function loadApiFactory(env: ApiEnv): Promise<ApiFactory> {
   if (env.VITE_FAKE_API === "1") {
+    const { createFakeApi } = await import("./fake.ts");
     const fake = createFakeApi({ latencyMs: 250, feedbackLatencyMs: 1600 });
     return () => fake;
   }
