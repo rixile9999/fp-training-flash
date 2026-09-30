@@ -232,6 +232,19 @@ hints:
     expect(hasIssue(issues, "exercises/predict-map/family.yaml", "source.upstream")).toBe(true);
   });
 
+  it("reports stray files in family and variant directories", async () => {
+    const files = baseFiles();
+    files["exercises/sum-list/notes.txt"] = "memo\n";
+    files["exercises/sum-list/base/promt.md"] = "오타\n";
+    files["exercises/sum-list/base/tests/sums_test.gleam"] = "pub fn a_test() { Nil }\n";
+    files["exercises/predict-map/base/starter/x.gleam"] = "pub fn x() { 1 }\n";
+    const issues = await loadIssues(files);
+    expect(hasIssue(issues, "exercises/sum-list/notes.txt", "unexpected file")).toBe(true);
+    expect(hasIssue(issues, "exercises/sum-list/base/promt.md", 'unexpected file "promt.md"')).toBe(true);
+    expect(hasIssue(issues, "exercises/sum-list/base/tests/sums_test.gleam", 'unexpected directory "tests"')).toBe(true);
+    expect(hasIssue(issues, "exercises/predict-map/base/starter/x.gleam", 'unexpected directory "starter" in a predict variant')).toBe(true);
+  });
+
   it("rejects mustFail entries that are not listed tests and invalid rubric patterns", async () => {
     const files = baseFiles();
     const ex = "exercises/sum-list/base/exercise.yaml";

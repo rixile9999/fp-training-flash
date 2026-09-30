@@ -87,6 +87,8 @@ export function materialize(v: ParsedVariant, version: number): MaterializedExer
   };
 }
 
+const VARIANT_TOP_FILES: readonly string[] = ["exercise.yaml", "prompt.md", "explanation.md"];
+const CODE_SUBDIRS: readonly string[] = ["starter", "solution", "test", "support", "wrong"];
 const DEFAULT_LIMITS = { timeMs: 10000, memoryMb: 256 } as const;
 const LANGUAGE: Language = "gleam";
 
@@ -319,6 +321,10 @@ function parseFamily(tree: ContentTree, familyId: string, refs: Refs, add: AddIs
     }
   }
   const variantKeys = subdirs(tree, dir);
+  for (const f of filesUnder(tree, dir)) {
+    const rest = f.path.slice(dir.length);
+    if (!rest.includes("/") && rest !== "family.yaml") add(f.path, "unexpected file; a family directory holds family.yaml and variant directories");
+  }
   if (variantKeys.length === 0) add(`exercises/${familyId}`, "family has no variants");
   const out: ParsedVariant[] = [];
   for (const key of variantKeys) {
@@ -382,13 +388,20 @@ function parseVariant(
 
   // Files.
   const variantFiles = filesUnder(tree, dir);
+  const isPredict = ex.kind === "predict";
+  for (const f of variantFiles) {
+    const rest = f.path.slice(dir.length);
+    const slash = rest.indexOf("/");
+    const allowed = slash < 0 ? VARIANT_TOP_FILES : isPredict ? [] : CODE_SUBDIRS;
+    const name = slash < 0 ? rest : rest.slice(0, slash);
+    if (!allowed.includes(name)) add(f.path, `unexpected ${slash < 0 ? "file" : "directory"} "${name}" in a ${ex.kind} variant`);
+  }
   const text = (rel: string): string | null => tree.files.get(dir + rel)?.text ?? null;
   const prompt = text("prompt.md");
   if (prompt === null || prompt.trim() === "") add(`${dir}prompt.md`, "missing or empty prompt.md");
   const explanation = text("explanation.md");
   if (explanation === null || explanation.trim() === "") add(`${dir}explanation.md`, "missing or empty explanation.md");
 
-  const isPredict = ex.kind === "predict";
   if (isPredict && !ex.predict) add(exPath, "predict: required for predict exercises");
   if (!isPredict && ex.predict) add(exPath, "predict: only allowed for predict exercises");
 

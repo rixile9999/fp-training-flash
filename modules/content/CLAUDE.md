@@ -48,6 +48,8 @@ src/db/catalog.ts       ContentCatalog over the tables (JSONB columns hold the c
   public test; implement/fix need at least one wrong answer; `wrong/` dirs and entries match 1:1;
   `performance.module` file exists, sizes ascending, `referenceCost` (optional, default []) one per size.
 - Predict: needs `predict {code, acceptedAnswers}`; module/tests/wrong not required.
+- Stray files are issues: a family dir holds only `family.yaml` + variant dirs; a variant dir only
+  `exercise.yaml`, `prompt.md`, `explanation.md` and (not predict) `starter/ solution/ test/ support/ wrong/`.
 
 ## File mapping
 
