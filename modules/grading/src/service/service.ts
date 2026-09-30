@@ -6,7 +6,10 @@ import type {
   CodeRunner,
   Evaluation,
   GradingService,
+  RunJob,
   RunOutput,
+  SnippetRequest,
+  SnippetResult,
   Submission,
   SubmissionEvaluatedPayload,
   SubmitRequest,
@@ -16,6 +19,7 @@ import type {
 import { interpretRunOutput, predictEvaluation, rejectedEvaluation } from "../grading/interpret.ts";
 import { rubricChecks } from "../grading/rubric.ts";
 import { buildRunJob, learnerFiles } from "../grading/run-job.ts";
+import { buildSnippetJob, interpretSnippetOutput, newSnippetToken } from "../grading/snippet.ts";
 import { staticChecks } from "../grading/static-checks.ts";
 import { createJobQueue } from "./queue.ts";
 import { createSubmissionRepo } from "./repo.ts";
@@ -47,7 +51,7 @@ export function createGradingService(deps: GradingServiceDeps): GradingServiceIn
   const inFlight = new Map<string, Promise<Result<Submission, AppError>>>();
   const now = () => clock.now().toISOString();
 
-  const runSafely = async (job: ReturnType<typeof buildRunJob>): Promise<RunOutput> => {
+  const runSafely = async (job: RunJob): Promise<RunOutput> => {
     try {
       return await queue.run(() => runner.run(job));
     } catch (e) {
@@ -164,6 +168,17 @@ export function createGradingService(deps: GradingServiceDeps): GradingServiceIn
         // Public tests only: hidden tests are never run in a trial, and never shown.
         tests: evaluation.tests.filter((t) => t.visibility === "public"),
       });
+    },
+
+    async evaluateSnippet(req: SnippetRequest): Promise<Result<SnippetResult, AppError>> {
+      const token = newSnippetToken();
+      const built = buildSnippetJob(req, token);
+      if (!built.ok) return built;
+      if (built.value.kind === "rejected") return ok(built.value);
+      if (runner.language !== "gleam") return err(appError("unavailable", "gleam 실행기가 없습니다."));
+      const output = await runSafely(built.value.job);
+      if (output.kind === "system_error") logger.error("grading system error (snippet)", { message: output.message });
+      return interpretSnippetOutput(output, token);
     },
 
     async recoverInterrupted() {

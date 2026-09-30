@@ -24,6 +24,8 @@ const { values } = parseArgs({
     models: { type: "string", default: "qwen3.8-flash" },
     reps: { type: "string", default: "1" },
     thinking: { type: "boolean", default: false },
+    "chat-agent": { type: "boolean", default: false },
+    "chat-only": { type: "boolean", default: false },
     concurrency: { type: "string", default: "6" },
     out: { type: "string", default: join(tmpdir(), "coach-eval.json") },
   },
@@ -84,7 +86,7 @@ type Task = () => Promise<void>;
 const tasks: Task[] = [];
 for (const model of models) {
   for (let rep = 1; rep <= reps; rep++) {
-    for (const s of SCENARIOS) {
+    for (const s of values["chat-only"] ? [] : SCENARIOS) {
       tasks.push(async () => {
         const warnings: string[] = [];
         const logger: Logger = { info: () => {}, warn: (m, f) => warnings.push(`${m} ${JSON.stringify(f ?? {})}`), error: (m, f) => warnings.push(`${m} ${JSON.stringify(f ?? {})}`) };
@@ -106,10 +108,10 @@ for (const model of models) {
     for (const c of CHATS) {
       tasks.push(async () => {
         const warnings: string[] = [];
-        const logger: Logger = { info: () => {}, warn: (m, f) => warnings.push(`${m} ${JSON.stringify(f ?? {})}`), error: (m, f) => warnings.push(`${m} ${JSON.stringify(f ?? {})}`) };
+        const logger: Logger = { info: (m, f) => warnings.push(`${m} ${JSON.stringify(f ?? {})}`), warn: (m, f) => warnings.push(`${m} ${JSON.stringify(f ?? {})}`), error: (m, f) => warnings.push(`${m} ${JSON.stringify(f ?? {})}`) };
         const coaching = createCoachingModule({
           db, clock: systemClock, logger, catalog: content.catalog, grading: grading.service, learner: learner.model,
-          llm: { provider: "dashscope", apiKey, model, enableThinking: values.thinking },
+          llm: { provider: "dashscope", apiKey, model, enableThinking: values.thinking, chatAgent: values["chat-agent"] },
         });
         const t0 = performance.now();
         const sid = submissions.get(c.submission);
@@ -143,7 +145,7 @@ await Promise.all(Array.from({ length: limit }, async () => {
   }
 }));
 
-writeFileSync(values.out, JSON.stringify({ models, reps, thinking: values.thinking, rows }, null, 2));
+writeFileSync(values.out, JSON.stringify({ models, reps, thinking: values.thinking, chatAgent: values["chat-agent"], rows }, null, 2));
 console.log(`\nwrote ${rows.length} rows to ${values.out}\n`);
 const summary = new Map<string, { n: number; llm: number; lat: number[]; leak: number; korean: number }>();
 for (const r of rows) {

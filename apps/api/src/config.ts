@@ -102,6 +102,7 @@ export function loadConfig(env: Env, cwd: string = process.cwd()): Result<ApiCon
         model: coachModel ?? DEFAULTS.dashscopeCoachModel,
         baseUrl: nonEmpty(env.DASHSCOPE_BASE_URL) ?? DEFAULTS.dashscopeBaseUrl,
         enableThinking: thinking === "on" || thinking === "true" || thinking === "1",
+        chatAgent: ["on", "true", "1"].includes(nonEmpty(env.FP_COACH_CHAT_AGENT) ?? ""),
       };
     }
   } else if (provider !== "none") {

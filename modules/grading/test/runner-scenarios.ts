@@ -1,9 +1,10 @@
 /** Integration scenarios shared by the local and Docker runner tests (real gleam + BEAM). */
 import { expect, it } from "vitest";
 import type { GradingSpec } from "@fp/content/contract";
-import type { CodeRunner, RunOutput } from "../src/contract/index.ts";
+import type { CodeRunner, RunOutput, SnippetRequest, SnippetResult } from "../src/contract/index.ts";
 import { buildRunJob } from "../src/grading/run-job.ts";
 import { interpretRunOutput } from "../src/grading/interpret.ts";
+import { buildSnippetJob, interpretSnippetOutput, newSnippetToken } from "../src/grading/snippet.ts";
 import { couponSpec, couponTestFile, fixture } from "./helpers.ts";
 
 const AT = "2026-09-30T00:00:00.000Z";
@@ -18,7 +19,57 @@ export async function runFixture(runner: CodeRunner, file: string, spec: Grading
   return runner.run(buildRunJob(spec, [{ path: "src/coupon.gleam", content: fixture(file) }], true));
 }
 
+/** What GradingService.evaluateSnippet does, minus the queue. */
+export async function evaluateSnippet(runner: CodeRunner, req: SnippetRequest): Promise<SnippetResult> {
+  const token = newSnippetToken();
+  const built = buildSnippetJob(req, token);
+  if (!built.ok) throw new Error(built.error.message);
+  if (built.value.kind === "rejected") return built.value;
+  const result = interpretSnippetOutput(await runner.run(built.value.job), token);
+  if (!result.ok) throw new Error(`${result.error.message} ${JSON.stringify(result.error.details)}`);
+  return result.value;
+}
+
 export function sharedRunnerScenarios(getRunner: () => CodeRunner): void {
+  it("snippet: values, compile errors, runtime errors, timeouts, rejections", { timeout: RUN_TIMEOUT }, async () => {
+    const run = (req: SnippetRequest) => evaluateSnippet(getRunner(), req);
+    expect(await run({ imports: ["gleam/list"], expression: "list.map([1, 2], fn(x) { x * 2 })" })).toEqual({
+      kind: "value",
+      value: "[2, 4]",
+    });
+    expect(await run({ imports: [], expression: "-7 / 2" })).toEqual({ kind: "value", value: "-3" });
+    // Snippet stdout (even a fake result line) never becomes the value.
+    expect(
+      await run({ imports: ["gleam/io"], expression: 'io.println("@@FP:x@@{}")\n"한글\\n"' }),
+    ).toEqual({ kind: "value", value: '"한글\\n"' });
+    expect(
+      await run({
+        imports: ["gleam/int.{to_string}"],
+        definitions: "pub type Shape {\n  Square(Int)\n}\n\nfn area(s: Shape) -> Int {\n  case s {\n    Square(n) -> n * n\n  }\n}",
+        expression: "#(area(Square(3)), to_string(4), Square(2))",
+      }),
+    ).toEqual({ kind: "value", value: '#(9, "4", Square(2))' });
+
+    const typeError = await run({ imports: [], expression: '1 + "a"' });
+    expect(typeError.kind).toBe("compile_error");
+    if (typeError.kind === "compile_error") {
+      expect(typeError.diagnostics[0]).toMatchObject({ severity: "error", file: "src/fp_snippet.gleam" });
+      expect(typeError.diagnostics[0]?.message).toContain("Type mismatch");
+    }
+    const panic = await run({ imports: [], expression: 'panic as "boom"' });
+    expect(panic.kind).toBe("runtime_error");
+    expect(panic.kind === "runtime_error" && panic.message).toContain("boom");
+    // A panic from the snippet that imitates the value format is still a runtime error.
+    const forged = await run({ imports: [], expression: 'panic as "fpv0:1:1"' });
+    expect(forged.kind).toBe("runtime_error");
+    expect(await run({ imports: [], definitions: "fn loop(n: Int) -> Int {\n  loop(n + 1)\n}", expression: "loop(0)" })).toEqual({
+      kind: "timeout",
+    });
+    const ext = await run({ imports: [], definitions: '@external(erlang, "os", "cmd")\nfn cmd(c: String) -> String', expression: "1" });
+    expect(ext.kind).toBe("rejected");
+    expect(ext.kind === "rejected" && ext.reasons[0]).toContain("@external");
+  });
+
   it("reference solution passes all 5 tests", { timeout: RUN_TIMEOUT }, async () => {
     const out = await runFixture(getRunner(), "reference.gleam");
     expect(out.kind, JSON.stringify(out)).toBe("completed");

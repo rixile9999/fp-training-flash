@@ -61,3 +61,53 @@ export function stdlibReference(sources: readonly string[]): string {
   }
   return parts.join("\n\n");
 }
+
+// ---------- On-demand lookups (chat agent tools) ----------
+
+interface SyntaxSection {
+  readonly title: string;
+  readonly body: string;
+}
+
+const syntaxSections: readonly SyntaxSection[] = syntaxText
+  .split(/^## /m)
+  .slice(1)
+  .map((chunk) => {
+    const nl = chunk.indexOf("\n");
+    return { title: chunk.slice(0, nl).trim(), body: `## ${chunk}`.trim() };
+  });
+
+export function syntaxTopics(): readonly string[] {
+  return syntaxSections.map((s) => s.title);
+}
+
+/** Up to `max` sections whose title best matches the query words (case-insensitive). */
+export function lookupSyntax(query: string, max = 2): string {
+  const words = query.toLowerCase().split(/[^a-z0-9|`/{}_-]+/).filter((w) => w.length > 1);
+  const scored = syntaxSections
+    .map((s) => {
+      const title = s.title.toLowerCase();
+      const body = s.body.toLowerCase();
+      const score = words.reduce((n, w) => n + (title.includes(w) ? 3 : 0) + (body.includes(w) ? 1 : 0), 0);
+      return { s, score };
+    })
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, max);
+  if (scored.length === 0) return `일치하는 문법 항목이 없습니다. 항목: ${syntaxTopics().join(", ")}`;
+  return scored.map((x) => x.s.body).join("\n\n");
+}
+
+/** Signature lines of one stdlib module, optionally filtered by a name fragment. */
+export function lookupStdlib(moduleName: string, query?: string, max = 40): string {
+  if (!stdlib) return "표준 라이브러리 참고 자료가 없습니다.";
+  const normalized = moduleName.startsWith("gleam/") ? moduleName : `gleam/${moduleName}`;
+  const mod = stdlib.modules.find((m) => m.module === normalized);
+  if (!mod) return `${normalized} 모듈이 없습니다. 모듈: ${stdlib.modules.map((m) => m.module).join(", ")}`;
+  const q = query?.trim().toLowerCase();
+  const lines = q ? mod.lines.filter((l) => l.toLowerCase().split("(")[0]?.includes(q) || l.toLowerCase().includes(`.${q}`)) : mod.lines;
+  if (lines.length === 0) return `${normalized}에 "${query}"와 일치하는 함수가 없습니다.`;
+  const shown = lines.slice(0, max);
+  const more = lines.length > shown.length ? `\n… ${lines.length - shown.length}개 더 있음 (query로 좁히세요)` : "";
+  return `${stdlib.package} ${stdlib.version} ${normalized}\n${shown.join("\n")}${more}`;
+}

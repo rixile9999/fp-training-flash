@@ -22,8 +22,12 @@ const FORBIDDEN_IMPORTS: readonly { readonly test: (m: string) => boolean; reado
 ];
 
 export function staticChecks(spec: GradingSpec, sourceFiles: readonly FileContent[]): readonly string[] {
+  return checkSources(sourceFiles, new Set(spec.testFiles.map((f) => moduleNameFromPath(f.path))));
+}
+
+/** The same checks without an exercise (snippets): `testModules` are extra forbidden imports. */
+export function checkSources(sourceFiles: readonly FileContent[], testModules: ReadonlySet<string>): readonly string[] {
   const reasons: string[] = [];
-  const testModules = new Set(spec.testFiles.map((f) => moduleNameFromPath(f.path)));
   if (sourceFiles.length === 0) reasons.push("제출된 코드가 없습니다.");
   for (const file of sourceFiles) {
     const name = file.path;

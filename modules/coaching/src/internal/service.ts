@@ -14,6 +14,7 @@ import {
   type RevealedReference,
 } from "./prompts.ts";
 import { countLines, extractLineReferences } from "./references.ts";
+import { runChatAgent } from "./chat-agent.ts";
 import { RULE_BASED_MODEL, RULE_BASED_VERSION, ruleBasedChatReply, ruleBasedFeedback } from "./rule-based.ts";
 
 export interface CoachingServiceDeps {
@@ -26,6 +27,9 @@ export interface CoachingServiceDeps {
   /** null = provider "none": always rule-based. */
   readonly llm: LlmClient | null;
   readonly llmTimeoutMs?: number;
+  /** Answer chat with the tool-using agent when the LLM client supports tools (see chat-agent.ts). */
+  readonly chatAgent?: boolean;
+  readonly chatAgentTimeoutMs?: number;
 }
 
 const MAX_CHAT_MESSAGES = 20;
@@ -172,14 +176,34 @@ export function createCoachingService(deps: CoachingServiceDeps): CoachingServic
           ...(reference ? { reference } : {}),
           messages,
         });
-        try {
-          const reply = (await withTimeout(llm.complete(request), timeoutMs)).trim();
-          if (reply.length > 0) {
-            text = reply;
+        if (deps.chatAgent && llm.chatWithTools) {
+          try {
+            const agent = await runChatAgent({
+              llm,
+              grading,
+              logger,
+              exercise,
+              conceptNotes,
+              theoryTopics,
+              request,
+              timeoutMs: deps.chatAgentTimeoutMs ?? 60_000,
+            });
+            text = agent.text.trim();
             source = "llm";
+          } catch (e) {
+            logger.warn("coaching: chat agent failed, using single call", { exerciseId: req.exerciseId, error: String(e) });
           }
-        } catch (e) {
-          logger.warn("coaching: llm chat failed, using rules", { exerciseId: req.exerciseId, error: String(e) });
+        }
+        if (text === undefined) {
+          try {
+            const reply = (await withTimeout(llm.complete(request), timeoutMs)).trim();
+            if (reply.length > 0) {
+              text = reply;
+              source = "llm";
+            }
+          } catch (e) {
+            logger.warn("coaching: llm chat failed, using rules", { exerciseId: req.exerciseId, error: String(e) });
+          }
         }
       }
       text ??= ruleBasedChatReply({

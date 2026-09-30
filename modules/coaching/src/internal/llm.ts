@@ -23,10 +23,44 @@ export interface LlmRequest {
   readonly maxOutputTokens?: number;
 }
 
+/** A tool the model may call; `parameters` is a JSON Schema object. */
+export interface ToolSpec {
+  readonly name: string;
+  readonly description: string;
+  readonly parameters: Record<string, unknown>;
+}
+
+export interface ToolCall {
+  readonly id: string;
+  readonly name: string;
+  /** Raw JSON arguments as produced by the model; may be invalid. */
+  readonly arguments: string;
+}
+
+export type AgentMessage =
+  | { readonly role: "user"; readonly content: string }
+  | { readonly role: "assistant"; readonly content: string; readonly toolCalls?: readonly ToolCall[] }
+  | { readonly role: "tool"; readonly toolCallId: string; readonly content: string };
+
+export interface ToolChatRequest {
+  readonly system: string;
+  readonly messages: readonly AgentMessage[];
+  /** Empty means the model must answer in text. */
+  readonly tools: readonly ToolSpec[];
+  readonly maxOutputTokens?: number;
+}
+
+export interface ToolChatResponse {
+  readonly text: string;
+  readonly toolCalls: readonly ToolCall[];
+}
+
 export interface LlmClient {
   readonly model: string;
   /** Returns the text of the reply. Throws on API errors, refusals and truncation. */
   complete(req: LlmRequest): Promise<string>;
+  /** One tool-calling turn. Optional: providers without it use the single-call chat path. */
+  chatWithTools?(req: ToolChatRequest): Promise<ToolChatResponse>;
 }
 
 export interface AnthropicLlmOptions {

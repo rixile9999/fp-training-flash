@@ -44,7 +44,10 @@ describe("loadConfig", () => {
       model: DEFAULTS.dashscopeCoachModel,
       baseUrl: DEFAULTS.dashscopeBaseUrl,
       enableThinking: false,
+      chatAgent: false,
     });
+    const agent = loadConfig({ DASHSCOPE_API_KEY: "sk-ds", FP_COACH_CHAT_AGENT: "on" });
+    expect(agent.ok && agent.value.llm).toMatchObject({ provider: "dashscope", chatAgent: true });
     const both = loadConfig({ ANTHROPIC_API_KEY: "sk-a", DASHSCOPE_API_KEY: "sk-ds" });
     expect(both.ok && both.value.llm.provider).toBe("anthropic");
     const forced = loadConfig({

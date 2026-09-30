@@ -187,6 +187,9 @@ export function makeSubmission(id: string, evaluation: Evaluation | undefined, o
 /** Like a real grading service, except it ignores `userId` so coaching's own ownership check is exercised. */
 export function fakeGrading(submissions: readonly Submission[]): GradingService {
   return {
+    evaluateSnippet: async () => {
+      throw new Error("not used");
+    },
     submit: async () => {
       throw new Error("not used");
     },

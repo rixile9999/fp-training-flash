@@ -20,6 +20,14 @@ Submissions, evaluations and the Gleam language adapter (`CodeRunner`). Publishe
 - Performance verdict: `not_measured` when referenceCost is empty or tests failed; `too_slow` when a
   size timed out or learner/reference cost at the largest common size > maxCostRatio.
 - Predict exercises never touch a runner: answer normalised (trim, collapse whitespace) vs acceptedAnswers.
+- `evaluateSnippet` (src/grading/snippet.ts): not stored, no events, same job queue. `src/fp_snippet.gleam` =
+  `import gleam/string` (or the request's own gleam/string import) + validated imports (`a/b` or `a/b.{x, type T}`,
+  else `rejected`) + definitions + `pub fn value() {\n<expr>\n}`; the whole module goes through the static
+  checks (`checkSources`). Generated `test/fp_snippet_test.gleam` `value_test` panics with
+  `<token>:<byte length>:<string.inspect(value())>`; the value is taken only from a `failed` value_test whose
+  message starts `panic: <token>:` (token random per job, only in the test source). Snippet panics are `error`
+  -> runtime_error. Limits 5000 ms / 128 MB; expression/definitions <= 4000 chars, <= 10 imports, else
+  invalid_input. Diagnostic lines are relative to the generated module; runner system_error -> `unavailable`.
 
 ## Static checks (src/grading/static-checks.ts), on learner files only
 
@@ -31,7 +39,7 @@ modules; non-.gleam files, > 64 KB, NUL bytes. Without FFI, Gleam's stdlib has n
 
 - `src/index.ts` composition root: `createGradingModule`, `migrations`, runner factories, pure helpers.
 - `src/service/` service (submit/trialRun), repo (SQL), queue (bounded FIFO concurrency), migrations.
-- `src/grading/` pure logic: static checks, rubric, buildRunJob, interpretRunOutput, predict.
+- `src/grading/` pure logic: static checks, rubric, buildRunJob, interpretRunOutput, predict, snippet.
 - `src/gleam/source.ts` tiny lexer helpers (blank comments/strings, top-level fns, imports, names).
 - `src/runner/` adapters: `project.ts` (job -> files + `.fp/job.json` + nonce), `protocol.ts` (stdout
   parsing, gleam diagnostics, compile-error attribution), `process.ts` (spawn with timeout/output cap),

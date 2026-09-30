@@ -187,12 +187,34 @@ export interface TrialRun {
   readonly rejectionReasons?: readonly string[];
 }
 
+/**
+ * A small Gleam expression evaluated in the sandbox (used by the coach to verify examples before showing them).
+ * The module is: `import gleam/string`, then `imports`, then `definitions`, then
+ * `pub fn value() { <expression> }`; the result is `string.inspect(value())`.
+ */
+export interface SnippetRequest {
+  /** Module paths such as "gleam/list" or "gleam/list.{map}"; learner/exercise modules are not available. */
+  readonly imports: readonly string[];
+  /** Optional top-level definitions (functions, types) used by the expression. */
+  readonly definitions?: string;
+  readonly expression: string;
+}
+
+export type SnippetResult =
+  | { readonly kind: "value"; readonly value: string }
+  | { readonly kind: "compile_error"; readonly diagnostics: readonly Diagnostic[] }
+  | { readonly kind: "runtime_error"; readonly message: string }
+  | { readonly kind: "timeout" }
+  | { readonly kind: "rejected"; readonly reasons: readonly string[] };
+
 export interface GradingService {
   /** Synchronous: returns the completed submission. Idempotent per (userId, idempotencyKey). */
   submit(req: SubmitRequest): Promise<Result<Submission, AppError>>;
   trialRun(req: TrialRunRequest): Promise<Result<TrialRun, AppError>>;
   getSubmission(id: SubmissionId, userId: UserId): Promise<Submission | null>;
   listSubmissions(userId: UserId, exerciseId?: ExerciseId): Promise<readonly Submission[]>;
+  /** Evaluates a snippet in the sandbox with small limits. Not stored, no events. */
+  evaluateSnippet(req: SnippetRequest): Promise<Result<SnippetResult, AppError>>;
 }
 
 // ---------- Events ----------

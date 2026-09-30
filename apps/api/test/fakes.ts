@@ -170,6 +170,7 @@ export function makeFakes(overrides: Overrides = {}): Fakes {
   };
 
   const grading: GradingService = {
+    evaluateSnippet: async () => ok({ kind: "value" as const, value: "[2, 4]" }),
     submit: async (req) =>
       ok(
         makeSubmission("s-1", {

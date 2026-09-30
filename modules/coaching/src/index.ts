@@ -24,6 +24,8 @@ export type LlmConfig =
       readonly baseUrl?: string;
       /** DashScope enable_thinking; default false for coaching latency. */
       readonly enableThinking?: boolean;
+      /** Answer chat with the tool-using agent (lookups + sandbox checks). */
+      readonly chatAgent?: boolean;
       readonly maxOutputTokens?: number;
     }
   | { readonly provider: "none" };
@@ -53,6 +55,7 @@ export function createCoachingModule(deps: CoachingModuleDeps): CoachingModule {
     grading: deps.grading,
     learner: deps.learner,
     llm: llmClientFor(deps.llm),
+    chatAgent: deps.llm.provider === "dashscope" && deps.llm.chatAgent === true,
   });
   return { service };
 }
