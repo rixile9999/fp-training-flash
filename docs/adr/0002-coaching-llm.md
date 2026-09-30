@@ -58,3 +58,22 @@ model calls when needed (pull, not push), evaluated the same way.
 - Latency is about 8-11 s per feedback; the web and CLI show grading results first and load coaching separately.
 - Re-run `node tools/coach-eval/src/main.ts --models <ids> --reps 2` after prompt or model changes.
 - Token Plan keys must not be used: their terms forbid application backends.
+
+## Chat agent prototype (pull instead of push)
+
+`FP_COACH_CHAT_AGENT=on` answers chat with a small tool loop (at most 3 calls): `lookup_stdlib` (pinned
+stdlib signatures), `syntax_reference` (sections of the verified syntax reference), `evaluate_gleam`
+(sandboxed expression via `GradingService.evaluateSnippet`), `run_public_tests`, `read_note`. On failure it
+falls back to the single-call chat. Blind comparison on qwen3.8-flash, 8 chat scenarios x 2 reps, four of them
+fact-heavy with verified ground truth:
+
+| chat mode | overall | fact questions | coaching questions | concision | best | p50 / p90 latency |
+|---|---|---|---|---|---|---|
+| single call (coach-v2) | 5.62 | 4.50 | 6.75 | 4.19 | 3/8 | 5.0 s / 5.9 s |
+| agent | 6.25 | 5.88 | 6.62 | 3.31 | 5/8 | 8.1 s / 13.4 s |
+
+The agent used tools where they matter (stdlib lookup for `fold_right`, sandbox evaluation for `-7 / 2`, none for
+the prompt injection) and fixed a real error: the single call stated `fold_right`'s callback as (item, acc).
+Weaknesses: longer answers, one "give me the answer" reply that described the fix step by step, and one stray
+non-Korean token. Status: prototype, off by default; recommended next steps are routing (agent only for questions
+that need library, syntax or code facts) and a guard that tool results never relax the no-solution rule.
