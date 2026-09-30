@@ -15,12 +15,22 @@ development runner and for working on exercises.
 
 ## Run it locally
 
+Requirements: Node 25+, pnpm, Docker Desktop. One script does everything (installs dependencies, starts Docker,
+builds the grader image on first run, starts API + web in the background, opens the browser):
+
 ```sh
-pnpm install
-pnpm runner:build                      # builds the fp-gleam-runner:1.18.1 sandbox image
-FP_DATA_DIR=memory pnpm api            # API on http://localhost:8787 (in-memory PostgreSQL)
-pnpm web                               # web UI on http://localhost:5173
+./fpctl up              # start (learning data kept in .data/pglite)
+./fpctl up --memory     # start with a throwaway in-memory DB
+./fpctl up --agent      # start with the tool-using chat coach
+./fpctl status          # processes and API health
+./fpctl logs [api|web]  # follow logs
+./fpctl restart         # stop + start
+./fpctl down            # stop
+./fpctl reset           # stop and delete local learning data (asks first; --yes to skip)
 ```
+
+Web: http://localhost:5173, API: http://localhost:8787. Coaching uses `DASHSCOPE_API_KEY` (or
+`ANTHROPIC_API_KEY`) from the environment; without a key it is rule-based.
 
 API configuration (environment variables):
 
@@ -32,8 +42,10 @@ API configuration (environment variables):
 | `FP_CONTENT_DIR` | `content/` | content source, validated and imported at startup |
 | `FP_RUNNER` | `docker` | `docker` (sandboxed) or `local` (development only, unsandboxed) |
 | `FP_RUNNER_IMAGE` | `fp-gleam-runner:1.18.1` | sandbox image |
-| `ANTHROPIC_API_KEY` | unset | enables LLM coaching; without it coaching is rule-based |
-| `FP_COACH_MODEL` | see apps/api | coaching model id |
+| `FP_LLM_PROVIDER` | auto | `anthropic`, `dashscope` or `none`; auto picks the first key that is set |
+| `DASHSCOPE_API_KEY` / `ANTHROPIC_API_KEY` | unset | coaching LLM keys |
+| `FP_COACH_MODEL` | `qwen3.8-flash` / `claude-opus-5` | coaching model id |
+| `FP_COACH_CHAT_AGENT` | off | `on` enables the tool-using chat agent (DashScope) |
 | `FP_WEB_ORIGIN` | `http://localhost:5173` | CORS origin for the web UI |
 
 The web UI can run without a backend: `VITE_FAKE_API=1 pnpm web`.

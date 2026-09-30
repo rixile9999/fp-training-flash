@@ -17,6 +17,7 @@ Do not load those for module work; they are not needed to change code.
 
 ## Commands
 
+- `./fpctl up|down|restart|reset|status|logs`: run the whole platform locally (see README).
 - `pnpm check:module <pkg>`: definition of done for one package (boundaries, context budget, typecheck, tests).
 - `pnpm check`: whole repo. `pnpm boundaries`: boundary rules only.
 - `node tools/ctx.mjs <pkg>`: the exact files you need for a package (`--tokens` for size, `--cat` to print).

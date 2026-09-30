@@ -1,0 +1,3 @@
+#!/bin/sh
+# Start, stop and reset the local FP Training Flash platform. See tools/dev.mjs.
+exec node "$(dirname "$0")/tools/dev.mjs" "$@"
