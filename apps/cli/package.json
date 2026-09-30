@@ -1,0 +1,12 @@
+{
+  "name": "@fp/cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": { "fp": "./src/main.ts" },
+  "fp": {
+    "kind": "app",
+    "description": "Command-line client (fp). Thin adapter over the HTTP API client; human and --json output."
+  },
+  "dependencies": { "@fp/api-contract": "workspace:*" }
+}

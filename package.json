@@ -1,0 +1,26 @@
+{
+  "name": "fp-training-flash",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.6.0",
+  "engines": {
+    "node": ">=25"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "boundaries": "node tools/check-boundaries.mjs",
+    "ctx": "node tools/ctx.mjs",
+    "check": "pnpm boundaries && pnpm typecheck && pnpm test",
+    "check:module": "node tools/check-module.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.2"
+  },
+  "fp": {
+    "contextBudgetTokens": 120000,
+    "description": "FP Training Flash monorepo. See CLAUDE.md and docs/architecture.md."
+  }
+}

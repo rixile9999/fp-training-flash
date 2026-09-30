@@ -1,0 +1,18 @@
+{
+  "name": "@fp/accounts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract/index.ts"
+  },
+  "fp": {
+    "kind": "module",
+    "description": "Users and bearer API tokens (dev login in MVP).",
+    "dbSchema": "accounts",
+    "publishes": [],
+    "consumes": []
+  },
+  "dependencies": { "@fp/kernel": "workspace:*" }
+}

@@ -1,0 +1,63 @@
+kind: implement
+format: drill
+module: coupon
+difficulty: 1250
+estimatedMinutes: 5
+limits: { timeMs: 10000, memoryMb: 256 }
+tests:
+  - fn: empty_list_test
+    name: 빈 목록은 빈 목록을 반환한다
+    visibility: public
+  - fn: discounts_pending_test
+    name: Pending 주문의 금액을 할인한다
+    visibility: public
+    requirements: [R1]
+  - fn: keeps_other_orders_test
+    name: Pending과 Shipped가 섞인 목록
+    visibility: public
+    errorTag: drops_items_with_filter
+    requirements: [R2]
+  - fn: keeps_order_test
+    name: 원래 순서를 유지한다
+    visibility: hidden
+    errorTag: reorders_items
+    requirements: [R3]
+  - fn: rounds_down_test
+    name: 할인 금액은 내림한다
+    visibility: hidden
+    errorTag: wrong_rounding
+requirements:
+  - id: R1
+    description: Pending 주문만 금액 변경
+  - id: R2
+    description: 대상 외 주문 보존
+  - id: R3
+    description: 순서 유지
+hints:
+  - level: 1
+    kind: question
+    text: 결과 목록의 길이는 입력과 같아야 할까요, 달라야 할까요?
+  - level: 2
+    kind: concept
+    text: "`list.map`은 길이를 유지하고 `list.filter`는 길이를 줄입니다."
+  - level: 3
+    kind: approach
+    text: 모든 주문을 순회하면서 상태에 따라 `case`로 나눠 보세요.
+  - level: 4
+    kind: partial_code
+    text: |
+      ```gleam
+      list.map(orders, fn(o) {
+        case o.status {
+          Pending -> todo
+          _ -> o
+        }
+      })
+      ```
+  - level: 5
+    kind: explanation
+    text: 전체 해설을 열 수 있습니다. 해설을 본 뒤의 숙련 확인은 새 문제로 진행합니다.
+wrong:
+  - key: filter-drops
+    mustFail: [keeps_other_orders_test]
+    errorTag: drops_items_with_filter

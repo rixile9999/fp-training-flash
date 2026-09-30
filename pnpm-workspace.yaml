@@ -1,0 +1,8 @@
+packages:
+  - shared/*
+  - modules/*
+  - apps/*
+  - tools/*
+minimumReleaseAgeExclude:
+  - '@hono/node-server@2.1.3'
+  - hono@4.13.11

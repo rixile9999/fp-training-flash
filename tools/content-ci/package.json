@@ -1,0 +1,21 @@
+{
+  "name": "@fp/content-ci",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "fp-content-ci": "./src/main.ts"
+  },
+  "fp": {
+    "kind": "tool",
+    "description": "Content CI: validates /content, runs reference and wrong solutions through the real grader, measures performance baselines.",
+    "contextExtras": [
+      "content/README.md"
+    ]
+  },
+  "dependencies": {
+    "@fp/kernel": "workspace:*",
+    "@fp/content": "workspace:*",
+    "@fp/grading": "workspace:*"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.base.json",
+  "include": [
+    "shared/*/src/**/*.ts",
+    "shared/*/test/**/*.ts",
+    "modules/*/src/**/*.ts",
+    "modules/*/test/**/*.ts",
+    "apps/api/src/**/*.ts",
+    "apps/api/test/**/*.ts",
+    "apps/mcp/src/**/*.ts",
+    "apps/mcp/test/**/*.ts",
+    "apps/cli/src/**/*.ts",
+    "apps/cli/test/**/*.ts",
+    "tools/*/src/**/*.ts",
+    "tools/*/test/**/*.ts"
+  ]
+}

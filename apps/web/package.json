@@ -1,0 +1,12 @@
+{
+  "name": "@fp/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": { "dev": "vite", "build": "vite build", "typecheck": "tsc -p tsconfig.json --noEmit", "test": "vitest run" },
+  "fp": {
+    "kind": "app",
+    "description": "Web training UI (React + Vite + CodeMirror). Talks to the API only via @fp/api-contract."
+  },
+  "dependencies": { "@fp/api-contract": "workspace:*", "react": "^19.3.0", "react-dom": "^19.3.0" }
+}

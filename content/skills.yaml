@@ -1,0 +1,44 @@
+# Skill graph. `order` is the learning-path order; prerequisites gate recommendations.
+skills:
+  - id: data-transformation
+    name: 데이터 변환
+    track: core
+    order: 1
+    description: 목록과 레코드를 map, filter, fold, 레코드 갱신으로 새 값으로 바꾼다. 구조 보존 여부를 판단한다.
+    prerequisites: []
+  - id: explicit-failure
+    name: 명시적 실패 처리
+    track: core
+    order: 2
+    description: 누락값과 오류를 Option, Result로 표현하고 use 표현과 result 함수로 연결한다.
+    prerequisites: [data-transformation]
+  - id: function-decomposition
+    name: 함수 분해와 합성
+    track: core
+    order: 3
+    description: 긴 처리를 작은 순수 함수로 나누고 파이프라인으로 합성한다. 계산과 효과를 분리한다.
+    prerequisites: [data-transformation]
+  - id: recursive-algorithms
+    name: 재귀와 분할 정복
+    track: algorithm
+    order: 4
+    description: 구조적 재귀, 누적자, 분할 정복으로 알고리즘을 설계한다.
+    prerequisites: [data-transformation]
+  - id: dynamic-programming
+    name: 동적 계획법
+    track: algorithm
+    order: 5
+    description: 부분 문제를 정의하고 불변 자료구조로 결과를 재사용한다.
+    prerequisites: [recursive-algorithms]
+  - id: search-and-graphs
+    name: 탐색과 그래프
+    track: algorithm
+    order: 6
+    description: 백트래킹, 격자 탐색, 그래프 탐색을 불변 상태로 구현한다.
+    prerequisites: [recursive-algorithms]
+  - id: functional-data-structures
+    name: 함수형 자료구조
+    track: algorithm
+    order: 7
+    description: 영속 자료구조와 상각 비용을 이해하고 직접 구현한다.
+    prerequisites: [recursive-algorithms]

@@ -1,0 +1,27 @@
+{
+  "name": "@fp/content",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract/index.ts"
+  },
+  "fp": {
+    "kind": "module",
+    "description": "Problem DB: skills, exercises, concept notes, theory topics, grading specs; loads /content into immutable bundles.",
+    "dbSchema": "content",
+    "publishes": [
+      "content.bundle_imported"
+    ],
+    "consumes": [],
+    "contextExtras": [
+      "content/README.md"
+    ]
+  },
+  "dependencies": {
+    "@fp/kernel": "workspace:*",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.5"
+  }
+}

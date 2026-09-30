@@ -1,0 +1,12 @@
+{
+  "name": "@fp/mcp",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": { "fp-mcp": "./src/main.ts" },
+  "fp": {
+    "kind": "app",
+    "description": "MCP server (stdio and streamable HTTP). Thin adapter over the HTTP API client; no business logic."
+  },
+  "dependencies": { "@fp/api-contract": "workspace:*", "@modelcontextprotocol/sdk": "^1.31.0", "zod": "^4.6.5" }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "@fp/api-contract",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "fp": {
+    "kind": "shared",
+    "description": "HTTP API contract (routes + DTO types) and the typed fetch client used by web, MCP and CLI."
+  },
+  "dependencies": {
+    "@fp/kernel": "workspace:*",
+    "@fp/accounts": "workspace:*",
+    "@fp/content": "workspace:*",
+    "@fp/grading": "workspace:*",
+    "@fp/learner": "workspace:*",
+    "@fp/sessions": "workspace:*",
+    "@fp/coaching": "workspace:*"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "@fp/kernel",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./testing": "./src/testing/index.ts"
+  },
+  "fp": {
+    "kind": "shared",
+    "description": "Shared kernel: ids, Result, Clock, Db, migrations, events, errors. No business logic."
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "pg": "^8.23.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.15.0"
+  }
+}
