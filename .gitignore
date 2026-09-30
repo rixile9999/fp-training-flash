@@ -9,3 +9,4 @@ dist/
 .fp-scope
 coverage/
 *.log
+.claude/worktrees/

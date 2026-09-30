@@ -16,6 +16,10 @@
   "dependencies": {
     "@fp/kernel": "workspace:*",
     "@fp/content": "workspace:*",
-    "@fp/grading": "workspace:*"
+    "@fp/grading": "workspace:*",
+    "yaml": "^2.9.1"
+  },
+  "scripts": {
+    "ci": "node src/main.ts"
   }
 }
