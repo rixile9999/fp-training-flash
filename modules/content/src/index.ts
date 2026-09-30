@@ -1,6 +1,13 @@
 /** Composition-root entry. Only apps/* and tools/* may import this file. */
-import type { AppError, Clock, Db, EventBus, Logger, Migration, Result } from "@fp/kernel";
+import type { AppError, Clock, Db, EventBus, Logger, Result } from "@fp/kernel";
+import { loadDirectory, type ContentBundle } from "./bundle.ts";
 import type { BundleInfo, ContentCatalog } from "./contract/index.ts";
+import { createCatalog } from "./db/catalog.ts";
+import { importBundle } from "./db/importer.ts";
+import type { ContentIssue } from "./loader/parse.ts";
+
+export { migrations } from "./db/migrations.ts";
+export type { ContentBundle, ContentIssue };
 
 export interface ContentModuleDeps {
   readonly db: Db;
@@ -9,22 +16,13 @@ export interface ContentModuleDeps {
   readonly logger: Logger;
 }
 
-/** A problem found while loading /content. `path` is relative to the content root. */
-export interface ContentIssue {
-  readonly path: string;
-  readonly message: string;
-}
-
-/** Fully parsed, validated content tree. Opaque to other modules. */
-export interface ContentBundle {
-  readonly bundleId: string;
-  readonly contentHash: string;
-}
-
 export interface ContentAdmin {
-  /** Parse and validate a content directory without touching the DB. */
+  /** Parse and validate a content directory without touching the DB. Collects every issue found. */
   loadDirectory(dir: string): Promise<Result<ContentBundle, readonly ContentIssue[]>>;
-  /** Import a bundle. Unchanged exercises keep their version; changed ones get version+1. Idempotent per contentHash. */
+  /**
+   * Import a bundle from `loadDirectory`. Unchanged exercises keep their version; changed ones get version+1;
+   * removed ones are retired. Re-importing the current bundle (same contentHash) is a no-op.
+   */
   importBundle(bundle: ContentBundle): Promise<Result<BundleInfo, AppError>>;
 }
 
@@ -33,8 +31,12 @@ export interface ContentModule {
   readonly admin: ContentAdmin;
 }
 
-export const migrations: readonly Migration[] = [];
-
-export function createContentModule(_deps: ContentModuleDeps): ContentModule {
-  throw new Error("not implemented");
+export function createContentModule(deps: ContentModuleDeps): ContentModule {
+  return {
+    catalog: createCatalog(deps.db),
+    admin: {
+      loadDirectory,
+      importBundle: (bundle) => importBundle(deps, bundle),
+    },
+  };
 }
