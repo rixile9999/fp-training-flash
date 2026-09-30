@@ -14,5 +14,12 @@
     "publishes": [],
     "consumes": []
   },
-  "dependencies": { "@fp/kernel": "workspace:*", "@fp/content": "workspace:*", "@fp/grading": "workspace:*", "@fp/learner": "workspace:*", "@anthropic-ai/sdk": "^0.129.0" }
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.129.0",
+    "@fp/content": "workspace:*",
+    "@fp/grading": "workspace:*",
+    "@fp/kernel": "workspace:*",
+    "@fp/learner": "workspace:*",
+    "zod": "^4.6.5"
+  }
 }

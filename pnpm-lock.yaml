@@ -265,6 +265,9 @@ importers:
       '@fp/learner':
         specifier: workspace:*
         version: link:../learner
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
 
   modules/content:
     dependencies:
