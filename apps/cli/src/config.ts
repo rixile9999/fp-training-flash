@@ -1,6 +1,8 @@
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { LocalizedError } from "./messages.ts";
+import type { Locale } from "./messages.ts";
 
 export const DEFAULT_API_URL = "http://localhost:8787";
 
@@ -13,6 +15,11 @@ export interface CliConfig {
   readonly lastSubmissionId?: string;
   /** Most recently written exercise project, used when a command gets no dir. */
   readonly lastWorkDir?: string;
+  /**
+   * Preferred display language: last known account locale, or the `fp lang` choice made while logged out
+   * (sent with the next `fp login`).
+   */
+  readonly locale?: Locale;
 }
 
 export interface ConfigEnv {
@@ -41,7 +48,7 @@ export async function loadConfig(env: ConfigEnv): Promise<CliConfig> {
     const parsed: unknown = JSON.parse(text);
     return parsed && typeof parsed === "object" ? (parsed as CliConfig) : {};
   } catch {
-    throw new Error(`설정 파일을 읽을 수 없습니다 (JSON 오류): ${configPath(env)}`);
+    throw new LocalizedError("errConfigJson", { path: configPath(env) });
   }
 }
 

@@ -5,6 +5,8 @@ export { bootstrap, ContentInvalidError, createRunner, migrateAll, MODULE_MIGRAT
 export type { BootstrapOptions, Runtime } from "./bootstrap.ts";
 export { DEFAULTS, loadConfig, runnerLabel } from "./config.ts";
 export type { ApiConfig, DbConfig, Env, RunnerConfig } from "./config.ts";
-export { STATUS_BY_CODE } from "./http.ts";
+export { requestLocale, STATUS_BY_CODE } from "./http.ts";
+export { API_MESSAGES, apiMessage, localeFromAcceptLanguage } from "./messages.ts";
+export type { ApiMessageId } from "./messages.ts";
 export { createRateLimiter } from "./rate-limit.ts";
 export type { RateLimitDecision, RateLimiter, RateLimitRule } from "./rate-limit.ts";

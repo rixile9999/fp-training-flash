@@ -150,3 +150,46 @@ export async function cleanupTrees(): Promise<void> {
 export function without(files: Files, prefix: string): Files {
   return Object.fromEntries(Object.entries(files).filter(([p]) => !p.startsWith(prefix)));
 }
+
+/**
+ * Translations for `baseFiles()`: a complete English translation of sum-list/base and of predict-map/base,
+ * a partial Chinese one (family title, prompt, skill name, theory note), and en/zh skill and note overlays.
+ */
+export function translationFiles(): Files {
+  return {
+    "skills.en.yaml": `skills:
+  data-transformation: { name: Data transformation, description: Transforming data }
+  recursive-algorithms: { name: Recursion }
+`,
+    "skills.zh.yaml": "skills:\n  data-transformation: { name: 数据转换 }\n",
+    "concepts/list-fold.en.md": "---\nid: list-fold\ntitle: Fold\n---\nAbout fold.\n",
+    "theory/folds.zh.md": "---\nid: folds\ntitle: 折叠的理论\n---\n理论正文。\n",
+    "exercises/sum-list/family.en.yaml": `title: Sum a list
+rubric:
+  R-01: { title: Fold instead of recursion, message: Do not use panic }
+`,
+    "exercises/sum-list/family.zh.yaml": "title: 列表求和\n",
+    "exercises/sum-list/base/exercise.en.yaml": `tests:
+  adds_numbers_test: Adds the numbers
+  empty_is_zero_test: An empty list sums to 0
+  big_numbers_test: Big numbers
+requirements:
+  R1: The total
+hints:
+  1: Question
+  2: Concept
+  3: Approach
+  4: Partial code
+  5: Explanation
+`,
+    "exercises/sum-list/base/prompt.en.md": "Sum a list of integers.\n",
+    "exercises/sum-list/base/explanation.en.md": "Add them up with fold.\n",
+    "exercises/sum-list/base/prompt.zh.md": "求整数列表的和。\n",
+    "exercises/predict-map/family.en.yaml": "title: Predict the result of map\n",
+    "exercises/predict-map/base/exercise.en.yaml": `title: Double it
+hints: { 1: q, 2: c, 3: a, 4: p, 5: e }
+`,
+    "exercises/predict-map/base/prompt.en.md": "What is the result?\n",
+    "exercises/predict-map/base/explanation.en.md": "Each element is doubled.\n",
+  };
+}

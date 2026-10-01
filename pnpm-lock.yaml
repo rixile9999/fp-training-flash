@@ -354,6 +354,18 @@ importers:
         specifier: workspace:*
         version: link:../../shared/kernel
 
+  modules/lessons:
+    dependencies:
+      '@fp/content':
+        specifier: workspace:*
+        version: link:../content
+      '@fp/kernel':
+        specifier: workspace:*
+        version: link:../../shared/kernel
+      '@fp/learner':
+        specifier: workspace:*
+        version: link:../learner
+
   modules/sessions:
     dependencies:
       '@fp/content':
@@ -389,6 +401,9 @@ importers:
       '@fp/learner':
         specifier: workspace:*
         version: link:../../modules/learner
+      '@fp/lessons':
+        specifier: workspace:*
+        version: link:../../modules/lessons
       '@fp/sessions':
         specifier: workspace:*
         version: link:../../modules/sessions

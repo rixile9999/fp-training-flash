@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { asId } from "@fp/kernel";
-import type { ExerciseId, UserId } from "@fp/kernel";
+import type { ExerciseId, Locale, UserId } from "@fp/kernel";
 import type { ContentCatalog, FileContent, GradingSpec } from "@fp/content/contract";
 import type { CodeRunner, HelpUsed, RunJob, RunOutput, RunnerInfo } from "../src/contract/index.ts";
 
@@ -80,7 +80,53 @@ export function fakeCatalog(specs: readonly GradingSpec[]): ContentCatalog {
     getConceptNotes: empty,
     getTheoryTopics: empty,
     listTheoryTopics: empty,
+    listLessonUnits: async () => [],
+    getLesson: async () => null,
+    getLessonAnswer: async () => null,
     currentBundle: none,
+  };
+}
+
+/**
+ * A catalog whose grading specs depend on the locale, like the real one: `translate(spec, locale)` returns the
+ * localized spec (or the spec itself for a missing translation). Records the locale of every getGradingSpec call.
+ */
+export function localizedCatalog(
+  specs: readonly GradingSpec[],
+  translate: (spec: GradingSpec, locale: Locale) => GradingSpec,
+): ContentCatalog & { readonly specLocales: (Locale | undefined)[] } {
+  const base = fakeCatalog(specs);
+  const specLocales: (Locale | undefined)[] = [];
+  return {
+    ...base,
+    specLocales,
+    getGradingSpec: async (id, locale) => {
+      specLocales.push(locale);
+      const spec = await base.getGradingSpec(id);
+      return spec ? translate(spec, locale ?? "ko") : null;
+    },
+  };
+}
+
+/** English and Chinese test names / requirement descriptions for couponSpec (zh lacks R3: falls back to ko). */
+export function translateCoupon(spec: GradingSpec, locale: Locale): GradingSpec {
+  const names: Partial<Record<Locale, Record<string, string>>> = {
+    en: { T1: "An empty list returns an empty list", T2: "Discounts Pending orders", T3: "A mix of Pending and Shipped", T4: "Keeps the original order", T5: "Rounds the discount down" },
+    zh: { T1: "空列表返回空列表", T2: "对待发货订单打折", T3: "待发货与已发货混合的列表", T4: "保持原有顺序", T5: "折扣金额向下取整" },
+  };
+  const reqs: Partial<Record<Locale, Record<string, string>>> = {
+    en: { R1: "Only Pending orders change amount", R2: "Other orders are kept", R3: "Order is preserved" },
+    zh: { R1: "只修改待发货订单的金额", R2: "保留其他订单" },
+  };
+  return {
+    ...spec,
+    tests: spec.tests.map((t) => ({ ...t, name: names[locale]?.[t.id] ?? t.name })),
+    requirements: spec.requirements.map((r) => ({ ...r, description: reqs[locale]?.[r.id] ?? r.description })),
+    rubric: spec.rubric.map((item) =>
+      item.automatedCheck && item.automatedCheck.kind !== "max_function_lines" && locale !== "ko"
+        ? { ...item, automatedCheck: { ...item.automatedCheck, message: `[${locale}] ${item.automatedCheck.message}` } }
+        : item,
+    ),
   };
 }
 

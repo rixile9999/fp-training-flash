@@ -1,8 +1,9 @@
 import type { ExerciseDetail, TrialRun } from "@fp/api-contract";
 import { CodeEditor } from "../editor/CodeEditor.tsx";
+import { useI18n } from "../i18n/I18n.tsx";
 import { Icon } from "../ui/Icon.tsx";
 import { StatusBadge } from "../ui/Status.tsx";
-import { OUTCOME_LABEL } from "../ui/labels.ts";
+import { outcomeLabel } from "../ui/labels.ts";
 
 export function starterCode(ex: ExerciseDetail): string {
   const file = ex.starterFiles.find((f) => f.path === `src/${ex.moduleName}.gleam`) ?? ex.starterFiles[0];
@@ -21,6 +22,7 @@ export function EditorPanel(props: {
   readonly error: string | null;
   readonly attempt: number;
 }) {
+  const { t } = useI18n();
   const ex = props.exercise;
   const predict = ex.kind === "predict";
   const busy = props.running || props.submitting;
@@ -28,52 +30,52 @@ export function EditorPanel(props: {
     <div className="panel editor-panel">
       <div className="editor-bar">
         <span className="file-name mono">
-          <Icon name="code" size={16} /> {predict ? "답안" : `src/${ex.moduleName}.gleam`}
+          <Icon name="code" size={16} /> {predict ? t("editor.answer") : `src/${ex.moduleName}.gleam`}
         </span>
-        {props.attempt > 0 && <span className="chip chip-small">{props.attempt + 1}번째 제출 준비</span>}
+        {props.attempt > 0 && <span className="chip chip-small">{t("editor.attemptReady", { n: props.attempt + 1 })}</span>}
       </div>
       {predict ? (
         <div className="predict-answer">
           <label htmlFor="predict-input" className="field-label">
-            main()이 돌려주는 값
+            {t("editor.predictLabel")}
           </label>
           <input
             id="predict-input"
             className="input mono"
             value={props.code}
-            placeholder="예: [1, 2, 3]"
+            placeholder={t("editor.predictPlaceholder")}
             onChange={(e) => props.onCodeChange(e.target.value)}
             autoComplete="off"
             spellCheck={false}
           />
-          <p className="muted small">결과 예측 문제는 실행 없이 제출로 바로 채점합니다.</p>
+          <p className="muted small">{t("editor.predictNote")}</p>
         </div>
       ) : (
         <div className="editor-host">
-          <CodeEditor value={props.code} onChange={props.onCodeChange} label={`${ex.title} 코드 편집기`} describedBy="editor-kbd-note" />
+          <CodeEditor value={props.code} onChange={props.onCodeChange} label={t("editor.label", { title: ex.title })} describedBy="editor-kbd-note" />
         </div>
       )}
       <div className="editor-actions">
         {!predict && (
           <button type="button" className="btn btn-secondary" onClick={props.onRun} disabled={busy}>
-            <Icon name="play" /> {props.running ? "실행 중..." : "실행"}
+            <Icon name="play" /> {props.running ? t("editor.running") : t("editor.run")}
           </button>
         )}
         <button type="button" className="btn btn-primary" onClick={props.onSubmit} disabled={busy || (predict && !props.code.trim())}>
-          <Icon name="send" /> {props.submitting ? "채점 중..." : "제출하고 피드백 받기"}
+          <Icon name="send" /> {props.submitting ? t("editor.submitting") : t("editor.submit")}
         </button>
-        {!predict && <span id="editor-kbd-note" className="muted small kbd-note">편집기에서 Esc 다음 Tab으로 빠져나옵니다</span>}
+        {!predict && <span id="editor-kbd-note" className="muted small kbd-note">{t("editor.kbdNote")}</span>}
       </div>
       <section className="console" aria-live="polite" aria-labelledby="console-h">
         <h2 id="console-h" className="console-title">
-          실행 결과 <span className="muted">(공개 테스트)</span>
+          {t("editor.console")} <span className="muted">{t("editor.consolePublic")}</span>
         </h2>
         {props.error && (
           <p className="inline-error" role="alert">
             {props.error}
           </p>
         )}
-        {!props.trial && !props.error && <p className="console-empty">실행을 누르면 공개 테스트 결과가 여기에 표시됩니다.</p>}
+        {!props.trial && !props.error && <p className="console-empty">{t("editor.consoleEmpty")}</p>}
         {props.trial && <TrialResult trial={props.trial} />}
       </section>
     </div>
@@ -81,13 +83,15 @@ export function EditorPanel(props: {
 }
 
 function TrialResult({ trial }: { readonly trial: TrialRun }) {
+  const tr = useI18n();
+  const { t } = tr;
   const passed = trial.tests.filter((t) => t.status === "passed").length;
   return (
     <div className="trial">
       <p className="trial-summary">
-        <StatusBadge ok={trial.outcome === "passed"} okLabel={OUTCOME_LABEL.passed} failLabel={OUTCOME_LABEL[trial.outcome]} />
+        <StatusBadge ok={trial.outcome === "passed"} okLabel={outcomeLabel(tr, "passed")} failLabel={outcomeLabel(tr, trial.outcome)} />
         <span className="mono muted">
-          {passed}/{trial.tests.length} 통과
+          {t("editor.passedCount", { passed, total: trial.tests.length })}
         </span>
       </p>
       {trial.rejectionReasons?.map((r) => (
@@ -97,7 +101,7 @@ function TrialResult({ trial }: { readonly trial: TrialRun }) {
       ))}
       {trial.compileDiagnostics.map((d, i) => (
         <pre key={i} className="console-pre">
-          {d.line ? `${d.line}행: ` : ""}
+          {d.line ? t("editor.line", { line: d.line }) : ""}
           {d.message}
         </pre>
       ))}

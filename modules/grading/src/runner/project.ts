@@ -65,19 +65,19 @@ export function layoutJob(job: RunJob, nonce: string): LayoutResult {
   ];
   const seen = new Set<string>();
   for (const f of files) {
-    if (!SAFE_PATH.test(f.path) || f.path.length > 100) return { ok: false, message: `허용되지 않는 파일 경로: ${f.path}` };
-    if (RESERVED.some((r) => r.test(f.path))) return { ok: false, message: `채점기 내부 경로와 겹칩니다: ${f.path}` };
-    if (seen.has(f.path)) return { ok: false, message: `파일 경로가 중복됩니다: ${f.path}` };
+    if (!SAFE_PATH.test(f.path) || f.path.length > 100) return { ok: false, message: `file path not allowed: ${f.path}` };
+    if (RESERVED.some((r) => r.test(f.path))) return { ok: false, message: `path collides with grader internals: ${f.path}` };
+    if (seen.has(f.path)) return { ok: false, message: `duplicate file path: ${f.path}` };
     seen.add(f.path);
   }
   for (const f of job.sourceFiles) {
-    if (!f.path.endsWith(".gleam")) return { ok: false, message: `학습자 파일은 .gleam이어야 합니다: ${f.path}` };
+    if (!f.path.endsWith(".gleam")) return { ok: false, message: `learner files must be .gleam: ${f.path}` };
   }
   for (const t of job.testFunctions) {
-    if (!QUALIFIED_TEST.test(t)) return { ok: false, message: `잘못된 테스트 이름: ${t}` };
+    if (!QUALIFIED_TEST.test(t)) return { ok: false, message: `invalid test name: ${t}` };
   }
   if (job.performance && !MODULE.test(job.performance.perfModule)) {
-    return { ok: false, message: `잘못된 성능 측정 모듈: ${job.performance.perfModule}` };
+    return { ok: false, message: `invalid performance module: ${job.performance.perfModule}` };
   }
   const timeMs = Math.max(100, Math.floor(job.limits.timeMs));
   const memoryMb = Math.max(16, Math.floor(job.limits.memoryMb));

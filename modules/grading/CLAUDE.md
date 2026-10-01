@@ -29,6 +29,25 @@ Submissions, evaluations and the Gleam language adapter (`CodeRunner`). Publishe
   -> runtime_error. Limits 5000 ms / 128 MB; expression/definitions <= 4000 chars, <= 10 imports, else
   invalid_input. Diagnostic lines are relative to the generated module; runner system_error -> `unavailable`.
 
+## Localization (ko default, en, zh)
+
+- Every learner-facing text grading produces lives in `src/messages.ts` (`MESSAGES`: id -> LocalizedText,
+  `msg(id, locale, params)`; missing en/zh falls back to ko). Glossary: docs/i18n-glossary.md.
+- `submit`/`trialRun` use `req.locale` (default "ko", unsupported -> invalid_input): the spec comes from
+  `catalog.getGradingSpec(id, locale)` (test names, requirement descriptions, rubric messages), and static-check
+  reasons, rubric/predict texts, test failure descriptions and AppError messages are rendered in it. The locale is
+  stored in `grading.submissions.locale` (migration 0002; not in the Submission contract); a retried key returns
+  the original evaluation; `recoverInterrupted` renders its reason in each row's locale.
+- The harness emits no prose: test events carry `failure` ({kind, expected, actual, message, value, operator,
+  left/right, arguments, limitMs/limitMb, reason, location, frame...}) + `output`/`outputTruncated`.
+  `src/grading/failure.ts` parses and renders them. Adapters attach them to RawTestResult as extra fields
+  (`RawTestDetail`) and fill `message` with the ko rendering (backward compatible); `interpretRunOutput(..., locale)`
+  re-renders when the structure is present, else uses `message` as is. `panic: <msg>` is identical in every
+  locale (snippets parse it).
+- Runner `system_error` messages are English operator diagnostics; a system_error evaluation's
+  `rejectionReasons` = [localized `eval.systemError`, diagnostic].
+- Snippets have no locale in the contract: their texts render in ko.
+
 ## Static checks (src/grading/static-checks.ts), on learner files only
 
 `@external` (outside comments/strings); imports of `fp_internal*`, `fp_runner*`, `gleeunit` /
@@ -39,7 +58,9 @@ modules; non-.gleam files, > 64 KB, NUL bytes. Without FFI, Gleam's stdlib has n
 
 - `src/index.ts` composition root: `createGradingModule`, `migrations`, runner factories, pure helpers.
 - `src/service/` service (submit/trialRun), repo (SQL), queue (bounded FIFO concurrency), migrations.
-- `src/grading/` pure logic: static checks, rubric, buildRunJob, interpretRunOutput, predict, snippet.
+- `src/messages.ts` message catalog (ko/en/zh).
+- `src/grading/` pure logic: static checks, rubric, buildRunJob, interpretRunOutput, predict, snippet,
+  failure (structured harness failures -> text per locale).
 - `src/gleam/source.ts` tiny lexer helpers (blank comments/strings, top-level fns, imports, names).
 - `src/runner/` adapters: `project.ts` (job -> files + `.fp/job.json` + nonce), `protocol.ts` (stdout
   parsing, gleam diagnostics, compile-error attribution), `process.ts` (spawn with timeout/output cap),
@@ -55,8 +76,8 @@ modules; non-.gleam files, > 64 KB, NUL bytes. Without FFI, Gleam's stdlib has n
 Learner files -> `src/`, support files -> `src/`, test files -> `test/` (`gleam build` compiles test/ in
 dev, so the harness can call `<module>.<fn>` directly). Stdout lines `@@FP:<nonce>@@{json}` are the only
 trusted output; the nonce is random per job, stored in `.fp/nonce` and deleted (with job.json) before any
-learner code runs, and the harness swaps the group leader so learner output is captured into failure
-messages, never printed. Each test runs in a fresh process with `max_heap_size` (memoryMb) and a timeout
+learner code runs, and the harness swaps the group leader so learner output is captured (reported as
+`output` of a failed test), never printed. Each test runs in a fresh process with `max_heap_size` (memoryMb) and a timeout
 (remaining share of `timeMs` for the whole test phase). Perf: `setup(size)` then reductions of
 `run(input)` in a fresh process, `timeMs` per size, only when all tests passed.
 Compile errors: errors in learner files, or in test files mentioning a learner module/public name (e.g.

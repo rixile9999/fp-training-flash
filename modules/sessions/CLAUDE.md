@@ -15,6 +15,17 @@ Builds short training sessions (review -> focus -> variation [-> challenge]), tr
 - `complete` is repeatable: the stored summary is returned again and the event is published once.
 - Session reads/writes are owner-checked (`get`/`skip`/`complete` return null / not_found for others).
 
+## Localization (ko/en/zh)
+
+- All learner-facing strings (item reasons, AppError messages) live in `src/messages.ts` (`MESSAGES`,
+  `LocalizedText` keyed by stable ids); render with `t(locale, id, params)`. Missing en/zh falls back to ko.
+  Follow `docs/i18n-glossary.md`. Never inline Korean text elsewhere.
+- `StartSessionRequest.locale` / `recommend(..., locale)` default to "ko"; unknown values are normalised by
+  `resolveLocale`. Skill names and exercise titles in reasons come from the catalog in that locale.
+- The session stores its locale (`sessions.sessions.locale`, migration 0002, not exposed in `Session`);
+  reasons are persisted already rendered, and skip/complete errors use the stored locale.
+  "Session not found" is always ko (no trusted session to read a locale from).
+
 ## Selection rules (src/planner.ts)
 
 - Skills considered: those with at least one drill in the language (catalog skills sorted by `order`;
@@ -43,11 +54,13 @@ Builds short training sessions (review -> focus -> variation [-> challenge]), tr
 - `src/progress.ts` pure state transitions (evaluation, skip, summary) and the stored item shape.
 - `src/store.ts` all SQL for schema `sessions` (tables: sessions, session_items, attempts).
 - `src/migrations.ts` schema DDL.
+- `src/messages.ts` message catalog (ko/en/zh) and `t`/`render`/`resolveLocale`.
 
 ## Testing
 
 - `pnpm check:module @fp/sessions`. Tests in `test/`: `fakes.ts` has a fake catalog, a fake learner
-  (logistic expected success or an explicit `esByDifficulty` table) and a harness with PGlite, a fixed
+  (logistic expected success or an explicit `esByDifficulty` table; fake en/zh names "Skill-a"/"能力-a",
+  titles prefixed "[en] "/"[zh] ", `untranslatedSkills` to test fallback) and a harness with PGlite, a fixed
   clock and an in-memory bus (`evaluate()` publishes submission events).
 - Harness records event-handler errors (the bus swallows them); tests assert the list is empty.
 

@@ -1,0 +1,22 @@
+{
+  "name": "@fp/lessons",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract/index.ts"
+  },
+  "fp": {
+    "kind": "module",
+    "description": "Gleam basics course: lesson progress, per-choice feedback, unit checkpoints and placement; feeds rated observations to the learner model.",
+    "dbSchema": "lessons",
+    "publishes": ["lessons.checkpoint_passed", "lessons.placement_completed"],
+    "consumes": []
+  },
+  "dependencies": {
+    "@fp/kernel": "workspace:*",
+    "@fp/content": "workspace:*",
+    "@fp/learner": "workspace:*"
+  }
+}

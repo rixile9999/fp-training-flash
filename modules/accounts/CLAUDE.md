@@ -17,6 +17,10 @@ Users and bearer API tokens shared by web, MCP and CLI. MVP login is a dev login
   (not `lower()` in SQL, which is collation dependent). The first spelling wins and is kept.
 - `devLogin` is insert-if-absent (`on conflict (name_key) do nothing`) + select, inside one transaction,
   and always issues a new token labelled `"web"`. Concurrent logins converge on one user.
+- `User.locale` (`users.locale`, DB check `in ('ko','en','zh')`, default `"ko"`). `devLogin(name, locale?)`
+  sets it on insert and, when `locale` is given, updates an existing user (select becomes update). An
+  unsupported locale is `invalid_input` and creates nothing. `setLocale` validates at runtime (callers may be
+  untyped), then updates; unknown user is `not_found`.
 - Tokens are `"fpt_" + base64url(32 random bytes)` (4 + 43 chars). Only the hex sha256 is stored
   (`tokens.token_hash`, unique). The plaintext exists only in the `IssuedToken` returned once.
 - Never log a token or its hash. Logs carry `userId`, `tokenId`, `label` only.
@@ -32,12 +36,22 @@ Users and bearer API tokens shared by web, MCP and CLI. MVP login is a dev login
 
 ## Layout
 
-- `src/schema.ts`: migrations (`0001_init`: `accounts.users`, `accounts.tokens`). Never edit an applied
-  migration; add `0002_...`.
+- `src/schema.ts`: migrations (`0001_init`: `accounts.users`, `accounts.tokens`; `0002_user_locale`).
+  Never edit an applied migration; add `0003_...`.
+- `src/messages.ts`: the only message catalog (ko/en/zh `LocalizedText` keyed by stable ids,
+  `message`/`localizedError`; missing en/zh or unknown locale falls back to ko).
 - `src/tokens.ts`: generate / hash / well-formedness check.
-- `src/validation.ts`: display name and label normalization (Korean error messages).
+- `src/validation.ts`: display name and label normalization; optional `locale` picks the error language.
 - `src/service.ts`: `createAccountsService` (all SQL lives here).
 - `test/tokens.test.ts`: pure unit tests. `test/accounts.test.ts`: service against in-memory PGlite.
+  `test/locale.test.ts`: catalog completeness, fallback, migration default, locale behaviour.
+
+## Localization
+
+Error-message language: `devLogin` uses its `locale` argument; user-scoped calls (`issueToken`,
+`revokeToken`, `setLocale` with a bad locale) use the user's stored locale; otherwise ko. `issueToken` looks
+the user up before validating the label for this reason (invalid label still wins over `not_found`).
+Every new user-facing string goes into `src/messages.ts` with all three locales (docs/i18n-glossary.md).
 
 ## Testing
 

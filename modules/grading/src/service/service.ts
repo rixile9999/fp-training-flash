@@ -1,5 +1,5 @@
-import { appError, createEvent, err, newId, ok } from "@fp/kernel";
-import type { AppError, Clock, Db, EventBus, Logger, Result, SubmissionId } from "@fp/kernel";
+import { appError, createEvent, DEFAULT_LOCALE, err, isLocale, newId, ok } from "@fp/kernel";
+import type { AppError, Clock, Db, EventBus, Locale, Logger, Result, SubmissionId } from "@fp/kernel";
 import type { ContentCatalog, GradingSpec } from "@fp/content/contract";
 import { GRADING_EVENTS } from "../contract/index.ts";
 import type {
@@ -21,6 +21,7 @@ import { rubricChecks } from "../grading/rubric.ts";
 import { buildRunJob, learnerFiles } from "../grading/run-job.ts";
 import { buildSnippetJob, interpretSnippetOutput, newSnippetToken } from "../grading/snippet.ts";
 import { staticChecks } from "../grading/static-checks.ts";
+import { msg } from "../messages.ts";
 import { createJobQueue } from "./queue.ts";
 import { createSubmissionRepo } from "./repo.ts";
 
@@ -55,30 +56,39 @@ export function createGradingService(deps: GradingServiceDeps): GradingServiceIn
     try {
       return await queue.run(() => runner.run(job));
     } catch (e) {
-      return { kind: "system_error", message: `채점 실행기 오류: ${e instanceof Error ? e.message : String(e)}` };
+      return { kind: "system_error", message: `runner threw: ${e instanceof Error ? e.message : String(e)}` };
     }
   };
 
-  const loadSpec = async (exerciseId: string): Promise<Result<GradingSpec, AppError>> => {
-    const spec = await catalog.getGradingSpec(exerciseId as GradingSpec["exerciseId"]);
-    return spec ? ok(spec) : err(appError("not_found", "문제를 찾을 수 없습니다.", { exerciseId }));
+  /** Test names, requirement descriptions and rubric texts come from the catalog in `locale`. */
+  const loadSpec = async (exerciseId: string, locale: Locale): Promise<Result<GradingSpec, AppError>> => {
+    const spec = await catalog.getGradingSpec(exerciseId as GradingSpec["exerciseId"], locale);
+    return spec ? ok(spec) : err(appError("not_found", msg("service.notFound", locale), { exerciseId }));
   };
 
+  /** `req.locale` or the default; an unsupported value is invalid_input. */
+  const localeOf = (requested: string | undefined): Result<Locale, AppError> =>
+    requested === undefined
+      ? ok(DEFAULT_LOCALE)
+      : isLocale(requested)
+        ? ok(requested)
+        : err(appError("invalid_input", msg("service.badLocale", DEFAULT_LOCALE, { locale: String(requested).slice(0, 20) })));
+
   /** Full evaluation of a submission (hidden tests + performance). Never throws for runner failures. */
-  const evaluate = async (spec: GradingSpec, code: string): Promise<Evaluation> => {
-    if (spec.kind === "predict") return predictEvaluation(spec, code, now());
+  const evaluate = async (spec: GradingSpec, code: string, locale: Locale): Promise<Evaluation> => {
+    if (spec.kind === "predict") return predictEvaluation(spec, code, now(), locale);
     const files = learnerFiles(spec, code);
-    const rubric = rubricChecks(spec.rubric, files);
-    const reasons = staticChecks(spec, files);
+    const rubric = rubricChecks(spec.rubric, files, locale);
+    const reasons = staticChecks(spec, files, locale);
     if (reasons.length > 0) return { ...rejectedEvaluation(spec, reasons, now()), rubricChecks: rubric };
     const output: RunOutput =
       spec.language === runner.language
         ? await runSafely(buildRunJob(spec, files, true))
-        : { kind: "system_error", message: `${spec.language} 실행기가 없습니다.` };
+        : { kind: "system_error", message: `no runner for language ${spec.language}` };
     if (output.kind === "system_error") {
       logger.error("grading system error", { exerciseId: spec.exerciseId, message: output.message });
     }
-    return { ...interpretRunOutput(spec, output, now()), rubricChecks: rubric };
+    return { ...interpretRunOutput(spec, output, now(), locale), rubricChecks: rubric };
   };
 
   const publish = async (s: Submission, evaluation: Evaluation): Promise<void> => {
@@ -105,10 +115,11 @@ export function createGradingService(deps: GradingServiceDeps): GradingServiceIn
     }
   };
 
-  const doSubmit = async (req: SubmitRequest): Promise<Result<Submission, AppError>> => {
+  const doSubmit = async (req: SubmitRequest, locale: Locale): Promise<Result<Submission, AppError>> => {
+    // A retried key returns the original submission, in the locale it was evaluated in.
     const existing = await repo.findByKey(req.userId, req.idempotencyKey);
     if (existing) return ok(existing);
-    const spec = await loadSpec(req.exerciseId);
+    const spec = await loadSpec(req.exerciseId, locale);
     if (!spec.ok) return spec;
     const inserted = await repo.insertRunning({
       id: newId() as SubmissionId,
@@ -118,14 +129,15 @@ export function createGradingService(deps: GradingServiceDeps): GradingServiceIn
       idempotencyKey: req.idempotencyKey,
       code: req.code,
       helpUsed: req.helpUsed,
+      locale,
       createdAt: now(),
     });
     if (!inserted) {
       // Another process inserted the same key between our lookup and insert: return its submission.
       const winner = await repo.findByKey(req.userId, req.idempotencyKey);
-      return winner ? ok(winner) : err(appError("conflict", "제출을 처리하지 못했습니다. 다시 시도하세요."));
+      return winner ? ok(winner) : err(appError("conflict", msg("service.conflict", locale)));
     }
-    const evaluation = await evaluate(spec.value, req.code);
+    const evaluation = await evaluate(spec.value, req.code, locale);
     // Committed before the event goes out, so consumers can read a consistent state.
     const completed = await repo.complete(inserted.id, evaluation);
     await publish(completed, evaluation);
@@ -134,34 +146,42 @@ export function createGradingService(deps: GradingServiceDeps): GradingServiceIn
 
   return {
     async submit(req) {
+      const loc = localeOf(req.locale);
+      if (!loc.ok) return loc;
+      const locale = loc.value;
       if (!req.idempotencyKey || req.idempotencyKey.length > MAX_KEY) {
-        return err(appError("invalid_input", "idempotencyKey가 올바르지 않습니다."));
+        return err(appError("invalid_input", msg("service.badKey", locale)));
       }
-      if (req.code.length > MAX_STORED_CODE) return err(appError("invalid_input", "코드가 너무 깁니다."));
+      if (req.code.length > MAX_STORED_CODE) return err(appError("invalid_input", msg("service.codeTooLong", locale)));
       const key = `${req.userId}\u0000${req.idempotencyKey}`;
       const pending = inFlight.get(key);
       if (pending) return pending;
-      const p = doSubmit(req).finally(() => inFlight.delete(key));
+      const p = doSubmit(req, locale).finally(() => inFlight.delete(key));
       inFlight.set(key, p);
       return p;
     },
 
     async trialRun(req: TrialRunRequest): Promise<Result<TrialRun, AppError>> {
-      if (req.code.length > MAX_STORED_CODE) return err(appError("invalid_input", "코드가 너무 깁니다."));
-      const loaded = await loadSpec(req.exerciseId);
+      const loc = localeOf(req.locale);
+      if (!loc.ok) return loc;
+      const locale = loc.value;
+      if (req.code.length > MAX_STORED_CODE) return err(appError("invalid_input", msg("service.codeTooLong", locale)));
+      const loaded = await loadSpec(req.exerciseId, locale);
       if (!loaded.ok) return loaded;
       const spec = loaded.value;
-      if (spec.kind === "predict") return err(appError("invalid_input", "예측 문제는 실행할 수 없습니다. 답을 제출하세요."));
+      if (spec.kind === "predict") return err(appError("invalid_input", msg("service.predictNotRunnable", locale)));
       const files = learnerFiles(spec, req.code);
-      const reasons = staticChecks(spec, files);
+      const reasons = staticChecks(spec, files, locale);
       if (reasons.length > 0) return ok({ outcome: "rejected", compileDiagnostics: [], tests: [], rejectionReasons: reasons });
-      if (spec.language !== runner.language) return err(appError("unavailable", `${spec.language} 실행기가 없습니다.`));
+      if (spec.language !== runner.language) {
+        return err(appError("unavailable", msg("service.noRunner", locale, { language: spec.language })));
+      }
       const output = await runSafely(buildRunJob(spec, files, false));
       if (output.kind === "system_error") {
         logger.error("grading system error (trial run)", { exerciseId: spec.exerciseId, message: output.message });
-        return err(appError("unavailable", "채점 환경 오류로 실행하지 못했습니다. 잠시 후 다시 시도하세요.", { message: output.message }));
+        return err(appError("unavailable", msg("service.trialUnavailable", locale), { message: output.message }));
       }
-      const evaluation = interpretRunOutput(spec, output, now());
+      const evaluation = interpretRunOutput(spec, output, now(), locale);
       return ok({
         outcome: evaluation.outcome,
         compileDiagnostics: evaluation.compileDiagnostics,
@@ -175,14 +195,15 @@ export function createGradingService(deps: GradingServiceDeps): GradingServiceIn
       const built = buildSnippetJob(req, token);
       if (!built.ok) return built;
       if (built.value.kind === "rejected") return ok(built.value);
-      if (runner.language !== "gleam") return err(appError("unavailable", "gleam 실행기가 없습니다."));
+      if (runner.language !== "gleam") return err(appError("unavailable", msg("service.noRunner", DEFAULT_LOCALE, { language: "gleam" })));
       const output = await runSafely(built.value.job);
       if (output.kind === "system_error") logger.error("grading system error (snippet)", { message: output.message });
       return interpretSnippetOutput(output, token);
     },
 
     async recoverInterrupted() {
-      const evaluation: Evaluation = {
+      const evaluatedAt = now();
+      const evaluationFor = (locale: Locale): Evaluation => ({
         outcome: "system_error",
         correctness: false,
         compileDiagnostics: [],
@@ -190,11 +211,11 @@ export function createGradingService(deps: GradingServiceDeps): GradingServiceIn
         requirements: [],
         rubricChecks: [],
         errorTags: [],
-        rejectionReasons: ["채점 중 서버가 중단되어 결과를 얻지 못했습니다. 다시 제출해 주세요."],
-        evaluatedAt: now(),
-      };
-      const recovered = await repo.completeInterrupted(evaluation);
-      for (const s of recovered) await publish(s, evaluation);
+        rejectionReasons: [msg("eval.interrupted", locale)],
+        evaluatedAt,
+      });
+      const recovered = await repo.completeInterrupted(evaluationFor);
+      for (const s of recovered) await publish(s, s.evaluation ?? evaluationFor(DEFAULT_LOCALE));
       if (recovered.length > 0) logger.warn("recovered interrupted submissions", { count: recovered.length });
       return recovered.length;
     },

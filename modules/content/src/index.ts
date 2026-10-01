@@ -7,6 +7,8 @@ import { importBundle } from "./db/importer.ts";
 import type { ContentIssue } from "./loader/parse.ts";
 
 export { migrations } from "./db/migrations.ts";
+/** Gleam source without comments/blank lines; a localized starter must equal the Korean one under it. */
+export { codeOnly } from "./loader/gleam.ts";
 export type { ContentBundle, ContentIssue };
 
 export interface ContentModuleDeps {

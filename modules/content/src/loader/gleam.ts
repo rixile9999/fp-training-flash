@@ -75,3 +75,33 @@ function dedent(text: string): string {
   if (!Number.isFinite(min)) return "";
   return lines.map((l) => (l.trim() === "" ? "" : l.slice(min).trimEnd())).join("\n");
 }
+
+/**
+ * Gleam source without comments, trailing whitespace and blank lines, for comparing code across locales
+ * (a localized starter may differ from the Korean one only in comments). Strings, including multi-line ones
+ * and escaped quotes, are kept verbatim.
+ */
+export function codeOnly(source: string): string {
+  const src = source.replace(/\r\n/g, "\n");
+  let out = "";
+  let i = 0;
+  while (i < src.length) {
+    const c = src[i];
+    if (c === '"') {
+      const end = skipString(src, i);
+      out += src.slice(i, end);
+      i = end;
+    } else if (c === "/" && src[i + 1] === "/") {
+      const nl = src.indexOf("\n", i);
+      i = nl < 0 ? src.length : nl;
+    } else {
+      out += c;
+      i++;
+    }
+  }
+  return out
+    .split("\n")
+    .map((l) => l.trimEnd())
+    .filter((l) => l.trim() !== "")
+    .join("\n");
+}

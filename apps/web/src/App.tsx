@@ -1,7 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DevLoginResponse, Session, SessionSummary, Skill } from "@fp/api-contract";
 import { errorMessage, isUnauthorized } from "./api/client.ts";
 import type { ApiFactory } from "./api/client.ts";
+import { I18nProvider } from "./i18n/I18n.tsx";
+import { DEFAULT_LOCALE, HTML_LANG, LOCALE_KEY, isLocale } from "./i18n/locale.ts";
+import type { Locale } from "./i18n/locale.ts";
+import { translator } from "./i18n/translator.ts";
 import { Login } from "./screens/Login.tsx";
 import { Progress } from "./screens/Progress.tsx";
 import type { RecentSession } from "./screens/Progress.tsx";
@@ -30,7 +34,51 @@ function readRecent(store: KeyValueStore): RecentSession[] {
   }
 }
 
-export function App({ apiFactory, store, now, initialView = "training" }: AppProps) {
+function readLocale(store: KeyValueStore): Locale | null {
+  const v = store.get(LOCALE_KEY);
+  return isLocale(v) ? v : null;
+}
+
+export function App(props: AppProps) {
+  const { store } = props;
+  // The locale chosen in this browser (localStorage); null until the learner or the server sets one.
+  const [stored, setStored] = useState<Locale | null>(() => readLocale(store));
+  const locale = stored ?? DEFAULT_LOCALE;
+  const storedRef = useRef(stored);
+  storedRef.current = stored;
+  const remember = useCallback(
+    (l: Locale) => {
+      store.set(LOCALE_KEY, l);
+      setStored(l);
+    },
+    [store],
+  );
+  useEffect(() => {
+    if (typeof document !== "undefined") document.documentElement.lang = HTML_LANG[locale];
+  }, [locale]);
+  return (
+    <I18nProvider locale={locale}>
+      <AppShell {...props} locale={locale} hasStoredLocale={stored !== null} storedRef={storedRef} remember={remember} />
+    </I18nProvider>
+  );
+}
+
+function AppShell({
+  apiFactory,
+  store,
+  now,
+  initialView = "training",
+  locale,
+  hasStoredLocale,
+  storedRef,
+  remember,
+}: AppProps & {
+  readonly locale: Locale;
+  readonly hasStoredLocale: boolean;
+  readonly storedRef: { readonly current: Locale | null };
+  readonly remember: (l: Locale) => void;
+}) {
+  const tr = translator(locale);
   const [auth, setAuth] = useState<StoredAuth | null>(() => readAuth(store));
   const api = useMemo(() => apiFactory(auth?.token), [apiFactory, auth?.token]);
   const [view, setView] = useState<View>(initialView);
@@ -42,6 +90,8 @@ export function App({ apiFactory, store, now, initialView = "training" }: AppPro
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [recent, setRecent] = useState<RecentSession[]>(() => readRecent(store));
+  // Bumped after the server accepted a new locale: screens refetch server-rendered content (exercise, progress, ...).
+  const [contentKey, setContentKey] = useState(0);
 
   const logout = useCallback(() => {
     store.remove(AUTH_KEY);
@@ -53,9 +103,9 @@ export function App({ apiFactory, store, now, initialView = "training" }: AppPro
   const fail = useCallback(
     (e: unknown) => {
       if (isUnauthorized(e)) logout();
-      else setError(errorMessage(e));
+      else setError(errorMessage(e, tr));
     },
-    [logout],
+    [logout, tr],
   );
 
   const adopt = useCallback((s: Session | null) => {
@@ -63,10 +113,45 @@ export function App({ apiFactory, store, now, initialView = "training" }: AppPro
     setActiveIndex(s ? s.currentIndex : null);
   }, []);
 
+  // Skill names are server-rendered in the user's locale, so they are refetched after a language switch.
   useEffect(() => {
     if (!auth) return;
     let alive = true;
     api.skills().then((s) => alive && setSkills(s), () => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [api, auth, contentKey]);
+
+  // Reconcile the account's locale with this browser's: a locale stored here wins and is pushed to the server;
+  // without one, the account's locale is adopted.
+  useEffect(() => {
+    if (!auth) return;
+    let alive = true;
+    api.me().then(
+      (user) => {
+        if (!alive || !isLocale(user.locale)) return;
+        const local = storedRef.current;
+        if (local === null) {
+          if (user.locale !== DEFAULT_LOCALE) setContentKey((k) => k + 1);
+          remember(user.locale);
+        } else if (local !== user.locale) {
+          api.updateMe({ locale: local }).then(
+            () => alive && setContentKey((k) => k + 1),
+            () => undefined,
+          );
+        }
+      },
+      () => undefined,
+    );
+    return () => {
+      alive = false;
+    };
+  }, [api, auth, storedRef, remember]);
+
+  useEffect(() => {
+    if (!auth) return;
+    let alive = true;
     api.activeSession("gleam").then(
       (s) => alive && adopt(s),
       (e: unknown) => {
@@ -80,14 +165,23 @@ export function App({ apiFactory, store, now, initialView = "training" }: AppPro
     };
   }, [api, auth, adopt, fail]);
 
+  /** Switches the UI at once; once the server stored the choice, server-rendered content is refetched. */
+  const changeLocale = (next: Locale) => {
+    if (next === locale && hasStoredLocale) return;
+    remember(next);
+    if (!auth) return;
+    api.updateMe({ locale: next }).then(() => setContentKey((k) => k + 1), fail);
+  };
+
   if (!auth) {
     const onLoggedIn = (res: DevLoginResponse) => {
       const a = { token: res.token.token, displayName: res.user.displayName };
       store.set(AUTH_KEY, JSON.stringify(a));
+      if (!hasStoredLocale && isLocale(res.user.locale)) remember(res.user.locale);
       setError(null);
       setAuth(a);
     };
-    return <Login api={api} onLoggedIn={onLoggedIn} />;
+    return <Login api={api} onLoggedIn={onLoggedIn} locale={locale} onLocale={changeLocale} sendLocale={hasStoredLocale} />;
   }
 
   const run = async (fn: () => Promise<void>) => {
@@ -134,7 +228,7 @@ export function App({ apiFactory, store, now, initialView = "training" }: AppPro
   return (
     <div className="app">
       <a className="skip-link" href="#main">
-        본문으로 건너뛰기
+        {tr.t("common.skipToContent")}
       </a>
       <Header
         displayName={auth.displayName}
@@ -146,6 +240,8 @@ export function App({ apiFactory, store, now, initialView = "training" }: AppPro
         phase={phase}
         completed={summary !== null}
         now={now}
+        locale={locale}
+        onLocale={changeLocale}
       />
       <main id="main" className="app-main">
         {view === "training" ? (
@@ -154,6 +250,7 @@ export function App({ apiFactory, store, now, initialView = "training" }: AppPro
             skills={skills}
             session={summary ? session : session === undefined ? undefined : activeSession}
             activeIndex={activeIndex}
+            contentKey={contentKey}
             phase={phase}
             summary={summary}
             busy={busy}
@@ -171,6 +268,7 @@ export function App({ apiFactory, store, now, initialView = "training" }: AppPro
             api={api}
             now={now}
             recent={recent}
+            contentKey={contentKey}
             hasActiveSession={!!activeSession && !summary}
             onStart={() => void start()}
             onResume={() => setView("training")}

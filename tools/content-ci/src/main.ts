@@ -5,14 +5,14 @@
  *        [--image <tag>] [--template <dir>] [--jobs N] [--write-baselines] [--json]
  * Exit code 1 when any check fails.
  */
-import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { parseDocument } from "yaml";
 import { InMemoryEventBus, runMigrations, silentLogger, systemClock, createPgliteDb } from "@fp/kernel";
-import type { ExerciseId } from "@fp/kernel";
+import { DEFAULT_LOCALE, SUPPORTED_LOCALES, type ExerciseId } from "@fp/kernel";
 import { createContentModule, migrations as contentMigrations } from "@fp/content";
 import { createDockerGleamRunner, createLocalGleamRunner } from "@fp/grading";
 import { verifyExercise, type ExerciseCheck } from "./verify.ts";
@@ -32,6 +32,7 @@ const { values } = parseArgs({
 });
 
 const contentDir = resolve(values.content);
+const TRANSLATED = SUPPORTED_LOCALES.filter((l) => l !== DEFAULT_LOCALE);
 const families = new Set(values.family ?? []);
 
 /**
@@ -41,7 +42,8 @@ const families = new Set(values.family ?? []);
 function scopedContentDir(): { dir: string; cleanup: () => void } {
   if (families.size === 0) return { dir: contentDir, cleanup: () => {} };
   const tmp = mkdtempSync(join(tmpdir(), "fp-content-ci-"));
-  for (const shared of ["skills.yaml", "concepts", "theory", "LICENSES"]) {
+  const sharedFiles = readdirSync(contentDir).filter((n) => /^skills(\.[^.]+)?\.yaml$/.test(n));
+  for (const shared of [...sharedFiles, "concepts", "theory", "LICENSES"]) {
     const from = join(contentDir, shared);
     if (existsSync(from)) cpSync(from, join(tmp, shared), { recursive: true });
   }
@@ -96,7 +98,15 @@ await Promise.all(
         results.push({ exerciseId: id, problems: ["missing detail/spec/reference after import"], durationMs: 0 });
         continue;
       }
-      const r = await verifyExercise({ detail, spec, reference, runner, now: () => new Date().toISOString() });
+      // Localized starters (comments translated) must compile and fail like the Korean starter.
+      const localizedStarters = [];
+      for (const locale of TRANSLATED) {
+        const loc = await content.catalog.getExercise(id, locale);
+        if (loc && JSON.stringify(loc.starterFiles) !== JSON.stringify(detail.starterFiles)) {
+          localizedStarters.push({ locale, files: loc.starterFiles });
+        }
+      }
+      const r = await verifyExercise({ detail, spec, reference, runner, now: () => new Date().toISOString(), localizedStarters });
       results.push(r);
       if (!values.json) console.log(`${r.problems.length ? "✗" : "✓"} ${id} (${r.durationMs}ms)${r.problems.map((p) => `\n    - ${p}`).join("")}`);
       if (values["write-baselines"] && r.referenceCost) {

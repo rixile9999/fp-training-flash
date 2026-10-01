@@ -1,5 +1,7 @@
 import { ApiError, createApiClient } from "@fp/api-contract";
 import type { ApiClient } from "@fp/api-contract";
+import { translator } from "../i18n/translator.ts";
+import type { Translator } from "../i18n/translator.ts";
 
 export type { ApiClient };
 
@@ -29,15 +31,18 @@ export function isUnauthorized(e: unknown): boolean {
   return e instanceof ApiError && e.status === 401;
 }
 
-/** Korean, user-facing message for any thrown API/network error. */
-export function errorMessage(e: unknown): string {
+/**
+ * User-facing message for any thrown API/network error, in the translator's locale (Korean by default).
+ * Other API errors show the server's message, which the API already renders in the user's locale.
+ */
+export function errorMessage(e: unknown, tr: Translator = translator()): string {
   if (e instanceof ApiError) {
-    if (e.status === 401) return "로그인이 만료되었습니다. 다시 로그인해 주세요.";
-    if (e.code === "unavailable") return "서버가 잠시 응답하지 않습니다. 잠시 후 다시 시도해 주세요.";
-    if (e.code === "rate_limited") return "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.";
-    return e.message || `요청을 처리하지 못했습니다 (${e.status}).`;
+    if (e.status === 401) return tr.t("error.unauthorized");
+    if (e.code === "unavailable") return tr.t("error.unavailable");
+    if (e.code === "rate_limited") return tr.t("error.rateLimited");
+    return e.message || tr.t("error.request", { status: e.status });
   }
-  return "서버에 연결하지 못했습니다. 네트워크 상태를 확인해 주세요.";
+  return tr.t("error.network");
 }
 
 export function newIdempotencyKey(): string {

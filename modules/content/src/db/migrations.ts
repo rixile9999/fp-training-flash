@@ -4,6 +4,7 @@ import type { Migration } from "@fp/kernel";
  * Schema "content". Exercise rows are immutable once written (one per exercise id / version);
  * `variants` points at the latest version of each (family, variant) and marks retirement.
  * Skills and notes are not versioned: they are replaced on import and retired when removed.
+ * Every content table has `translations` (jsonb, { en?, zh? } text overlays applied by the catalog).
  */
 export const migrations: readonly Migration[] = [
   {
@@ -66,6 +67,16 @@ create table content.bundles (
   exercise_count integer not null,
   exercise_ids jsonb not null
 );
+`,
+  },
+  {
+    // en/zh overlays (src/i18n.ts) next to the Korean objects; '{}' means Korean only.
+    id: "0002_translations",
+    sql: `
+alter table content.skills add column translations jsonb not null default '{}'::jsonb;
+alter table content.concept_notes add column translations jsonb not null default '{}'::jsonb;
+alter table content.theory_topics add column translations jsonb not null default '{}'::jsonb;
+alter table content.exercise_versions add column translations jsonb not null default '{}'::jsonb;
 `,
   },
 ];

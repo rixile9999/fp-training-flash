@@ -2,7 +2,11 @@
  * Pure mapping from runner output (or a static rejection / predict answer) to an Evaluation.
  * Outcome precedence: rejected > compile_error > timeout > failed_tests > too_slow > passed.
  * system_error is an infrastructure failure and never a learning failure.
+ * Learner-facing texts follow `locale` (default "ko"): pass a spec loaded with the same locale
+ * (getGradingSpec(id, locale)) so test names and requirement descriptions match.
  */
+import { DEFAULT_LOCALE } from "@fp/kernel";
+import type { Locale } from "@fp/kernel";
 import type { GradingSpec, PerformanceSpec, TestCaseSpec } from "@fp/content/contract";
 import type {
   Evaluation,
@@ -15,6 +19,8 @@ import type {
   TestResult,
 } from "../contract/index.ts";
 import { extractFunction } from "../gleam/source.ts";
+import { msg } from "../messages.ts";
+import { renderTestMessage, type RawTestDetail } from "./failure.ts";
 import { isAcceptedAnswer } from "./predict.ts";
 
 function base(spec: GradingSpec, evaluatedAt: string) {
@@ -36,11 +42,23 @@ export function rejectedEvaluation(spec: GradingSpec, reasons: readonly string[]
   return { ...base(spec, evaluatedAt), outcome: "rejected", correctness: false, rejectionReasons: [...reasons] };
 }
 
-export function systemErrorEvaluation(spec: GradingSpec, message: string, evaluatedAt: string): Evaluation {
-  return { ...base(spec, evaluatedAt), outcome: "system_error", correctness: false, rejectionReasons: [message] };
+/** `detail` is the runner's (English) diagnostic; it follows the localized explanation. */
+export function systemErrorEvaluation(
+  spec: GradingSpec,
+  detail: string,
+  evaluatedAt: string,
+  locale: Locale = DEFAULT_LOCALE,
+): Evaluation {
+  const reasons = [msg("eval.systemError", locale), ...(detail ? [detail] : [])];
+  return { ...base(spec, evaluatedAt), outcome: "system_error", correctness: false, rejectionReasons: reasons };
 }
 
-export function predictEvaluation(spec: GradingSpec, answer: string, evaluatedAt: string): Evaluation {
+export function predictEvaluation(
+  spec: GradingSpec,
+  answer: string,
+  evaluatedAt: string,
+  locale: Locale = DEFAULT_LOCALE,
+): Evaluation {
   const correct = spec.predict ? isAcceptedAnswer(spec.predict, answer) : false;
   return {
     ...base(spec, evaluatedAt),
@@ -49,10 +67,10 @@ export function predictEvaluation(spec: GradingSpec, answer: string, evaluatedAt
     tests: [
       {
         id: "predict",
-        name: "예측한 결과",
+        name: msg("predict.testName", locale),
         status: correct ? "passed" : "failed",
         visibility: "public",
-        ...(correct ? {} : { message: "예상한 값이 실제 결과와 다릅니다." }),
+        ...(correct ? {} : { message: msg("predict.wrong", locale) }),
       },
     ],
     requirements: spec.requirements.map((r) => ({ id: r.id, description: r.description, status: correct ? "met" : "unmet" })),
@@ -67,17 +85,18 @@ function testCode(spec: GradingSpec, functionName: string): string | undefined {
   return undefined;
 }
 
-function toTestResult(spec: GradingSpec, raw: RawTestResult): TestResult {
+function toTestResult(spec: GradingSpec, raw: RawTestDetail, locale: Locale): TestResult {
   const tc: TestCaseSpec | undefined = spec.tests.find((t) => t.functionName === raw.functionName);
   const failed = raw.status !== "passed";
   const code = failed ? testCode(spec, raw.functionName) : undefined;
+  const message = renderTestMessage(raw, locale);
   return {
     id: tc?.id ?? raw.functionName,
     name: tc?.name ?? raw.functionName,
     status: raw.status,
     // Unknown tests are treated as hidden (never reveal more than needed).
     visibility: tc?.visibility ?? "hidden",
-    ...(raw.message !== undefined ? { message: raw.message } : {}),
+    ...(message !== undefined ? { message } : {}),
     // Test code is revealed only for tests that did not pass (hidden ones included).
     ...(code !== undefined ? { code } : {}),
     ...(tc?.errorTag !== undefined ? { errorTag: tc.errorTag } : {}),
@@ -115,11 +134,16 @@ export function performanceResult(perf: PerformanceSpec, measurements: readonly 
 }
 
 /** Pure mapping from runner output to an Evaluation (rubric checks are added by the caller). */
-export function interpretRunOutput(spec: GradingSpec, output: RunOutput, evaluatedAt: string): Evaluation {
+export function interpretRunOutput(
+  spec: GradingSpec,
+  output: RunOutput,
+  evaluatedAt: string,
+  locale: Locale = DEFAULT_LOCALE,
+): Evaluation {
   switch (output.kind) {
     case "system_error":
       return {
-        ...systemErrorEvaluation(spec, output.message, evaluatedAt),
+        ...systemErrorEvaluation(spec, output.message, evaluatedAt, locale),
         ...(output.runner ? { runner: output.runner } : {}),
       };
     case "compile_error":
@@ -140,7 +164,7 @@ export function interpretRunOutput(spec: GradingSpec, output: RunOutput, evaluat
         durationMs: output.durationMs,
       };
     case "completed": {
-      const tests = output.tests.map((t) => toTestResult(spec, t));
+      const tests = output.tests.map((t) => toTestResult(spec, t, locale));
       const allPassed = tests.length > 0 && tests.every((t) => t.status === "passed");
       // Performance only counts once the code is correct (the harness skips it otherwise).
       const performance: PerformanceResult | undefined = !spec.performance

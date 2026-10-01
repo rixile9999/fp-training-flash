@@ -5,13 +5,8 @@ export type StepKey = "review" | "focus" | "feedback" | "variation" | "wrapup";
 export type StepState = "done" | "current" | "upcoming";
 export type Phase = "work" | "feedback";
 
-export const STEPS: readonly { readonly key: StepKey; readonly label: string }[] = [
-  { key: "review", label: "복습" },
-  { key: "focus", label: "집중 훈련" },
-  { key: "feedback", label: "피드백·재제출" },
-  { key: "variation", label: "변형 적용" },
-  { key: "wrapup", label: "마무리" },
-];
+/** Labels come from the i18n catalog as `step.<key>`. */
+export const STEPS: readonly { readonly key: StepKey }[] = [{ key: "review" }, { key: "focus" }, { key: "feedback" }, { key: "variation" }, { key: "wrapup" }];
 
 type Item = Session["items"][number];
 

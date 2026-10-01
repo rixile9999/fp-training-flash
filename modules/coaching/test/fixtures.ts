@@ -1,5 +1,5 @@
 /** Hand-written fakes for the contracts coaching depends on, plus a scriptable fake LLM. */
-import { asId, runMigrations, silentLogger, type Db, type ExerciseId, type SubmissionId, type UserId } from "@fp/kernel";
+import { asId, runMigrations, silentLogger, type Db, type ExerciseId, type Locale, type SubmissionId, type UserId } from "@fp/kernel";
 import { createFixedClock, createTestDb, type MutableClock } from "@fp/kernel/testing";
 import type { ConceptNote, ContentCatalog, ExerciseDetail, ReferenceMaterial, TheoryTopic } from "@fp/content/contract";
 import type { Evaluation, GradingService, Submission } from "@fp/grading/contract";
@@ -32,6 +32,7 @@ export const exercise: ExerciseDetail = {
   estimatedMinutes: 5,
   contextTags: ["orders"],
   source: { kind: "original" },
+  locales: ["ko", "en", "zh"],
   promptMarkdown: "주문 목록의 각 가격에 쿠폰 할인을 적용하세요.",
   moduleName: "coupon",
   starterFiles: [{ path: "src/coupon.gleam", content: "pub fn apply(orders) { todo }" }],
@@ -48,6 +49,34 @@ export const exercise: ExerciseDetail = {
   conceptNoteIds: [asId("list-map")],
   theoryTopicIds: [asId("functor")],
 };
+
+/** Translated learner-facing fields, as content would return them for `locale`. */
+const exerciseTranslations: Record<Exclude<Locale, "ko">, Partial<ExerciseDetail>> = {
+  en: {
+    title: "Apply a coupon",
+    promptMarkdown: "Apply the coupon discount to each price in the order list.",
+    hints: [
+      { level: 2, kind: "concept", markdown: "Hint2: think of list.map." },
+      { level: 1, kind: "question", markdown: "Hint1: what do you do with each element?" },
+      { level: 3, kind: "approach", markdown: "Hint3: round after the discount." },
+    ],
+  },
+  zh: {
+    title: "使用优惠券",
+    promptMarkdown: "对订单列表中的每个价格应用优惠券折扣。",
+    hints: [
+      { level: 2, kind: "concept", markdown: "提示2：想想 list.map。" },
+      { level: 1, kind: "question", markdown: "提示1：你要对每个元素做什么？" },
+      { level: 3, kind: "approach", markdown: "提示3：打折后再取整。" },
+    ],
+  },
+};
+
+export function exerciseIn(locale: Locale | undefined): ExerciseDetail {
+  return !locale || locale === "ko" ? exercise : { ...exercise, ...exerciseTranslations[locale] };
+}
+
+const conceptNoteTitles: Record<Locale, string> = { ko: "list.map 기초", en: "list.map basics", zh: "list.map 基础" };
 
 const reference: ReferenceMaterial = {
   exerciseId: EXERCISE_ID,
@@ -76,25 +105,42 @@ const theory: TheoryTopic = {
   furtherReading: [],
 };
 
-export function fakeCatalog(): ContentCatalog & { calls: string[] } {
+/** `calls` records reference-material reads; `locales` records "<method>:<locale>" for every localized read. */
+export function fakeCatalog(): ContentCatalog & { calls: string[]; locales: string[] } {
   const calls: string[] = [];
+  const locales: string[] = [];
+  const seen = (method: string, locale: Locale | undefined) => locales.push(`${method}:${locale ?? "default"}`);
   const fail = (name: string) => () => {
     throw new Error(`catalog.${name} must not be called by coaching`);
   };
   return {
     calls,
+    locales,
     listSkills: async () => [],
     getSkill: async () => null,
     listExercises: async () => [],
-    getExercise: async (id) => (id === EXERCISE_ID ? exercise : null),
+    getExercise: async (id, locale) => {
+      seen("getExercise", locale);
+      return id === EXERCISE_ID ? exerciseIn(locale) : null;
+    },
     getGradingSpec: fail("getGradingSpec"),
-    getReferenceMaterial: async (id) => {
+    getReferenceMaterial: async (id, locale) => {
       calls.push("getReferenceMaterial");
+      seen("getReferenceMaterial", locale);
       return id === EXERCISE_ID ? reference : null;
     },
-    getConceptNotes: async (ids) => (ids.includes(conceptNote.id) ? [conceptNote] : []),
-    getTheoryTopics: async (ids) => (ids.includes(theory.id) ? [theory] : []),
+    getConceptNotes: async (ids, locale) => {
+      seen("getConceptNotes", locale);
+      return ids.includes(conceptNote.id) ? [{ ...conceptNote, title: conceptNoteTitles[locale ?? "ko"] }] : [];
+    },
+    getTheoryTopics: async (ids, locale) => {
+      seen("getTheoryTopics", locale);
+      return ids.includes(theory.id) ? [theory] : [];
+    },
     listTheoryTopics: async () => [theory],
+    listLessonUnits: async () => [],
+    getLesson: async () => null,
+    getLessonAnswer: async () => null,
     currentBundle: async () => null,
   };
 }

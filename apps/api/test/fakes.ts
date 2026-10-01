@@ -1,6 +1,6 @@
 /** Hand-written fakes of the module contracts used by app.ts tests. Every call is recorded in `calls`. */
-import { appError, asId, err, ok } from "@fp/kernel";
-import type { Clock, ExerciseId, SessionId, SubmissionId, UserId } from "@fp/kernel";
+import { appError, asId, err, ok, pickLocale } from "@fp/kernel";
+import type { Clock, ExerciseId, Locale, SessionId, SubmissionId, UserId } from "@fp/kernel";
 import type { AccountsService, User } from "@fp/accounts/contract";
 import type { ContentCatalog, ExerciseDetail } from "@fp/content/contract";
 import type { GradingService, HelpUsed, Submission } from "@fp/grading/contract";
@@ -13,9 +13,17 @@ export const EXERCISE_ID = asId<ExerciseId>("orders-apply-coupon/base@1");
 export const PREDICT_ID = asId<ExerciseId>("pipes-predict/base@2");
 export const TOKEN = "tok-minsu";
 export const OTHER_TOKEN = "tok-jiwoo";
+export const EN_TOKEN = "tok-emma";
+export const ZH_TOKEN = "tok-lei";
 
-export const USER: User = { id: asId<UserId>("u-minsu"), displayName: "민수", createdAt: "2026-01-01T00:00:00.000Z" };
-export const OTHER_USER: User = { id: asId<UserId>("u-jiwoo"), displayName: "지우", createdAt: "2026-01-01T00:00:00.000Z" };
+const CREATED = "2026-01-01T00:00:00.000Z";
+export const USER: User = { id: asId<UserId>("u-minsu"), displayName: "민수", locale: "ko", createdAt: CREATED };
+export const OTHER_USER: User = { id: asId<UserId>("u-jiwoo"), displayName: "지우", locale: "ko", createdAt: CREATED };
+export const EN_USER: User = { id: asId<UserId>("u-emma"), displayName: "Emma", locale: "en", createdAt: CREATED };
+export const ZH_USER: User = { id: asId<UserId>("u-lei"), displayName: "Lei", locale: "zh", createdAt: CREATED };
+
+/** Skill name per locale, used by the fake catalog so tests can see which locale it was asked for. */
+export const SKILL_NAME = { ko: "데이터 변환", en: "data transformation", zh: "数据转换" } as const;
 
 export function makeExercise(id: ExerciseId, extra: Partial<ExerciseDetail> = {}): ExerciseDetail {
   return {
@@ -33,6 +41,7 @@ export function makeExercise(id: ExerciseId, extra: Partial<ExerciseDetail> = {}
     estimatedMinutes: 5,
     contextTags: ["orders"],
     source: { kind: "original" },
+    locales: ["ko", "en", "zh"],
     promptMarkdown: "주문에 쿠폰을 적용하세요.",
     moduleName: "coupon",
     starterFiles: [{ path: "src/coupon.gleam", content: "pub fn apply() { todo }" }],
@@ -136,24 +145,46 @@ export function makeFakes(overrides: Overrides = {}): Fakes {
     ],
   ]);
   const fakes: Fakes = { calls, helpUsed: NO_HELP, services: undefined as unknown as AppServices };
+  // token -> user; setLocale and devLogin(locale) update it so later requests see the new locale.
+  const users = new Map<string, User>([
+    [TOKEN, USER],
+    [OTHER_TOKEN, OTHER_USER],
+    [EN_TOKEN, EN_USER],
+    [ZH_TOKEN, ZH_USER],
+  ]);
+  const tokenOf = (id: UserId): string | undefined => [...users].find(([, u]) => u.id === id)?.[0];
 
   const accounts: AccountsService = {
-    devLogin: async (displayName) =>
-      ok({
-        user: { ...USER, displayName },
-        token: { token: TOKEN, tokenId: "t1", label: "dev", createdAt: USER.createdAt },
-      }),
-    getUser: async (id) => (id === USER.id ? USER : null),
+    devLogin: async (displayName, locale?: Locale) => {
+      const user: User = { ...(users.get(TOKEN) as User), displayName, ...(locale === undefined ? {} : { locale }) };
+      users.set(TOKEN, user);
+      return ok({ user, token: { token: TOKEN, tokenId: "t1", label: "dev", createdAt: USER.createdAt } });
+    },
+    setLocale: async (id, locale) => {
+      const token = tokenOf(id);
+      if (token === undefined) return err(appError("not_found", "사용자 없음"));
+      const user: User = { ...(users.get(token) as User), locale };
+      users.set(token, user);
+      return ok(user);
+    },
+    getUser: async (id) => [...users.values()].find((u) => u.id === id) ?? null,
     issueToken: async (_u, label) => ok({ token: "tok-new", tokenId: "t2", label, createdAt: USER.createdAt }),
     listTokens: async () => [{ tokenId: "t1", label: "dev", createdAt: USER.createdAt }],
     revokeToken: async (_u, tokenId) => (tokenId === "t1" ? ok(undefined) : err(appError("not_found", "토큰 없음"))),
-    authenticate: async (token) => (token === TOKEN ? USER : token === OTHER_TOKEN ? OTHER_USER : null),
+    authenticate: async (token) => users.get(token) ?? null,
     ...overrides.accounts,
   };
 
   const catalog: ContentCatalog = {
-    listSkills: async () => [
-      { id: asId("data-transform"), name: "데이터 변환", description: "", track: "core", prerequisites: [], order: 1 },
+    listSkills: async (locale?: Locale) => [
+      {
+        id: asId("data-transform"),
+        name: pickLocale(SKILL_NAME, locale),
+        description: "",
+        track: "core",
+        prerequisites: [],
+        order: 1,
+      },
     ],
     getSkill: async () => null,
     listExercises: async () => [...exercises.values()],
@@ -165,6 +196,9 @@ export function makeFakes(overrides: Overrides = {}): Fakes {
     getTheoryTopics: async (ids) =>
       ids.map((id) => ({ id, title: "펑터", level: "basic", markdown: "이론", relatedSkills: [], furtherReading: [] })),
     listTheoryTopics: async () => [],
+    listLessonUnits: async () => [],
+    getLesson: async () => null,
+    getLessonAnswer: async () => null,
     currentBundle: async () => ({ bundleId: "b-1", contentHash: "h", importedAt: USER.createdAt, exerciseCount: 2 }),
     ...overrides.catalog,
   };

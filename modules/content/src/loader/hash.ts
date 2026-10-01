@@ -23,12 +23,18 @@ export function hashFiles(entries: readonly { readonly path: string; readonly by
 }
 
 /**
- * Hash of one variant: the family defaults (family.yaml) plus every file of the variant directory,
- * with paths relative to that directory. Independent of where the content root lives.
+ * Hash of one variant: the family files (family.yaml and its translations family.<locale>.yaml, paths relative
+ * to the family directory) plus every file of the variant directory (including its translations), with paths
+ * relative to that directory. Independent of where the content root lives.
  */
-export function hashVariant(familyYaml: TreeFile | undefined, variantFiles: readonly TreeFile[], variantPrefix: string): string {
+export function hashVariant(
+  familyFiles: readonly TreeFile[],
+  familyPrefix: string,
+  variantFiles: readonly TreeFile[],
+  variantPrefix: string,
+): string {
   const entries: { path: string; bytes: Uint8Array }[] = [];
-  if (familyYaml) entries.push({ path: "family.yaml", bytes: familyYaml.bytes });
+  for (const f of familyFiles) entries.push({ path: f.path.slice(familyPrefix.length), bytes: f.bytes });
   for (const f of variantFiles) entries.push({ path: `variant/${f.path.slice(variantPrefix.length)}`, bytes: f.bytes });
   return hashFiles(entries);
 }

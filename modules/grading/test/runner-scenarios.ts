@@ -4,6 +4,7 @@ import type { GradingSpec } from "@fp/content/contract";
 import type { CodeRunner, RunOutput, SnippetRequest, SnippetResult } from "../src/contract/index.ts";
 import { buildRunJob } from "../src/grading/run-job.ts";
 import { interpretRunOutput } from "../src/grading/interpret.ts";
+import type { RawTestDetail } from "../src/grading/failure.ts";
 import { buildSnippetJob, interpretSnippetOutput, newSnippetToken } from "../src/grading/snippet.ts";
 import { couponSpec, couponTestFile, fixture } from "./helpers.ts";
 
@@ -88,6 +89,38 @@ export function sharedRunnerScenarios(getRunner: () => CodeRunner): void {
     expect(e.errorTags).toContain("drops_items_with_filter");
   });
 
+  it("the harness reports structured failures; texts are rendered per locale", { timeout: RUN_TIMEOUT }, async () => {
+    const out = await runFixture(getRunner(), "wrong-filter-drops.gleam");
+    if (out.kind !== "completed") throw new Error(JSON.stringify(out));
+    const raw = out.tests.find((t) => t.functionName === "keeps_other_orders_test") as RawTestDetail;
+    expect(raw.failure).toMatchObject({
+      kind: "should_equal",
+      expected: "[Order(1, Pending, 9000), Order(2, Shipped, 5000)]",
+      actual: "[Order(1, Pending, 9000)]",
+    });
+    // RawTestResult.message stays a (Korean) rendering for contract-only readers.
+    expect(raw.message).toContain("기대값: [Order(1, Pending, 9000), Order(2, Shipped, 5000)]");
+    const t3 = (locale: "en" | "zh") => interpretRunOutput(couponSpec(), out, AT, locale).tests.find((x) => x.id === "T3")!.message;
+    expect(t3("en")).toContain("expected: [Order(1, Pending, 9000), Order(2, Shipped, 5000)]");
+    expect(t3("en")).toContain("actual: [Order(1, Pending, 9000)]");
+    expect(t3("zh")).toContain("预期值：[Order(1, Pending, 9000), Order(2, Shipped, 5000)]");
+    expect(t3("zh")).toContain("实际值：[Order(1, Pending, 9000)]");
+    for (const m of [t3("en"), t3("zh")]) expect(m).not.toMatch(/[가-힣]/);
+
+    const todo = await runFixture(getRunner(), "starter.gleam");
+    if (todo.kind !== "completed") throw new Error(JSON.stringify(todo));
+    expect((todo.tests[0] as RawTestDetail).failure).toMatchObject({ kind: "todo", location: { file: "src/coupon.gleam" } });
+    expect(interpretRunOutput(couponSpec(), todo, AT, "en").tests[0]?.message).toMatch(/^Reached code that is not implemented yet \(todo\)/);
+    expect(interpretRunOutput(couponSpec(), todo, AT, "zh").tests[0]?.message).toMatch(/^执行到了尚未实现的代码（todo）/);
+    expect(interpretRunOutput(couponSpec(), todo, AT).tests[0]?.message).toMatch(/^아직 구현되지 않은 코드\(todo\)/);
+
+    const forged = await runFixture(getRunner(), "forge-output.gleam");
+    if (forged.kind !== "completed") throw new Error(JSON.stringify(forged));
+    const forgedT3 = (locale: "en" | "zh") => interpretRunOutput(couponSpec(), forged, AT, locale).tests.find((x) => x.id === "T3")!.message;
+    expect(forgedT3("en")).toContain("\n\nOutput:\n");
+    expect(forgedT3("zh")).toContain("\n\n输出：\n");
+  });
+
   it("learner stdout cannot forge results", { timeout: RUN_TIMEOUT }, async () => {
     const e = interpretRunOutput(couponSpec(), await runFixture(getRunner(), "forge-output.gleam"), AT);
     const t = e.tests.find((x) => x.id === "T3")!;
@@ -104,10 +137,12 @@ export function sharedRunnerScenarios(getRunner: () => CodeRunner): void {
 
   it("exceeding the memory limit fails the test instead of the job", { timeout: RUN_TIMEOUT }, async () => {
     const spec = couponSpec({ limits: { timeMs: 10_000, memoryMb: 64 } });
-    const e = interpretRunOutput(spec, await runFixture(getRunner(), "memory-hog.gleam", spec), AT);
+    const out = await runFixture(getRunner(), "memory-hog.gleam", spec);
+    const e = interpretRunOutput(spec, out, AT);
     expect(e.outcome).toBe("failed_tests");
     expect(e.tests[0]?.status).toBe("error");
     expect(e.tests[0]?.message).toContain("메모리 한도(64 MB)");
+    expect(interpretRunOutput(spec, out, AT, "en").tests[0]?.message).toContain("memory limit (64 MB)");
   });
 
   it("learner compile errors become compile_error diagnostics", { timeout: RUN_TIMEOUT }, async () => {

@@ -66,14 +66,15 @@ export async function importBundle(deps: ImporterDeps, bundle: ContentBundle): P
 async function writeContent(tx: Db, parsed: ParsedContent, bundleId: string, importedAt: Date): Promise<ExerciseId[]> {
   for (const skill of parsed.skills) {
     await tx.query(
-      `insert into content.skills (id, sort_order, data, retired) values ($1, $2, $3::jsonb, false)
-       on conflict (id) do update set sort_order = excluded.sort_order, data = excluded.data, retired = false`,
-      [skill.id, skill.order, JSON.stringify(skill)],
+      `insert into content.skills (id, sort_order, data, translations, retired) values ($1, $2, $3::jsonb, $4::jsonb, false)
+       on conflict (id) do update
+         set sort_order = excluded.sort_order, data = excluded.data, translations = excluded.translations, retired = false`,
+      [skill.id, skill.order, JSON.stringify(skill), JSON.stringify(parsed.translations.skills.get(skill.id) ?? {})],
     );
   }
   await retireMissing(tx, "skills", parsed.skills.map((s) => s.id));
-  await replaceNotes(tx, "concept_notes", parsed.conceptNotes);
-  await replaceNotes(tx, "theory_topics", parsed.theoryTopics);
+  await replaceNotes(tx, "concept_notes", parsed.conceptNotes, parsed.translations.conceptNotes);
+  await replaceNotes(tx, "theory_topics", parsed.theoryTopics, parsed.translations.theoryTopics);
 
   const existing = await tx.query<VariantRow>(
     "select family_id, variant_key, latest_version, content_hash, retired from content.variants",
@@ -101,8 +102,8 @@ async function writeContent(tx: Db, parsed: ParsedContent, bundleId: string, imp
     await tx.query(
       `insert into content.exercise_versions
          (id, family_id, variant_key, version, content_hash, language, kind, format, primary_skill,
-          summary, detail, grading, reference, bundle_id, created_at)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11::jsonb, $12::jsonb, $13::jsonb, $14, $15)`,
+          summary, detail, grading, reference, translations, bundle_id, created_at)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11::jsonb, $12::jsonb, $13::jsonb, $14::jsonb, $15, $16)`,
       [
         m.id,
         v.familyId,
@@ -117,6 +118,7 @@ async function writeContent(tx: Db, parsed: ParsedContent, bundleId: string, imp
         JSON.stringify(m.detail),
         JSON.stringify(m.grading),
         JSON.stringify(m.reference),
+        JSON.stringify(v.translations),
         bundleId,
         importedAt.toISOString(),
       ],
@@ -146,12 +148,13 @@ async function replaceNotes(
   tx: Db,
   table: "concept_notes" | "theory_topics",
   notes: readonly { readonly id: string }[],
+  translations: ReadonlyMap<string, object>,
 ): Promise<void> {
   for (const n of notes) {
     await tx.query(
-      `insert into content.${table} (id, data, retired) values ($1, $2::jsonb, false)
-       on conflict (id) do update set data = excluded.data, retired = false`,
-      [n.id, JSON.stringify(n)],
+      `insert into content.${table} (id, data, translations, retired) values ($1, $2::jsonb, $3::jsonb, false)
+       on conflict (id) do update set data = excluded.data, translations = excluded.translations, retired = false`,
+      [n.id, JSON.stringify(n), JSON.stringify(translations.get(n.id) ?? {})],
     );
   }
   await retireMissing(tx, table, notes.map((n) => n.id));

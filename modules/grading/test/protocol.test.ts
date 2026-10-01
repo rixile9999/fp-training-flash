@@ -103,9 +103,37 @@ describe("parseStdout / toRunOutput", () => {
     expect(out.performance).toEqual([{ size: 10, cost: 123, status: "ok" }]);
   });
 
+  it("keeps structured failures and output, and fills message with the Korean rendering", () => {
+    const stdout =
+      built +
+      ev({
+        type: "test",
+        name: job.testFunctions[2],
+        status: "failed",
+        durationMs: 3,
+        failure: { kind: "should_equal", expected: "[1]", actual: "[]", location: { file: "test/coupon_test.gleam", line: 16 } },
+        output: "debug",
+        outputTruncated: false,
+      }) +
+      ev({ type: "done" });
+    const out = toRunOutput(proc(stdout), NONCE, layout, FAKE_INFO, ROOT);
+    if (out.kind !== "completed") throw new Error(out.kind);
+    expect(out.tests[2]).toEqual({
+      functionName: "keeps_other_orders_test",
+      status: "failed",
+      durationMs: 3,
+      failure: { kind: "should_equal", expected: "[1]", actual: "[]", location: { file: "test/coupon_test.gleam", line: 16 } },
+      output: "debug",
+      message: "값이 기대와 다릅니다.\n  기대값: [1]\n  실제값: [] (test/coupon_test.gleam:16)\n\n출력:\ndebug",
+    });
+    // Unreported tests get a structured failure too (rendered per locale later).
+    expect(out.tests[0]).toMatchObject({ status: "error", failure: { kind: "not_reported" }, message: "테스트 결과가 보고되지 않았습니다." });
+  });
+
   it("reports missing results after a crash as errors, and a wall-clock kill as timeout", () => {
     const crashed = toRunOutput(proc(built + ev({ type: "test", name: job.testFunctions[0], status: "passed" }), { exitCode: 137 }), NONCE, layout, FAKE_INFO, ROOT);
     expect(crashed.kind === "completed" && crashed.tests.map((t) => t.status)).toEqual(["passed", "error", "error", "error", "error"]);
+    expect(crashed.kind === "completed" && crashed.tests[1]).toMatchObject({ failure: { kind: "aborted" } });
     expect(toRunOutput(proc(built, { timedOut: true, exitCode: null }), NONCE, layout, FAKE_INFO, ROOT).kind).toBe("timeout");
     expect(toRunOutput(proc("", { exitCode: 1, stderr: "no image" }), NONCE, layout, FAKE_INFO, ROOT).kind).toBe("system_error");
   });

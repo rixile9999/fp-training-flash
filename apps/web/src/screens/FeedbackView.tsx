@@ -2,13 +2,15 @@ import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import type { ApiClient, CoachingFeedback, ExerciseDetail, Explanation, Skill, SubmissionView } from "@fp/api-contract";
 import { errorMessage } from "../api/client.ts";
+import { useI18n } from "../i18n/I18n.tsx";
+import type { Translator } from "../i18n/translator.ts";
 import type { Evaluation, RequirementResult, TestResult } from "../api/types.ts";
 import { CodeBlock } from "../ui/CodeBlock.tsx";
 import { Icon } from "../ui/Icon.tsx";
 import type { IconName } from "../ui/Icon.tsx";
 import { Markdown } from "../ui/Markdown.tsx";
 import { StatusBadge } from "../ui/Status.tsx";
-import { OUTCOME_LABEL, errorTagLabel, skillName } from "../ui/labels.ts";
+import { errorTagLabel, outcomeLabel, skillName } from "../ui/labels.ts";
 
 /** Splits a runner message like "expected: X\n     got: Y" into its parts. */
 export function parseExpectedActual(message: string | undefined): { expected: string; actual: string; rest: string } | null {
@@ -27,8 +29,12 @@ export function FeedbackView(props: {
   /** Present when the session has a next item to move on to. */
   readonly onNext?: (() => void) | undefined;
   readonly nextLabel?: string;
+  /** Changes after a language switch: coaching feedback is fetched again in the new language. */
+  readonly contentKey?: number;
 }) {
-  const { api, exercise, result } = props;
+  const { api, exercise, result, contentKey = 0 } = props;
+  const tr = useI18n();
+  const { t } = tr;
   const sub = result.submission;
   const ev = sub.evaluation;
   const [coach, setCoach] = useState<CoachingFeedback | null>(null);
@@ -40,12 +46,14 @@ export function FeedbackView(props: {
     setCoachError(null);
     api.feedback(sub.id).then(
       (fb) => alive && setCoach(fb),
-      (e: unknown) => alive && setCoachError(errorMessage(e)),
+      (e: unknown) => alive && setCoachError(errorMessage(e, tr)),
     );
     return () => {
       alive = false;
     };
-  }, [api, sub.id]);
+    // contentKey: refetch in the new language. tr is read only for the error text.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [api, sub.id, contentKey]);
   useEffect(loadCoach, [loadCoach]);
 
   return (
@@ -53,13 +61,13 @@ export function FeedbackView(props: {
       <div className="feedback-main">
         <header className="feedback-head">
           <p className="eyebrow">
-            {sub.attemptNo}번째 제출 · {exercise.title}
+            {t("feedback.attempt", { n: sub.attemptNo, title: exercise.title })}
           </p>
           <h1 className="feedback-title">
-            {ev ? <StatusBadge ok={ev.correctness} okLabel="정답" failLabel={OUTCOME_LABEL[ev.outcome]} /> : "채점 중"}
+            {ev ? <StatusBadge ok={ev.correctness} okLabel={t("feedback.correct")} failLabel={outcomeLabel(tr, ev.outcome)} /> : t("feedback.grading")}
           </h1>
         </header>
-        {ev ? <EvaluationLayers ev={ev} exercise={exercise} /> : <p className="muted">채점 결과를 기다리고 있습니다.</p>}
+        {ev ? <EvaluationLayers ev={ev} exercise={exercise} /> : <p className="muted">{t("feedback.waiting")}</p>}
       </div>
       <aside className="feedback-side">
         <RatingPanel result={result} skills={props.skills} />
@@ -67,16 +75,16 @@ export function FeedbackView(props: {
         <div className="feedback-actions">
           {props.onNext && ev?.correctness && (
             <button type="button" className="btn btn-primary btn-block" onClick={props.onNext}>
-              {props.nextLabel ?? "다음 문제"} <Icon name="arrowRight" />
+              {props.nextLabel ?? t("feedback.next")} <Icon name="arrowRight" />
             </button>
           )}
           <button type="button" className={`btn btn-block ${ev?.correctness ? "btn-secondary" : "btn-primary"}`} onClick={props.onRevise}>
-            <Icon name="refresh" /> 코드 수정하고 재제출
+            <Icon name="refresh" /> {t("feedback.revise")}
           </button>
           <ExplanationControl api={api} exerciseId={exercise.id} />
           {props.onNext && !ev?.correctness && (
             <button type="button" className="btn btn-ghost btn-block" onClick={props.onNext}>
-              {props.nextLabel ?? "다음 문제"}로 넘어가기
+              {t("feedback.moveOn", { label: props.nextLabel ?? t("feedback.next") })}
             </button>
           )}
         </div>
@@ -102,11 +110,18 @@ function Layer(props: { readonly n: number; readonly title: string; readonly ico
 }
 
 function EvaluationLayers({ ev, exercise }: { readonly ev: Evaluation; readonly exercise: ExerciseDetail }) {
+  const tr = useI18n();
+  const { t } = tr;
   const passed = ev.tests.filter((t) => t.status === "passed").length;
   return (
     <>
-      <Layer n={1} title="동작 정확성" icon="checkCircle" aside={<span className="mono muted">{ev.tests.length ? `${passed}/${ev.tests.length} 통과` : ""}</span>}>
-        {ev.outcome === "system_error" && <p className="notice">채점 시스템 오류입니다. 이 결과는 학습 기록에 실패로 남지 않습니다.</p>}
+      <Layer
+        n={1}
+        title={t("layer.correctness")}
+        icon="checkCircle"
+        aside={<span className="mono muted">{ev.tests.length ? t("editor.passedCount", { passed, total: ev.tests.length }) : ""}</span>}
+      >
+        {ev.outcome === "system_error" && <p className="notice">{t("feedback.systemError")}</p>}
         {ev.rejectionReasons?.map((r) => (
           <p key={r} className="notice notice-fail">
             <Icon name="alert" size={16} /> {r}
@@ -127,19 +142,19 @@ function EvaluationLayers({ ev, exercise }: { readonly ev: Evaluation; readonly 
         )}
         {ev.performance && ev.performance.verdict !== "not_measured" && (
           <p className="perf">
-            <StatusBadge ok={ev.performance.verdict === "ok"} okLabel="성능 기준 충족" failLabel="성능 기준 미달" />
-            {ev.performance.ratio !== undefined && <span className="mono muted">기준 대비 {ev.performance.ratio.toFixed(1)}배</span>}
+            <StatusBadge ok={ev.performance.verdict === "ok"} okLabel={t("feedback.perfOk")} failLabel={outcomeLabel(tr, "too_slow")} />
+            {ev.performance.ratio !== undefined && <span className="mono muted">{t("feedback.perfRatio", { ratio: tr.number(ev.performance.ratio, 1) })}</span>}
           </p>
         )}
         {ev.errorTags.length > 0 && (
           <p className="error-tags">
-            <Icon name="tag" size={16} /> 기록된 오류 유형: {ev.errorTags.map(errorTagLabel).join(", ")}
+            <Icon name="tag" size={16} /> {t("feedback.errorTags", { tags: tr.list(ev.errorTags.map((tag) => errorTagLabel(tr, tag))) })}
           </p>
         )}
       </Layer>
-      <Layer n={2} title="과제 요구사항" icon="flag">
+      <Layer n={2} title={t("layer.requirements")} icon="flag">
         {ev.requirements.length === 0 ? (
-          <p className="muted">이 문제는 요구사항을 테스트로만 확인합니다.</p>
+          <p className="muted">{t("feedback.requirementsTestsOnly")}</p>
         ) : (
           <ul className="req-list">
             {ev.requirements.map((r) => (
@@ -148,9 +163,9 @@ function EvaluationLayers({ ev, exercise }: { readonly ev: Evaluation; readonly 
           </ul>
         )}
       </Layer>
-      <Layer n={3} title="코드 품질" icon="layers" aside={<span className="chip chip-small chip-quiet">정답 판정과 레이팅에 반영하지 않음</span>}>
+      <Layer n={3} title={t("layer.quality")} icon="layers" aside={<span className="chip chip-small chip-quiet">{t("feedback.qualityNote")}</span>}>
         {ev.rubricChecks.length === 0 ? (
-          <p className="muted">자동 점검 항목이 없습니다.</p>
+          <p className="muted">{t("feedback.noRubric")}</p>
         ) : (
           <ul className="rubric-list">
             {ev.rubricChecks.map((c) => {
@@ -160,7 +175,7 @@ function EvaluationLayers({ ev, exercise }: { readonly ev: Evaluation; readonly 
                 <li key={c.rubricId} className="rubric-row">
                   <span className={`rubric-status ${ok ? "is-ok" : "is-flagged"}`}>
                     <Icon name={ok ? "check" : "alert"} size={16} />
-                    {ok ? "기준 충족" : "개선 제안"}
+                    {ok ? t("rubric.ok") : t("rubric.flagged")}
                   </span>
                   <span>
                     <span className="mono muted">{c.rubricId}</span> {item?.title ?? ""}
@@ -177,27 +192,28 @@ function EvaluationLayers({ ev, exercise }: { readonly ev: Evaluation; readonly 
 }
 
 function TestRow({ test }: { readonly test: TestResult }) {
+  const { t } = useI18n();
   const ok = test.status === "passed";
   const ea = parseExpectedActual(test.message);
-  const statusLabel = test.status === "timeout" ? "시간 초과" : test.status === "error" ? "오류" : "실패";
+  const statusLabel = test.status === "timeout" ? t("test.timeout") : test.status === "error" ? t("test.error") : t("common.fail");
   return (
     <li className={`test-row${ok ? "" : " is-failed"}`}>
       <div className="test-row-head">
         <StatusBadge ok={ok} failLabel={statusLabel} />
         <span className="test-name">{test.name}</span>
-        {test.visibility === "hidden" && <span className="chip chip-small">숨은 테스트</span>}
+        {test.visibility === "hidden" && <span className="chip chip-small">{t("test.hidden")}</span>}
       </div>
       {!ok && (
         <div className="test-detail">
           {ea ? (
             <dl className="expected-actual">
-              <dt>기대값</dt>
+              <dt>{t("test.expected")}</dt>
               <dd className="mono">{ea.expected}</dd>
-              <dt>실제 결과</dt>
+              <dt>{t("test.actual")}</dt>
               <dd className="mono">{ea.actual}</dd>
               {ea.rest && (
                 <>
-                  <dt>메시지</dt>
+                  <dt>{t("test.message")}</dt>
                   <dd>{ea.rest}</dd>
                 </>
               )}
@@ -207,8 +223,8 @@ function TestRow({ test }: { readonly test: TestResult }) {
           )}
           {test.code && (
             <>
-              <p className="small muted">{test.visibility === "hidden" ? "실패한 숨은 테스트의 코드를 공개합니다" : "테스트 코드"}</p>
-              <CodeBlock code={test.code} label={`${test.name} 테스트 코드`} />
+              <p className="small muted">{test.visibility === "hidden" ? t("test.hiddenCode") : t("test.code")}</p>
+              <CodeBlock code={test.code} label={t("problem.testCode", { name: test.name })} />
             </>
           )}
         </div>
@@ -217,19 +233,20 @@ function TestRow({ test }: { readonly test: TestResult }) {
   );
 }
 
-const REQ: Record<RequirementResult["status"], { label: string; icon: IconName; cls: string }> = {
-  met: { label: "충족", icon: "checkCircle", cls: "is-met" },
-  unmet: { label: "미충족", icon: "xCircle", cls: "is-unmet" },
-  undetermined: { label: "판정 불가", icon: "help", cls: "is-undetermined" },
+const REQ: Record<RequirementResult["status"], { icon: IconName; cls: string }> = {
+  met: { icon: "checkCircle", cls: "is-met" },
+  unmet: { icon: "xCircle", cls: "is-unmet" },
+  undetermined: { icon: "help", cls: "is-undetermined" },
 };
 
 function RequirementRow({ req }: { readonly req: RequirementResult }) {
+  const { t } = useI18n();
   const s = REQ[req.status];
   return (
     <li className="req-row">
       <span className={`req-status ${s.cls}`}>
         <Icon name={s.icon} size={16} />
-        {s.label}
+        {t(`req.${req.status}`)}
       </span>
       <span>
         <span className="mono muted">{req.id}</span> {req.description}
@@ -238,86 +255,93 @@ function RequirementRow({ req }: { readonly req: RequirementResult }) {
   );
 }
 
-function RatingPanel({ result, skills }: { readonly result: SubmissionView; readonly skills: readonly Skill[] }) {
-  const rc = result.ratingChange;
-  const sub = result.submission;
+function notRatedReasons(tr: Translator, sub: SubmissionView["submission"]): string[] {
   const reasons: string[] = [];
-  if (sub.attemptNo > 1) reasons.push("재제출");
-  if (sub.helpUsed.maxHintLevel > 2) reasons.push(`힌트 ${sub.helpUsed.maxHintLevel}단계 사용`);
-  if (sub.helpUsed.explanationViewed) reasons.push("해설 확인 후 제출");
-  if (sub.evaluation?.outcome === "system_error") reasons.push("채점 시스템 오류");
+  if (sub.attemptNo > 1) reasons.push(tr.t("rating.reason.resubmit"));
+  if (sub.helpUsed.maxHintLevel > 2) reasons.push(tr.t("rating.reason.hint", { level: sub.helpUsed.maxHintLevel }));
+  if (sub.helpUsed.explanationViewed) reasons.push(tr.t("rating.reason.explanation"));
+  if (sub.evaluation?.outcome === "system_error") reasons.push(tr.t("rating.reason.systemError"));
+  return reasons;
+}
+
+function RatingPanel({ result, skills }: { readonly result: SubmissionView; readonly skills: readonly Skill[] }) {
+  const tr = useI18n();
+  const { t } = tr;
+  const rc = result.ratingChange;
+  const reasons = notRatedReasons(tr, result.submission);
   return (
     <section className="card rating-card" aria-labelledby="rating-h">
       <h2 id="rating-h" className="card-title">
-        레이팅 변화
+        {t("rating.title")}
       </h2>
       {rc ? (
         <>
           <p className="rating-skill">{skillName(skills, rc.skillId)}</p>
           <p className="rating-change">
             <span className="mono rating-before">{rc.before}</span>
-            <Icon name="arrowRight" label="에서" />
+            <Icon name="arrowRight" label={t("rating.arrow")} />
             <span className="mono rating-after">{rc.after}</span>
             <span className={`rating-delta mono ${rc.after >= rc.before ? "is-up" : "is-down"}`}>
               ({rc.after >= rc.before ? "+" : ""}
               {rc.after - rc.before})
             </span>
-            {rc.provisional && <span className="badge-provisional">잠정</span>}
+            {rc.provisional && <span className="badge-provisional">{t("common.provisional")}</span>}
           </p>
         </>
       ) : (
         <p className="rating-none">
-          이번 제출은 레이팅에 반영되지 않았습니다{reasons.length ? ` (${reasons.join(", ")})` : ""}.
+          {t("rating.notRated", { reasons: reasons.length ? t("rating.reasons", { list: tr.list(reasons) }) : "" })}
         </p>
       )}
-      <p className="small muted">첫 제출만 반영합니다. 힌트 3단계 이상이나 해설을 본 뒤의 제출은 기록만 남습니다.</p>
+      <p className="small muted">{t("rating.policy")}</p>
     </section>
   );
 }
 
 function CoachFeedbackPanel(props: { readonly coach: CoachingFeedback | null; readonly error: string | null; readonly onRetry: () => void }) {
   const { coach, error } = props;
+  const { t } = useI18n();
   return (
     <section className="card coach-feedback" aria-labelledby="coach-fb-h" aria-busy={!coach && !error}>
       <h2 id="coach-fb-h" className="card-title">
-        <Icon name="message" /> 코치 피드백
-        {coach && <span className="chip chip-small chip-quiet">{coach.source === "llm" ? "AI 코치" : "규칙 기반"}</span>}
+        <Icon name="message" /> {t("coachFb.title")}
+        {coach && <span className="chip chip-small chip-quiet">{coach.source === "llm" ? t("coachFb.llm") : t("coachFb.rules")}</span>}
       </h2>
       {error ? (
         <div role="alert">
           <p className="inline-error">{error}</p>
           <button type="button" className="btn btn-secondary" onClick={props.onRetry}>
-            다시 불러오기
+            {t("coachFb.reload")}
           </button>
         </div>
       ) : !coach ? (
         <div role="status" className="coach-loading">
-          <p>코치가 실행 결과를 근거로 피드백을 작성하고 있습니다...</p>
+          <p>{t("coachFb.loading")}</p>
           <span className="skeleton" />
           <span className="skeleton skeleton-short" />
         </div>
       ) : (
         <dl className="coach-parts">
-          <dt>현재 결과</dt>
+          <dt>{t("coachFb.summary")}</dt>
           <dd>
             <Markdown source={coach.summary} />
           </dd>
-          <dt>근거</dt>
+          <dt>{t("coachFb.evidence")}</dt>
           <dd>
             {coach.evidence.length === 0 ? (
-              <p className="muted">추가 근거 없음</p>
+              <p className="muted">{t("coachFb.noEvidence")}</p>
             ) : (
               <ul>
                 {coach.evidence.map((e, i) => (
                   <li key={i}>
-                    {e.line !== undefined && <span className="mono muted">{e.line}행 </span>}
+                    {e.line !== undefined && <span className="mono muted">{t("coachFb.line", { line: e.line })}</span>}
                     {e.text}
                   </li>
                 ))}
               </ul>
             )}
           </dd>
-          <dt>우선 과제</dt>
+          <dt>{t("coachFb.priorities")}</dt>
           <dd>
             <ol>
               {coach.priorities.map((p, i) => (
@@ -325,7 +349,7 @@ function CoachFeedbackPanel(props: { readonly coach: CoachingFeedback | null; re
               ))}
             </ol>
           </dd>
-          <dt>다음 행동</dt>
+          <dt>{t("coachFb.next")}</dt>
           <dd>
             <p>{coach.nextAction}</p>
           </dd>
@@ -336,6 +360,8 @@ function CoachFeedbackPanel(props: { readonly coach: CoachingFeedback | null; re
 }
 
 function ExplanationControl({ api, exerciseId }: { readonly api: ApiClient; readonly exerciseId: string }) {
+  const tr = useI18n();
+  const { t } = tr;
   const [stage, setStage] = useState<"idle" | "confirm" | "loading" | "shown">("idle");
   const [explanation, setExplanation] = useState<Explanation | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -346,33 +372,33 @@ function ExplanationControl({ api, exerciseId }: { readonly api: ApiClient; read
       setExplanation(await api.explanation(exerciseId));
       setStage("shown");
     } catch (e) {
-      setError(errorMessage(e));
+      setError(errorMessage(e, tr));
       setStage("confirm");
     }
   };
   if (stage === "idle")
     return (
       <button type="button" className="btn btn-ghost btn-block" onClick={() => setStage("confirm")}>
-        <Icon name="book" /> 전체 해설 보기
+        <Icon name="book" /> {t("expl.show")}
       </button>
     );
   if (stage === "shown" && explanation)
     return (
       <section className="card explanation" aria-labelledby="expl-h">
         <h2 id="expl-h" className="card-title">
-          <Icon name="book" /> 전체 해설
+          <Icon name="book" /> {t("expl.title")}
         </h2>
         <Markdown source={explanation.markdown} />
-        <CodeBlock code={explanation.solutionCode} label="참고 풀이 코드" />
+        <CodeBlock code={explanation.solutionCode} label={t("expl.solutionCode")} />
       </section>
     );
   return (
     <div className="confirm" role="alertdialog" aria-labelledby="confirm-h" aria-describedby="confirm-d">
       <p id="confirm-h" className="confirm-title">
-        전체 해설을 볼까요?
+        {t("expl.confirmTitle")}
       </p>
       <p id="confirm-d" className="small">
-        해설을 보면 이 문제에서는 숙달 여부를 판정하지 않고, 새로운 변형 문제로 다시 확인합니다.
+        {t("expl.confirmBody")}
       </p>
       {error && (
         <p className="inline-error" role="alert">
@@ -381,10 +407,10 @@ function ExplanationControl({ api, exerciseId }: { readonly api: ApiClient; read
       )}
       <div className="confirm-actions">
         <button type="button" className="btn btn-primary" onClick={reveal} disabled={stage === "loading"}>
-          {stage === "loading" ? "불러오는 중..." : "해설 보기"}
+          {stage === "loading" ? t("common.loading") : t("expl.confirm")}
         </button>
         <button type="button" className="btn btn-secondary" onClick={() => setStage("idle")}>
-          취소
+          {t("common.cancel")}
         </button>
       </div>
     </div>

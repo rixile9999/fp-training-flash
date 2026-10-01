@@ -9,43 +9,69 @@
  *  5. File shape: `.gleam` files only, at most 64 KB each, no NUL bytes.
  * Comments and string literals are ignored, so `"@external"` in a string is fine.
  */
+import { DEFAULT_LOCALE } from "@fp/kernel";
+import type { Locale } from "@fp/kernel";
 import type { FileContent, GradingSpec } from "@fp/content/contract";
 import { blankCommentsAndStrings, importedModules, moduleNameFromPath } from "../gleam/source.ts";
+import { msg, type MessageId } from "../messages.ts";
 
 export const MAX_SOURCE_BYTES = 64 * 1024;
 
-const FORBIDDEN_IMPORTS: readonly { readonly test: (m: string) => boolean; readonly why: string }[] = [
-  { test: (m) => /^fp_internal($|[/_])/.test(m), why: "채점기 내부 모듈" },
-  { test: (m) => /^fp_runner($|\/)/.test(m), why: "채점기 내부 모듈" },
-  { test: (m) => m === "gleeunit" || m.startsWith("gleeunit/internal"), why: "테스트 실행기 모듈" },
-  { test: (m) => /(^|\/)[a-z0-9_]*_test$/.test(m), why: "테스트 모듈" },
+const FORBIDDEN_IMPORTS: readonly { readonly test: (m: string) => boolean; readonly why: MessageId }[] = [
+  { test: (m) => /^fp_internal($|[/_])/.test(m), why: "static.why.graderInternal" },
+  { test: (m) => /^fp_runner($|\/)/.test(m), why: "static.why.graderInternal" },
+  { test: (m) => m === "gleeunit" || m.startsWith("gleeunit/internal"), why: "static.why.testRunner" },
+  { test: (m) => /(^|\/)[a-z0-9_]*_test$/.test(m), why: "static.why.testModule" },
 ];
 
-export function staticChecks(spec: GradingSpec, sourceFiles: readonly FileContent[]): readonly string[] {
-  return checkSources(sourceFiles, new Set(spec.testFiles.map((f) => moduleNameFromPath(f.path))));
+/** One rejection reason; `file` is absent for submission-level reasons. */
+export interface SourceIssue {
+  readonly file?: string;
+  readonly text: string;
 }
 
-/** The same checks without an exercise (snippets): `testModules` are extra forbidden imports. */
-export function checkSources(sourceFiles: readonly FileContent[], testModules: ReadonlySet<string>): readonly string[] {
-  const reasons: string[] = [];
-  if (sourceFiles.length === 0) reasons.push("제출된 코드가 없습니다.");
-  for (const file of sourceFiles) {
-    const name = file.path;
-    if (!file.path.endsWith(".gleam")) reasons.push(`${name}: Gleam 소스 파일(.gleam)만 제출할 수 있습니다.`);
-    if (Buffer.byteLength(file.content, "utf8") > MAX_SOURCE_BYTES) {
-      reasons.push(`${name}: 코드가 너무 깁니다 (최대 ${MAX_SOURCE_BYTES / 1024}KB).`);
+export function staticChecks(
+  spec: GradingSpec,
+  sourceFiles: readonly FileContent[],
+  locale: Locale = DEFAULT_LOCALE,
+): readonly string[] {
+  return checkSources(sourceFiles, new Set(spec.testFiles.map((f) => moduleNameFromPath(f.path))), locale);
+}
+
+/** The same checks without an exercise (snippets): `testModules` are extra forbidden imports. "<file>: <reason>" each. */
+export function checkSources(
+  sourceFiles: readonly FileContent[],
+  testModules: ReadonlySet<string>,
+  locale: Locale = DEFAULT_LOCALE,
+): readonly string[] {
+  return sourceIssues(sourceFiles, testModules, locale).map((i) =>
+    i.file === undefined ? i.text : msg("static.fileReason", locale, { file: i.file, reason: i.text }),
+  );
+}
+
+export function sourceIssues(
+  sourceFiles: readonly FileContent[],
+  testModules: ReadonlySet<string>,
+  locale: Locale = DEFAULT_LOCALE,
+): readonly SourceIssue[] {
+  const issues: SourceIssue[] = [];
+  if (sourceFiles.length === 0) issues.push({ text: msg("static.noCode", locale) });
+  for (const f of sourceFiles) {
+    const file = f.path;
+    const add = (text: string) => issues.push({ file, text });
+    if (!f.path.endsWith(".gleam")) add(msg("static.notGleam", locale));
+    if (Buffer.byteLength(f.content, "utf8") > MAX_SOURCE_BYTES) {
+      add(msg("static.tooLarge", locale, { maxKb: MAX_SOURCE_BYTES / 1024 }));
       continue;
     }
-    if (file.content.includes("\u0000")) reasons.push(`${name}: 코드에 NUL 문자가 있습니다.`);
-    const code = blankCommentsAndStrings(file.content);
-    if (/@\s*external\b/.test(code)) {
-      reasons.push(`${name}: @external(외부 함수 연결)은 사용할 수 없습니다. Gleam 표준 라이브러리만 사용하세요.`);
-    }
-    for (const m of importedModules(file.content)) {
-      const hit = FORBIDDEN_IMPORTS.find((f) => f.test(m));
-      if (hit) reasons.push(`${name}: ${m} 모듈(${hit.why})은 import할 수 없습니다.`);
-      else if (testModules.has(m)) reasons.push(`${name}: ${m} 모듈(테스트 모듈)은 import할 수 없습니다.`);
+    if (f.content.includes("\u0000")) add(msg("static.nul", locale));
+    const code = blankCommentsAndStrings(f.content);
+    if (/@\s*external\b/.test(code)) add(msg("static.external", locale));
+    for (const m of importedModules(f.content)) {
+      const hit = FORBIDDEN_IMPORTS.find((x) => x.test(m));
+      const why: MessageId | undefined = hit ? hit.why : testModules.has(m) ? "static.why.testModule" : undefined;
+      if (why) add(msg("static.forbiddenImport", locale, { module: m, why: msg(why, locale) }));
     }
   }
-  return reasons;
+  return issues;
 }

@@ -6,8 +6,8 @@ import { Hono } from "hono";
 import type { Context } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { cors } from "hono/cors";
-import { appError, asId, silentLogger, systemClock } from "@fp/kernel";
-import type { AppError, Clock, ExerciseId, Logger, SessionId, SubmissionId } from "@fp/kernel";
+import { asId, isLocale, silentLogger, systemClock } from "@fp/kernel";
+import type { Clock, ExerciseId, Locale, Logger, SessionId, SubmissionId } from "@fp/kernel";
 import { ROUTES } from "@fp/api-contract";
 import type {
   DevLoginResponse,
@@ -22,7 +22,7 @@ import type { GradingService } from "@fp/grading/contract";
 import type { LearnerModel } from "@fp/learner/contract";
 import type { SessionService } from "@fp/sessions/contract";
 import type { CoachingService } from "@fp/coaching/contract";
-import { fail, json, parseBody, parseQuery, respond } from "./http.ts";
+import { apiError, fail, json, parseBody, parseQuery, requestLocale, respond } from "./http.ts";
 import { createRateLimiter } from "./rate-limit.ts";
 import type { RateLimitRule } from "./rate-limit.ts";
 import * as s from "./schemas.ts";
@@ -51,13 +51,12 @@ export interface AppOptions {
   readonly maxBodyBytes?: number;
 }
 
-type AppEnv = { Variables: { user: User } };
+/** `locale` is the authenticated user's locale; before auth, `requestLocale` falls back to Accept-Language. */
+type AppEnv = { Variables: { user: User; locale: Locale } };
 export type ApiApp = Hono<AppEnv>;
 
 const PUBLIC_PATHS: ReadonlySet<string> = new Set([ROUTES.health.path, ROUTES.devLogin.path]);
 const DEFAULT_RATE_LIMIT: RateLimitRule = { limit: 30, windowMs: 60_000 };
-
-const notFound = (what: string): AppError => appError("not_found", `${what}을(를) 찾을 수 없습니다.`);
 
 /**
  * The learner-facing view hides content the help ledger has not released: unrevealed hints keep
@@ -84,16 +83,16 @@ export function createApp(services: AppServices, options: AppOptions = {}): ApiA
       path: c.req.path,
       error: e instanceof Error ? (e.stack ?? e.message) : String(e),
     });
-    return fail(c, appError("internal", "서버 내부 오류가 발생했습니다."));
+    return fail(c, apiError(c, "internal", "internal"));
   });
-  app.notFound((c) => fail(c, appError("not_found", "요청한 경로를 찾을 수 없습니다.")));
+  app.notFound((c) => fail(c, apiError(c, "not_found", "routeNotFound")));
 
   app.use(
     "/v1/*",
     cors({
       origin: options.webOrigin ?? "http://localhost:5173",
-      allowMethods: ["GET", "POST", "DELETE", "OPTIONS"],
-      allowHeaders: ["authorization", "content-type", "accept"],
+      allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+      allowHeaders: ["authorization", "content-type", "accept", "accept-language"],
       maxAge: 600,
     }),
   );
@@ -101,7 +100,7 @@ export function createApp(services: AppServices, options: AppOptions = {}): ApiA
     "/v1/*",
     bodyLimit({
       maxSize: options.maxBodyBytes ?? 512 * 1024,
-      onError: (c) => fail(c, appError("invalid_input", "요청 본문이 너무 큽니다."), 413),
+      onError: (c) => fail(c, apiError(c, "invalid_input", "bodyTooLarge"), 413),
     }),
   );
 
@@ -109,10 +108,12 @@ export function createApp(services: AppServices, options: AppOptions = {}): ApiA
     if (PUBLIC_PATHS.has(c.req.path)) return next();
     const match = /^Bearer\s+(\S+)\s*$/i.exec(c.req.header("authorization") ?? "");
     const token = match?.[1];
-    if (token === undefined) return fail(c, appError("unauthorized", "로그인이 필요합니다."));
+    if (token === undefined) return fail(c, apiError(c, "unauthorized", "loginRequired"));
     const user = await accounts.authenticate(token);
-    if (user === null) return fail(c, appError("unauthorized", "인증 토큰이 유효하지 않거나 만료되었습니다."));
+    if (user === null) return fail(c, apiError(c, "unauthorized", "invalidToken"));
     c.set("user", user);
+    // Defensive: an account without a valid stored locale keeps the Accept-Language fallback.
+    if (typeof user.locale === "string" && isLocale(user.locale)) c.set("locale", user.locale);
     return next();
   });
 
@@ -122,11 +123,11 @@ export function createApp(services: AppServices, options: AppOptions = {}): ApiA
     if (decision.allowed) return null;
     const retryAfterSeconds = Math.max(1, Math.ceil(decision.retryAfterMs / 1000));
     c.header("retry-after", String(retryAfterSeconds));
-    return fail(
-      c,
-      appError("rate_limited", "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.", { action, retryAfterSeconds }),
-    );
+    return fail(c, apiError(c, "rate_limited", "rateLimited", { action, retryAfterSeconds }));
   }
+
+  /** Locale of the authenticated user (see requestLocale); every module call with a locale parameter gets it. */
+  const loc = (c: Context<AppEnv>): Locale => requestLocale(c);
 
   const exerciseIdParam = (c: Context<AppEnv>): ExerciseId => asId<ExerciseId>(c.req.param("exerciseId") ?? "");
 
@@ -146,7 +147,8 @@ export function createApp(services: AppServices, options: AppOptions = {}): ApiA
   app.post(ROUTES.devLogin.path, async (c) => {
     const req = await parseBody(c, s.devLoginSchema);
     if (!req.ok) return fail(c, req.error);
-    const r = await accounts.devLogin(req.value.displayName);
+    const { displayName, locale } = req.value;
+    const r = locale === undefined ? await accounts.devLogin(displayName) : await accounts.devLogin(displayName, locale);
     if (!r.ok) return fail(c, r.error);
     const body: DevLoginResponse = { user: r.value.user, token: r.value.token };
     return json(c, body);
@@ -155,6 +157,12 @@ export function createApp(services: AppServices, options: AppOptions = {}): ApiA
   // ---------- accounts ----------
 
   app.get(ROUTES.me.path, (c) => json(c, c.get("user")));
+
+  app.patch(ROUTES.updateMe.path, async (c) => {
+    const req = await parseBody(c, s.updateMeSchema);
+    if (!req.ok) return fail(c, req.error);
+    return respond(c, await accounts.setLocale(c.get("user").id, req.value.locale));
+  });
 
   app.post(ROUTES.issueToken.path, async (c) => {
     const req = await parseBody(c, s.issueTokenSchema);
@@ -171,23 +179,24 @@ export function createApp(services: AppServices, options: AppOptions = {}): ApiA
 
   // ---------- content ----------
 
-  app.get(ROUTES.skills.path, async (c) => json(c, await catalog.listSkills()));
+  app.get(ROUTES.skills.path, async (c) => json(c, await catalog.listSkills(loc(c))));
 
   app.get(ROUTES.exercises.path, async (c) => {
     const q = parseQuery(c, s.exerciseFilterSchema);
     if (!q.ok) return fail(c, q.error);
     const filter = Object.fromEntries(Object.entries(q.value).filter(([, v]) => v !== undefined));
-    return json(c, await catalog.listExercises(filter));
+    return json(c, await catalog.listExercises(filter, loc(c)));
   });
 
   app.get(ROUTES.exercise.path, async (c) => {
     const user = c.get("user");
+    const locale = loc(c);
     const id = exerciseIdParam(c);
-    const ex = await catalog.getExercise(id);
-    if (ex === null) return fail(c, notFound("문제"));
+    const ex = await catalog.getExercise(id, locale);
+    if (ex === null) return fail(c, apiError(c, "not_found", "exerciseNotFound"));
     const [conceptNotes, theoryTopics, help] = await Promise.all([
-      catalog.getConceptNotes(ex.conceptNoteIds),
-      catalog.getTheoryTopics(ex.theoryTopicIds),
+      catalog.getConceptNotes(ex.conceptNoteIds, locale),
+      catalog.getTheoryTopics(ex.theoryTopicIds, locale),
       coaching.helpUsed(user.id, id),
     ]);
     const body: ExerciseView = {
@@ -199,7 +208,7 @@ export function createApp(services: AppServices, options: AppOptions = {}): ApiA
     return json(c, body);
   });
 
-  app.get(ROUTES.theoryTopics.path, async (c) => json(c, await catalog.listTheoryTopics()));
+  app.get(ROUTES.theoryTopics.path, async (c) => json(c, await catalog.listTheoryTopics(loc(c))));
 
   // ---------- grading ----------
 
@@ -208,7 +217,10 @@ export function createApp(services: AppServices, options: AppOptions = {}): ApiA
     if (!req.ok) return fail(c, req.error);
     const blocked = limited(c, "run");
     if (blocked) return blocked;
-    return respond(c, await grading.trialRun({ exerciseId: exerciseIdParam(c), code: req.value.code }));
+    return respond(
+      c,
+      await grading.trialRun({ exerciseId: exerciseIdParam(c), code: req.value.code, locale: loc(c) }),
+    );
   });
 
   app.post(ROUTES.submit.path, async (c) => {
@@ -226,6 +238,7 @@ export function createApp(services: AppServices, options: AppOptions = {}): ApiA
       idempotencyKey,
       helpUsed,
       ...(sessionId === undefined ? {} : { sessionId }),
+      locale: loc(c),
     });
     if (!r.ok) return fail(c, r.error);
     const body: SubmissionView = { submission: r.value, ratingChange: await learner.ratingChangeFor(r.value.id) };
@@ -235,7 +248,7 @@ export function createApp(services: AppServices, options: AppOptions = {}): ApiA
   app.get(ROUTES.submission.path, async (c) => {
     const id = asId<SubmissionId>(c.req.param("submissionId") ?? "");
     const submission = await grading.getSubmission(id, c.get("user").id);
-    if (submission === null) return fail(c, notFound("제출"));
+    if (submission === null) return fail(c, apiError(c, "not_found", "submissionNotFound"));
     const body: SubmissionView = { submission, ratingChange: await learner.ratingChangeFor(submission.id) };
     return json(c, body);
   });
@@ -246,7 +259,7 @@ export function createApp(services: AppServices, options: AppOptions = {}): ApiA
     const blocked = limited(c, "feedback");
     if (blocked) return blocked;
     const id = asId<SubmissionId>(c.req.param("submissionId") ?? "");
-    return respond(c, await coaching.feedback(id, c.get("user").id));
+    return respond(c, await coaching.feedback(id, c.get("user").id, loc(c)));
   });
 
   app.post(ROUTES.chat.path, async (c) => {
@@ -263,6 +276,7 @@ export function createApp(services: AppServices, options: AppOptions = {}): ApiA
         messages,
         ...(code === undefined ? {} : { code }),
         ...(submissionId === undefined ? {} : { submissionId }),
+        locale: loc(c),
       }),
     );
   });
@@ -270,21 +284,21 @@ export function createApp(services: AppServices, options: AppOptions = {}): ApiA
   app.post(ROUTES.revealHint.path, async (c) => {
     const req = await parseBody(c, s.revealHintSchema);
     if (!req.ok) return fail(c, req.error);
-    return respond(c, await coaching.revealHint(c.get("user").id, exerciseIdParam(c), req.value.level));
+    return respond(c, await coaching.revealHint(c.get("user").id, exerciseIdParam(c), req.value.level, loc(c)));
   });
 
   app.post(ROUTES.noteOpened.path, async (c) => {
     const req = await parseBody(c, s.noteOpenedSchema);
     if (!req.ok) return fail(c, req.error);
     const id = exerciseIdParam(c);
-    if ((await catalog.getExercise(id)) === null) return fail(c, notFound("문제"));
+    if ((await catalog.getExercise(id, loc(c))) === null) return fail(c, apiError(c, "not_found", "exerciseNotFound"));
     const kind = req.value.kind === "concept" ? "concept_note" : "theory_note";
     await coaching.recordHelp(c.get("user").id, id, kind, req.value.noteId);
     return json(c, null);
   });
 
   app.post(ROUTES.explanation.path, async (c) =>
-    respond(c, await coaching.revealExplanation(c.get("user").id, exerciseIdParam(c))),
+    respond(c, await coaching.revealExplanation(c.get("user").id, exerciseIdParam(c), loc(c))),
   );
 
   // ---------- sessions ----------
@@ -308,6 +322,7 @@ export function createApp(services: AppServices, options: AppOptions = {}): ApiA
         targetMinutes,
         ...(focusSkill === undefined ? {} : { focusSkill }),
         ...(includeChallenge === undefined ? {} : { includeChallenge }),
+        locale: loc(c),
       }),
       201,
     );
@@ -317,7 +332,7 @@ export function createApp(services: AppServices, options: AppOptions = {}): ApiA
 
   app.get(ROUTES.session.path, async (c) => {
     const session = await sessions.get(sessionIdParam(c), c.get("user").id);
-    return session === null ? fail(c, notFound("세션")) : json(c, session);
+    return session === null ? fail(c, apiError(c, "not_found", "sessionNotFound")) : json(c, session);
   });
 
   app.post(ROUTES.skipItem.path, async (c) =>
@@ -331,7 +346,7 @@ export function createApp(services: AppServices, options: AppOptions = {}): ApiA
   app.get(ROUTES.recommend.path, async (c) => {
     const q = parseQuery(c, s.recommendQuerySchema);
     if (!q.ok) return fail(c, q.error);
-    return respond(c, await sessions.recommend(c.get("user").id, q.value.language, q.value.skill));
+    return respond(c, await sessions.recommend(c.get("user").id, q.value.language, q.value.skill, loc(c)));
   });
 
   // ---------- learner ----------
@@ -341,7 +356,7 @@ export function createApp(services: AppServices, options: AppOptions = {}): ApiA
     if (!q.ok) return fail(c, q.error);
     const [profile, skills] = await Promise.all([
       learner.getProfile(c.get("user").id, q.value.language),
-      catalog.listSkills(),
+      catalog.listSkills(loc(c)),
     ]);
     const body: ProgressView = { profile, skills };
     return json(c, body);

@@ -13,9 +13,13 @@ Thin adapter over the HTTP API (`createApiClient` from `@fp/api-contract`); no b
   `fp://exercise/{id}/theory`, `fp://theory/{id}`) are extras; reading an exercise's notes records
   `noteOpened`.
 - Never render unrevealed hints, hidden tests or predict accepted answers.
-- Every tool handler is wrapped in `safe()`: API errors become Korean `isError` results, never throws.
+- Every tool handler is wrapped in `safe()`: API errors become localized `isError` results, never throws.
 - `submit_solution` links the active session only when the exercise is its current item (best effort).
-- Output text is Korean; `structuredContent` carries ids/outcomes for hosts that use it.
+- Output text is in the learner's locale: `user.locale` from `/v1/me`, fetched once and cached per server
+  instance (deps.locale / `FP_LANG` fixes it; Korean while `/v1/me` fails, retried next call). Strings live in
+  `src/messages.ts` (ko/en/zh, missing -> ko). `structuredContent` carries ids/outcomes plus `locale`.
+- Tool titles/descriptions, input schema descriptions and the server instructions stay English; the
+  instructions tell the host to talk to the learner in `user.locale`, and the coach note names it.
 
 ## Tools
 
@@ -24,17 +28,19 @@ get_explanation, get_progress, recommend_exercise, skip_item.
 
 ## Layout
 
-- `src/main.ts` stdio entry; reads `FP_TOKEN` / `FP_API_URL` (default http://localhost:8787).
-- `src/server.ts` `createFpMcpServer({ api, language?, newKey?, version? })`: tool and resource registration.
+- `src/main.ts` stdio entry; reads `FP_TOKEN` / `FP_API_URL` (default http://localhost:8787) / optional `FP_LANG`.
+- `src/server.ts` `createFpMcpServer({ api, language?, locale?, newKey?, version? })`: tool and resource registration.
   `api` may be a factory, called per request.
-- `src/api.ts` `FpApi` (subset of ApiClient), `apiFromEnv`, Korean error descriptions.
-- `src/format.ts` Markdown/text rendering of exercises, runs, submissions, feedback, progress.
-- `src/instructions.ts` server instructions and the coach note.
+- `src/api.ts` `FpApi` (subset of ApiClient), `apiFromEnv`, localized error descriptions.
+- `src/format.ts` Markdown/text rendering (locale param) of exercises, runs, submissions, feedback, progress.
+- `src/messages.ts` message catalog; mirrors kernel's `pickLocale`/`formatMessage` (no kernel dependency).
+- `src/instructions.ts` server instructions and `coachNote(locale)`.
 
 ## Testing
 
 `pnpm check:module @fp/mcp`. `test/server.test.ts` connects an SDK `Client` over `InMemoryTransport` to a
-server built with the recording fake API in `test/fixtures.ts`; no HTTP.
+server built with the recording fake API in `test/fixtures.ts`; no HTTP. `test/locale.test.ts` covers the
+catalog, en/zh output, the `/v1/me` cache and the Korean fallback.
 
 ## Gotchas
 

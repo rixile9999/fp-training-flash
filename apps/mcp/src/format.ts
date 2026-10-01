@@ -10,6 +10,11 @@ import type {
   SubmissionView,
   TrialRun,
 } from "@fp/api-contract";
+import { DEFAULT_LOCALE, translator } from "./messages.ts";
+import type { Locale, MessageId, Translate } from "./messages.ts";
+
+// Every renderer takes the learner's locale (default "ko"). Server-provided text (prompts, test names,
+// feedback, hints, notes) already arrives in the account's locale and is passed through as is.
 
 // Types that api-contract does not re-export are derived structurally so we depend on nothing else.
 type Evaluation = NonNullable<SubmissionView["submission"]["evaluation"]>;
@@ -18,47 +23,49 @@ type TestResult = TrialRun["tests"][number];
 type Diagnostic = TrialRun["compileDiagnostics"][number];
 type SessionItem = Session["items"][number];
 
-const KIND_LABEL: Record<ExerciseView["exercise"]["kind"], string> = {
-  implement: "구현",
-  fix: "버그 수정",
-  refactor: "리팩터링",
-  predict: "결과 예측",
+const KIND_LABEL: Record<ExerciseView["exercise"]["kind"], MessageId> = {
+  implement: "kindImplement",
+  fix: "kindFix",
+  refactor: "kindRefactor",
+  predict: "kindPredict",
 };
 
-const OUTCOME_LABEL: Record<Outcome, string> = {
-  passed: "통과",
-  failed_tests: "테스트 실패",
-  too_slow: "성능 기준 미달",
-  compile_error: "컴파일 오류",
-  timeout: "시간 초과",
-  rejected: "정적 검사에서 거부됨",
-  system_error: "시스템 오류 (학습 실패로 집계되지 않습니다)",
+const OUTCOME_LABEL: Record<Outcome, MessageId> = {
+  passed: "outcomePassed",
+  failed_tests: "outcomeFailedTests",
+  too_slow: "outcomeTooSlow",
+  compile_error: "outcomeCompileError",
+  timeout: "outcomeTimeout",
+  rejected: "outcomeRejected",
+  system_error: "outcomeSystemError",
 };
 
-const TEST_STATUS_LABEL: Record<TestResult["status"], string> = {
-  passed: "통과",
-  failed: "실패",
-  error: "오류",
-  timeout: "시간 초과",
+const TEST_STATUS_LABEL: Record<TestResult["status"], MessageId> = {
+  passed: "testPassed",
+  failed: "testFailed",
+  error: "testError",
+  timeout: "testTimeout",
 };
 
-const ITEM_KIND_LABEL: Record<SessionItem["kind"], string> = {
-  review: "복습",
-  focus: "집중",
-  variation: "변형",
-  challenge: "도전",
+const ITEM_KIND_LABEL: Record<SessionItem["kind"], MessageId> = {
+  review: "itemReview",
+  focus: "itemFocus",
+  variation: "itemVariation",
+  challenge: "itemChallenge",
 };
 
-const ITEM_STATUS_LABEL: Record<SessionItem["status"], string> = {
-  pending: "대기",
-  in_progress: "진행 중",
-  passed: "통과",
-  failed: "실패",
-  skipped: "건너뜀",
+const ITEM_STATUS_LABEL: Record<SessionItem["status"], MessageId> = {
+  pending: "statusPending",
+  in_progress: "statusInProgress",
+  passed: "statusPassed",
+  failed: "statusFailed",
+  skipped: "statusSkipped",
 };
 
-export function outcomeLabel(o: Outcome): string {
-  return OUTCOME_LABEL[o];
+const REQUIREMENT_LABEL = { met: "reqMet", unmet: "reqUnmet", undetermined: "reqUndetermined" } as const satisfies Record<string, MessageId>;
+
+export function outcomeLabel(o: Outcome, locale: Locale = DEFAULT_LOCALE): string {
+  return translator(locale)(OUTCOME_LABEL[o]);
 }
 
 /** Resource URI helpers. Exercise ids contain "/" and "@", so they are percent-encoded in URIs. */
@@ -104,65 +111,75 @@ export function exerciseStructured(view: ExerciseView) {
   };
 }
 
-export function renderHints(hints: readonly Hint[]): string {
-  return hints.map((h) => `**힌트 ${h.level}** (${h.kind})\n${h.markdown}`).join("\n\n");
+export function renderHints(hints: readonly Hint[], locale: Locale = DEFAULT_LOCALE): string {
+  const t = translator(locale);
+  return hints.map((h) => `${t("hintLabel", { level: h.level, kind: h.kind })}\n${h.markdown}`).join("\n\n");
 }
 
 export interface RenderExerciseOptions {
   /** Include the full markdown of concept notes and theory topics. */
   readonly includeNotes?: boolean;
+  readonly locale?: Locale;
 }
 
 /** Essential problem content as markdown. Many MCP hosts ignore resources, so this must stand alone. */
 export function renderExercise(view: ExerciseView, opts: RenderExerciseOptions = {}): string {
+  const locale = opts.locale ?? DEFAULT_LOCALE;
+  const t = translator(locale);
   const ex = view.exercise;
   const out: string[] = [];
   out.push(`## ${ex.title}`);
   out.push(
-    `- 문제 ID: \`${ex.id}\`\n- 유형: ${KIND_LABEL[ex.kind]}${ex.format === "challenge" ? " (도전 과제)" : ""}` +
-      ` · 기술: ${ex.primarySkill} · 난이도: ${ex.difficulty} · 예상 ${ex.estimatedMinutes}분`,
+    t("exerciseMeta", {
+      id: ex.id,
+      kind: t(KIND_LABEL[ex.kind]),
+      challenge: ex.format === "challenge" ? t("challengeSuffix") : "",
+      skill: ex.primarySkill,
+      difficulty: ex.difficulty,
+      minutes: ex.estimatedMinutes,
+    }),
   );
-  out.push(`### 문제\n${ex.promptMarkdown.trim()}`);
+  out.push(`${t("problemHeading")}\n${ex.promptMarkdown.trim()}`);
   if (ex.predict) {
-    out.push(`### 읽을 코드\n${fence(ex.predict.code)}\n답은 submit_solution의 code에 결과 값만 적어 제출합니다.`);
+    out.push(`${t("readCodeHeading")}\n${fence(ex.predict.code)}\n${t("predictHow")}`);
   }
   if (ex.kind !== "predict") {
     const learnerPath = `src/${ex.moduleName}.gleam`;
-    if (ex.starterFiles.length === 0) out.push(`### 시작 코드 (${learnerPath})\n(비어 있음)`);
-    for (const f of ex.starterFiles) out.push(`### 시작 코드 (${f.path})\n${fence(f.content)}`);
+    if (ex.starterFiles.length === 0) out.push(`${t("starterHeading", { path: learnerPath })}\n${t("starterEmpty")}`);
+    for (const f of ex.starterFiles) out.push(`${t("starterHeading", { path: f.path })}\n${fence(f.content)}`);
   }
   if (ex.publicTests.length > 0) {
-    out.push(`### 공개 테스트\n` + ex.publicTests.map((t) => `#### ${t.name}\n${fence(t.code)}`).join("\n\n"));
+    out.push(`${t("publicTestsHeading")}\n` + ex.publicTests.map((x) => `#### ${x.name}\n${fence(x.code)}`).join("\n\n"));
   }
   if (ex.rubric.length > 0) {
-    out.push(`### 코드 품질 기준\n` + ex.rubric.map((r) => `- ${r.id} ${r.title}: ${r.description}`).join("\n"));
+    out.push(`${t("rubricHeading")}\n` + ex.rubric.map((r) => `- ${r.id} ${r.title}: ${r.description}`).join("\n"));
   }
-  out.push(`### 힌트\n총 ${ex.hints.length}단계 중 ${view.revealedHints.length}단계 공개됨.`);
-  if (view.revealedHints.length > 0) out.push(renderHints(view.revealedHints));
+  out.push(t("hintsSummary", { total: ex.hints.length, revealed: view.revealedHints.length }));
+  if (view.revealedHints.length > 0) out.push(renderHints(view.revealedHints, locale));
   if (view.conceptNotes.length > 0 || view.theoryTopics.length > 0) {
     if (opts.includeNotes) {
-      for (const n of view.conceptNotes) out.push(`### 개념 노트: ${n.title}\n${n.markdown.trim()}`);
-      for (const t of view.theoryTopics) out.push(`### 이론: ${t.title}\n${t.markdown.trim()}`);
+      for (const n of view.conceptNotes) out.push(`${t("conceptNoteHeading", { title: n.title })}\n${n.markdown.trim()}`);
+      for (const x of view.theoryTopics) out.push(`${t("theoryHeading", { title: x.title })}\n${x.markdown.trim()}`);
     } else {
       const lines = [
-        ...view.conceptNotes.map((n) => `- 개념: ${n.title}`),
-        ...view.theoryTopics.map((t) => `- 이론: ${t.title}`),
+        ...view.conceptNotes.map((n) => t("conceptNoteItem", { title: n.title })),
+        ...view.theoryTopics.map((x) => t("theoryItem", { title: x.title })),
       ];
       out.push(
-        `### 참고 노트\n${lines.join("\n")}\n` +
-          `(전문: get_exercise에 include_notes=true, 또는 리소스 ${uris.concepts(ex.id)} / ${uris.exerciseTheory(ex.id)})`,
+        `${t("notesHeading")}\n${lines.join("\n")}\n` + t("notesHow", { concepts: uris.concepts(ex.id), theory: uris.exerciseTheory(ex.id) }),
       );
     }
   }
   return out.join("\n\n");
 }
 
-export function renderSessionPlan(session: Session): string {
+export function renderSessionPlan(session: Session, locale: Locale = DEFAULT_LOCALE): string {
+  const t = translator(locale);
   const lines = session.items.map((it) => {
     const marker = it.index === session.currentIndex ? "▶" : " ";
-    return `${marker} ${it.index + 1}. [${ITEM_KIND_LABEL[it.kind]}] ${it.exerciseId} · ${it.reason} · ${ITEM_STATUS_LABEL[it.status]}`;
+    return `${marker} ${it.index + 1}. [${t(ITEM_KIND_LABEL[it.kind])}] ${it.exerciseId} · ${it.reason} · ${t(ITEM_STATUS_LABEL[it.status])}`;
   });
-  return `세션 \`${session.id}\` (${session.targetMinutes}분 목표, ${session.items.length}문제)\n${lines.join("\n")}`;
+  return `${t("sessionPlan", { id: session.id, minutes: session.targetMinutes, count: session.items.length })}\n${lines.join("\n")}`;
 }
 
 export function currentItem(session: Session): SessionItem | null {
@@ -170,23 +187,23 @@ export function currentItem(session: Session): SessionItem | null {
   return session.items.find((i) => i.index === session.currentIndex) ?? null;
 }
 
-function renderDiagnostics(diags: readonly Diagnostic[]): string {
+function renderDiagnostics(t: Translate, diags: readonly Diagnostic[]): string {
   return diags
     .map((d) => {
       const loc = d.file ? ` (${d.file}${d.line !== undefined ? `:${d.line}` : ""}${d.column !== undefined ? `:${d.column}` : ""})` : "";
-      return `- ${d.severity === "error" ? "오류" : "경고"}${loc}: ${d.message}`;
+      return `- ${t(d.severity === "error" ? "diagError" : "diagWarning")}${loc}: ${d.message}`;
     })
     .join("\n");
 }
 
-function renderTests(tests: readonly TestResult[]): string {
+function renderTests(t: Translate, tests: readonly TestResult[]): string {
   return tests
-    .map((t) => {
-      const hidden = t.visibility === "hidden" ? " (숨김 테스트)" : "";
-      let line = `- [${TEST_STATUS_LABEL[t.status]}] ${t.name}${hidden}`;
-      if (t.status !== "passed") {
-        if (t.message) line += `\n  메시지: ${t.message}`;
-        if (t.code) line += `\n  테스트 코드:\n${fence(t.code)
+    .map((r) => {
+      const hidden = r.visibility === "hidden" ? t("hiddenTestSuffix") : "";
+      let line = `- [${t(TEST_STATUS_LABEL[r.status])}] ${r.name}${hidden}`;
+      if (r.status !== "passed") {
+        if (r.message) line += `\n${t("testMessage", { message: r.message })}`;
+        if (r.code) line += `\n${t("testCode")}\n${fence(r.code)
           .split("\n")
           .map((l) => "  " + l)
           .join("\n")}`;
@@ -196,121 +213,145 @@ function renderTests(tests: readonly TestResult[]): string {
     .join("\n");
 }
 
-function renderCommon(r: {
-  readonly outcome: Outcome;
-  readonly compileDiagnostics: readonly Diagnostic[];
-  readonly tests: readonly TestResult[];
-  readonly rejectionReasons?: readonly string[] | undefined;
-}): string[] {
+function renderCommon(
+  t: Translate,
+  r: {
+    readonly outcome: Outcome;
+    readonly compileDiagnostics: readonly Diagnostic[];
+    readonly tests: readonly TestResult[];
+    readonly rejectionReasons?: readonly string[] | undefined;
+  },
+): string[] {
   const out: string[] = [];
-  const passed = r.tests.filter((t) => t.status === "passed").length;
-  out.push(`결과: ${OUTCOME_LABEL[r.outcome]}${r.tests.length > 0 ? ` (테스트 ${passed}/${r.tests.length} 통과)` : ""}`);
+  const passed = r.tests.filter((x) => x.status === "passed").length;
+  const count = r.tests.length > 0 ? t("testsPassedCount", { passed, total: r.tests.length }) : "";
+  out.push(t("resultLine", { outcome: t(OUTCOME_LABEL[r.outcome]) }) + count);
   if (r.rejectionReasons && r.rejectionReasons.length > 0) {
-    out.push(`거부 사유:\n${r.rejectionReasons.map((x) => `- ${x}`).join("\n")}`);
+    out.push(`${t("rejectionReasons")}\n${r.rejectionReasons.map((x) => `- ${x}`).join("\n")}`);
   }
-  if (r.compileDiagnostics.length > 0) out.push(`컴파일 진단:\n${renderDiagnostics(r.compileDiagnostics)}`);
-  if (r.tests.length > 0) out.push(`테스트:\n${renderTests(r.tests)}`);
+  if (r.compileDiagnostics.length > 0) out.push(`${t("compileDiagnostics")}\n${renderDiagnostics(t, r.compileDiagnostics)}`);
+  if (r.tests.length > 0) out.push(`${t("testsHeading")}\n${renderTests(t, r.tests)}`);
   return out;
 }
 
-export function renderTrialRun(run: TrialRun): string {
-  const out = ["## 실행 결과 (공개 테스트만, 기록되지 않음)", ...renderCommon(run)];
-  if (run.outcome === "passed") out.push("공개 테스트를 모두 통과했습니다. 준비되면 submit_solution으로 제출하세요 (숨김 테스트 포함 채점).");
+export function renderTrialRun(run: TrialRun, locale: Locale = DEFAULT_LOCALE): string {
+  const t = translator(locale);
+  const out = [t("trialRunHeading"), ...renderCommon(t, run)];
+  if (run.outcome === "passed") out.push(t("trialRunPassed"));
   return out.join("\n\n");
 }
 
-export function renderRatingChange(rc: RatingChange | null): string {
-  if (!rc) return "레이팅 변화: 없음 (재제출, 많은 도움 사용, 또는 시스템 오류로 레이팅에 반영되지 않았습니다)";
+export function renderRatingChange(rc: RatingChange | null, locale: Locale = DEFAULT_LOCALE): string {
+  const t = translator(locale);
+  if (!rc) return t("ratingNone");
   const delta = Math.round(rc.after - rc.before);
   const sign = delta > 0 ? "+" : "";
-  return `레이팅 변화: ${rc.skillId} ${Math.round(rc.before)} → ${Math.round(rc.after)} (${sign}${delta})${rc.provisional ? " · 잠정치" : ""}`;
+  return t("ratingChange", {
+    skill: rc.skillId,
+    before: Math.round(rc.before),
+    after: Math.round(rc.after),
+    delta: `${sign}${delta}`,
+    provisional: rc.provisional ? t("provisionalSuffix") : "",
+  });
 }
 
-function renderEvaluation(ev: Evaluation): string[] {
-  const out = renderCommon(ev);
+function renderEvaluation(t: Translate, ev: Evaluation): string[] {
+  const out = renderCommon(t, ev);
   if (ev.requirements.length > 0) {
-    const label = { met: "충족", unmet: "미충족", undetermined: "판단 불가" } as const;
-    out.push(`요구사항:\n${ev.requirements.map((r) => `- [${label[r.status]}] ${r.id} ${r.description}`).join("\n")}`);
+    out.push(`${t("requirementsHeading")}\n${ev.requirements.map((r) => `- [${t(REQUIREMENT_LABEL[r.status])}] ${r.id} ${r.description}`).join("\n")}`);
   }
   if (ev.performance && ev.performance.verdict !== "not_measured") {
-    const ratio = ev.performance.ratio !== undefined ? ` (기준 대비 ${ev.performance.ratio.toFixed(2)}배)` : "";
-    out.push(`성능: ${ev.performance.verdict === "ok" ? "기준 충족" : "기준 미달"}${ratio}`);
+    const ratio = ev.performance.ratio !== undefined ? t("performanceRatio", { ratio: ev.performance.ratio.toFixed(2) }) : "";
+    out.push(t("performanceLine", { verdict: t(ev.performance.verdict === "ok" ? "performanceOk" : "performanceSlow"), ratio }));
   }
   const flagged = ev.rubricChecks.filter((c) => c.status === "flagged");
   if (flagged.length > 0) {
-    out.push(`코드 품질 지적 (정답 여부와 무관):\n${flagged.map((c) => `- ${c.rubricId}${c.message ? `: ${c.message}` : ""}`).join("\n")}`);
+    out.push(`${t("rubricFlagged")}\n${flagged.map((c) => `- ${c.rubricId}${c.message ? `: ${c.message}` : ""}`).join("\n")}`);
   }
   return out;
 }
 
-export function renderSubmission(view: SubmissionView): string {
+export function renderSubmission(view: SubmissionView, locale: Locale = DEFAULT_LOCALE): string {
+  const t = translator(locale);
   const s = view.submission;
-  const out = [`## 제출 결과 (\`${s.id}\`, ${s.attemptNo}번째 시도)`];
-  if (!s.evaluation) out.push("아직 채점 중입니다. 잠시 후 get_feedback으로 확인하세요.");
-  else out.push(...renderEvaluation(s.evaluation));
-  out.push(renderRatingChange(view.ratingChange));
-  out.push(`코치 피드백: get_feedback {"submission_id": "${s.id}"}`);
+  const out = [t("submissionHeading", { id: s.id, attempt: s.attemptNo })];
+  if (!s.evaluation) out.push(t("stillGrading"));
+  else out.push(...renderEvaluation(t, s.evaluation));
+  out.push(renderRatingChange(view.ratingChange, locale));
+  out.push(t("feedbackCall", { args: `{"submission_id": "${s.id}"}` }));
   return out.join("\n\n");
 }
 
-export function renderFeedback(fb: CoachingFeedback): string {
-  const out = [`## 코치 피드백${fb.source === "rule_based" ? " (규칙 기반)" : ""}`, fb.summary.trim()];
+export function renderFeedback(fb: CoachingFeedback, locale: Locale = DEFAULT_LOCALE): string {
+  const t = translator(locale);
+  const out = [`${t("feedbackHeading")}${fb.source === "rule_based" ? t("ruleBasedSuffix") : ""}`, fb.summary.trim()];
   if (fb.evidence.length > 0) {
     out.push(
-      `근거:\n${fb.evidence
-        .map((e) => `- ${e.text}${e.line !== undefined ? ` (${e.line}행)` : ""}${e.testId ? ` [테스트 ${e.testId}]` : ""}`)
+      `${t("evidenceHeading")}\n${fb.evidence
+        .map((e) => `- ${e.text}${e.line !== undefined ? t("lineRef", { line: e.line }) : ""}${e.testId ? t("testRef", { id: e.testId }) : ""}`)
         .join("\n")}`,
     );
   }
-  if (fb.priorities.length > 0) out.push(`우선순위:\n${fb.priorities.map((p, i) => `${i + 1}. ${p}`).join("\n")}`);
-  out.push(`다음 행동: ${fb.nextAction}`);
+  if (fb.priorities.length > 0) out.push(`${t("prioritiesHeading")}\n${fb.priorities.map((p, i) => `${i + 1}. ${p}`).join("\n")}`);
+  out.push(t("nextAction", { action: fb.nextAction }));
   if (fb.rubricNotes.length > 0) {
-    out.push(`코드 품질 메모:\n${fb.rubricNotes.map((n) => `- ${n.rubricId} (${n.verdict === "good" ? "좋음" : "제안"}): ${n.text}`).join("\n")}`);
+    out.push(
+      `${t("rubricNotesHeading")}\n${fb.rubricNotes
+        .map((n) => `- ${n.rubricId} (${t(n.verdict === "good" ? "verdictGood" : "verdictSuggestion")}): ${n.text}`)
+        .join("\n")}`,
+    );
   }
   return out.join("\n\n");
 }
 
-export function renderExplanation(ex: Explanation): string {
-  return [
-    "## 해설 (공개됨)",
-    "주의: 해설을 본 문제는 레이팅에 반영되지 않으며, 숙달 여부는 이후 새로운 문제에서 다시 확인됩니다.",
-    ex.markdown.trim(),
-    `### 참고 풀이\n${fence(ex.solutionCode)}`,
-  ].join("\n\n");
+export function renderExplanation(ex: Explanation, locale: Locale = DEFAULT_LOCALE): string {
+  const t = translator(locale);
+  return [t("explanationHeading"), t("explanationWarning"), ex.markdown.trim(), `${t("referenceSolution")}\n${fence(ex.solutionCode)}`].join("\n\n");
 }
 
-export function renderProgress(p: ProgressView): string {
+export function renderProgress(p: ProgressView, locale: Locale = DEFAULT_LOCALE): string {
+  const t = translator(locale);
   const names = new Map(p.skills.map((s) => [s.id as string, s.name]));
   const prof = p.profile;
-  const out = ["## 학습 현황"];
+  const out = [t("progressHeading")];
   out.push(
     prof.overall
-      ? `종합 레이팅: ${Math.round(prof.overall.rating)}${prof.overall.provisional ? " (잠정치)" : ""}`
-      : "종합 레이팅: 아직 없음 (채점된 첫 시도가 쌓이면 계산됩니다)",
+      ? t("overallRating", { rating: Math.round(prof.overall.rating), provisional: prof.overall.provisional ? t("provisionalParen") : "" })
+      : t("overallNone"),
   );
   if (prof.estimates.length > 0) {
     const rows = [...prof.estimates]
       .sort((a, b) => b.rating - a.rating)
-      .map(
-        (e) =>
-          `- ${names.get(e.skillId) ?? e.skillId}: ${Math.round(e.rating)} ±${Math.round(e.deviation)}` +
-          ` (채점 ${e.ratedObservations}회${e.provisional ? ", 잠정치" : ""})`,
+      .map((e) =>
+        t("skillRatingRow", {
+          skill: names.get(e.skillId) ?? e.skillId,
+          rating: Math.round(e.rating),
+          deviation: Math.round(e.deviation),
+          count: e.ratedObservations,
+          provisional: e.provisional ? t("provisionalComma") : "",
+        }),
       );
-    out.push(`기술별 레이팅:\n${rows.join("\n")}`);
+    out.push(`${t("skillRatingsHeading")}\n${rows.join("\n")}`);
   }
   if (prof.reviews.length > 0) {
     const rows = [...prof.reviews]
       .sort((a, b) => a.dueAt.localeCompare(b.dueAt))
       .map((r) => `- ${names.get(r.skillId) ?? r.skillId}: ${r.dueAt.slice(0, 10)}`);
-    out.push(`복습 예정:\n${rows.join("\n")}`);
+    out.push(`${t("reviewsHeading")}\n${rows.join("\n")}`);
   }
-  const open = prof.errorTags.filter((t) => !t.lastResolvedAt || t.lastResolvedAt < t.lastSeenAt);
+  const open = prof.errorTags.filter((x) => !x.lastResolvedAt || x.lastResolvedAt < x.lastSeenAt);
   if (open.length > 0) {
-    out.push(`반복되는 실수:\n${[...open].sort((a, b) => b.count - a.count).map((t) => `- ${t.tag} (${t.count}회)`).join("\n")}`);
+    out.push(
+      `${t("mistakesHeading")}\n${[...open]
+        .sort((a, b) => b.count - a.count)
+        .map((x) => t("mistakeRow", { tag: x.tag, count: x.count }))
+        .join("\n")}`,
+    );
   }
   return out.join("\n\n");
 }
 
-export function renderRecommendation(r: Recommendation): string {
-  return `추천 문제: \`${r.exerciseId}\` [${ITEM_KIND_LABEL[r.kind]}] · ${r.reason} · 예상 성공률 ${pct(r.expectedSuccess)}`;
+export function renderRecommendation(r: Recommendation, locale: Locale = DEFAULT_LOCALE): string {
+  const t = translator(locale);
+  return t("recommendation", { id: r.exerciseId, kind: t(ITEM_KIND_LABEL[r.kind]), reason: r.reason, success: pct(r.expectedSuccess) });
 }

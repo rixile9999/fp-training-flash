@@ -2,7 +2,7 @@
  * Sample content for the fake API (VITE_FAKE_API=1). Realistic Korean data built around the
  * "orders-apply-coupon" exercise family. `rules` let the fake simulate grading from the code text.
  */
-import type { ConceptNote, ExerciseDetail, Explanation, Skill, TheoryTopic } from "@fp/api-contract";
+import type { ConceptNote, ExerciseDetail, Explanation, Locale, Skill, TheoryTopic } from "@fp/api-contract";
 
 type SkillId = Skill["id"];
 type ExerciseId = ExerciseDetail["id"];
@@ -41,6 +41,18 @@ export const SKILLS: readonly Skill[] = [
   { id: sk("option-result"), name: "Option과 Result", description: "값의 부재와 실패를 타입으로 다룹니다.", track: "core", prerequisites: [sk("pattern-matching")], order: 3 },
   { id: sk("recursion"), name: "재귀", description: "리스트를 재귀로 순회하고 누적합니다.", track: "core", prerequisites: [sk("pattern-matching")], order: 4 },
 ];
+
+/** Skill names per locale, so the fake shows server-rendered text switching language (other content stays Korean). */
+const SKILL_NAMES: Readonly<Record<string, Partial<Record<Locale, string>>>> = {
+  "data-transform": { en: "List transformation", zh: "列表转换" },
+  "pattern-matching": { en: "Pattern matching", zh: "模式匹配" },
+  "option-result": { en: "Option and Result", zh: "Option 与 Result" },
+  recursion: { en: "Recursion", zh: "递归" },
+};
+
+export function localizedSkills(locale: Locale): Skill[] {
+  return SKILLS.map((s) => ({ ...s, name: SKILL_NAMES[s.id]?.[locale] ?? s.name }));
+}
 
 export const CONCEPT_NOTES: readonly ConceptNote[] = [
   {
@@ -107,6 +119,7 @@ const coupon: FakeExercise = {
     difficulty: 1320,
     estimatedMinutes: 6,
     contextTags: ["orders"],
+    locales: ["ko"],
     source: { kind: "original" },
     promptMarkdown:
       "온라인 상점의 주문 목록이 있습니다. 쿠폰 코드가 `code`와 **일치하는 주문의 `total`에만** `percent`% 할인을 적용하세요.\n\n- 쿠폰이 없거나 다른 쿠폰을 쓴 주문은 **그대로 결과에 남아야** 합니다.\n- 결과 리스트의 순서는 입력과 같아야 합니다.\n- 할인 금액은 `total * percent / 100` (정수 나눗셈, 내림)입니다.",
@@ -189,6 +202,7 @@ const cartTotal: FakeExercise = {
     difficulty: 1380,
     estimatedMinutes: 5,
     contextTags: ["cart"],
+    locales: ["ko"],
     promptMarkdown:
       "`cart_total`은 장바구니 합계를 구한 뒤 쿠폰 할인을 **한 번만** 적용해야 합니다. 그런데 지금 코드는 줄마다 할인을 적용해서 내림 오차가 쌓입니다. 버그를 고치세요.",
     moduleName: "cart",
@@ -243,6 +257,7 @@ const optionPredict: FakeExercise = {
     difficulty: 1150,
     estimatedMinutes: 2,
     contextTags: ["basics"],
+    locales: ["ko"],
     promptMarkdown: "아래 `main()`이 돌려주는 값을 Gleam 표기로 적으세요. 코드를 실행하지 않고 머릿속으로 따라가 보세요.",
     moduleName: "predict",
     starterFiles: [],

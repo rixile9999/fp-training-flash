@@ -1,0 +1,31 @@
+skills:
+  gleam-basics:
+    name: Gleam basics
+    description: Values and let, functions and pipes, case, and what Gleam leaves out. Your first steps in Gleam syntax.
+  gleam-types:
+    name: Gleam types
+    description: Design data with custom types and records, generics and opaque types.
+  gleam-lists-recursion:
+    name: Lists and recursion
+    description: Lists and recursion, tail recursion and accumulators, functions as values, and the list module.
+  data-transformation:
+    name: Data transformation
+    description: Turn lists and records into new values with map, filter, fold and record update. Decide whether the structure should be preserved.
+  explicit-failure:
+    name: Explicit failure handling
+    description: Represent missing values and errors with Option and Result, and chain them with use expressions and result functions.
+  function-decomposition:
+    name: Function decomposition and composition
+    description: Split long processing into small pure functions and compose them into a pipeline. Keep computation separate from effects.
+  recursive-algorithms:
+    name: Recursion and divide and conquer
+    description: Design algorithms with structural recursion, accumulators and divide and conquer.
+  dynamic-programming:
+    name: Dynamic programming
+    description: Define subproblems and reuse their results with immutable data structures.
+  search-and-graphs:
+    name: Search and graphs
+    description: Implement backtracking, grid search and graph search with immutable state.
+  functional-data-structures:
+    name: Functional data structures
+    description: Understand persistent data structures and amortized cost, and implement them yourself.

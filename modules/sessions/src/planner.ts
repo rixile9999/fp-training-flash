@@ -3,10 +3,11 @@
  * Reads catalog + learner through their contracts; history comes from our own store.
  */
 import { appError, err, ok } from "@fp/kernel";
-import type { AppError, ExerciseId, FamilyId, Language, Result, SkillId, UserId } from "@fp/kernel";
+import type { AppError, ExerciseId, FamilyId, Language, Locale, Result, SkillId, UserId } from "@fp/kernel";
 import type { ContentCatalog, ExerciseSummary, Skill } from "@fp/content/contract";
 import type { LearnerModel, SkillEstimate } from "@fp/learner/contract";
 import type { SessionItemKind } from "./contract/index.ts";
+import { t } from "./messages.ts";
 import { variantRef, type History } from "./store.ts";
 
 export const TARGET_SUCCESS = 0.8;
@@ -35,6 +36,8 @@ export interface PlannedItem {
 export interface PlanContext {
   readonly userId: UserId;
   readonly language: Language;
+  /** Locale of reasons and error messages; skill names and titles are loaded in it. */
+  readonly locale: Locale;
   readonly now: Date;
   /** Skills that have at least one drill in this language, sorted by order. */
   readonly skills: readonly Skill[];
@@ -53,10 +56,11 @@ export async function loadPlanContext(
   userId: UserId,
   language: Language,
   now: Date,
+  locale: Locale,
 ): Promise<PlanContext> {
   const [skillList, exercises, profile] = await Promise.all([
-    deps.catalog.listSkills(),
-    deps.catalog.listExercises({ language }),
+    deps.catalog.listSkills(locale),
+    deps.catalog.listExercises({ language }, locale),
     deps.learner.getProfile(userId, language),
   ]);
   const drills = exercises.filter((e) => e.format === "drill");
@@ -81,7 +85,7 @@ export async function loadPlanContext(
     .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
   const estimates = new Map<SkillId, SkillEstimate>(profile.estimates.map((e) => [e.skillId, e]));
   return {
-    userId, language, now, skills, skillById, drills, challenges, estimates, history,
+    userId, language, locale, now, skills, skillById, drills, challenges, estimates, history,
     learner: deps.learner, esCache: new Map(),
   };
 }
@@ -173,9 +177,9 @@ const focusPrefix = (ctx: PlanContext) => (e: ExerciseSummary) => [flag(isPassed
 
 function focusReason(ctx: PlanContext, skillId: SkillId, es: number, forced: boolean): string {
   const name = skillName(ctx, skillId);
-  if (forced) return `선택한 기술 집중 연습: ${name} (예상 성공률 ${pct(es)})`;
-  if (!hasRatingEvidence(ctx, skillId)) return `학습 시작: ${name} (입문 난이도)`;
-  return `집중 연습: ${name} — 지금 가장 약한 기술 (예상 성공률 ${pct(es)})`;
+  if (forced) return t(ctx.locale, "reason.focus.forced", { skill: name, pct: pct(es) });
+  if (!hasRatingEvidence(ctx, skillId)) return t(ctx.locale, "reason.focus.start", { skill: name });
+  return t(ctx.locale, "reason.focus.weakest", { skill: name, pct: pct(es) });
 }
 
 export async function chooseFocus(
@@ -183,12 +187,12 @@ export async function chooseFocus(
   forcedSkill: SkillId | undefined,
   used: ReadonlySet<ExerciseId> = new Set(),
 ): Promise<Result<PlannedItem, AppError>> {
-  if (ctx.drills.length === 0) return err(appError("not_found", "아직 풀 수 있는 연습 문제가 없습니다."));
+  if (ctx.drills.length === 0) return err(appError("not_found", t(ctx.locale, "error.noExercises")));
   let pick: Pick | null = null;
   if (forcedSkill !== undefined) {
     pick = await best(ctx, focusPool(ctx, forcedSkill, used, true), focusPrefix(ctx));
     if (!pick) {
-      return err(appError("not_found", `선택한 기술(${skillName(ctx, forcedSkill)})에 맞는 연습 문제가 없습니다.`, {
+      return err(appError("not_found", t(ctx.locale, "error.noExercisesForSkill", { skill: skillName(ctx, forcedSkill) }), {
         skillId: forcedSkill,
       }));
     }
@@ -202,7 +206,7 @@ export async function chooseFocus(
       }
       if (pick) break;
     }
-    if (!pick) return err(appError("not_found", "지금 추천할 수 있는 연습 문제가 없습니다."));
+    if (!pick) return err(appError("not_found", t(ctx.locale, "error.noRecommendation")));
   }
   const skillId = pick.exercise.primarySkill;
   return ok({
@@ -249,7 +253,12 @@ async function chooseReviews(
     if (!pick) continue;
     used.add(pick.exercise.id);
     usedFamilies.add(pick.exercise.familyId);
-    out.push({ kind: "review", exercise: pick.exercise, expectedSuccess: pick.es, reason: `복습 예정: ${skillName(ctx, skillId)}` });
+    out.push({
+      kind: "review",
+      exercise: pick.exercise,
+      expectedSuccess: pick.es,
+      reason: t(ctx.locale, "reason.review", { skill: skillName(ctx, skillId) }),
+    });
   }
   return out;
 }
@@ -269,7 +278,7 @@ async function chooseVariation(
       kind: "variation",
       exercise: variant.exercise,
       expectedSuccess: variant.es,
-      reason: `변형 연습: 같은 문제의 다른 변형 — ${variant.exercise.title}`,
+      reason: t(ctx.locale, "reason.variation.sameFamily", { title: variant.exercise.title }),
     };
   }
   const differentContext = (e: ExerciseSummary): boolean =>
@@ -288,7 +297,7 @@ async function chooseVariation(
     kind: "variation",
     exercise: other.exercise,
     expectedSuccess: other.es,
-    reason: `변형 연습: 다른 맥락에서 ${skillName(ctx, focus.primarySkill)} 다시 적용`,
+    reason: t(ctx.locale, "reason.variation.otherContext", { skill: skillName(ctx, focus.primarySkill) }),
   };
 }
 
@@ -306,7 +315,7 @@ async function chooseChallenge(
     kind: "challenge",
     exercise: pick.exercise,
     expectedSuccess: pick.es,
-    reason: `도전 과제 (선택): ${skillName(ctx, pick.exercise.primarySkill)}`,
+    reason: t(ctx.locale, "reason.challenge", { skill: skillName(ctx, pick.exercise.primarySkill) }),
   };
 }
 
@@ -347,7 +356,7 @@ export async function planSession(
   const items: PlannedItem[] = [...chosenReviews];
   if (focus) items.push(focus);
   if (variation && variation.exercise.estimatedMinutes <= remaining) items.push(variation);
-  if (items.length === 0) return err(appError("not_found", "아직 풀 수 있는 연습 문제가 없습니다."));
+  if (items.length === 0) return err(appError("not_found", t(ctx.locale, "error.noExercises")));
 
   if (req.includeChallenge) {
     const challenge = await chooseChallenge(ctx, focus?.exercise.primarySkill, new Set(items.map((i) => i.exercise.id)));

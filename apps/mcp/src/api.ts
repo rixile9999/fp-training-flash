@@ -1,9 +1,12 @@
 import { ApiError, createApiClient } from "@fp/api-contract";
 import type { ApiClient } from "@fp/api-contract";
+import { DEFAULT_LOCALE, translator } from "./messages.ts";
+import type { Locale } from "./messages.ts";
 
 /** The subset of the HTTP API client the MCP server uses. Tests implement this with a small fake. */
 export type FpApi = Pick<
   ApiClient,
+  | "me"
   | "exercise"
   | "trialRun"
   | "revealHint"
@@ -24,6 +27,8 @@ export const DEFAULT_API_URL = "http://localhost:8787";
 export interface ApiEnv {
   readonly FP_API_URL?: string | undefined;
   readonly FP_TOKEN?: string | undefined;
+  /** Optional fixed output language (ko, en, zh); otherwise the account's user.locale is used. */
+  readonly FP_LANG?: string | undefined;
 }
 
 export function apiFromEnv(env: ApiEnv): FpApi {
@@ -32,33 +37,32 @@ export function apiFromEnv(env: ApiEnv): FpApi {
   return createApiClient(token ? { baseUrl, token } : { baseUrl });
 }
 
-/** Korean, actionable message for any error thrown by the API client. */
-export function describeError(e: unknown): string {
+/** Actionable message in `locale` (default Korean) for any error thrown by the API client. */
+export function describeError(e: unknown, locale: Locale = DEFAULT_LOCALE): string {
+  const t = translator(locale);
   if (e instanceof ApiError) {
     switch (e.code) {
       case "unauthorized":
-        return "인증에 실패했습니다. `fp token issue mcp`로 토큰을 발급해 MCP 설정의 FP_TOKEN에 넣어 주세요.";
+        return t("errUnauthorized");
       case "not_found":
-        return `찾을 수 없습니다: ${e.message}`;
+        return t("errNotFound", { message: e.message });
       case "invalid_input":
-        return `입력이 올바르지 않습니다: ${e.message}`;
+        return t("errInvalidInput", { message: e.message });
       case "forbidden":
-        return `권한이 없습니다: ${e.message}`;
+        return t("errForbidden", { message: e.message });
       case "conflict":
-        return `요청이 현재 상태와 충돌합니다: ${e.message}`;
+        return t("errConflict", { message: e.message });
       case "rate_limited":
-        return "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.";
+        return t("errRateLimited");
       case "unavailable":
-        return `서버의 일부 기능을 지금 사용할 수 없습니다: ${e.message}`;
+        return t("errUnavailable", { message: e.message });
       default:
-        return `서버 오류 (HTTP ${e.status}): ${e.message}`;
+        return t("errServer", { status: e.status, message: e.message });
     }
   }
   if (e instanceof Error) {
-    if (e instanceof TypeError || /fetch failed|ECONNREFUSED/i.test(e.message)) {
-      return `API 서버에 연결할 수 없습니다 (${e.message}). 서버가 실행 중인지, FP_API_URL이 맞는지 확인해 주세요.`;
-    }
-    return `오류: ${e.message}`;
+    if (e instanceof TypeError || /fetch failed|ECONNREFUSED/i.test(e.message)) return t("errConnect", { message: e.message });
+    return t("errGeneric", { message: e.message });
   }
-  return `오류: ${String(e)}`;
+  return t("errGeneric", { message: String(e) });
 }

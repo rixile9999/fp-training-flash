@@ -19,6 +19,15 @@ import type { Submission, TrialRun } from "@fp/grading/contract";
 import type { LearnerProfile, RatingChange } from "@fp/learner/contract";
 import type { Recommendation, Session, SessionSummary } from "@fp/sessions/contract";
 import type { ChatMessage, ChatReply, CoachingFeedback, Explanation } from "@fp/coaching/contract";
+import type {
+  AnswerResult,
+  CheckpointResult,
+  CourseView,
+  LessonView,
+  PlacementResult,
+  Quiz,
+  UnitProgress,
+} from "@fp/lessons/contract";
 
 export type {
   User,
@@ -43,7 +52,25 @@ export type {
   Explanation,
   Language,
   Locale,
+  AnswerResult,
+  CheckpointResult,
+  CourseView,
+  LessonView,
+  PlacementResult,
+  Quiz,
+  UnitProgress,
 };
+
+export interface LessonAnswerRequest {
+  readonly exerciseId: string;
+  readonly choice: number | null;
+  readonly giveUp?: boolean;
+}
+
+export interface QuizSubmitRequest {
+  /** itemId -> chosen index (null = skipped). */
+  readonly answers: Readonly<Record<string, number | null>>;
+}
 
 export interface ApiErrorBody {
   readonly code: AppErrorCode;
@@ -163,6 +190,14 @@ export const ROUTES = {
   completeSession: { method: "POST", path: "/v1/sessions/:sessionId/complete" },
   recommend: { method: "GET", path: "/v1/recommendation" },
   progress: { method: "GET", path: "/v1/progress" },
+  course: { method: "GET", path: "/v1/course" },
+  lesson: { method: "GET", path: "/v1/lessons/:unitId/:lessonId" },
+  lessonAnswer: { method: "POST", path: "/v1/lessons/:unitId/:lessonId/answers" },
+  lessonComplete: { method: "POST", path: "/v1/lessons/:unitId/:lessonId/complete" },
+  startCheckpoint: { method: "POST", path: "/v1/units/:unitId/checkpoint" },
+  submitCheckpoint: { method: "POST", path: "/v1/checkpoints/:quizId/submit" },
+  startPlacement: { method: "POST", path: "/v1/placement" },
+  submitPlacement: { method: "POST", path: "/v1/placement/:quizId/submit" },
 } as const;
 
 // ---------- Client ----------
@@ -263,6 +298,15 @@ export function createApiClient(opts: ApiClientOptions) {
     recommend: (language: Language, skill?: string) =>
       call<Recommendation>(ROUTES.recommend, {}, undefined, { language, skill }),
     progress: (language: Language) => call<ProgressView>(ROUTES.progress, {}, undefined, { language }),
+    course: () => call<CourseView>(ROUTES.course),
+    lesson: (unitId: string, lessonId: string) => call<LessonView>(ROUTES.lesson, { unitId, lessonId }),
+    lessonAnswer: (unitId: string, lessonId: string, req: LessonAnswerRequest) =>
+      call<AnswerResult>(ROUTES.lessonAnswer, { unitId, lessonId }, req),
+    lessonComplete: (unitId: string, lessonId: string) => call<UnitProgress>(ROUTES.lessonComplete, { unitId, lessonId }, {}),
+    startCheckpoint: (unitId: string) => call<Quiz>(ROUTES.startCheckpoint, { unitId }, {}),
+    submitCheckpoint: (quizId: string, req: QuizSubmitRequest) => call<CheckpointResult>(ROUTES.submitCheckpoint, { quizId }, req),
+    startPlacement: () => call<Quiz>(ROUTES.startPlacement, {}, {}),
+    submitPlacement: (quizId: string, req: QuizSubmitRequest) => call<PlacementResult>(ROUTES.submitPlacement, { quizId }, req),
   };
 }
 

@@ -1,5 +1,6 @@
 /** SQL for the grading schema. Only this module touches grading.*. */
-import type { Db, ExerciseId, SessionId, SubmissionId, UserId } from "@fp/kernel";
+import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from "@fp/kernel";
+import type { Db, ExerciseId, Locale, SessionId, SubmissionId, UserId } from "@fp/kernel";
 import type { Evaluation, HelpUsed, Submission } from "../contract/index.ts";
 
 interface Row {
@@ -44,6 +45,8 @@ export interface NewSubmission {
   readonly idempotencyKey: string;
   readonly code: string;
   readonly helpUsed: HelpUsed;
+  /** Locale the evaluation texts are rendered in. */
+  readonly locale: Locale;
   readonly createdAt: string;
 }
 
@@ -67,14 +70,24 @@ export function createSubmissionRepo(db: Db) {
         await tx.query("select pg_advisory_xact_lock(hashtext($1))", [`grading:${s.userId}:${s.exerciseId}`]);
         const r = await tx.query<Row>(
           `insert into grading.submissions
-             (id, user_id, exercise_id, session_id, idempotency_key, attempt_no, code, help_used, status, created_at)
+             (id, user_id, exercise_id, session_id, idempotency_key, attempt_no, code, help_used, status, created_at, locale)
            select $1, $2, $3, $4, $5,
                   1 + (select count(*) from grading.submissions
                         where user_id = $2 and exercise_id = $3 and not system_error)::int,
-                  $6, $7::jsonb, 'running', $8
+                  $6, $7::jsonb, 'running', $8, $9
            on conflict (user_id, idempotency_key) do nothing
            returning ${COLUMNS}`,
-          [s.id, s.userId, s.exerciseId, s.sessionId ?? null, s.idempotencyKey, s.code, JSON.stringify(s.helpUsed), s.createdAt],
+          [
+            s.id,
+            s.userId,
+            s.exerciseId,
+            s.sessionId ?? null,
+            s.idempotencyKey,
+            s.code,
+            JSON.stringify(s.helpUsed),
+            s.createdAt,
+            s.locale,
+          ],
         );
         return r.rows[0] ? toSubmission(r.rows[0]) : null;
       });
@@ -93,16 +106,20 @@ export function createSubmissionRepo(db: Db) {
     },
 
     /**
-     * Completes every submission still marked running as a system error. Used at startup: a submission can only
-     * be running there if the process died while evaluating it.
+     * Completes every submission still marked running as a system error, with the evaluation rendered in each
+     * submission's own locale. Used at startup: a submission can only be running there if the process died
+     * while evaluating it.
      */
-    async completeInterrupted(evaluation: Evaluation): Promise<Submission[]> {
+    async completeInterrupted(evaluationFor: (locale: Locale) => Evaluation): Promise<Submission[]> {
+      const byLocale = Object.fromEntries(SUPPORTED_LOCALES.map((l) => [l, evaluationFor(l)]));
+      const evaluatedAt = evaluationFor(DEFAULT_LOCALE).evaluatedAt;
       const r = await db.query<Row>(
         `update grading.submissions
-            set status = 'completed', evaluation = $1::jsonb, outcome = 'system_error', system_error = true, evaluated_at = $2
+            set status = 'completed', evaluation = coalesce($1::jsonb -> locale, $1::jsonb -> 'ko'),
+                outcome = 'system_error', system_error = true, evaluated_at = $2
           where status = 'running'
           returning ${COLUMNS}`,
-        [JSON.stringify(evaluation), evaluation.evaluatedAt],
+        [JSON.stringify(byLocale), evaluatedAt],
       );
       return r.rows.map(toSubmission);
     },

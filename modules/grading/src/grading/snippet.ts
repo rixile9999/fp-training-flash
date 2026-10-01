@@ -20,12 +20,16 @@
  * themselves are protected by the runner nonce, so snippet stdout cannot forge them. If the harness truncated
  * the message (MAX_MESSAGE 3000 bytes), the available prefix is returned followed by "…".
  * A panic/assert/todo in the snippet module is status "error" (runtime_error); timeout -> timeout.
+ * Texts use the message catalog in DEFAULT_LOCALE (SnippetRequest carries no locale); `details` are English.
  */
 import { randomBytes } from "node:crypto";
-import { appError, err, ok } from "@fp/kernel";
+import { appError, DEFAULT_LOCALE, err, ok } from "@fp/kernel";
 import type { AppError, Result } from "@fp/kernel";
 import type { RunJob, RunOutput, SnippetRequest, SnippetResult } from "../contract/index.ts";
-import { checkSources } from "./static-checks.ts";
+import { msg } from "../messages.ts";
+import { sourceIssues } from "./static-checks.ts";
+
+const LOCALE = DEFAULT_LOCALE;
 
 export const SNIPPET_LIMITS = { timeMs: 5000, memoryMb: 128 } as const;
 export const MAX_SNIPPET_CHARS = 4000;
@@ -53,13 +57,13 @@ export type SnippetJob =
 export function buildSnippetJob(req: SnippetRequest, token: string): Result<SnippetJob, AppError> {
   const definitions = req.definitions ?? "";
   if (typeof req.expression !== "string" || req.expression.trim() === "") {
-    return err(appError("invalid_input", "평가할 식이 비어 있습니다."));
+    return err(appError("invalid_input", msg("snippet.emptyExpression", LOCALE)));
   }
   if (req.expression.length > MAX_SNIPPET_CHARS || definitions.length > MAX_SNIPPET_CHARS) {
-    return err(appError("invalid_input", `식과 정의는 각각 최대 ${MAX_SNIPPET_CHARS}자입니다.`));
+    return err(appError("invalid_input", msg("snippet.tooLong", LOCALE, { max: MAX_SNIPPET_CHARS })));
   }
   if (!Array.isArray(req.imports) || req.imports.length > MAX_SNIPPET_IMPORTS) {
-    return err(appError("invalid_input", `import는 최대 ${MAX_SNIPPET_IMPORTS}개입니다.`));
+    return err(appError("invalid_input", msg("snippet.tooManyImports", LOCALE, { max: MAX_SNIPPET_IMPORTS })));
   }
   const reasons: string[] = [];
   const imports: string[] = [];
@@ -68,7 +72,7 @@ export function buildSnippetJob(req: SnippetRequest, token: string): Result<Snip
     const imp = typeof raw === "string" ? raw.trim() : "";
     const m = IMPORT.exec(imp);
     if (!m) {
-      reasons.push(`잘못된 import: ${JSON.stringify(raw).slice(0, 120)} (예: gleam/list 또는 gleam/list.{map, fold})`);
+      reasons.push(msg("snippet.badImport", LOCALE, { import: JSON.stringify(raw).slice(0, 120) }));
       continue;
     }
     if (m[1] === "gleam/string") stringImport = imp;
@@ -86,10 +90,8 @@ export function buildSnippetJob(req: SnippetRequest, token: string): Result<Snip
     "}",
     "",
   ].join("\n");
-  const checked = checkSources([{ path: SNIPPET_PATH, content: module }], new Set([TEST_MODULE]));
-  if (checked.length > 0) {
-    return ok({ kind: "rejected", reasons: checked.map((r) => r.replace(`${SNIPPET_PATH}: `, "")) });
-  }
+  const checked = sourceIssues([{ path: SNIPPET_PATH, content: module }], new Set([TEST_MODULE]), LOCALE);
+  if (checked.length > 0) return ok({ kind: "rejected", reasons: checked.map((i) => i.text) });
   const test = [
     `import ${SNIPPET_MODULE}`,
     "import gleam/int",
@@ -131,7 +133,7 @@ export function parseSnippetValue(message: string, token: string): string | null
 /** Maps a runner result to a SnippetResult; runner system errors (and unexpected shapes) are `unavailable`. */
 export function interpretSnippetOutput(output: RunOutput, token: string): Result<SnippetResult, AppError> {
   const unavailable = (message: string) =>
-    err(appError("unavailable", "실행 환경 오류로 코드를 평가하지 못했습니다. 잠시 후 다시 시도하세요.", { message }));
+    err(appError("unavailable", msg("snippet.unavailable", LOCALE), { message }));
   switch (output.kind) {
     case "system_error":
       return unavailable(output.message);
@@ -141,15 +143,15 @@ export function interpretSnippetOutput(output: RunOutput, token: string): Result
       return ok({ kind: "compile_error", diagnostics: output.compileDiagnostics.filter((d) => d.severity === "error") });
     case "completed": {
       const test = output.tests.find((t) => t.functionName === "value_test");
-      if (!test) return unavailable("value_test 결과가 없습니다.");
+      if (!test) return unavailable("no value_test result");
       const message = test.message ?? "";
       if (test.status === "timeout") return ok({ kind: "timeout" });
       if (test.status === "failed") {
         const value = parseSnippetValue(message, token);
         if (value !== null) return ok({ kind: "value", value });
       }
-      if (test.status === "passed") return unavailable("value_test가 값을 보고하지 않았습니다.");
-      return ok({ kind: "runtime_error", message: message || "실행 중 오류가 발생했습니다." });
+      if (test.status === "passed") return unavailable("value_test did not report a value");
+      return ok({ kind: "runtime_error", message: message || msg("snippet.runtimeError", LOCALE) });
     }
   }
 }

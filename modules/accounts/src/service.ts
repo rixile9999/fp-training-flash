@@ -1,7 +1,8 @@
-import { appError, asId, err, newId, ok, type Clock, type Db, type Logger, type UserId } from "@fp/kernel";
+import { asId, DEFAULT_LOCALE, err, isLocale, newId, ok, SUPPORTED_LOCALES, type Clock, type Db, type Locale, type Logger, type UserId } from "@fp/kernel";
 import type { AccountsService, IssuedToken, TokenInfo, User } from "./contract/index.ts";
 import { generateToken, hashToken, isWellFormedToken } from "./tokens.ts";
-import { normalizeDisplayName, normalizeTokenLabel } from "./validation.ts";
+import { localizedError } from "./messages.ts";
+import { isSupportedLocale, normalizeDisplayName, normalizeTokenLabel } from "./validation.ts";
 
 /** Label of the token issued by devLogin. */
 export const WEB_TOKEN_LABEL = "web";
@@ -17,6 +18,7 @@ export interface AccountsServiceDeps {
 interface UserRow {
   id: string;
   display_name: string;
+  locale: string;
   created_at: unknown;
 }
 
@@ -38,7 +40,9 @@ function toIso(value: unknown): string {
 }
 
 function toUser(row: UserRow): User {
-  return { id: asId<UserId>(row.id), displayName: row.display_name, createdAt: toIso(row.created_at) };
+  // The check constraint keeps locale valid; the guard only protects against a future schema drift.
+  const locale = isLocale(row.locale) ? row.locale : DEFAULT_LOCALE;
+  return { id: asId<UserId>(row.id), displayName: row.display_name, locale, createdAt: toIso(row.created_at) };
 }
 
 function toTokenInfo(row: TokenRow): TokenInfo {
@@ -46,7 +50,7 @@ function toTokenInfo(row: TokenRow): TokenInfo {
   return row.last_used_at == null ? base : { ...base, lastUsedAt: toIso(row.last_used_at) };
 }
 
-const USER_COLUMNS = "id, display_name, created_at";
+const USER_COLUMNS = "id, display_name, locale, created_at";
 
 export function createAccountsService({ db, clock, logger }: AccountsServiceDeps): AccountsService {
   /** Inserts a token row and returns the plaintext once. Never log `token`. */
@@ -68,26 +72,41 @@ export function createAccountsService({ db, clock, logger }: AccountsServiceDeps
     return row ? toUser(row) : null;
   }
 
+  /** Language for an error addressed to `userId`: their stored preference, else ko. */
+  async function localeOf(tx: Db, userId: string): Promise<Locale> {
+    return (await findUser(tx, userId))?.locale ?? DEFAULT_LOCALE;
+  }
+
+  function unsupportedLocale(messageLocale: Locale) {
+    return err(localizedError("invalid_input", "locale.unsupported", messageLocale, { locales: SUPPORTED_LOCALES.join(", ") }));
+  }
+
   return {
-    async devLogin(displayName) {
-      const name = normalizeDisplayName(displayName);
+    async devLogin(displayName, locale) {
+      if (locale !== undefined && !isSupportedLocale(locale)) return unsupportedLocale(DEFAULT_LOCALE);
+      const name = normalizeDisplayName(displayName, locale);
       if (!name.ok) return name;
       const { displayName: shown, key } = name.value;
       const result = await db.transaction(async (tx) => {
         // Insert-if-absent is race-safe: concurrent logins with the same key converge on one row.
         const inserted = await tx.query<UserRow>(
-          `insert into accounts.users (id, display_name, name_key, created_at) values ($1, $2, $3, $4)
+          `insert into accounts.users (id, display_name, name_key, locale, created_at) values ($1, $2, $3, $4, $5)
            on conflict (name_key) do nothing
            returning ${USER_COLUMNS}`,
-          [newId(), shown, key, clock.now().toISOString()],
+          [newId(), shown, key, locale ?? DEFAULT_LOCALE, clock.now().toISOString()],
         );
         let row = inserted.rows[0];
         if (row) {
           logger.info("accounts.user_created", { userId: row.id });
         } else {
-          const existing = await tx.query<UserRow>(`select ${USER_COLUMNS} from accounts.users where name_key = $1`, [
-            key,
-          ]);
+          // An explicit locale updates the existing user's preference; otherwise it is left as is.
+          const existing =
+            locale === undefined
+              ? await tx.query<UserRow>(`select ${USER_COLUMNS} from accounts.users where name_key = $1`, [key])
+              : await tx.query<UserRow>(
+                  `update accounts.users set locale = $2 where name_key = $1 returning ${USER_COLUMNS}`,
+                  [key, locale],
+                );
           row = existing.rows[0];
           if (!row) throw new Error("accounts: user vanished between insert and select");
         }
@@ -98,16 +117,29 @@ export function createAccountsService({ db, clock, logger }: AccountsServiceDeps
       return ok(result);
     },
 
+    async setLocale(userId, locale) {
+      if (!isSupportedLocale(locale)) return unsupportedLocale(await localeOf(db, userId));
+      const r = await db.query<UserRow>(`update accounts.users set locale = $2 where id = $1 returning ${USER_COLUMNS}`, [
+        userId,
+        locale,
+      ]);
+      const row = r.rows[0];
+      if (!row) return err(localizedError("not_found", "user.notFound", locale));
+      logger.info("accounts.locale_changed", { userId, locale });
+      return ok(toUser(row));
+    },
+
     getUser(id) {
       return findUser(db, id);
     },
 
     async issueToken(userId, label) {
-      const normalized = normalizeTokenLabel(label);
-      if (!normalized.ok) return normalized;
       return db.transaction(async (tx) => {
+        // Look the user up first so validation errors come back in their preferred language.
         const user = await findUser(tx, userId);
-        if (!user) return err(appError("not_found", "사용자를 찾을 수 없습니다."));
+        const normalized = normalizeTokenLabel(label, user?.locale);
+        if (!normalized.ok) return normalized;
+        if (!user) return err(localizedError("not_found", "user.notFound"));
         return ok(await insertToken(tx, user.id, normalized.value));
       });
     },
@@ -131,7 +163,7 @@ export function createAccountsService({ db, clock, logger }: AccountsServiceDeps
          returning id`,
         [tokenId, userId, clock.now().toISOString()],
       );
-      if (r.rows.length === 0) return err(appError("not_found", "토큰을 찾을 수 없습니다."));
+      if (r.rows.length === 0) return err(localizedError("not_found", "token.notFound", await localeOf(db, userId)));
       logger.info("accounts.token_revoked", { userId, tokenId });
       return ok(undefined);
     },
@@ -139,7 +171,7 @@ export function createAccountsService({ db, clock, logger }: AccountsServiceDeps
     async authenticate(token) {
       if (!isWellFormedToken(token)) return null;
       const r = await db.query<AuthRow>(
-        `select u.id, u.display_name, u.created_at, t.id as token_id, t.last_used_at
+        `select u.id, u.display_name, u.locale, u.created_at, t.id as token_id, t.last_used_at
          from accounts.tokens t join accounts.users u on u.id = t.user_id
          where t.token_hash = $1 and t.revoked_at is null`,
         [hashToken(token)],

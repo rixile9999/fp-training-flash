@@ -1,12 +1,13 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { ok, runMigrations, silentLogger, type Db } from "@fp/kernel";
 import { createFixedClock, createTestDb } from "@fp/kernel/testing";
-import type { GradingService, SnippetRequest } from "@fp/grading/contract";
+import type { GradingService, SnippetRequest, TrialRunRequest } from "@fp/grading/contract";
 import { migrations } from "../src/index.ts";
 import { createCoachingService } from "../src/internal/service.ts";
 import type { LlmClient, ToolChatRequest, ToolChatResponse } from "../src/internal/llm.ts";
 import { lookupStdlib, lookupSyntax } from "../src/internal/gleam-reference.ts";
 import { EXERCISE_ID, LEARNER_CODE, USER, fakeCatalog, fakeGrading, fakeLearner } from "./fixtures.ts";
+import { chatSystemPrompt } from "../src/internal/prompts.ts";
 
 let db: Db | undefined;
 afterEach(async () => {
@@ -37,7 +38,7 @@ function toolLlm(steps: readonly Step[], complete = "단일 호출 답변"): Llm
 
 const call = (id: string, name: string, args: object) => ({ id, name, arguments: JSON.stringify(args) });
 
-async function service(llm: LlmClient, snippets: SnippetRequest[] = []) {
+async function service(llm: LlmClient, snippets: SnippetRequest[] = [], trialRuns: TrialRunRequest[] = []) {
   const fresh = await createTestDb();
   db = fresh;
   await runMigrations(fresh, "coaching", migrations);
@@ -46,6 +47,10 @@ async function service(llm: LlmClient, snippets: SnippetRequest[] = []) {
     evaluateSnippet: async (req) => {
       snippets.push(req);
       return ok({ kind: "value" as const, value: "[2, 4]" });
+    },
+    trialRun: async (req) => {
+      trialRuns.push(req);
+      return ok({ outcome: "passed" as const, compileDiagnostics: [], tests: [] });
     },
   };
   return createCoachingService({
@@ -95,6 +100,19 @@ describe("chat agent", () => {
     expect(r.ok && r.value.message.content).toBe("최종 답변");
     expect(llm.requests).toHaveLength(4);
     expect(llm.requests[3]!.tools).toEqual([]);
+  });
+
+  it("uses the locale's chat prompt and runs public tests in that locale", async () => {
+    const trialRuns: TrialRunRequest[] = [];
+    const llm = toolLlm([
+      { text: "", toolCalls: [call("t1", "run_public_tests", { code: "pub fn apply(x) { x }" })] },
+      { text: "你的代码通过了公开测试。看看第 2 行。", toolCalls: [] },
+    ]);
+    const svc = await service(llm, [], trialRuns);
+    const r = await svc.chat({ ...ask("可以吗？"), locale: "zh" });
+    expect(r.ok && r.value.references).toEqual([{ line: 2 }]);
+    expect(trialRuns).toEqual([{ exerciseId: EXERCISE_ID, code: "pub fn apply(x) { x }", locale: "zh" }]);
+    expect(llm.requests[0]!.system.startsWith(chatSystemPrompt("zh"))).toBe(true);
   });
 
   it("falls back to the single-call chat when the agent fails", async () => {

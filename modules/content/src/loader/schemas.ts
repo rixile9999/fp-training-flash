@@ -41,7 +41,7 @@ export const skillsFileSchema = z.strictObject({
     z.strictObject({
       id: kebabId,
       name: text,
-      track: z.enum(["core", "algorithm"]),
+      track: z.enum(["basics", "core", "algorithm"]),
       order: z.number().int(),
       description: text,
       prerequisites: z.array(kebabId).default([]),
@@ -137,6 +137,33 @@ export const theoryFrontMatterSchema = z.strictObject({
     .array(z.strictObject({ text, url: text.optional(), verified: z.boolean().default(false) }))
     .default([]),
 });
+
+// Localization overlays (<name>.<locale>.<ext>). Keys of the records are checked against the Korean source.
+
+const rubricTextSchema = z.strictObject({ title: text.optional(), description: text.optional(), message: text.optional() });
+const textRecord = z.record(z.string(), text);
+
+export const skillsOverlaySchema = z.strictObject({
+  skills: z.record(z.string(), z.strictObject({ name: text.optional(), description: text.optional() })).default({}),
+});
+
+export const familyOverlaySchema = z.strictObject({
+  title: text.optional(),
+  rubric: z.record(z.string(), rubricTextSchema).optional(),
+});
+export type FamilyOverlayYaml = z.infer<typeof familyOverlaySchema>;
+
+export const exerciseOverlaySchema = z.strictObject({
+  title: text.optional(),
+  tests: textRecord.optional(),
+  requirements: textRecord.optional(),
+  hints: textRecord.optional(),
+  rubric: z.record(z.string(), rubricTextSchema).optional(),
+});
+export type ExerciseOverlayYaml = z.infer<typeof exerciseOverlaySchema>;
+
+/** Front matter of a translated note: only the id (equal to the Korean note's) and the translated title. */
+export const noteOverlayFrontMatterSchema = z.strictObject({ id: kebabId, title: text.optional() });
 
 /** Formats zod issues as "a.b: message" lines. */
 export function formatZodIssues(error: z.ZodError): string[] {

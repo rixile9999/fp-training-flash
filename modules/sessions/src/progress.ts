@@ -1,5 +1,5 @@
 /** Pure session state transitions: evaluation results, skip, summary. No I/O. */
-import type { ExerciseId, FamilyId, SkillId, SubmissionId } from "@fp/kernel";
+import type { ExerciseId, FamilyId, Locale, SkillId, SubmissionId } from "@fp/kernel";
 import type { Session, SessionItem, SessionSummary } from "./contract/index.ts";
 
 /** Item as stored: the public item plus bookkeeping the contract does not expose. */
@@ -11,6 +11,8 @@ export interface StoredItem extends SessionItem {
 }
 
 export interface StoredSession extends Omit<Session, "items"> {
+  /** Locale chosen at start; item reasons are stored in it and later messages use it. Not public. */
+  readonly locale: Locale;
   readonly items: readonly StoredItem[];
   readonly summary: SessionSummary | null;
 }

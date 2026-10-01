@@ -1,5 +1,5 @@
 import { asId, createEvent, InMemoryEventBus, runMigrations } from "@fp/kernel";
-import type { Db, DomainEvent, ExerciseId, FamilyId, Logger, SessionId, SkillId, SubmissionId, UserId } from "@fp/kernel";
+import type { Db, DomainEvent, ExerciseId, FamilyId, Locale, Logger, SessionId, SkillId, SubmissionId, UserId } from "@fp/kernel";
 import { createFixedClock, createTestDb, type MutableClock } from "@fp/kernel/testing";
 import type { ContentCatalog, ExerciseDetail, ExerciseSummary, Skill } from "@fp/content/contract";
 import type { EvaluationOutcome, SubmissionEvaluatedPayload } from "@fp/grading/contract";
@@ -37,15 +37,34 @@ export function exercise(
     estimatedMinutes: opts.estimatedMinutes ?? 4,
     contextTags: opts.contextTags ?? [],
     source: { kind: "original" },
+    locales: ["ko", "en", "zh"],
   };
 }
 
-export function fakeCatalog(skills: Skill[], exercises: ExerciseSummary[]): ContentCatalog {
+export interface FakeCatalogOptions {
+  /** Skills with no en/zh name: the catalog falls back to the Korean name, like the real one. */
+  readonly untranslatedSkills?: readonly string[];
+}
+
+/** Fake localized names: ko "기술-a", en "Skill-a", zh "能力-a"; exercise titles get a "[en]"/"[zh]" prefix. */
+function localizeSkill(s: Skill, locale: Locale | undefined, opts: FakeCatalogOptions): Skill {
+  if (locale === undefined || locale === "ko" || opts.untranslatedSkills?.includes(s.id)) return s;
+  return { ...s, name: locale === "en" ? `Skill-${s.id}` : `能力-${s.id}` };
+}
+
+function localizeTitle(title: string, locale: Locale | undefined): string {
+  return locale === undefined || locale === "ko" ? title : `[${locale}] ${title}`;
+}
+
+export function fakeCatalog(skills: Skill[], exercises: ExerciseSummary[], opts: FakeCatalogOptions = {}): ContentCatalog {
   return {
-    listSkills: async () => skills,
-    getSkill: async (id) => skills.find((s) => s.id === id) ?? null,
-    listExercises: async (f = {}) =>
-      exercises.filter(
+    listSkills: async (locale) => skills.map((s) => localizeSkill(s, locale, opts)),
+    getSkill: async (id, locale) => {
+      const s = skills.find((x) => x.id === id);
+      return s ? localizeSkill(s, locale, opts) : null;
+    },
+    listExercises: async (f = {}, locale) =>
+      exercises.map((e) => ({ ...e, title: localizeTitle(e.title, locale) })).filter(
         (e) =>
           (f.language === undefined || e.language === f.language) &&
           (f.skill === undefined || e.primarySkill === f.skill) &&
@@ -67,6 +86,9 @@ export function fakeCatalog(skills: Skill[], exercises: ExerciseSummary[]): Cont
     getConceptNotes: async () => [],
     getTheoryTopics: async () => [],
     listTheoryTopics: async () => [],
+    listLessonUnits: async () => [],
+    getLesson: async () => null,
+    getLessonAnswer: async () => null,
     currentBundle: async () => null,
   };
 }
@@ -122,7 +144,12 @@ export interface Harness {
 
 let seq = 0;
 
-export async function setup(skills: Skill[], exercises: ExerciseSummary[], learner: Partial<FakeLearnerState> = {}): Promise<Harness> {
+export async function setup(
+  skills: Skill[],
+  exercises: ExerciseSummary[],
+  learner: Partial<FakeLearnerState> = {},
+  catalogOpts: FakeCatalogOptions = {},
+): Promise<Harness> {
   const db = await createTestDb();
   await runMigrations(db, "sessions", migrations);
   const clock = createFixedClock("2026-09-30T09:00:00.000Z");
@@ -135,7 +162,7 @@ export async function setup(skills: Skill[], exercises: ExerciseSummary[], learn
   });
   const learnerState: FakeLearnerState = { estimates: [], reviews: [], ...learner };
   const { service } = createSessionsModule({
-    db, clock, events: bus, logger, catalog: fakeCatalog(skills, exercises), learner: fakeLearner(learnerState),
+    db, clock, events: bus, logger, catalog: fakeCatalog(skills, exercises, catalogOpts), learner: fakeLearner(learnerState),
   });
   return {
     db, clock, bus, service, learnerState, published, handlerErrors,

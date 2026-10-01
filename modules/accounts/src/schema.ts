@@ -5,6 +5,7 @@ import type { Migration } from "@fp/kernel";
  * - users.name_key is the normalized, lower-cased display name (case-insensitive uniqueness is
  *   computed in JS so it does not depend on the database collation).
  * - tokens.token_hash is the hex sha256 of the plaintext token; the plaintext is never stored.
+ * - users.locale is the preferred UI/content language; existing rows get the default "ko".
  */
 export const migrations: readonly Migration[] = [
   {
@@ -27,6 +28,14 @@ export const migrations: readonly Migration[] = [
         revoked_at timestamptz
       );
       create index tokens_user_id_idx on accounts.tokens (user_id);
+    `,
+  },
+  {
+    id: "0002_user_locale",
+    sql: `
+      alter table accounts.users
+        add column locale text not null default 'ko'
+        constraint users_locale_check check (locale in ('ko', 'en', 'zh'));
     `,
   },
 ];

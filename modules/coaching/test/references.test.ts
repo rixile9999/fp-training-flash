@@ -13,6 +13,12 @@ describe("extractLineReferences", () => {
     ]);
   });
 
+  it("recognises Chinese forms with and without spaces, mixed with other locales", () => {
+    expect(extractLineReferences("第15行和第 3 行，line 7，第15行")).toEqual([{ line: 15 }, { line: 3 }, { line: 7 }]);
+    expect(extractLineReferences("第0行", 5)).toEqual([]);
+    expect(extractLineReferences("第2行与第20行", 5)).toEqual([{ line: 2 }]);
+  });
+
   it("ignores line 0, counts that are not line references, and lines beyond the code", () => {
     expect(extractLineReferences("0행과 10개의 줄")).toEqual([]);
     expect(extractLineReferences("2행과 20행", 5)).toEqual([{ line: 2 }]);

@@ -1,6 +1,8 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, resolve, sep } from "node:path";
 import type { ExerciseView } from "@fp/api-contract";
+import { DEFAULT_LOCALE, LocalizedError, translator } from "./messages.ts";
+import type { Locale } from "./messages.ts";
 
 /** Metadata file linking a local project dir to its exercise. */
 export const META_FILE = ".fp.json";
@@ -72,7 +74,7 @@ export function gleamToml(view: ExerciseView): string {
  * test/<package>_test.gleam built from the PUBLIC tests only. A public test's code is usually a test body;
  * if it already defines functions it is kept verbatim. Import lines are hoisted and de-duplicated.
  */
-export function publicTestModule(view: ExerciseView): string {
+export function publicTestModule(view: ExerciseView, locale: Locale = DEFAULT_LOCALE): string {
   const ex = view.exercise;
   const imports = new Set<string>(["import gleeunit", "import gleeunit/should", `import ${ex.moduleName}`]);
   const bodies: string[] = [];
@@ -98,7 +100,7 @@ export function publicTestModule(view: ExerciseView): string {
       .join("\n");
     bodies.push(`// ${t.name}\npub fn ${name}() {\n${indented}\n}`);
   }
-  const header = "// 공개 테스트만 포함되어 있습니다. 제출 시에는 숨김 테스트도 함께 채점됩니다.";
+  const header = translator(locale)("testFileHeader");
   const main = "pub fn main() {\n  gleeunit.main()\n}";
   return [header, [...imports].join("\n"), main, ...bodies].join("\n\n") + "\n";
 }
@@ -107,32 +109,27 @@ function fence(code: string): string {
   return "```gleam\n" + code.replace(/\n+$/, "") + "\n```";
 }
 
-export function promptMarkdown(view: ExerciseView): string {
+/**
+ * PROMPT.md. Headings and instructions are in the display locale; the problem text, tests, hints and notes
+ * come from the server, which already renders them in the account's locale (Korean when untranslated).
+ */
+export function promptMarkdown(view: ExerciseView, locale: Locale = DEFAULT_LOCALE): string {
+  const t = translator(locale);
   const ex = view.exercise;
   const out: string[] = [`# ${ex.title}`];
-  out.push(`- 문제 ID: \`${ex.id}\`\n- 기술: ${ex.primarySkill} · 난이도: ${ex.difficulty} · 예상 ${ex.estimatedMinutes}분`);
-  out.push(`## 문제\n\n${ex.promptMarkdown.trim()}`);
-  if (ex.predict) out.push(`## 읽을 코드\n\n${fence(ex.predict.code)}\n\n답을 \`${ANSWER_FILE}\`에 적고 \`fp submit\`으로 제출하세요.`);
+  out.push(t("promptMeta", { id: ex.id, skill: ex.primarySkill, difficulty: ex.difficulty, minutes: ex.estimatedMinutes }));
+  out.push(`${t("promptProblem")}\n\n${ex.promptMarkdown.trim()}`);
+  if (ex.predict) out.push(`${t("promptReadCode")}\n\n${fence(ex.predict.code)}\n\n${t("promptAnswerHow", { file: ANSWER_FILE })}`);
   if (ex.publicTests.length > 0) {
-    out.push(`## 공개 테스트\n\n` + ex.publicTests.map((t) => `### ${t.name}\n\n${fence(t.code)}`).join("\n\n"));
+    out.push(`${t("promptPublicTests")}\n\n` + ex.publicTests.map((x) => `### ${x.name}\n\n${fence(x.code)}`).join("\n\n"));
   }
-  if (ex.rubric.length > 0) out.push(`## 코드 품질 기준\n\n` + ex.rubric.map((r) => `- ${r.id} ${r.title}: ${r.description}`).join("\n"));
+  if (ex.rubric.length > 0) out.push(`${t("promptRubric")}\n\n` + ex.rubric.map((r) => `- ${r.id} ${r.title}: ${r.description}`).join("\n"));
   if (view.revealedHints.length > 0) {
-    out.push(`## 공개된 힌트\n\n` + view.revealedHints.map((h) => `**${h.level}단계**: ${h.markdown}`).join("\n\n"));
+    out.push(`${t("promptRevealedHints")}\n\n` + view.revealedHints.map((h) => `${t("promptHintLevel", { level: h.level })}: ${h.markdown}`).join("\n\n"));
   }
-  for (const n of view.conceptNotes) out.push(`## 개념 노트: ${n.title}\n\n${n.markdown.trim()}`);
-  for (const t of view.theoryTopics) out.push(`## 이론: ${t.title}\n\n${t.markdown.trim()}`);
-  out.push(
-    [
-      "## 사용법",
-      "",
-      `- \`${learnerFile({ kind: ex.kind, moduleName: ex.moduleName })}\`을(를) 수정하세요.`,
-      "- `gleam test`: 로컬에서 공개 테스트 실행 (Gleam 설치 필요)",
-      "- `fp run`: 서버에서 공개 테스트 실행 (기록되지 않음)",
-      "- `fp submit`: 제출 (숨김 테스트 포함 채점, 레이팅 반영)",
-      `- \`fp hint\`: 다음 힌트 (총 ${ex.hints.length}단계, 3단계부터는 레이팅 미반영)`,
-    ].join("\n"),
-  );
+  for (const n of view.conceptNotes) out.push(`${t("promptConceptNote", { title: n.title })}\n\n${n.markdown.trim()}`);
+  for (const x of view.theoryTopics) out.push(`${t("promptTheory", { title: x.title })}\n\n${x.markdown.trim()}`);
+  out.push(t("promptUsage", { file: learnerFile({ kind: ex.kind, moduleName: ex.moduleName }), hints: ex.hints.length }));
   return out.join("\n\n") + "\n";
 }
 
@@ -148,13 +145,15 @@ async function readIfExists(file: string): Promise<string | null> {
 /** Resolves a server-provided relative path, refusing anything that escapes the project dir. */
 function inside(dir: string, rel: string): string {
   const target = resolve(dir, rel);
-  if (!target.startsWith(resolve(dir) + sep)) throw new Error(`잘못된 파일 경로입니다: ${rel}`);
+  if (!target.startsWith(resolve(dir) + sep)) throw new LocalizedError("errInvalidPath", { path: rel });
   return target;
 }
 
 export interface WriteOptions {
   readonly force?: boolean;
   readonly sessionId?: string;
+  /** Display locale for generated headings (PROMPT.md, test file comment). Default "ko". */
+  readonly locale?: Locale;
 }
 
 /**
@@ -190,7 +189,8 @@ export async function writeProject(baseDir: string, view: ExerciseView, opts: Wr
     ...(opts.sessionId ? { sessionId: opts.sessionId } : {}),
   };
   await put(META_FILE, JSON.stringify(meta, null, 2) + "\n");
-  await put("PROMPT.md", promptMarkdown(view));
+  const locale = opts.locale ?? DEFAULT_LOCALE;
+  await put("PROMPT.md", promptMarkdown(view, locale));
 
   if (ex.kind === "predict") {
     await putLearner(ANSWER_FILE, "");
@@ -199,7 +199,7 @@ export async function writeProject(baseDir: string, view: ExerciseView, opts: Wr
     await put(".gitignore", "build/\n");
     const starters = ex.starterFiles.length > 0 ? ex.starterFiles : [{ path: learnerFile(meta), content: `// ${ex.title}\n` }];
     for (const f of starters) await putLearner(f.path, f.content);
-    await put(join("test", `${packageName(ex.moduleName)}_test.gleam`), publicTestModule(view));
+    await put(join("test", `${packageName(ex.moduleName)}_test.gleam`), publicTestModule(view, locale));
   }
   return { dir, written, kept };
 }
@@ -222,7 +222,7 @@ export async function readMeta(dir: string): Promise<ProjectMeta | null> {
   } catch {
     // fall through
   }
-  throw new Error(`문제 메타데이터가 손상되었습니다: ${file}. \`fp next --force\`로 다시 생성하세요.`);
+  throw new LocalizedError("errCorruptMeta", { path: file });
 }
 
 /** Finds the nearest project dir at or above `start` (so commands work from src/ or test/). */
@@ -240,6 +240,6 @@ export async function findProjectDir(start: string): Promise<{ dir: string; meta
 export async function readLearnerCode(dir: string, meta: ProjectMeta): Promise<string> {
   const rel = learnerFile(meta);
   const text = await readIfExists(join(dir, rel));
-  if (text === null) throw new Error(`학습자 파일이 없습니다: ${join(dir, rel)}`);
+  if (text === null) throw new LocalizedError("errLearnerFileMissing", { path: join(dir, rel) });
   return meta.kind === "predict" ? text.trim() : text;
 }

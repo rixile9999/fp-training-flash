@@ -151,11 +151,11 @@ describe("exercise routes", () => {
     const { request, fakes } = setup();
     const res = await request(`/v1/exercises/${enc(EXERCISE_ID)}`);
     expect(res.status).toBe(200);
-    expect(callsTo(fakes, "catalog.getExercise")).toEqual([[EXERCISE_ID]]);
+    expect(callsTo(fakes, "catalog.getExercise")).toEqual([[EXERCISE_ID, "ko"]]);
     expect(callsTo(fakes, "coaching.helpUsed")).toEqual([[USER.id, EXERCISE_ID]]);
 
     await request(`/v1/exercises/${enc(EXERCISE_ID)}/run`, { method: "POST", body: JSON.stringify({ code: "x" }) });
-    expect(callsTo(fakes, "grading.trialRun")).toEqual([[{ exerciseId: EXERCISE_ID, code: "x" }]]);
+    expect(callsTo(fakes, "grading.trialRun")).toEqual([[{ exerciseId: EXERCISE_ID, code: "x", locale: "ko" }]]);
   });
 
   it("works through the contract client for every exercise sub-route", async () => {
@@ -165,8 +165,8 @@ describe("exercise routes", () => {
     await api.revealHint(EXERCISE_ID, { level: 2 });
     await api.noteOpened(EXERCISE_ID, { kind: "theory", noteId: "functor" });
     await api.explanation(EXERCISE_ID);
-    expect(callsTo(fakes, "coaching.revealHint")).toEqual([[USER.id, EXERCISE_ID, 2]]);
-    expect(callsTo(fakes, "coaching.revealExplanation")).toEqual([[USER.id, EXERCISE_ID]]);
+    expect(callsTo(fakes, "coaching.revealHint")).toEqual([[USER.id, EXERCISE_ID, 2, "ko"]]);
+    expect(callsTo(fakes, "coaching.revealExplanation")).toEqual([[USER.id, EXERCISE_ID, "ko"]]);
     expect(callsTo(fakes, "coaching.recordHelp")).toEqual([[USER.id, EXERCISE_ID, "theory_note", "functor"]]);
   });
 
@@ -217,7 +217,7 @@ describe("exercise routes", () => {
     expect((await request("/v1/exercises?kind=essay")).status).toBe(400);
     const ok = await request("/v1/exercises?language=gleam&kind=predict");
     expect(ok.status).toBe(200);
-    expect(callsTo(fakes, "catalog.listExercises")).toEqual([[{ language: "gleam", kind: "predict" }]]);
+    expect(callsTo(fakes, "catalog.listExercises")).toEqual([[{ language: "gleam", kind: "predict" }, "ko"]]);
   });
 });
 
@@ -241,6 +241,7 @@ describe("submissions", () => {
           idempotencyKey: "k-1",
           sessionId: "sess-1",
           helpUsed: fakes.helpUsed,
+          locale: "ko",
         },
       ],
     ]);
@@ -297,10 +298,10 @@ describe("submissions", () => {
     const api = client(TOKEN);
     const fb = await api.feedback("s-1");
     expect(fb.source).toBe("rule_based");
-    expect(callsTo(fakes, "coaching.feedback")).toEqual([["s-1", USER.id]]);
+    expect(callsTo(fakes, "coaching.feedback")).toEqual([["s-1", USER.id, "ko"]]);
     await api.chat({ exerciseId: EXERCISE_ID, messages: [{ role: "user", content: "도와줘" }] });
     expect(callsTo(fakes, "coaching.chat")).toEqual([
-      [{ userId: USER.id, exerciseId: EXERCISE_ID, messages: [{ role: "user", content: "도와줘" }] }],
+      [{ userId: USER.id, exerciseId: EXERCISE_ID, messages: [{ role: "user", content: "도와줘" }], locale: "ko" }],
     ]);
   });
 
@@ -379,7 +380,7 @@ describe("sessions, recommendation and progress", () => {
     const api = client(TOKEN);
     await api.startSession({ language: "gleam", targetMinutes: 15, focusSkill: "data-transform" });
     expect(callsTo(fakes, "sessions.start")).toEqual([
-      [{ userId: USER.id, language: "gleam", targetMinutes: 15, focusSkill: "data-transform" }],
+      [{ userId: USER.id, language: "gleam", targetMinutes: 15, focusSkill: "data-transform", locale: "ko" }],
     ]);
     expect((await api.session("sess-1")).id).toBe("sess-1");
     expect((await api.skipItem("sess-1")).id).toBe("sess-1");

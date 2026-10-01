@@ -1,5 +1,6 @@
 /** SQL access to the `sessions` schema. Only this file writes SQL. */
 import type { Db, ExerciseId, FamilyId, Language, SessionId, SkillId, SubmissionId, UserId } from "@fp/kernel";
+import { resolveLocale } from "./messages.ts";
 import type { SessionItemKind, SessionItemStatus, SessionStatus, SessionSummary } from "./contract/index.ts";
 import type { StoredItem, StoredSession } from "./progress.ts";
 
@@ -28,6 +29,7 @@ interface SessionRow {
   id: string;
   user_id: string;
   language: string;
+  locale: string | null;
   status: string;
   target_minutes: number;
   started_at: unknown;
@@ -81,6 +83,7 @@ async function hydrate(db: Db, row: SessionRow): Promise<StoredSession> {
     id: row.id as SessionId,
     userId: row.user_id as UserId,
     language: row.language as Language,
+    locale: resolveLocale(row.locale),
     status: row.status as SessionStatus,
     targetMinutes: Number(row.target_minutes),
     startedAt: toIso(row.started_at),
@@ -92,7 +95,7 @@ async function hydrate(db: Db, row: SessionRow): Promise<StoredSession> {
 }
 
 const SESSION_COLS =
-  "id, user_id, language, status, target_minutes, started_at, completed_at, current_index, summary";
+  "id, user_id, language, locale, status, target_minutes, started_at, completed_at, current_index, summary";
 
 export async function loadSession(db: Db, id: SessionId, forUpdate = false): Promise<StoredSession | null> {
   const r = await db.query<SessionRow>(
@@ -121,9 +124,9 @@ export async function insertSession(tx: Db, s: StoredSession): Promise<void> {
     [s.userId, s.language],
   );
   await tx.query(
-    `insert into sessions.sessions (id, user_id, language, status, target_minutes, started_at, current_index)
-     values ($1, $2, $3, $4, $5, $6, $7)`,
-    [s.id, s.userId, s.language, s.status, s.targetMinutes, s.startedAt, s.currentIndex],
+    `insert into sessions.sessions (id, user_id, language, locale, status, target_minutes, started_at, current_index)
+     values ($1, $2, $3, $4, $5, $6, $7, $8)`,
+    [s.id, s.userId, s.language, s.locale, s.status, s.targetMinutes, s.startedAt, s.currentIndex],
   );
   for (const i of s.items) {
     await tx.query(

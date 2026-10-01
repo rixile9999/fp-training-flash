@@ -1,4 +1,4 @@
-import type { ExerciseView, RatingChange, Session, SubmissionView, TrialRun } from "@fp/api-contract";
+import type { ExerciseView, Locale, RatingChange, Session, SubmissionView, TrialRun } from "@fp/api-contract";
 import type { FpApi } from "../src/api.ts";
 
 /** Branded ids are plain strings at runtime. */
@@ -17,6 +17,7 @@ export function exerciseView(id = EX_ID, title = "쿠폰 적용하기"): Exercis
       variantKey: "base",
       version: 1,
       language: "gleam",
+      locales: ["ko"],
       kind: "implement",
       format: "drill",
       title,
@@ -115,8 +116,12 @@ export interface Call {
   readonly args: readonly unknown[];
 }
 
-/** Hand-written fake API. Each method records its call; override behaviour via `overrides`. */
-export function fakeApi(overrides: Partial<FpApi> = {}, active: Session | null = session()): { api: FpApi; calls: Call[] } {
+/** Hand-written fake API. Each method records its call; override behaviour via `overrides`. `locale` is user.locale. */
+export function fakeApi(
+  overrides: Partial<FpApi> = {},
+  active: Session | null = session(),
+  locale: Locale = "ko",
+): { api: FpApi; calls: Call[] } {
   const calls: Call[] = [];
   const rec =
     <A extends unknown[], R>(method: string, fn: (...args: A) => Promise<R>) =>
@@ -125,6 +130,7 @@ export function fakeApi(overrides: Partial<FpApi> = {}, active: Session | null =
       return fn(...args);
     };
   const base: FpApi = {
+    me: async () => ({ id: brand("user-1"), displayName: "민수", locale, createdAt: "2026-09-30T00:00:00.000Z" }),
     exercise: async (id) => exerciseView(id, id === EX2_ID ? "주문 합계" : "쿠폰 적용하기"),
     trialRun: async () => failingRun,
     revealHint: async (_id, req) => exerciseView().exercise.hints.filter((h) => h.level <= req.level),

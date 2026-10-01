@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ApiClient, ExerciseView, Session, SessionSummary, Skill, SubmissionView, TrialRun } from "@fp/api-contract";
 import { errorMessage, newIdempotencyKey } from "../api/client.ts";
+import { useI18n } from "../i18n/I18n.tsx";
 import type { Phase } from "../session.ts";
 import { Icon } from "../ui/Icon.tsx";
-import { formatDate, skillName } from "../ui/labels.ts";
+import { itemKindLabel, skillName } from "../ui/labels.ts";
 import { CoachPanel } from "./CoachPanel.tsx";
 import { EditorPanel, starterCode } from "./EditorPanel.tsx";
 import { FeedbackView } from "./FeedbackView.tsx";
@@ -12,14 +13,14 @@ import { ProblemPanel } from "./ProblemPanel.tsx";
 type SessionItem = Session["items"][number];
 type Async<T> = { readonly status: "loading" } | { readonly status: "ready"; readonly data: T } | { readonly status: "error"; readonly message: string };
 
-const ITEM_KIND: Record<SessionItem["kind"], string> = { review: "복습", focus: "집중 훈련", variation: "변형 적용", challenge: "도전 과제" };
-
 export interface TrainingProps {
   readonly api: ApiClient;
   readonly skills: readonly Skill[];
   /** undefined while loading, null when there is no active session. */
   readonly session: Session | null | undefined;
   readonly activeIndex: number | null;
+  /** Changes when the learner switched language: server-rendered content is fetched again. */
+  readonly contentKey?: number;
   readonly phase: Phase;
   readonly summary: SessionSummary | null;
   readonly busy: boolean;
@@ -34,18 +35,19 @@ export interface TrainingProps {
 }
 
 export function Training(props: TrainingProps) {
+  const { t } = useI18n();
   const { session, summary } = props;
   if (summary) return <SummaryView summary={summary} skills={props.skills} onStart={props.onStart} onShowProgress={props.onShowProgress} busy={props.busy} />;
-  if (session === undefined) return <p className="page-status" role="status">세션을 불러오는 중입니다...</p>;
+  if (session === undefined) return <p className="page-status" role="status">{t("training.loadingSession")}</p>;
   if (session === null) return <StartCard onStart={props.onStart} busy={props.busy} error={props.error} />;
   const item = props.activeIndex === null ? undefined : session.items[props.activeIndex];
   if (!item) {
     return (
       <div className="center-card panel">
-        <h1 className="problem-title">세션의 모든 문제를 마쳤습니다</h1>
-        <p className="muted">마무리하면 이번 세션 요약과 다음 복습 일정을 보여 드립니다.</p>
+        <h1 className="problem-title">{t("training.allDoneTitle")}</h1>
+        <p className="muted">{t("training.allDoneBody")}</p>
         <button type="button" className="btn btn-primary" onClick={props.onComplete} disabled={props.busy}>
-          <Icon name="flag" /> 세션 마무리
+          <Icon name="flag" /> {t("training.finish")}
         </button>
       </div>
     );
@@ -54,13 +56,14 @@ export function Training(props: TrainingProps) {
 }
 
 function StartCard({ onStart, busy, error }: { readonly onStart: () => void; readonly busy: boolean; readonly error: string | null }) {
+  const { t } = useI18n();
   return (
     <div className="center-card panel">
-      <p className="eyebrow">오늘의 훈련</p>
-      <h1 className="problem-title">15분 세션을 시작하세요</h1>
-      <p className="muted">복습 한 문제, 집중 훈련, 피드백 후 재제출, 변형 문제 적용 순서로 진행합니다. 문제는 현재 레이팅과 복습 일정에 맞춰 고릅니다.</p>
+      <p className="eyebrow">{t("start.eyebrow")}</p>
+      <h1 className="problem-title">{t("start.title")}</h1>
+      <p className="muted">{t("start.body")}</p>
       <button type="button" className="btn btn-primary" onClick={onStart} disabled={busy}>
-        <Icon name="play" /> {busy ? "세션 준비 중..." : "15분 세션 시작"}
+        <Icon name="play" /> {busy ? t("start.preparing") : t("start.button")}
       </button>
       {error && (
         <p className="inline-error" role="alert">
@@ -72,33 +75,35 @@ function StartCard({ onStart, busy, error }: { readonly onStart: () => void; rea
 }
 
 function SummaryView(props: { readonly summary: SessionSummary; readonly skills: readonly Skill[]; readonly onStart: () => void; readonly onShowProgress: () => void; readonly busy: boolean }) {
+  const tr = useI18n();
+  const { t } = tr;
   const s = props.summary;
   return (
     <div className="center-card panel summary">
-      <p className="eyebrow">마무리</p>
-      <h1 className="problem-title">세션을 마쳤습니다</h1>
+      <p className="eyebrow">{t("summary.eyebrow")}</p>
+      <h1 className="problem-title">{t("summary.title")}</h1>
       <dl className="summary-stats">
         <div>
-          <dt>통과</dt>
+          <dt>{t("summary.passed")}</dt>
           <dd className="mono">{s.passed}</dd>
         </div>
         <div>
-          <dt>미통과</dt>
+          <dt>{t("summary.failed")}</dt>
           <dd className="mono">{s.failed}</dd>
         </div>
         <div>
-          <dt>피드백 후 해결</dt>
+          <dt>{t("summary.fixedAfterFeedback")}</dt>
           <dd className="mono">{s.fixedAfterFeedback}</dd>
         </div>
       </dl>
-      {s.skillsPracticed.length > 0 && <p>연습한 기술: {s.skillsPracticed.map((id) => skillName(props.skills, id)).join(", ")}</p>}
+      {s.skillsPracticed.length > 0 && <p>{t("summary.skillsPracticed", { skills: tr.list(s.skillsPracticed.map((id) => skillName(props.skills, id))) })}</p>}
       {s.nextReviews.length > 0 && (
         <>
-          <h2 className="section-label">다음 복습</h2>
+          <h2 className="section-label">{t("summary.nextReviews")}</h2>
           <ul className="plain-list">
             {s.nextReviews.map((r) => (
               <li key={r.skillId}>
-                <Icon name="calendar" size={16} /> {skillName(props.skills, r.skillId)} · {formatDate(r.dueAt)}
+                <Icon name="calendar" size={16} /> {skillName(props.skills, r.skillId)} · {tr.date(r.dueAt)}
               </li>
             ))}
           </ul>
@@ -106,10 +111,10 @@ function SummaryView(props: { readonly summary: SessionSummary; readonly skills:
       )}
       <div className="row-actions">
         <button type="button" className="btn btn-primary" onClick={props.onShowProgress}>
-          <Icon name="chart" /> 진행 현황 보기
+          <Icon name="chart" /> {t("summary.showProgress")}
         </button>
         <button type="button" className="btn btn-secondary" onClick={props.onStart} disabled={props.busy}>
-          <Icon name="play" /> 새 세션 시작
+          <Icon name="play" /> {t("summary.newSession")}
         </button>
       </div>
     </div>
@@ -117,7 +122,9 @@ function SummaryView(props: { readonly summary: SessionSummary; readonly skills:
 }
 
 function Workspace(props: TrainingProps & { readonly session: Session; readonly item: SessionItem }) {
-  const { api, session, item, phase, onPhase, onSession } = props;
+  const { api, session, item, phase, onPhase, onSession, contentKey = 0 } = props;
+  const tr = useI18n();
+  const { t } = tr;
   const [view, setView] = useState<Async<ExerciseView>>({ status: "loading" });
   const [code, setCode] = useState("");
   const codeRef = useRef("");
@@ -142,27 +149,36 @@ function Workspace(props: TrainingProps & { readonly session: Session; readonly 
     setCode(c);
   }, []);
 
+  // The first load fills the editor with the starter code; later loads (after a language switch) only replace the
+  // server-rendered texts and keep the learner's code and the current view.
+  const loaded = useRef(false);
   const load = useCallback(() => {
-    setView({ status: "loading" });
+    if (!loaded.current) setView({ status: "loading" });
     api.exercise(item.exerciseId).then(
       (v) => {
         if (!alive.current) return;
-        updateCode(starterCode(v.exercise));
+        if (!loaded.current) updateCode(starterCode(v.exercise));
+        loaded.current = true;
         setView({ status: "ready", data: v });
       },
-      (e: unknown) => alive.current && setView({ status: "error", message: errorMessage(e) }),
+      (e: unknown) => alive.current && !loaded.current && setView({ status: "error", message: errorMessage(e, tr) }),
     );
-  }, [api, item.exerciseId, updateCode]);
+    // contentKey: refetch in the new language. tr is read only for the error text.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [api, item.exerciseId, updateCode, contentKey]);
 
   useEffect(() => {
     onPhase("work");
+  }, [onPhase]);
+
+  useEffect(() => {
     load();
-  }, [load, onPhase]);
+  }, [load]);
 
   if (view.status !== "ready") {
     return view.status === "loading" ? (
       <p className="page-status" role="status">
-        문제를 불러오는 중입니다...
+        {t("workspace.loadingExercise")}
       </p>
     ) : (
       <div className="center-card panel">
@@ -170,7 +186,7 @@ function Workspace(props: TrainingProps & { readonly session: Session; readonly 
           {view.message}
         </p>
         <button type="button" className="btn btn-secondary" onClick={load}>
-          <Icon name="refresh" /> 다시 시도
+          <Icon name="refresh" /> {t("common.retry")}
         </button>
       </div>
     );
@@ -184,7 +200,7 @@ function Workspace(props: TrainingProps & { readonly session: Session; readonly 
       const r = await api.trialRun(ex.id, { code: codeRef.current });
       if (alive.current) setTrial(r);
     } catch (e) {
-      if (alive.current) setError(errorMessage(e));
+      if (alive.current) setError(errorMessage(e, tr));
     } finally {
       if (alive.current) setRunning(false);
     }
@@ -208,7 +224,7 @@ function Workspace(props: TrainingProps & { readonly session: Session; readonly 
         () => undefined,
       );
     } catch (e) {
-      if (alive.current) setError(errorMessage(e));
+      if (alive.current) setError(errorMessage(e, tr));
     } finally {
       if (alive.current) setSubmitting(false);
     }
@@ -218,27 +234,27 @@ function Workspace(props: TrainingProps & { readonly session: Session; readonly 
   const next = !itemDone
     ? null
     : session.currentIndex === null
-      ? { label: "세션 마무리", onClick: props.onComplete }
-      : { label: `다음 문제: ${ITEM_KIND[session.items[session.currentIndex]!.kind]}`, onClick: () => props.onActiveIndex(session.currentIndex) };
+      ? { label: t("training.finish"), onClick: props.onComplete }
+      : { label: t("workspace.next", { kind: itemKindLabel(tr, session.items[session.currentIndex]!.kind) }), onClick: () => props.onActiveIndex(session.currentIndex) };
 
   return (
     <div className="training">
       <div className="item-bar">
         <p className="item-bar-info">
-          <span className="chip chip-accent">{ITEM_KIND[item.kind]}</span>
+          <span className="chip chip-accent">{itemKindLabel(tr, item.kind)}</span>
           <span>
-            문제 <span className="mono">{item.index + 1}</span>/<span className="mono">{session.items.length}</span>
+            {t("workspace.exercise")} <span className="mono">{item.index + 1}</span>/<span className="mono">{session.items.length}</span>
           </span>
           <span className="muted item-bar-reason">{item.reason}</span>
         </p>
         <div className="item-bar-actions">
           {phase === "work" && !itemDone && (
             <button type="button" className="btn btn-quiet btn-small" onClick={props.onSkip} disabled={props.busy || submitting}>
-              <Icon name="skip" size={16} /> 이 문제 건너뛰기
+              <Icon name="skip" size={16} /> {t("workspace.skip")}
             </button>
           )}
           <button type="button" className="btn btn-quiet btn-small" onClick={props.onComplete} disabled={props.busy}>
-            <Icon name="flag" size={16} /> 세션 마무리
+            <Icon name="flag" size={16} /> {t("training.finish")}
           </button>
         </div>
       </div>
@@ -249,6 +265,7 @@ function Workspace(props: TrainingProps & { readonly session: Session; readonly 
             api={api}
             result={submission}
             exercise={ex}
+            contentKey={contentKey}
             skills={props.skills}
             onRevise={() => {
               setTrial(null);

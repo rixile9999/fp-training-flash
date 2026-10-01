@@ -95,4 +95,18 @@ describe("verifyExercise", () => {
     const r = await verifyExercise({ detail, spec, reference, runner, now });
     expect(r.problems.some((p) => p.startsWith("reference does not pass"))).toBe(true);
   });
+
+  it("checks localized starters compile and fail like the Korean starter", async () => {
+    const runner = fakeRunner((job): Statuses => {
+      const s = source(job);
+      if (s === "WRONG") return { b_test: "failed" };
+      if (s === "STARTER" || s === "STARTER_EN") return { a_test: "failed", b_test: "failed" };
+      if (s === "STARTER_ZH") return { a_test: "failed" };
+      return {};
+    });
+    const ok = await verifyExercise({ detail, spec, reference, runner, now, localizedStarters: [{ locale: "en", files: file("STARTER_EN") }] });
+    expect(ok.problems).toEqual([]);
+    const bad = await verifyExercise({ detail, spec, reference, runner, now, localizedStarters: [{ locale: "zh", files: file("STARTER_ZH") }] });
+    expect(bad.problems.some((p) => p.startsWith("starter.zh: results differ from the Korean starter"))).toBe(true);
+  });
 });

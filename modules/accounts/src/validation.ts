@@ -1,4 +1,5 @@
-import { appError, err, ok, type AppError, type Result } from "@fp/kernel";
+import { err, isLocale, ok, type AppError, type Locale, type Result } from "@fp/kernel";
+import { localizedError } from "./messages.ts";
 
 export const MAX_DISPLAY_NAME_LENGTH = 40;
 export const MAX_TOKEN_LABEL_LENGTH = 40;
@@ -22,26 +23,32 @@ function clean(raw: unknown): string {
   return typeof raw === "string" ? raw.normalize("NFC").trim() : "";
 }
 
-export function normalizeDisplayName(raw: string): Result<NormalizedName, AppError> {
+/** `locale` only selects the language of the error message (default ko). */
+export function normalizeDisplayName(raw: string, locale?: Locale): Result<NormalizedName, AppError> {
   const displayName = clean(raw);
   const len = codePointLength(displayName);
   if (len < 1 || len > MAX_DISPLAY_NAME_LENGTH) {
-    return err(appError("invalid_input", `표시 이름은 1자 이상 ${MAX_DISPLAY_NAME_LENGTH}자 이하여야 합니다.`));
+    return err(localizedError("invalid_input", "displayName.length", locale, { max: MAX_DISPLAY_NAME_LENGTH }));
   }
   if (FORBIDDEN_CHARS.test(displayName)) {
-    return err(appError("invalid_input", "표시 이름에 사용할 수 없는 문자가 포함되어 있습니다."));
+    return err(localizedError("invalid_input", "displayName.forbiddenChars", locale));
   }
   return ok({ displayName, key: displayName.toLowerCase() });
 }
 
-export function normalizeTokenLabel(raw: string): Result<string, AppError> {
+export function normalizeTokenLabel(raw: string, locale?: Locale): Result<string, AppError> {
   const label = clean(raw);
   const len = codePointLength(label);
   if (len < 1 || len > MAX_TOKEN_LABEL_LENGTH) {
-    return err(appError("invalid_input", `토큰 이름은 1자 이상 ${MAX_TOKEN_LABEL_LENGTH}자 이하여야 합니다.`));
+    return err(localizedError("invalid_input", "tokenLabel.length", locale, { max: MAX_TOKEN_LABEL_LENGTH }));
   }
   if (FORBIDDEN_CHARS.test(label)) {
-    return err(appError("invalid_input", "토큰 이름에 사용할 수 없는 문자가 포함되어 있습니다."));
+    return err(localizedError("invalid_input", "tokenLabel.forbiddenChars", locale));
   }
   return ok(label);
+}
+
+/** Runtime guard: callers outside TypeScript (HTTP, MCP, CLI) may pass anything. */
+export function isSupportedLocale(value: unknown): value is Locale {
+  return typeof value === "string" && isLocale(value);
 }

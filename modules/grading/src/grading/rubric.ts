@@ -1,12 +1,21 @@
 /**
  * Deterministic rubric checks (`RubricItem.automatedCheck`). They only annotate the evaluation
  * ("flagged"/"ok") for coaching; they never change correctness or the outcome.
+ * pattern checks carry the content's own message (already localized by the catalog); the others are rendered
+ * in `locale`.
  */
+import { DEFAULT_LOCALE } from "@fp/kernel";
+import type { Locale } from "@fp/kernel";
 import type { FileContent, RubricItem } from "@fp/content/contract";
 import type { RubricCheckResult } from "../contract/index.ts";
 import { stripComments, topLevelFunctions } from "../gleam/source.ts";
+import { msg } from "../messages.ts";
 
-export function rubricChecks(rubric: readonly RubricItem[], sourceFiles: readonly FileContent[]): RubricCheckResult[] {
+export function rubricChecks(
+  rubric: readonly RubricItem[],
+  sourceFiles: readonly FileContent[],
+  locale: Locale = DEFAULT_LOCALE,
+): RubricCheckResult[] {
   const results: RubricCheckResult[] = [];
   const code = sourceFiles.map((f) => stripComments(f.content)).join("\n");
   for (const item of rubric) {
@@ -22,7 +31,12 @@ export function rubricChecks(rubric: readonly RubricItem[], sourceFiles: readonl
           : {
               rubricId: item.id,
               status: "flagged",
-              message: `함수가 ${check.max}줄을 넘습니다: ${long.map((f) => `${f.name}(${f.endLine - f.startLine + 1}줄)`).join(", ")}`,
+              message: msg("rubric.functionsTooLong", locale, {
+                max: check.max,
+                functions: long
+                  .map((f) => msg("rubric.functionLines", locale, { name: f.name, lines: f.endLine - f.startLine + 1 }))
+                  .join(msg("rubric.listSeparator", locale)),
+              }),
             },
       );
       continue;
@@ -32,7 +46,7 @@ export function rubricChecks(rubric: readonly RubricItem[], sourceFiles: readonl
       re = new RegExp(check.pattern, "m");
     } catch {
       // Invalid pattern is a content bug; do not flag the learner for it.
-      results.push({ rubricId: item.id, status: "ok", message: `잘못된 검사 패턴: ${check.pattern}` });
+      results.push({ rubricId: item.id, status: "ok", message: msg("rubric.invalidPattern", locale, { pattern: check.pattern }) });
       continue;
     }
     const matched = re.test(code);

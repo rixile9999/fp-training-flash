@@ -7,6 +7,10 @@
 %%                  "perf": null | {"module": "<module>", "sizes": [N, ...]}}
 %%   output: one line per event on stdout: "@@FP:<nonce>@@" ++ JSON (ASCII only).
 %%           events: hello, test, perf, perf_skipped, harness_error, done.
+%%           A test event is {"type":"test","name","status","durationMs"} plus, when it did not pass,
+%%           "failure": {"kind": ..., language-neutral fields} (see src/grading/failure.ts, which renders the
+%%           text per locale) and "output"/"outputTruncated" (captured learner stdout). The harness never
+%%           emits human-readable sentences: no natural-language text lives here.
 %%
 %% Every test (and every perf size) runs in a fresh process with max_heap_size (memoryMb) and a
 %% timeout. timeMs is the budget for the whole test phase; each perf size gets its own timeMs.
@@ -64,17 +68,16 @@ run_tests([Name | Rest], Deadline, Limits, AllPassed) ->
             true ->
                 run_test(Name, Remaining, Limits);
             false ->
-                Msg = fmt("전체 실행 시간 제한(~b ms)을 이미 다 써서 실행하지 않았습니다.",
-                          [maps:get(time_ms, Limits)]),
-                emit_test(Name, timeout, Msg, 0),
+                emit_test(Name, timeout, #{kind => budget_exhausted, limitMs => maps:get(time_ms, Limits)},
+                          {<<>>, false}, 0),
                 timeout
         end,
     run_tests(Rest, Deadline, Limits, AllPassed andalso Status =:= passed).
 
 run_test(Name, Timeout, Limits) ->
     case resolve(Name) of
-        {error, Msg} ->
-            emit_test(Name, error, Msg, 0),
+        {error, Failure} ->
+            emit_test(Name, error, Failure, {<<>>, false}, 0),
             error;
         {ok, Module, Function, ModuleName} ->
             Started = now_ms(),
@@ -87,34 +90,29 @@ run_test(Name, Timeout, Limits) ->
                              end
                          end, Timeout, maps:get(heap, Limits)),
             Duration = now_ms() - Started,
-            {Status, Msg} =
+            {Status, Failure} =
                 case Outcome of
                     {ok, passed} -> {passed, undefined};
-                    {ok, {Kind, Text}} -> {Kind, Text};
-                    timeout ->
-                        {timeout, fmt("시간 제한(~b ms)을 넘었습니다. 무한 루프나 너무 느린 계산이 있는지 확인하세요.",
-                                      [maps:get(time_ms, Limits)])};
-                    killed ->
-                        {error, fmt("메모리 한도(~b MB)를 넘어 실행이 중단되었습니다.",
-                                    [maps:get(memory_mb, Limits)])};
-                    {crashed, Reason} ->
-                        {error, fmt("테스트 프로세스가 비정상 종료되었습니다: ~0P", [Reason, 20])}
+                    {ok, {Kind, F}} -> {Kind, F};
+                    timeout -> {timeout, #{kind => timeout, limitMs => maps:get(time_ms, Limits)}};
+                    killed -> {error, #{kind => memory, limitMb => maps:get(memory_mb, Limits)}};
+                    {crashed, Reason} -> {error, #{kind => crashed, reason => text(fmt("~0P", [Reason, 20]))}}
                 end,
-            emit_test(Name, Status, with_output(Status, Msg, Output), Duration),
+            emit_test(Name, Status, Failure, Output, Duration),
             Status
     end.
 
-emit_test(Name, Status, Msg, Duration) ->
+%% Output = {CapturedBytes, Truncated}; it is attached only to tests that did not pass.
+emit_test(Name, Status, Failure, {Output, Truncated}, Duration) ->
     Base = #{type => test, name => Name, status => Status, durationMs => Duration},
-    emit(case Msg of
-             undefined -> Base;
-             _ -> Base#{message => truncate(Msg, ?MAX_MESSAGE)}
+    WithFailure = case Failure of
+                      undefined -> Base;
+                      _ -> Base#{failure => Failure}
+                  end,
+    emit(case Status =/= passed andalso Output =/= <<>> of
+             true -> WithFailure#{output => Output, outputTruncated => Truncated};
+             false -> WithFailure
          end).
-
-with_output(_Status, Msg, <<>>) -> Msg;
-with_output(passed, Msg, _Output) -> Msg;
-with_output(_Status, undefined, Output) -> fmt("출력:~n~ts", [Output]);
-with_output(_Status, Msg, Output) -> fmt("~ts~n~n출력:~n~ts", [Msg, Output]).
 
 resolve(Name) ->
     case string:split(Name, ".", trailing) of
@@ -124,13 +122,13 @@ resolve(Name) ->
                     Function = binary_to_atom(FunctionName, utf8),
                     case erlang:function_exported(Module, Function, 0) of
                         true -> {ok, Module, Function, ModuleName};
-                        false -> {error, fmt("테스트 함수 ~ts를 찾을 수 없습니다.", [Name])}
+                        false -> {error, #{kind => test_not_found, name => Name}}
                     end;
                 error ->
-                    {error, fmt("테스트 모듈 ~ts를 찾을 수 없습니다.", [ModuleName])}
+                    {error, #{kind => module_not_found, module => ModuleName}}
             end;
         _ ->
-            {error, fmt("잘못된 테스트 이름: ~ts", [Name])}
+            {error, #{kind => bad_test_name, name => text(Name)}}
     end.
 
 load(ModuleName) ->
@@ -205,7 +203,7 @@ isolated(Fun, Timeout, HeapWords) ->
             timeout
         end,
     Capture ! {get, self()},
-    Output = receive {captured, Capture, Bin} -> Bin after 1000 -> <<>> end,
+    Output = receive {captured, Capture, Captured} -> Captured after 1000 -> {<<>>, false} end,
     exit(Capture, kill),
     {Outcome, Output}.
 
@@ -217,11 +215,7 @@ capture_loop(Buf, Truncated) ->
             From ! {io_reply, ReplyAs, Reply},
             capture_loop(Buf2, Truncated2);
         {get, From} ->
-            Out = case Truncated of
-                      true -> <<Buf/binary, "\n...(출력 생략)"/utf8>>;
-                      false -> Buf
-                  end,
-            From ! {captured, self(), Out};
+            From ! {captured, self(), {Buf, Truncated}};
         _ ->
             capture_loop(Buf, Truncated)
     end.
@@ -251,83 +245,93 @@ append(Bin, Buf, false) ->
         false -> {ok, <<Buf/binary, (truncate(Bin, Room))/binary>>, true}
     end.
 
-%% ---------------------------------------------------------------- failure messages
+%% ---------------------------------------------------------------- failures
 
-%% Returns {failed | error, Message}. "failed" = an assertion in the test code (gleeunit/should,
+%% Returns {failed | error, Failure}. "failed" = an assertion in the test code (gleeunit/should,
 %% `assert`, `let assert`/`panic` in the test module, qcheck); "error" = anything else (a crash,
-%% `todo` or `panic` in learner code, ...).
+%% `todo` or `panic` in learner code, ...). Failure is a map of language-neutral fields.
 describe(error, #{gleam_error := Kind} = E, Stack, TestModule) ->
     Module = maps:get(module, E, <<>>),
     Assertion = Module =:= TestModule orelse Module =:= <<"gleeunit/should">>
         orelse Module =:= <<"qcheck">> orelse string:prefix(Module, <<"qcheck/">>) =/= nomatch,
-    Where = case Module of
-                %% should.equal panics inside gleeunit: point at the calling test line when the frame
-                %% survived (tail calls drop it); a location inside gleeunit is useless.
-                <<"gleeunit/should">> -> caller_location(Stack, TestModule, <<>>);
-                _ -> location(E)
-            end,
-    case Kind of
-        assert ->
-            {kind(Assertion), fmt("assert 실패: ~ts~ts", [assert_detail(E), Where])};
-        panic when Module =:= <<"gleeunit/should">> ->
-            {failed, fmt("~ts~ts", [should_detail(maps:get(message, E, <<>>)), Where])};
-        panic ->
-            {kind(Assertion), fmt("panic: ~ts~ts", [maps:get(message, E, <<>>), Where])};
-        todo ->
-            {error, fmt("아직 구현되지 않은 코드(todo)에 도달했습니다: ~ts~ts",
-                        [maps:get(message, E, <<>>), Where])};
-        let_assert ->
-            {kind(Assertion), fmt("let assert 패턴이 값과 맞지 않습니다. 값: ~ts~ts",
-                                  [inspect(maps:get(value, E, nil)), Where])};
-        _ ->
-            {error, fmt("~p: ~ts~ts", [Kind, maps:get(message, E, <<>>), Where])}
-    end;
+    Location = case Module of
+                   %% should.equal panics inside gleeunit: point at the calling test line when the frame
+                   %% survived (tail calls drop it); a location inside gleeunit is useless.
+                   <<"gleeunit/should">> -> caller_location(Stack, TestModule);
+                   _ -> location(E)
+               end,
+    Message = maps:get(message, E, <<>>),
+    {Status, Failure} =
+        case Kind of
+            assert ->
+                {kind(Assertion), assert_failure(E)};
+            panic when Module =:= <<"gleeunit/should">> ->
+                {failed, should_failure(Message)};
+            panic ->
+                {kind(Assertion), #{kind => panic, message => text(Message)}};
+            todo ->
+                {error, #{kind => todo, message => text(Message)}};
+            let_assert ->
+                {kind(Assertion), #{kind => let_assert, value => inspect(maps:get(value, E, nil))}};
+            _ ->
+                {error, #{kind => gleam_error, gleamKind => fmt("~p", [Kind]), message => text(Message)}}
+        end,
+    {Status, case Location of
+                 undefined -> Failure;
+                 _ -> Failure#{location => Location}
+             end};
 describe(Class, Reason, Stack, _TestModule) ->
-    {error, fmt("실행 중 오류가 발생했습니다 (~p): ~0tP~ts", [Class, Reason, 20, top_frame(Stack)])}.
+    Failure = #{kind => exception, errorClass => fmt("~p", [Class]), reason => text(fmt("~0tP", [Reason, 20]))},
+    {error, case top_frame(Stack) of
+                undefined -> Failure;
+                Frame -> Failure#{frame => Frame}
+            end}.
 
 kind(true) -> failed;
 kind(false) -> error.
 
-should_detail(<<"\n", Rest/binary>>) ->
+should_failure(<<"\n", Rest/binary>>) ->
     case binary:split(Rest, <<"\nshould equal\n">>) of
         [Actual, Expected] ->
-            fmt("값이 기대와 다릅니다.~n  기대값: ~ts~n  실제값: ~ts", [Expected, Actual]);
+            #{kind => should_equal, expected => text(Expected), actual => text(Actual)};
         _ ->
             case binary:split(Rest, <<"\nshould not equal\n">>) of
-                [Actual, _] -> fmt("두 값이 달라야 하는데 같습니다: ~ts", [Actual]);
-                _ -> binary:replace(Rest, <<"\n">>, <<" ">>, [global])
+                [Actual, _] -> #{kind => should_not_equal, actual => text(Actual)};
+                _ -> #{kind => assertion_message,
+                       message => text(binary:replace(Rest, <<"\n">>, <<" ">>, [global]))}
             end
     end;
-should_detail(Message) ->
-    Message.
+should_failure(Message) ->
+    #{kind => assertion_message, message => text(Message)}.
 
-assert_detail(#{kind := binary_operator, operator := Op, left := L, right := R}) ->
-    fmt("`~ts` 비교가 거짓입니다.~n  왼쪽 값: ~ts~n  오른쪽 값: ~ts", [atom_to_binary(Op), expr(L), expr(R)]);
-assert_detail(#{kind := function_call, arguments := Args}) ->
-    fmt("함수 호출 결과가 False입니다. 인자: ~ts",
-        [lists:join(<<", ">>, [expr(A) || A <- Args])]);
-assert_detail(_) ->
-    <<"식의 값이 False입니다."/utf8>>.
+assert_failure(#{kind := binary_operator, operator := Op, left := L, right := R}) ->
+    #{kind => assert, assertKind => binary_operator, operator => atom_to_binary(Op),
+      left => expr(L), right => expr(R)};
+assert_failure(#{kind := function_call, arguments := Args}) ->
+    #{kind => assert, assertKind => function_call, arguments => [expr(A) || A <- Args]};
+assert_failure(_) ->
+    #{kind => assert, assertKind => expression}.
 
-expr(#{kind := unevaluated}) -> <<"(평가되지 않음)"/utf8>>;
+%% null = not evaluated (short-circuited operand).
+expr(#{kind := unevaluated}) -> null;
 expr(#{value := V}) -> inspect(V);
 expr(_) -> <<"?">>.
 
-location(#{file := File, line := Line}) ->
-    fmt(" (~ts:~b)", [short_path(File), Line]);
+location(#{file := File, line := Line}) when is_binary(File), is_integer(Line) ->
+    #{file => short_path(File), line => Line};
 location(_) ->
-    <<>>.
+    undefined.
 
-caller_location(Stack, TestModule, Default) ->
+caller_location(Stack, TestModule) ->
     Erl = binary_to_atom(binary:replace(TestModule, <<"/">>, <<"@">>, [global]), utf8),
     case [Info || {M, _F, _A, Info} <- Stack, M =:= Erl] of
         [Info | _] ->
             case {proplists:get_value(file, Info), proplists:get_value(line, Info)} of
                 {File, Line} when is_list(File), is_integer(Line) ->
-                    fmt(" (~ts:~b)", [short_path(unicode:characters_to_binary(File)), Line]);
-                _ -> Default
+                    #{file => short_path(unicode:characters_to_binary(File)), line => Line};
+                _ -> undefined
             end;
-        [] -> Default
+        [] -> undefined
     end.
 
 short_path(File) ->
@@ -336,14 +340,18 @@ short_path(File) ->
         nomatch -> File
     end.
 
-top_frame([{M, F, A, Info} | _]) ->
+top_frame([{M, F, A, Info} | _]) when is_atom(M), is_atom(F) ->
     Arity = case A of L when is_list(L) -> length(L); N -> N end,
+    Frame = #{module => atom_to_binary(M), function => atom_to_binary(F), arity => Arity},
     case proplists:get_value(line, Info) of
-        undefined -> fmt(" (~p:~p/~b)", [M, F, Arity]);
-        Line -> fmt(" (~p:~p/~b, ~b행)", [M, F, Arity, Line])
+        Line when is_integer(Line) -> Frame#{line => Line};
+        _ -> Frame
     end;
 top_frame(_) ->
-    <<>>.
+    undefined.
+
+text(Bin) when is_binary(Bin) -> truncate(Bin, ?MAX_MESSAGE);
+text(Other) -> truncate(fmt("~0tP", [Other, 30]), ?MAX_MESSAGE).
 
 inspect(V) ->
     try truncate(gleam@string:inspect(V), ?MAX_MESSAGE)

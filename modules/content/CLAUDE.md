@@ -17,6 +17,9 @@ an immutable, versioned bundle into schema `content`, and serves it through `Con
   published only after commit. Re-importing the *current* bundle hash is a no-op (no event, same BundleInfo).
   Re-importing an older bundle after a newer one is a real import (changed variants get new versions).
 - Skills and notes are not versioned: upserted on import, retired when removed (not listed, still readable).
+- Localization (content/README.md "Localization"): Korean is stored as the contract objects; en/zh overlays
+  (`src/i18n.ts` types) are stored in a `translations` jsonb column next to them and applied by the catalog
+  field by field (missing -> Korean). No locale / "ko" returns exactly the Korean objects.
 - The loader never fails fast: every problem becomes a `ContentIssue { path, message }` with a path relative
   to the content root. A bundle is produced only when there are zero issues.
 
@@ -28,11 +31,15 @@ src/bundle.ts           loadDirectory -> opaque ContentBundle (parsed data kept 
                         created by this module in this process can be imported)
 src/loader/tree.ts      reads a directory into a sorted in-memory tree (skips dot files)
 src/loader/schemas.ts   zod schemas (strict: unknown keys are issues)
+src/i18n.ts             overlay types (SkillText, NoteText, VariantText) and localize* functions for the catalog
 src/loader/parse.ts     validation, family->variant merge, cross references, ParsedVariant building
-src/loader/gleam.ts     `pub fn` detection and body extraction (skips strings and // comments)
-src/loader/hash.ts      variant hash (family.yaml + variant files, root-independent) and bundle hash
+src/loader/translations.ts  *.<locale>.* overlays: parsing, key checks against Korean, locales (rule 4)
+src/loader/yaml.ts      parseYaml + validate (unknown keys reported, then checks continue)
+src/loader/gleam.ts     `pub fn` detection, body extraction, codeOnly (skips strings and // comments)
+src/loader/hash.ts      variant hash (family.yaml, family.<l>.yaml + variant files incl. translations) and bundle hash
 src/loader/frontmatter.ts  YAML front matter splitter for notes
 src/db/migrations.ts    schema content: skills, concept_notes, theory_topics, exercise_versions, variants, bundles
+                        (0002: `translations` jsonb on skills, notes, topics, exercise_versions)
 src/db/importer.ts      importBundle
 src/db/catalog.ts       ContentCatalog over the tables (JSONB columns hold the contract objects verbatim)
 ```
@@ -48,8 +55,24 @@ src/db/catalog.ts       ContentCatalog over the tables (JSONB columns hold the c
   public test; implement/fix need at least one wrong answer; `wrong/` dirs and entries match 1:1;
   `performance.module` file exists, sizes ascending, `referenceCost` (optional, default []) one per size.
 - Predict: needs `predict {code, acceptedAnswers}`; module/tests/wrong not required.
-- Stray files are issues: a family dir holds only `family.yaml` + variant dirs; a variant dir only
-  `exercise.yaml`, `prompt.md`, `explanation.md` and (not predict) `starter/ solution/ test/ support/ wrong/`.
+- Stray files are issues: a family dir holds only `family.yaml`, `family.<l>.yaml` + variant dirs; a variant dir
+  only `exercise.yaml`, `prompt.md`, `explanation.md`, their `.<l>.` siblings and (not predict)
+  `starter/ starter.<l>/ solution/ test/ support/ wrong/`.
+
+## Translations (loader/translations.ts)
+
+- Files: `skills.<l>.yaml`, `concepts|theory/<id>.<l>.md` (front matter id + title only), `family.<l>.yaml`,
+  `exercise.<l>.yaml`, `prompt|explanation.<l>.md`, `starter.<l>/<module>.gleam`. `<l>` must be en or zh.
+- Issues: unknown overlay keys (schema keys, test fns, requirement ids, hint levels, rubric ids of the merged
+  rubric; `message` only for items with a pattern check), unknown skill/note ids, starter whose `codeOnly`
+  differs from the Korean starter or extra files in `starter.<l>/`.
+- Title: `exercise.<l>.yaml` title, else (only when the variant does not override the Korean title) the family
+  overlay title. Rubric: variant overlay, else family overlay (only for a rubric inherited from the family).
+- `locales`: "ko" + each locale with prompt, explanation, overlay with every test name and hints 1..5, family
+  title, the variant title when the variant overrides it (stricter than README rule 4), and a localized starter
+  when the Korean starter has Hangul. Partial translations are still served field by field.
+- Translation files of a variant (and family.<l>.yaml) are part of its hash: changes bump the version. Skill and
+  note translations are not versioned. Rows stored before 0002 have no `locales`; the catalog fills ["ko"].
 
 ## File mapping
 
@@ -61,6 +84,8 @@ test/** -> `test/**` (GradingSpec.testFiles, all files); solution and wrong/<key
 `pnpm check:module @fp/content`. Tests in `test/`:
 - `loader.test.ts`: real repo `/content` (`../../../content`), temp trees from `test/fixtures.ts`
   (`baseFiles()` is a valid tree with an implement variant and a predict variant; mutate it per test).
+- `i18n.test.ts`: overlays, issues, starter override, hash bump, locales, localized catalog with fallback,
+  real `/content` in every locale (`translationFiles()` in fixtures adds en (complete) + zh (partial)).
 - `module.test.ts`: in-memory PGlite, recording event bus, fixed clock; versioning, retirement, idempotency,
   rollback, filters and hidden-data checks.
 

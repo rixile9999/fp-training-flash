@@ -1,6 +1,6 @@
 # @fp/web — training UI
 
-React 19 + Vite + CodeMirror 6. Korean UI. Talks to the backend only through `createApiClient` from
+React 19 + Vite + CodeMirror 6. UI in ko (default) / en / zh. Talks to the backend only through `createApiClient` from
 `@fp/api-contract` (never import module contracts or `@fp/kernel` values: the kernel pulls in `node:crypto`).
 Nested module types are derived from the DTOs in `src/api/types.ts`.
 
@@ -14,21 +14,33 @@ Nested module types are derived from the DTOs in `src/api/types.ts`.
 ## Layout
 
 - `main.tsx` awaits `loadApiFactory(import.meta.env)` (the fake API is a lazily loaded chunk, absent from production bundles), then wires it, `browserStore()` and the wall clock into `App`.
-- `App.tsx` owns auth (localStorage key `fp.auth`), the active session, the active item index, the UI phase
+- `App.tsx` owns the locale (localStorage `fp.locale`, `<html lang>`), auth (localStorage key `fp.auth`), the active session, the active item index, the UI phase
   (`work` | `feedback`), the completed-session summary and recent sessions (`fp.recentSessions`).
-- `session.ts` maps session items + phase onto the 5-step stepper (복습, 집중 훈련, 피드백·재제출, 변형 적용, 마무리).
+- `session.ts` maps session items + phase onto the 5-step stepper (review, focus, feedback, variation, wrapup).
+- `i18n/`: dependency-free i18n. `messages.ts` is the ONE catalog (`id -> { ko, en, zh }`, `{name}` placeholders,
+  no plurals: phrase en/zh so one template fits any count; terms from docs/i18n-glossary.md). `locale.ts` mirrors
+  the kernel helpers (Locale, SUPPORTED_LOCALES, isLocale, pickLocale, formatMessage) since kernel values are off
+  limits. `translator.ts`: `translator(locale)` -> `t(id, params)`, Intl `date`/`percent`/`number`/`relativeDay`,
+  `list`; missing en/zh falls back to ko, unknown ids render as the id. `I18n.tsx`: `<I18nProvider>` + `useI18n()`
+  (Korean without a provider, so isolated component tests stay Korean). Never hard-code UI text in components.
 - `screens/`: `Login`, `Training` (start card, workspace, summary), `ProblemPanel` (+ `HintPanel`),
   `EditorPanel`, `CoachPanel` (chat), `FeedbackView` (3 layers, rating, coach feedback, explanation),
   `Progress`.
 - `ui/`: small presentational pieces (inline stroke `Icon`, `Disclosure`, safe `Markdown` subset, `CodeBlock`,
-  `StatusBadge`, `RangeBar`, Korean `labels`). `styles.css` holds all styling; tokens on `:root`.
+  `StatusBadge`, `RangeBar`, enum `labels`, `LanguageSwitcher` (segmented on login, select in the header)). `styles.css` holds all styling; tokens on `:root`.
 - `editor/gleam.ts`: StreamLanguage Gleam tokenizer shared by the CodeMirror editor and static code blocks
   (`highlightGleam`), styled via `tok-*` classes.
-- `api/fake.ts` + `api/fake-data.ts`: fake client with the coupon exercise family, grading simulated by regex
+- `api/fake.ts` + `api/fake-data.ts`: fake client (content stays Korean except skill names; supports `updateMe` and
+  `User.locale`) with the coupon exercise family, grading simulated by regex
   rules on the code, rating rules mirroring the real policy (first attempt, hint <= 2, no explanation).
 
 ## Invariants
 
+- Locale: a locale stored in this browser wins (sent with dev-login, pushed with `updateMe` if the account differs);
+  without one the account's locale is adopted. Switching changes the chrome at once, calls `api.updateMe`, then
+  bumps `contentKey` so exercise, skills, progress and coach feedback are refetched (the learner's code is kept).
+- zh uses Noto Sans SC (`html:lang(zh)` swaps `--font-ui`). Longer en labels: the header stepper hides non-current
+  step labels per locale via container queries (thresholds measured at 1440px); re-measure when labels change.
 - Evaluation (correctness, requirements, code-quality rubric) renders as soon as `submit` resolves. Coaching is
   fetched separately with `feedback()` and shows a loading state; it must never block results.
 - Code quality is labelled "정답 판정과 레이팅에 반영하지 않음". Rating shows before -> after, 잠정, "첫 제출만 반영합니다".
@@ -43,7 +55,8 @@ Nested module types are derived from the DTOs in `src/api/types.ts`.
 
 - `helpers.ts`: `spyApi()` wraps the fake in `vi.fn` spies; `deferred()` to hold `feedback()` open.
 - Component tests use Testing Library + user-event. To edit code in the real editor use
-  `EditorView.findFromDOM(screen.getByRole("textbox", { name: /코드 편집기/ }))` and `dispatch`.
+  `EditorView.findFromDOM(await screen.findByRole("textbox", { name: /코드 편집기/ }))` and `dispatch` (the view
+  is created in an effect). Queries use the Korean catalog text; `test/i18n.test.tsx` covers en/zh and fallback.
 - `user.type` treats `[` as a key descriptor; use `user.paste` for Gleam list literals.
 
 ## Gotchas

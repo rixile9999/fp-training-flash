@@ -14,6 +14,18 @@ import {
   formatSubmission,
   formatTrialRun,
 } from "./format.ts";
+import {
+  DEFAULT_LOCALE,
+  LocalizedError,
+  isLocale,
+  localeName,
+  msg,
+  normalizeLocale,
+  resolveLocale,
+  sourceLabel,
+  systemLocale,
+} from "./messages.ts";
+import type { Locale, LocaleSource, MessageId, MessageParams, SystemLocaleEnv } from "./messages.ts";
 import { META_FILE, learnerFile, readLearnerCode, readMeta, writeProject } from "./project.ts";
 import type { ProjectMeta } from "./project.ts";
 
@@ -22,6 +34,7 @@ export type CliApi = Pick<
   ApiClient,
   | "devLogin"
   | "me"
+  | "updateMe"
   | "issueToken"
   | "exercise"
   | "trialRun"
@@ -35,9 +48,11 @@ export type CliApi = Pick<
   | "progress"
 >;
 
-export interface CliEnv extends ConfigEnv {
+export interface CliEnv extends ConfigEnv, SystemLocaleEnv {
   readonly FP_API_URL?: string | undefined;
   readonly FP_TOKEN?: string | undefined;
+  /** Display language override (ko, en, zh; "en_US.UTF-8"-style values are accepted). */
+  readonly FP_LANG?: string | undefined;
 }
 
 export interface CliDeps {
@@ -51,55 +66,51 @@ export interface CliDeps {
 
 const LANGUAGE: Language = "gleam";
 
-export const USAGE = `사용법: fp <명령> [옵션]
-
-  login <이름>              개발용 로그인 (토큰을 설정 파일에 저장)
-  whoami                    현재 사용자
-  start [--minutes 15] [--focus <기술>]
-                            세션 시작 후 첫 문제를 ./fp-work/ 에 생성
-  next | current [--force]  현재 문제를 ./fp-work/<family>-<variant>/ 에 생성
-  run [dir]                 공개 테스트 실행 (기록되지 않음)
-  submit [dir]              제출 (숨김 테스트 포함 채점, 레이팅 변화 표시)
-  feedback [제출ID|last]    코치 피드백
-  hint [단계] [--dir d]     힌트 공개 (생략 시 다음 단계)
-  explain [--yes] [--dir d] 해설 공개 (레이팅 미반영, --yes 필요)
-  progress                  기술별 레이팅과 복습 일정
-  skip                      현재 문제 건너뛰기 후 다음 문제 생성
-  token issue <라벨>        MCP 등에 쓸 토큰 발급
-
-공통 옵션: --json (기계용 JSON 출력), --help
-환경 변수: FP_API_URL, FP_TOKEN, FP_CONFIG_DIR (기본 ~/.config/fp)`;
-
-/** Expected, user-facing failure: printed without a stack trace. */
-class CliError extends Error {
-  readonly exitCode: number;
-  constructor(message: string, exitCode = 1) {
-    super(message);
-    this.exitCode = exitCode;
-  }
+/** Usage text in `locale` (default Korean). */
+export function usage(locale: Locale = DEFAULT_LOCALE): string {
+  return msg(locale, "usage");
 }
 
-function describeError(e: unknown): string {
+/** Korean usage, kept for callers that print help without a locale. */
+export const USAGE = usage();
+
+/** Expected, user-facing failure: printed without a stack trace. */
+class CliError extends LocalizedError {}
+
+/** Commands that render with the account locale; they fetch /v1/me unless --lang/FP_LANG decide. */
+const ACCOUNT_LOCALE_COMMANDS = new Set(["start", "next", "current", "skip", "run", "submit", "feedback", "hint", "explain", "progress", "token"]);
+
+function describeError(e: unknown, locale: Locale): string {
+  const m = (id: MessageId, params?: MessageParams) => msg(locale, id, params);
+  if (e instanceof LocalizedError) return e.render(locale);
   if (e instanceof ApiError) {
     switch (e.code) {
       case "unauthorized":
-        return "인증에 실패했습니다. `fp login <이름>`으로 다시 로그인하세요.";
+        return m("errUnauthorized");
       case "not_found":
-        return `찾을 수 없습니다: ${e.message}`;
+        return m("errNotFound", { message: e.message });
       case "invalid_input":
-        return `입력이 올바르지 않습니다: ${e.message}`;
+        return m("errInvalidInput", { message: e.message });
       case "conflict":
-        return `현재 상태와 충돌합니다: ${e.message}`;
+        return m("errConflict", { message: e.message });
       case "rate_limited":
-        return "요청이 너무 많습니다. 잠시 후 다시 시도하세요.";
+        return m("errRateLimited");
       default:
-        return `서버 오류 (HTTP ${e.status}, ${e.code}): ${e.message}`;
+        return m("errServer", { status: e.status, code: e.code, message: e.message });
     }
   }
-  if (e instanceof TypeError && /fetch/i.test(e.message)) {
-    return `API 서버에 연결할 수 없습니다 (${e.message}). 서버 실행 여부와 FP_API_URL을 확인하세요.`;
-  }
+  if (e instanceof TypeError && /fetch/i.test(e.message)) return m("errConnect", { message: e.message });
   return e instanceof Error ? e.message : String(e);
+}
+
+/** Finds --lang in raw argv (used when parseArgs itself failed). */
+function scanLangFlag(argv: readonly string[]): Locale | undefined {
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i] ?? "";
+    if (a === "--lang") return normalizeLocale(argv[i + 1]);
+    if (a.startsWith("--lang=")) return normalizeLocale(a.slice("--lang=".length));
+  }
+  return undefined;
 }
 
 export async function runCli(argv: readonly string[], deps: CliDeps): Promise<number> {
@@ -107,6 +118,17 @@ export async function runCli(argv: readonly string[], deps: CliDeps): Promise<nu
   const out = deps.stdout;
   const makeClient = deps.createClient ?? ((o) => createApiClient(o));
   const newKey = deps.newKey ?? randomUUID;
+  const system = systemLocale(env);
+
+  // The config may hold the cached account locale; a broken file is reported later as a command error.
+  let config: CliConfig = {};
+  let configError: unknown = null;
+  try {
+    config = await loadConfig(env);
+  } catch (e) {
+    configError = e;
+  }
+  const cachedLocale = (): Locale | undefined => (config.locale && isLocale(config.locale) ? config.locale : undefined);
 
   let parsed;
   try {
@@ -122,33 +144,63 @@ export async function runCli(argv: readonly string[], deps: CliDeps): Promise<nu
         minutes: { type: "string" },
         focus: { type: "string" },
         dir: { type: "string" },
+        lang: { type: "string" },
       },
     });
   } catch (e) {
-    deps.stderr(`${(e as Error).message}\n\n${USAGE}`);
+    const { locale } = resolveLocale({ flag: scanLangFlag(argv), env: env.FP_LANG, config: cachedLocale(), system });
+    deps.stderr(`${(e as Error).message}\n\n${usage(locale)}`);
     return 2;
   }
   const { values: opts, positionals } = parsed;
   const [command, ...args] = positionals;
   const json = opts.json ?? false;
 
+  const flag = normalizeLocale(opts.lang);
+  /** Locale before asking the server: everything except the live account locale. */
+  let resolved = resolveLocale({ flag, env: env.FP_LANG, config: cachedLocale(), system });
+  let locale: Locale = resolved.locale;
+  const t = (id: MessageId, params?: MessageParams) => msg(locale, id, params);
+
+  if (opts.lang !== undefined && !flag) {
+    deps.stderr(`${t("invalidLangFlag", { value: opts.lang })}\n\n${usage(locale)}`);
+    return 2;
+  }
   if (!command || opts.help || command === "help") {
-    out(USAGE);
+    out(usage(locale));
     return command || opts.help ? 0 : 2;
   }
 
-  let config: CliConfig = {};
   const apiUrl = () => env.FP_API_URL || config.apiUrl || DEFAULT_API_URL;
   const anon = () => makeClient({ baseUrl: apiUrl() });
+  const token = () => env.FP_TOKEN || config.token;
   const authed = (): CliApi => {
-    const token = env.FP_TOKEN || config.token;
-    if (!token) throw new CliError("로그인이 필요합니다. `fp login <이름>`을 먼저 실행하세요.");
-    return makeClient({ baseUrl: apiUrl(), token });
+    const tok = token();
+    if (!tok) throw new CliError("loginRequired");
+    return makeClient({ baseUrl: apiUrl(), token: tok });
   };
   const update = async (patch: Partial<CliConfig>) => {
     config = { ...config, ...patch };
     await saveConfig(env, config);
   };
+  /** Applies the account locale (live from the server) and caches it for offline output. */
+  const useAccountLocale = async (account: Locale) => {
+    resolved = resolveLocale({ flag, env: env.FP_LANG, account, config: cachedLocale(), system });
+    locale = resolved.locale;
+    // Cache only for the account the config file belongs to (FP_TOKEN may point at another one).
+    if (config.locale !== account && config.token && !env.FP_TOKEN) await update({ locale: account });
+  };
+  /** Fetches /v1/me for its locale when neither --lang nor FP_LANG decides. Best effort. */
+  const loadAccountLocale = async () => {
+    if (resolved.source === "flag" || resolved.source === "env" || !token()) return;
+    try {
+      const me = await authed().me();
+      if (me.locale && isLocale(me.locale)) await useAccountLocale(me.locale);
+    } catch {
+      // The command itself reports API problems; the cached/system locale stays in effect.
+    }
+  };
+
   /** Prints human text, or the data as JSON with --json. */
   const emit = (data: unknown, text: string) => out(json ? JSON.stringify(data, null, 2) : text);
   const rel = (p: string) => relative(cwd, p) || ".";
@@ -162,84 +214,120 @@ export async function runCli(argv: readonly string[], deps: CliDeps): Promise<nu
       if (meta) return { dir, meta };
     }
     const where = candidates[0] ?? cwd;
-    throw new CliError(`문제 디렉터리를 찾을 수 없습니다 (${rel(where)}에 ${META_FILE} 없음). \`fp next\`로 문제를 먼저 받으세요.`);
+    throw new CliError("projectNotFound", { where: rel(where), meta: META_FILE });
   };
 
   /** Writes the session's current exercise to ./fp-work and prints where it went. */
-  const materialize = async (api: CliApi, session: Session, header: string): Promise<number> => {
+  const materialize = async (api: CliApi, session: Session, header: MessageId): Promise<number> => {
     const item = session.currentIndex === null ? undefined : session.items.find((i) => i.index === session.currentIndex);
     if (!item) {
-      emit({ session, project: null }, `${header}\n${formatSession(session)}\n\n세션의 모든 문제를 마쳤습니다. \`fp progress\`로 결과를 확인하세요.`);
+      emit({ session, project: null }, `${t(header)}\n${formatSession(session, locale)}\n\n${t("sessionDone")}`);
       return 0;
     }
     const view = await api.exercise(item.exerciseId);
-    const report = await writeProject(cwd, view, { force: opts.force ?? false, sessionId: session.id });
+    const report = await writeProject(cwd, view, { force: opts.force ?? false, sessionId: session.id, locale });
     await update({ lastWorkDir: report.dir });
     const ex = view.exercise;
     const lines = [
-      header,
-      formatSession(session),
+      t(header),
+      formatSession(session, locale),
       "",
-      `현재 문제: ${ex.title} (${ex.id})`,
-      `  이유: ${item.reason}`,
-      `  디렉터리: ${rel(report.dir)}`,
-      `  문제 설명: ${rel(resolve(report.dir, "PROMPT.md"))}`,
-      `  작성할 파일: ${rel(resolve(report.dir, learnerFile(ex)))}`,
+      t("currentExercise", { title: ex.title, id: ex.id }),
+      t("itemReason", { reason: item.reason }),
+      t("itemDir", { path: rel(report.dir) }),
+      t("itemPrompt", { path: rel(resolve(report.dir, "PROMPT.md")) }),
+      t("itemLearnerFile", { path: rel(resolve(report.dir, learnerFile(ex))) }),
     ];
-    for (const k of report.kept) lines.push(`  유지됨: ${k} (수정된 파일이라 덮어쓰지 않았습니다. 시작 코드로 되돌리려면 --force)`);
-    lines.push("", "코드를 작성한 뒤 `fp run`으로 확인하고 `fp submit`으로 제출하세요.");
+    for (const k of report.kept) lines.push(t("itemKept", { path: k }));
+    lines.push("", t("itemNextSteps"));
     emit({ session, item, exerciseId: ex.id, dir: report.dir, written: report.written, kept: report.kept }, lines.join("\n"));
     return 0;
   };
 
   const activeOrFail = async (api: CliApi): Promise<Session> => {
     const s = await api.activeSession(LANGUAGE);
-    if (!s) throw new CliError("진행 중인 세션이 없습니다. `fp start`로 시작하세요.");
+    if (!s) throw new CliError("noActiveSession");
     return s;
   };
 
+  const showLocale = (source: LocaleSource) =>
+    emit({ locale, source }, t("langCurrent", { name: localeName(locale, locale), locale, source: sourceLabel(locale, source) }));
+
   try {
-    config = await loadConfig(env);
+    if (configError) throw configError;
+    if (ACCOUNT_LOCALE_COMMANDS.has(command)) await loadAccountLocale();
     switch (command) {
       case "login": {
         const name = args.join(" ").trim();
-        if (!name) throw new CliError("사용법: fp login <이름>", 2);
-        const res = await anon().devLogin({ displayName: name });
-        await update({ apiUrl: apiUrl(), token: res.token.token, user: { id: res.user.id, displayName: res.user.displayName } });
-        emit({ user: res.user, configPath: configPath(env) }, `${res.user.displayName}(으)로 로그인했습니다. 설정: ${configPath(env)}`);
+        if (!name) throw new CliError("loginUsage", {}, 2);
+        // An explicit preference (--lang, FP_LANG, or `fp lang` while logged out) is applied to the account.
+        const preferred = flag ?? normalizeLocale(env.FP_LANG) ?? cachedLocale();
+        const res = await anon().devLogin({ displayName: name, ...(preferred ? { locale: preferred } : {}) });
+        await update({
+          apiUrl: apiUrl(),
+          token: res.token.token,
+          user: { id: res.user.id, displayName: res.user.displayName },
+          ...(res.user.locale && isLocale(res.user.locale) ? { locale: res.user.locale } : {}),
+        });
+        if (res.user.locale && isLocale(res.user.locale)) await useAccountLocale(res.user.locale);
+        emit({ user: res.user, configPath: configPath(env) }, t("loggedIn", { name: res.user.displayName, path: configPath(env) }));
         return 0;
       }
       case "whoami": {
         const me = await authed().me();
+        if (me.locale && isLocale(me.locale)) await useAccountLocale(me.locale);
         emit({ user: me, apiUrl: apiUrl() }, `${me.displayName} (${me.id}) @ ${apiUrl()}`);
+        return 0;
+      }
+      case "lang": {
+        const [value, ...extra] = args;
+        if (extra.length > 0) throw new CliError("langUsage", {}, 2);
+        if (value === undefined) {
+          await loadAccountLocale();
+          showLocale(resolved.source);
+          return 0;
+        }
+        const chosen = normalizeLocale(value);
+        if (!chosen || chosen !== value.trim().toLowerCase()) throw new CliError("langInvalid", { value }, 2);
+        const synced = Boolean(token());
+        const user = synced ? await authed().updateMe({ locale: chosen }) : null;
+        const saved = user?.locale && isLocale(user.locale) ? user.locale : chosen;
+        await update({ locale: saved });
+        // Confirm in the new language unless --lang asks for another one for this run.
+        locale = flag ?? saved;
+        const name = localeName(locale, saved);
+        const lines = [t(synced ? "langSet" : "langSavedLocally", { name, locale: saved })];
+        const envLocale = normalizeLocale(env.FP_LANG);
+        if (envLocale && envLocale !== saved) lines.push(t("langOverridden", { value: env.FP_LANG ?? "" }));
+        emit({ locale: saved, synced, ...(user ? { user } : {}) }, lines.join("\n"));
         return 0;
       }
       case "start": {
         const minutes = opts.minutes === undefined ? 15 : Number(opts.minutes);
-        if (!Number.isInteger(minutes) || minutes <= 0) throw new CliError("--minutes는 양의 정수여야 합니다.", 2);
+        if (!Number.isInteger(minutes) || minutes <= 0) throw new CliError("minutesInvalid", {}, 2);
         const api = authed();
         const session = await api.startSession({
           language: LANGUAGE,
           targetMinutes: minutes,
           ...(opts.focus ? { focusSkill: opts.focus } : {}),
         });
-        return await materialize(api, session, "새 세션을 시작했습니다.");
+        return await materialize(api, session, "sessionStarted");
       }
       case "next":
       case "current": {
         const api = authed();
-        return await materialize(api, await activeOrFail(api), "진행 중인 세션입니다.");
+        return await materialize(api, await activeOrFail(api), "sessionActive");
       }
       case "skip": {
         const api = authed();
         const session = await activeOrFail(api);
-        return await materialize(api, await api.skipItem(session.id), "현재 문제를 건너뛰었습니다.");
+        return await materialize(api, await api.skipItem(session.id), "itemSkipped");
       }
       case "run": {
         const { dir, meta } = await projectDir(args[0]);
         const code = await readLearnerCode(dir, meta);
         const run = await authed().trialRun(meta.exerciseId, { code });
-        emit(run, formatTrialRun(run));
+        emit(run, formatTrialRun(run, locale));
         return run.outcome === "passed" ? 0 : 1;
       }
       case "submit": {
@@ -252,16 +340,16 @@ export async function runCli(argv: readonly string[], deps: CliDeps): Promise<nu
         const sessionId = active && current?.exerciseId === meta.exerciseId ? active.id : undefined;
         const view = await api.submit({ exerciseId: meta.exerciseId, code, idempotencyKey: newKey(), ...(sessionId ? { sessionId } : {}) });
         await update({ lastSubmissionId: view.submission.id });
-        const next = view.submission.evaluation?.outcome === "passed" && sessionId ? "\n다음 문제: `fp next`" : "";
-        emit(view, formatSubmission(view) + next);
+        const next = view.submission.evaluation?.outcome === "passed" && sessionId ? `\n${t("nextExercise")}` : "";
+        emit(view, formatSubmission(view, locale) + next);
         return view.submission.evaluation?.outcome === "passed" ? 0 : 1;
       }
       case "feedback": {
         const arg = args[0];
         const id = !arg || arg === "last" ? config.lastSubmissionId : arg;
-        if (!id) throw new CliError("최근 제출이 없습니다. 제출 ID를 지정하세요: fp feedback <제출ID>");
+        if (!id) throw new CliError("noRecentSubmission");
         const fb = await authed().feedback(id);
-        emit(fb, formatFeedback(fb));
+        emit(fb, formatFeedback(fb, locale));
         return 0;
       }
       case "hint": {
@@ -270,57 +358,50 @@ export async function runCli(argv: readonly string[], deps: CliDeps): Promise<nu
         let level: number;
         if (args[0] !== undefined) {
           level = Number(args[0]);
-          if (!Number.isInteger(level) || level < 1 || level > 5) throw new CliError("힌트 단계는 1-5 사이의 정수입니다.", 2);
+          if (!Number.isInteger(level) || level < 1 || level > 5) throw new CliError("hintLevelInvalid", {}, 2);
         } else {
           const view = await api.exercise(meta.exerciseId);
           const revealed = view.revealedHints.reduce((m, h) => Math.max(m, h.level), 0);
           if (revealed >= view.exercise.hints.length) {
-            emit({ hints: view.revealedHints }, `모든 힌트를 이미 공개했습니다.\n\n${formatHints(view.revealedHints)}`);
+            emit({ hints: view.revealedHints }, `${t("allHintsRevealed")}\n\n${formatHints(view.revealedHints, locale)}`);
             return 0;
           }
           level = revealed + 1;
         }
         const hints = await api.revealHint(meta.exerciseId, { level });
-        const warn = level >= 3 ? "\n\n참고: 힌트 3단계 이상을 사용해 이 문제의 제출은 레이팅에 반영되지 않습니다." : "";
-        emit({ level, hints }, formatHints(hints) + warn);
+        const warn = level >= 3 ? `\n\n${t("hintUnratedWarning")}` : "";
+        emit({ level, hints }, formatHints(hints, locale) + warn);
         return 0;
       }
       case "explain": {
         const { meta } = await projectDir();
-        if (!opts.yes) {
-          throw new CliError(
-            "해설을 보면 이 문제는 레이팅에 반영되지 않고, 숙달 여부는 새 문제에서 다시 확인됩니다.\n먼저 `fp hint`를 권합니다. 그래도 보려면 `fp explain --yes`를 실행하세요.",
-          );
-        }
+        if (!opts.yes) throw new CliError("explainConfirm");
         const ex = await authed().explanation(meta.exerciseId);
-        emit(ex, formatExplanation(ex));
+        emit(ex, formatExplanation(ex, locale));
         return 0;
       }
       case "progress": {
         const p = await authed().progress(LANGUAGE);
-        emit(p, formatProgress(p));
+        emit(p, formatProgress(p, locale));
         return 0;
       }
       case "token": {
         const [sub, ...rest] = args;
         const label = rest.join(" ").trim();
-        if (sub !== "issue" || !label) throw new CliError("사용법: fp token issue <라벨>", 2);
-        const t = await authed().issueToken({ label });
-        const mcp = { mcpServers: { fp: { command: "fp-mcp", env: { FP_TOKEN: t.token, FP_API_URL: apiUrl() } } } };
-        emit(
-          { token: t, mcpConfig: mcp },
-          `토큰 발급됨 (${t.label}, ${t.tokenId}). 이 값은 다시 표시되지 않습니다:\n\n${t.token}\n\nMCP 설정 예:\n${JSON.stringify(mcp, null, 2)}`,
-        );
+        if (sub !== "issue" || !label) throw new CliError("tokenUsage", {}, 2);
+        const tk = await authed().issueToken({ label });
+        const mcp = { mcpServers: { fp: { command: "fp-mcp", env: { FP_TOKEN: tk.token, FP_API_URL: apiUrl() } } } };
+        emit({ token: tk, mcpConfig: mcp }, t("tokenIssued", { label: tk.label, id: tk.tokenId, token: tk.token, config: JSON.stringify(mcp, null, 2) }));
         return 0;
       }
       default:
-        deps.stderr(`알 수 없는 명령: ${command}\n\n${USAGE}`);
+        deps.stderr(`${t("unknownCommand", { command })}\n\n${usage(locale)}`);
         return 2;
     }
   } catch (e) {
-    const msg = describeError(e);
-    if (json) out(JSON.stringify({ error: e instanceof ApiError ? { code: e.code, message: e.message, status: e.status } : { message: msg } }, null, 2));
-    deps.stderr(msg);
-    return e instanceof CliError ? e.exitCode : 1;
+    const message = describeError(e, locale);
+    if (json) out(JSON.stringify({ error: e instanceof ApiError ? { code: e.code, message: e.message, status: e.status } : { message } }, null, 2));
+    deps.stderr(message);
+    return e instanceof LocalizedError ? e.exitCode : 1;
   }
 }

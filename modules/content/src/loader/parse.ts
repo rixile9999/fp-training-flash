@@ -3,8 +3,6 @@
  * Every problem is collected as a ContentIssue (path relative to the content root); nothing fails fast.
  */
 import { asId, err, ok, type ExerciseId, type FamilyId, type Language, type Result } from "@fp/kernel";
-import { parse as parseYamlText } from "yaml";
-import type { z } from "zod";
 import type {
   ConceptNote,
   ContentSource,
@@ -21,12 +19,12 @@ import type {
 } from "../contract/index.ts";
 import { splitFrontMatter } from "./frontmatter.ts";
 import { declaresPubFn, extractPubFnBody } from "./gleam.ts";
+import type { NoteText, SkillText, Translations, VariantText } from "../i18n.ts";
 import { hashFiles, hashVariant } from "./hash.ts";
 import {
   conceptFrontMatterSchema,
   exerciseSchema,
   familySchema,
-  formatZodIssues,
   HINT_KINDS,
   KEBAB_ID,
   skillsFileSchema,
@@ -35,6 +33,17 @@ import {
   type FamilyYaml,
 } from "./schemas.ts";
 import { filesUnder, subdirs, type ContentTree, type TreeFile } from "./tree.ts";
+import {
+  isFamilyTranslationFile,
+  isNoteTranslationFile,
+  isVariantTranslationEntry,
+  parseFamilyTranslations,
+  parseNoteTranslations,
+  parseSkillTranslations,
+  parseVariantTranslations,
+  type FamilyOverlay,
+} from "./translations.ts";
+import { parseYaml, validate, type AddIssue } from "./yaml.ts";
 
 export interface ContentIssue {
   readonly path: string;
@@ -52,6 +61,15 @@ export interface ParsedVariant {
   readonly detail: Omit<ExerciseDetail, keyof ExerciseSummary>;
   readonly grading: Omit<GradingSpec, "exerciseId">;
   readonly reference: Omit<ReferenceMaterial, "exerciseId">;
+  /** en/zh texts; applied over the Korean objects by the catalog (src/i18n.ts). */
+  readonly translations: Translations<VariantText>;
+}
+
+/** Translations of the unversioned content, keyed by id. */
+export interface ParsedTranslations {
+  readonly skills: ReadonlyMap<string, Translations<SkillText>>;
+  readonly conceptNotes: ReadonlyMap<string, Translations<NoteText>>;
+  readonly theoryTopics: ReadonlyMap<string, Translations<NoteText>>;
 }
 
 export interface ParsedContent {
@@ -60,6 +78,7 @@ export interface ParsedContent {
   readonly conceptNotes: readonly ConceptNote[];
   readonly theoryTopics: readonly TheoryTopic[];
   readonly variants: readonly ParsedVariant[];
+  readonly translations: ParsedTranslations;
 }
 
 export interface MaterializedExercise {
@@ -129,6 +148,12 @@ export function parseContent(tree: ContentTree): Result<ParsedContent, readonly 
     } satisfies TheoryTopic;
   });
 
+  const translations: ParsedTranslations = {
+    skills: parseSkillTranslations(tree, skills, add),
+    conceptNotes: parseNoteTranslations(tree, "concepts/", conceptIds, add),
+    theoryTopics: parseNoteTranslations(tree, "theory/", theoryIds, add),
+  };
+
   const refs: Refs = { skillIds, conceptIds, theoryIds };
   const variants: ParsedVariant[] = [];
   const families = subdirs(tree, "exercises/");
@@ -142,47 +167,15 @@ export function parseContent(tree: ContentTree): Result<ParsedContent, readonly 
     conceptNotes,
     theoryTopics,
     variants,
+    translations,
   });
 }
-
-type AddIssue = (path: string, message: string) => void;
 
 interface Refs {
   /** null when skills.yaml itself is invalid (skill references are then not checked). */
   readonly skillIds: ReadonlySet<string> | null;
   readonly conceptIds: ReadonlySet<string>;
   readonly theoryIds: ReadonlySet<string>;
-}
-
-/**
- * Validates `raw` and reports every schema issue. When the only problems are unknown keys, they are
- * reported and validation continues without them, so the remaining checks of the file still run.
- */
-function validate<S extends z.ZodType>(schema: S, raw: unknown, path: string, add: AddIssue): z.output<S> | null {
-  const r = schema.safeParse(raw);
-  if (r.success) return r.data;
-  for (const m of formatZodIssues(r.error)) add(path, m);
-  const unknownKeysOnly = r.error.issues.every((i) => i.code === "unrecognized_keys");
-  if (!unknownKeysOnly) return null;
-  const cleaned = structuredClone(raw);
-  for (const i of r.error.issues) {
-    if (i.code !== "unrecognized_keys") continue;
-    let target: unknown = cleaned;
-    for (const k of i.path) target = (target as Record<PropertyKey, unknown> | undefined)?.[k];
-    if (typeof target === "object" && target !== null) for (const k of i.keys) delete (target as Record<string, unknown>)[k];
-  }
-  const retry = schema.safeParse(cleaned);
-  return retry.success ? retry.data : null;
-}
-
-function parseYaml(file: TreeFile, add: AddIssue): unknown {
-  try {
-    const value: unknown = parseYamlText(file.text);
-    return value ?? {};
-  } catch (e) {
-    add(file.path, `invalid YAML: ${e instanceof Error ? e.message.split("\n")[0] : String(e)}`);
-    return undefined;
-  }
 }
 
 function checkRefs(
@@ -280,6 +273,7 @@ function parseNotes<T>(
   const out: T[] = [];
   for (const file of filesUnder(tree, dir)) {
     const name = file.path.slice(dir.length);
+    if (isNoteTranslationFile(name)) continue; // <id>.<locale>.md, see translations.ts
     if (name.includes("/") || !name.endsWith(".md")) {
       add(file.path, `unexpected file; notes must be ${dir}<id>.md`);
       continue;
@@ -320,26 +314,36 @@ function parseFamily(tree: ContentTree, familyId: string, refs: Refs, add: AddIs
       family = validate(familySchema, raw, familyPath, add);
     }
   }
+  const familyTranslations = parseFamilyTranslations(tree, dir, family, add);
+  const familyFiles = familyFile ? [familyFile, ...familyTranslations.files] : [...familyTranslations.files];
   const variantKeys = subdirs(tree, dir);
   for (const f of filesUnder(tree, dir)) {
     const rest = f.path.slice(dir.length);
-    if (!rest.includes("/") && rest !== "family.yaml") add(f.path, "unexpected file; a family directory holds family.yaml and variant directories");
+    if (!rest.includes("/") && rest !== "family.yaml" && !isFamilyTranslationFile(rest)) {
+      add(f.path, "unexpected file; a family directory holds family.yaml, family.<locale>.yaml and variant directories");
+    }
   }
   if (variantKeys.length === 0) add(`exercises/${familyId}`, "family has no variants");
   const out: ParsedVariant[] = [];
   for (const key of variantKeys) {
-    const v = parseVariant(tree, familyId, key, familyFile, family, refs, add);
+    const v = parseVariant(tree, familyId, key, { files: familyFiles, family, overlays: familyTranslations.overlays }, refs, add);
     if (v) out.push(v);
   }
   return out;
+}
+
+interface FamilyInput {
+  /** family.yaml and family.<locale>.yaml (all part of every variant's hash). */
+  readonly files: readonly TreeFile[];
+  readonly family: FamilyYaml | null;
+  readonly overlays: Translations<FamilyOverlay>;
 }
 
 function parseVariant(
   tree: ContentTree,
   familyId: string,
   variantKey: string,
-  familyFile: TreeFile | undefined,
-  family: FamilyYaml | null,
+  fam: FamilyInput,
   refs: Refs,
   addOuter: AddIssue,
 ): ParsedVariant | null {
@@ -348,6 +352,7 @@ function parseVariant(
     issueCount++;
     addOuter(path, message);
   };
+  const { family } = fam;
   const dir = `exercises/${familyId}/${variantKey}/`;
   const exPath = `${dir}exercise.yaml`;
   const familyPath = `exercises/${familyId}/family.yaml`;
@@ -394,7 +399,7 @@ function parseVariant(
     const slash = rest.indexOf("/");
     const allowed = slash < 0 ? VARIANT_TOP_FILES : isPredict ? [] : CODE_SUBDIRS;
     const name = slash < 0 ? rest : rest.slice(0, slash);
-    if (!allowed.includes(name)) add(f.path, `unexpected ${slash < 0 ? "file" : "directory"} "${name}" in a ${ex.kind} variant`);
+    if (!allowed.includes(name) && !isVariantTranslationEntry(name, slash >= 0, isPredict)) add(f.path, `unexpected ${slash < 0 ? "file" : "directory"} "${name}" in a ${ex.kind} variant`);
   }
   const text = (rel: string): string | null => tree.files.get(dir + rel)?.text ?? null;
   const prompt = text("prompt.md");
@@ -407,6 +412,21 @@ function parseVariant(
 
   let code: CodeParts | null = null;
   if (!isPredict) code = checkCodeExercise(ex, dir, exPath, variantFiles, add);
+
+  const rubric: RubricItem[] = merged.rubric.map((item) =>
+    item.automatedCheck === undefined ? { id: item.id, title: item.title, description: item.description } : { ...item },
+  );
+  const i18n = parseVariantTranslations(
+    {
+      dir,
+      ex,
+      variantFiles,
+      familyOverlays: fam.overlays,
+      rubric,
+      starter: code?.starter[0]?.content ?? null,
+    },
+    add,
+  );
 
   if (issueCount > 0) return null;
 
@@ -423,10 +443,8 @@ function parseVariant(
     estimatedMinutes: ex.estimatedMinutes,
     contextTags: merged.contextTags,
     source: toSource(merged.source),
+    locales: i18n.locales,
   };
-  const rubric: RubricItem[] = merged.rubric.map((item) =>
-    item.automatedCheck === undefined ? { id: item.id, title: item.title, description: item.description } : { ...item },
-  );
   const predict = ex.predict ? { code: ex.predict.code, acceptedAnswers: ex.predict.acceptedAnswers } : undefined;
   const moduleName = ex.module ?? "";
 
@@ -476,7 +494,7 @@ function parseVariant(
   return {
     familyId: asId(familyId),
     variantKey,
-    contentHash: hashVariant(familyFile, variantFiles, dir),
+    contentHash: hashVariant(fam.files, `exercises/${familyId}/`, variantFiles, dir),
     summary,
     detail,
     grading,
@@ -485,6 +503,7 @@ function parseVariant(
       explanationMarkdown: explanation ?? "",
       wrongSolutions: code?.wrong ?? [],
     },
+    translations: i18n.translations,
   };
 }
 

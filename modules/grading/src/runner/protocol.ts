@@ -2,8 +2,11 @@
  * Parses what entry.sh + the Erlang harness print. Only lines starting with "@@FP:<nonce>@@" are
  * trusted; the nonce is random per job and deleted before learner code runs, and learner stdout is
  * captured by the harness (it only ever appears inside a JSON string), so results cannot be forged.
+ * Test events carry a structured `failure` (+ captured `output`); the text is rendered per locale by
+ * src/grading/failure.ts. system_error messages are English operator diagnostics.
  */
 import type { Diagnostic, PerfMeasurement, RawTestResult, RunOutput, RunnerInfo, TestStatus } from "../contract/index.ts";
+import { parseFailure, renderTestMessage, type RawTestDetail, type TestFailure } from "../grading/failure.ts";
 import type { JobLayout, LearnerInfo } from "./project.ts";
 
 export interface ProcessOutcome {
@@ -114,6 +117,13 @@ export function parseGleamDiagnostics(log: string, projectDir: string): Diagnost
   return out;
 }
 
+/** Fills RawTestResult.message with the default-locale (ko) rendering, for callers that only read the contract. */
+function withMessage(raw: RawTestDetail): RawTestDetail {
+  if (!raw.failure && raw.output === undefined) return raw;
+  const message = renderTestMessage(raw);
+  return message === undefined ? raw : { ...raw, message };
+}
+
 function tail(text: string, max = 2000): string {
   const t = text.trim();
   return t.length > max ? `...${t.slice(-max)}` : t;
@@ -159,7 +169,7 @@ function compileFailure(diagnostics: readonly Diagnostic[], layout: JobLayout, r
   const where = first?.file ? ` (${first.file}${first.line ? `:${first.line}` : ""})` : "";
   return {
     kind: "system_error",
-    message: `문제의 테스트/지원 코드가 컴파일되지 않습니다(콘텐츠 오류)${where}: ${first?.message ?? "알 수 없는 오류"}`,
+    message: `exercise test/support code does not compile (content bug)${where}: ${first?.message ?? "unknown error"}`,
     runner,
   };
 }
@@ -182,25 +192,25 @@ export function toRunOutput(
 
   if (!parsed.buildBegun) {
     if (proc.timedOut) return { kind: "timeout", runner, durationMs };
-    return systemError(`채점 환경을 시작하지 못했습니다 (exit ${proc.exitCode}). ${tail(proc.stderr || proc.stdout)}`);
+    return systemError(`grading environment did not start (exit ${proc.exitCode}). ${tail(proc.stderr || proc.stdout)}`);
   }
   if (parsed.buildExit === null) {
     if (diagnostics.some((d) => d.severity === "error")) return compileFailure(diagnostics, layout, runner, durationMs);
     if (proc.timedOut) return { kind: "timeout", runner, durationMs };
-    if (proc.truncated) return systemError("컴파일 출력이 크기 제한을 넘었습니다.");
-    return systemError(`컴파일 도중 채점 환경이 종료되었습니다 (exit ${proc.exitCode}). ${tail(proc.stderr)}`);
+    if (proc.truncated) return systemError("compiler output exceeded the size limit");
+    return systemError(`grading environment exited during compilation (exit ${proc.exitCode}). ${tail(proc.stderr)}`);
   }
   if (parsed.buildExit !== 0) {
     if (diagnostics.some((d) => d.severity === "error")) return compileFailure(diagnostics, layout, runner, durationMs);
-    return systemError(`gleam build가 실패했습니다: ${tail(parsed.buildLog || proc.stderr)}`);
+    return systemError(`gleam build failed: ${tail(parsed.buildLog || proc.stderr)}`);
   }
 
   const harnessError = parsed.events.find((e) => e.type === "harness_error");
-  if (harnessError) return systemError(`채점 하네스 오류: ${String(harnessError.message ?? "")}`);
+  if (harnessError) return systemError(`grading harness error: ${String(harnessError.message ?? "")}`);
   const hello = parsed.events.find((e) => e.type === "hello");
   if (!hello) {
     if (proc.timedOut) return { kind: "timeout", runner, durationMs };
-    return systemError(`테스트 하네스가 시작되지 않았습니다 (exit ${proc.exitCode}). ${tail(proc.stderr)}`);
+    return systemError(`test harness did not start (exit ${proc.exitCode}). ${tail(proc.stderr)}`);
   }
   const done = parsed.events.some((e) => e.type === "done");
   if (!done && proc.timedOut) return { kind: "timeout", runner, durationMs };
@@ -209,18 +219,22 @@ export function toRunOutput(
   for (const e of parsed.events) {
     if (e.type !== "test" || typeof e.name !== "string") continue;
     const status = TEST_STATUSES.includes(e.status as TestStatus) ? (e.status as TestStatus) : "error";
-    reported.set(e.name, {
+    const failure = parseFailure(e.failure);
+    const output = typeof e.output === "string" && e.output !== "" ? e.output : undefined;
+    const detail: RawTestDetail = {
       functionName: shortName(e.name),
       status,
+      // Older harness images sent a pre-rendered (Korean) message instead of `failure`.
       ...(typeof e.message === "string" ? { message: e.message } : {}),
       ...(typeof e.durationMs === "number" ? { durationMs: e.durationMs } : {}),
-    });
+      ...(failure ? { failure } : {}),
+      ...(output !== undefined ? { output, ...(e.outputTruncated === true ? { outputTruncated: true } : {}) } : {}),
+    };
+    reported.set(e.name, withMessage(detail));
   }
-  const aborted = done
-    ? "테스트 결과가 보고되지 않았습니다."
-    : "테스트 실행이 비정상적으로 중단되었습니다. 메모리를 지나치게 많이 쓰거나 VM을 종료시키는 코드가 있는지 확인하세요.";
+  const missing: TestFailure = { kind: done ? "not_reported" : "aborted" };
   const tests: RawTestResult[] = layout.harness.tests.map(
-    (name) => reported.get(name) ?? { functionName: shortName(name), status: "error", message: aborted },
+    (name) => reported.get(name) ?? withMessage({ functionName: shortName(name), status: "error", failure: missing }),
   );
   const performance: PerfMeasurement[] = [];
   for (const e of parsed.events) {

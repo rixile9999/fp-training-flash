@@ -1,4 +1,4 @@
-import { appError, err, ok, type Clock, type Db, type ExerciseId, type Logger, type UserId } from "@fp/kernel";
+import { appError, err, ok, type Clock, type Db, type ExerciseId, type Locale, type Logger, type UserId } from "@fp/kernel";
 import type { ContentCatalog, ExerciseDetail, Hint } from "@fp/content/contract";
 import type { Evaluation, GradingService, HelpUsed } from "@fp/grading/contract";
 import type { ErrorTagStat, LearnerModel } from "@fp/learner/contract";
@@ -14,6 +14,7 @@ import {
   type RevealedReference,
 } from "./prompts.ts";
 import { countLines, extractLineReferences } from "./references.ts";
+import { msg, resolveLocale } from "./messages.ts";
 import { runChatAgent } from "./chat-agent.ts";
 import { RULE_BASED_MODEL, RULE_BASED_VERSION, ruleBasedChatReply, ruleBasedFeedback } from "./rule-based.ts";
 
@@ -42,9 +43,13 @@ export function createCoachingService(deps: CoachingServiceDeps): CoachingServic
   const cache = createFeedbackCache(deps.db, clock);
   const timeoutMs = deps.llmTimeoutMs ?? 30_000;
 
-  async function revealedReference(exercise: ExerciseDetail, help: HelpUsed): Promise<RevealedReference | undefined> {
+  async function revealedReference(
+    exercise: ExerciseDetail,
+    help: HelpUsed,
+    locale: Locale,
+  ): Promise<RevealedReference | undefined> {
     if (!help.explanationViewed) return undefined;
-    const ref = await catalog.getReferenceMaterial(exercise.id);
+    const ref = await catalog.getReferenceMaterial(exercise.id, locale);
     return ref ? { explanationMarkdown: ref.explanationMarkdown, solutionCode: solutionCode(exercise, ref.solutionFiles) } : undefined;
   }
 
@@ -58,28 +63,31 @@ export function createCoachingService(deps: CoachingServiceDeps): CoachingServic
   }
 
   const service: CoachingService = {
-    async feedback(submissionId, userId) {
+    async feedback(submissionId, userId, requestedLocale) {
+      const locale = resolveLocale(requestedLocale);
       const submission = await grading.getSubmission(submissionId, userId);
-      if (!submission) return err(appError("not_found", "제출을 찾을 수 없습니다."));
-      if (submission.userId !== userId) return err(appError("forbidden", "다른 사용자의 제출입니다."));
+      if (!submission) return err(appError("not_found", msg(locale, "error.submission_not_found")));
+      if (submission.userId !== userId) return err(appError("forbidden", msg(locale, "error.submission_forbidden")));
       const evaluation = submission.evaluation;
       if (submission.status !== "completed" || !evaluation) {
-        return err(appError("conflict", "채점이 아직 끝나지 않았습니다."));
+        return err(appError("conflict", msg(locale, "error.grading_pending")));
       }
 
       const key = llm
-        ? { submissionId, promptVersion: PROMPT_VERSION, model: llm.model }
-        : { submissionId, promptVersion: RULE_BASED_VERSION, model: RULE_BASED_MODEL };
+        ? { submissionId, promptVersion: PROMPT_VERSION, model: llm.model, locale }
+        : { submissionId, promptVersion: RULE_BASED_VERSION, model: RULE_BASED_MODEL, locale };
       const cached = await cache.get(key);
       if (cached) return ok(cached);
 
-      const exercise = await catalog.getExercise(submission.exerciseId);
-      if (!exercise) return err(appError("not_found", "문제를 찾을 수 없습니다.", { exerciseId: submission.exerciseId }));
+      const exercise = await catalog.getExercise(submission.exerciseId, locale);
+      if (!exercise) {
+        return err(appError("not_found", msg(locale, "error.exercise_not_found"), { exerciseId: submission.exerciseId }));
+      }
 
       const history = await errorTagHistory(userId, exercise);
       const createdAt = clock.now().toISOString();
       const fallback = (): CoachingFeedback =>
-        ruleBasedFeedback({ submissionId, evaluation, rubric: exercise.rubric, errorTagHistory: history, createdAt });
+        ruleBasedFeedback({ submissionId, evaluation, rubric: exercise.rubric, errorTagHistory: history, createdAt, locale });
 
       if (!llm) {
         const fb = fallback();
@@ -101,7 +109,8 @@ export function createCoachingService(deps: CoachingServiceDeps): CoachingServic
         evaluation,
         errorTagHistory: history,
         helpUsed: help,
-        reference: await revealedReference(exercise, help),
+        reference: await revealedReference(exercise, help, locale),
+        locale,
       });
 
       let raw: string;
@@ -130,34 +139,35 @@ export function createCoachingService(deps: CoachingServiceDeps): CoachingServic
     },
 
     async chat(req) {
+      const locale = resolveLocale(req.locale);
       const last = req.messages[req.messages.length - 1];
-      if (!last || last.role !== "user") return err(appError("invalid_input", "마지막 메시지는 학습자의 질문이어야 합니다."));
-      if (last.content.trim().length === 0) return err(appError("invalid_input", "질문 내용이 비어 있습니다."));
+      if (!last || last.role !== "user") return err(appError("invalid_input", msg(locale, "error.chat_last_not_user")));
+      if (last.content.trim().length === 0) return err(appError("invalid_input", msg(locale, "error.chat_empty")));
       if (req.messages.some((m) => m.content.length > MAX_CHAT_MESSAGE_CHARS)) {
-        return err(appError("invalid_input", `메시지는 ${MAX_CHAT_MESSAGE_CHARS}자 이하여야 합니다.`));
+        return err(appError("invalid_input", msg(locale, "error.chat_too_long", { max: MAX_CHAT_MESSAGE_CHARS })));
       }
       if (req.code !== undefined && req.code.length > MAX_CODE_CHARS) {
-        return err(appError("invalid_input", "코드가 너무 깁니다."));
+        return err(appError("invalid_input", msg(locale, "error.code_too_long")));
       }
 
-      const exercise = await catalog.getExercise(req.exerciseId);
-      if (!exercise) return err(appError("not_found", "문제를 찾을 수 없습니다."));
+      const exercise = await catalog.getExercise(req.exerciseId, locale);
+      if (!exercise) return err(appError("not_found", msg(locale, "error.exercise_not_found")));
 
       let evaluation: Evaluation | undefined;
       if (req.submissionId !== undefined) {
         const submission = await grading.getSubmission(req.submissionId, req.userId);
-        if (!submission) return err(appError("not_found", "제출을 찾을 수 없습니다."));
-        if (submission.userId !== req.userId) return err(appError("forbidden", "다른 사용자의 제출입니다."));
+        if (!submission) return err(appError("not_found", msg(locale, "error.submission_not_found")));
+        if (submission.userId !== req.userId) return err(appError("forbidden", msg(locale, "error.submission_forbidden")));
         if (submission.exerciseId !== req.exerciseId) {
-          return err(appError("invalid_input", "제출이 이 문제에 속하지 않습니다."));
+          return err(appError("invalid_input", msg(locale, "error.submission_wrong_exercise")));
         }
         evaluation = submission.evaluation;
       }
 
       const help = await ledger.summary(req.userId, req.exerciseId);
       const [conceptNotes, theoryTopics] = await Promise.all([
-        catalog.getConceptNotes(exercise.conceptNoteIds),
-        catalog.getTheoryTopics(exercise.theoryTopicIds),
+        catalog.getConceptNotes(exercise.conceptNoteIds, locale),
+        catalog.getTheoryTopics(exercise.theoryTopicIds, locale),
       ]);
       const maxLine = countLines(req.code);
 
@@ -165,7 +175,7 @@ export function createCoachingService(deps: CoachingServiceDeps): CoachingServic
       let source: ChatReply["source"] = "rule_based";
       if (llm) {
         const messages: LlmMessage[] = req.messages.slice(-MAX_CHAT_MESSAGES).map((m) => ({ role: m.role, content: m.content }));
-        const reference = await revealedReference(exercise, help);
+        const reference = await revealedReference(exercise, help, locale);
         const request = buildChatRequest({
           exercise,
           conceptNotes,
@@ -175,6 +185,7 @@ export function createCoachingService(deps: CoachingServiceDeps): CoachingServic
           ...(evaluation ? { evaluation } : {}),
           ...(reference ? { reference } : {}),
           messages,
+          locale,
         });
         if (deps.chatAgent && llm.chatWithTools) {
           try {
@@ -186,6 +197,7 @@ export function createCoachingService(deps: CoachingServiceDeps): CoachingServic
               conceptNotes,
               theoryTopics,
               request,
+              locale,
               timeoutMs: deps.chatAgentTimeoutMs ?? 60_000,
             });
             text = agent.text.trim();
@@ -211,6 +223,7 @@ export function createCoachingService(deps: CoachingServiceDeps): CoachingServic
         helpUsed: help,
         ...(evaluation ? { evaluation } : {}),
         conceptNoteTitles: conceptNotes.map((n) => n.title),
+        locale,
       });
 
       await ledger.record(req.userId, req.exerciseId, "coach_message");
@@ -221,19 +234,22 @@ export function createCoachingService(deps: CoachingServiceDeps): CoachingServic
       });
     },
 
-    async revealHint(userId, exerciseId, level) {
-      if (!isHintLevel(level)) return err(appError("invalid_input", "힌트 단계는 1에서 5 사이여야 합니다.", { level }));
-      const exercise = await catalog.getExercise(exerciseId);
-      if (!exercise) return err(appError("not_found", "문제를 찾을 수 없습니다."));
+    async revealHint(userId, exerciseId, level, requestedLocale) {
+      const locale = resolveLocale(requestedLocale);
+      if (!isHintLevel(level)) return err(appError("invalid_input", msg(locale, "error.hint_level_range"), { level }));
+      const exercise = await catalog.getExercise(exerciseId, locale);
+      if (!exercise) return err(appError("not_found", msg(locale, "error.exercise_not_found")));
       const authored = [...exercise.hints].sort((a, b) => a.level - b.level);
       const maxAuthored = authored.reduce((m, h) => Math.max(m, h.level), 0);
       if (level > maxAuthored) {
-        return err(appError("invalid_input", `이 문제에는 ${maxAuthored}단계 힌트까지만 있습니다.`, { level, maxAuthored }));
+        return err(
+          appError("invalid_input", msg(locale, "error.hint_level_unavailable", { max: maxAuthored }), { level, maxAuthored }),
+        );
       }
       const current = (await ledger.summary(userId, exerciseId)).maxHintLevel;
       if (level > current + 1) {
         return err(
-          appError("invalid_input", `힌트는 순서대로 열어야 합니다. 다음에 열 수 있는 단계는 ${current + 1}단계입니다.`, {
+          appError("invalid_input", msg(locale, "error.hint_order", { next: current + 1 }), {
             level,
             currentMaxLevel: current,
           }),
@@ -244,11 +260,12 @@ export function createCoachingService(deps: CoachingServiceDeps): CoachingServic
       return ok(hints);
     },
 
-    async revealExplanation(userId, exerciseId) {
-      const exercise = await catalog.getExercise(exerciseId);
-      if (!exercise) return err(appError("not_found", "문제를 찾을 수 없습니다."));
-      const ref = await catalog.getReferenceMaterial(exerciseId);
-      if (!ref) return err(appError("not_found", "이 문제에는 해설이 없습니다."));
+    async revealExplanation(userId, exerciseId, requestedLocale) {
+      const locale = resolveLocale(requestedLocale);
+      const exercise = await catalog.getExercise(exerciseId, locale);
+      if (!exercise) return err(appError("not_found", msg(locale, "error.exercise_not_found")));
+      const ref = await catalog.getReferenceMaterial(exerciseId, locale);
+      if (!ref) return err(appError("not_found", msg(locale, "error.explanation_missing")));
       await ledger.record(userId, exerciseId, "explanation");
       const explanation: Explanation = {
         exerciseId,

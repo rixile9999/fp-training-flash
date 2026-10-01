@@ -115,9 +115,9 @@ export function createLocalGleamRunner(opts: LocalGleamRunnerOptions): CodeRunne
         runner = await info();
         await prepare();
       } catch (e) {
-        return { kind: "system_error", message: `로컬 Gleam 환경을 준비하지 못했습니다: ${String(e)}`, runner: unknownInfo };
+        return { kind: "system_error", message: `could not prepare the local Gleam environment: ${String(e)}`, runner: unknownInfo };
       }
-      if (job.language !== "gleam") return { kind: "system_error", message: `지원하지 않는 언어: ${job.language}`, runner };
+      if (job.language !== "gleam") return { kind: "system_error", message: `unsupported language: ${job.language}`, runner };
       const nonce = newNonce();
       const layout = layoutJob(job, nonce);
       if (!layout.ok) return { kind: "system_error", message: layout.message, runner };

@@ -1,4 +1,4 @@
-import type { ExerciseView, Session, SubmissionView, TrialRun } from "@fp/api-contract";
+import type { ExerciseView, Locale, Session, SubmissionView, TrialRun } from "@fp/api-contract";
 import type { CliApi } from "../src/cli.ts";
 
 /** Branded ids are plain strings at runtime. */
@@ -19,6 +19,7 @@ export function exerciseView(id = EX_ID): ExerciseView {
       variantKey: "base",
       version: 1,
       language: "gleam",
+      locales: ["ko"],
       kind: "implement",
       format: "drill",
       title: id === EX2_ID ? "주문 합계" : "쿠폰 적용하기",
@@ -141,16 +142,21 @@ export interface Call {
   readonly args: readonly unknown[];
 }
 
-/** Hand-written fake API; every call is recorded. `overrides` replace individual methods. */
-export function fakeApi(overrides: Partial<CliApi> = {}): { api: CliApi; calls: Call[] } {
+/**
+ * Hand-written fake API; every call is recorded. `overrides` replace individual methods. `accountLocale` is the
+ * user's server-side locale (devLogin with a locale and updateMe change it).
+ */
+export function fakeApi(overrides: Partial<CliApi> = {}, accountLocale: Locale = "ko"): { api: CliApi; calls: Call[] } {
   const calls: Call[] = [];
   let active: Session | null = session(0);
+  let locale: Locale = accountLocale;
   const base: CliApi = {
     devLogin: async (req) => ({
-      user: { id: brand("user-1"), displayName: req.displayName, createdAt: "2026-09-30T00:00:00.000Z" },
+      user: { id: brand("user-1"), displayName: req.displayName, locale: (locale = req.locale ?? locale), createdAt: "2026-09-30T00:00:00.000Z" },
       token: { token: "tok-secret", tokenId: "tid-1", label: "cli", createdAt: "2026-09-30T00:00:00.000Z" },
     }),
-    me: async () => ({ id: brand("user-1"), displayName: "민수", createdAt: "2026-09-30T00:00:00.000Z" }),
+    me: async () => ({ id: brand("user-1"), displayName: "민수", locale, createdAt: "2026-09-30T00:00:00.000Z" }),
+    updateMe: async (req) => ({ id: brand("user-1"), displayName: "민수", locale: (locale = req.locale), createdAt: "2026-09-30T00:00:00.000Z" }),
     issueToken: async (req) => ({ token: "tok-mcp", tokenId: "tid-2", label: req.label, createdAt: "2026-09-30T00:00:00.000Z" }),
     exercise: async (id) => (id === PREDICT_ID ? predictView() : exerciseView(id)),
     trialRun: async () => failingRun,

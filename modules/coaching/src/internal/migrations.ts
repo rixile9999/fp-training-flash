@@ -29,4 +29,13 @@ export const coachingMigrations: readonly Migration[] = [
       );
     `,
   },
+  {
+    // Feedback is cached per locale; existing rows were written in Korean.
+    id: "0002_feedback_cache_locale",
+    sql: `
+      alter table coaching.feedback_cache add column locale text not null default 'ko';
+      alter table coaching.feedback_cache drop constraint feedback_cache_pkey;
+      alter table coaching.feedback_cache add primary key (submission_id, prompt_version, model, locale);
+    `,
+  },
 ];

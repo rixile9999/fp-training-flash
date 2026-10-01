@@ -13,7 +13,8 @@ import type {
   TheoryTopicId,
 } from "@fp/kernel";
 
-export type SkillTrack = "core" | "algorithm";
+/** basics: Gleam language lessons (content/lessons); core: FP skills; algorithm: algorithm track. */
+export type SkillTrack = "basics" | "core" | "algorithm";
 
 export interface Skill {
   readonly id: SkillId;
@@ -253,7 +254,59 @@ export interface ContentCatalog {
   getConceptNotes(ids: readonly ConceptNoteId[], locale?: Locale): Promise<readonly ConceptNote[]>;
   getTheoryTopics(ids: readonly TheoryTopicId[], locale?: Locale): Promise<readonly TheoryTopic[]>;
   listTheoryTopics(locale?: Locale): Promise<readonly TheoryTopic[]>;
+  listLessonUnits(locale?: Locale): Promise<readonly LessonUnitSummary[]>;
+  getLesson(unitId: string, lessonId: string, locale?: Locale): Promise<Lesson | null>;
+  /** Server-side only (lessons module): answer and feedback of one lesson exercise. */
+  getLessonAnswer(unitId: string, lessonId: string, exerciseId: string, locale?: Locale): Promise<LessonAnswerKey | null>;
   currentBundle(): Promise<BundleInfo | null>;
+}
+
+// ---------- Lessons (content/lessons, docs/design/lessons.md) ----------
+
+export interface LessonUnitSummary {
+  readonly id: string;
+  readonly title: string;
+  readonly order: number;
+  /** 1-4 */
+  readonly level: number;
+  readonly skill: SkillId;
+  /** Unit ids. */
+  readonly prerequisites: readonly string[];
+  readonly lessonIds: readonly string[];
+  readonly lessonTitles: readonly string[];
+  /** Locales with every lesson of the unit translated (always includes "ko"). */
+  readonly locales: readonly Locale[];
+}
+
+export type LessonBlock =
+  | { readonly kind: "prose"; readonly id: string; readonly markdown: string }
+  | {
+      readonly kind: "exercise";
+      readonly id: string;
+      /** choice: a question about a fact; predict: what does this code evaluate to. Both are answered by choice. */
+      readonly type: "choice" | "predict";
+      readonly prompt: string;
+      readonly code?: string;
+      readonly choices: readonly string[];
+    };
+
+/** Learner-facing lesson. Never contains answers or feedback (see getLessonAnswer). */
+export interface Lesson {
+  readonly id: string;
+  readonly unitId: string;
+  readonly title: string;
+  readonly tags: readonly string[];
+  readonly blocks: readonly LessonBlock[];
+}
+
+export interface LessonAnswerKey {
+  readonly unitId: string;
+  readonly lessonId: string;
+  readonly exerciseId: string;
+  readonly answer: number;
+  readonly correctFeedback: string;
+  /** Explanation per wrong choice index. */
+  readonly choiceFeedback: Readonly<Record<number, string>>;
 }
 
 export const CONTENT_EVENTS = {

@@ -1,5 +1,5 @@
 /** SessionService implementation and the grading.submission_evaluated consumer. */
-import { appError, createEvent, err, newId, ok } from "@fp/kernel";
+import { appError, createEvent, DEFAULT_LOCALE, err, newId, ok } from "@fp/kernel";
 import type {
   AppError,
   Clock,
@@ -9,6 +9,7 @@ import type {
   ExerciseId,
   FamilyId,
   Language,
+  Locale,
   Logger,
   Result,
   SessionId,
@@ -27,6 +28,7 @@ import {
   type SessionSummary,
   type StartSessionRequest,
 } from "./contract/index.ts";
+import { resolveLocale, t } from "./messages.ts";
 import { chooseFocus, loadPlanContext, planSession } from "./planner.ts";
 import { applyEvaluation, skipCurrent, summarize, toPublicSession, type StoredSession } from "./progress.ts";
 import { insertAttempt, insertSession, loadActiveSession, loadHistory, loadSession, saveSession } from "./store.ts";
@@ -45,7 +47,8 @@ export const NEXT_REVIEW_WINDOW_DAYS = 30;
 export const MAX_TARGET_MINUTES = 240;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const notFound = (): AppError => appError("not_found", "세션을 찾을 수 없습니다.");
+/** Unknown or foreign sessions carry no trusted locale, so this message stays in the default locale. */
+const notFound = (): AppError => appError("not_found", t(DEFAULT_LOCALE, "error.sessionNotFound"));
 
 /** Parses `<familyId>/<variantKey>@<version>`; used when the catalog no longer knows an exercise id. */
 export function parseExerciseId(id: ExerciseId): { familyId: FamilyId; variantKey: string } {
@@ -62,10 +65,10 @@ export function createSessionService(deps: ServiceDeps): SessionService & {
 } {
   const { db, clock, catalog, learner } = deps;
 
-  async function context(userId: UserId, language: Language) {
+  async function context(userId: UserId, language: Language, locale: Locale) {
     const now = clock.now();
     const history = await loadHistory(db, userId, language);
-    return loadPlanContext({ catalog, learner }, history, userId, language, now);
+    return loadPlanContext({ catalog, learner }, history, userId, language, now, locale);
   }
 
   async function owned(conn: Db, sessionId: SessionId, userId: UserId, lock = false): Promise<StoredSession | null> {
@@ -74,10 +77,11 @@ export function createSessionService(deps: ServiceDeps): SessionService & {
   }
 
   async function start(req: StartSessionRequest): Promise<Result<Session, AppError>> {
+    const locale = resolveLocale(req.locale);
     if (!Number.isFinite(req.targetMinutes) || req.targetMinutes <= 0 || req.targetMinutes > MAX_TARGET_MINUTES) {
-      return err(appError("invalid_input", `목표 시간은 1분에서 ${MAX_TARGET_MINUTES}분 사이여야 합니다.`));
+      return err(appError("invalid_input", t(locale, "error.invalidTargetMinutes", { max: MAX_TARGET_MINUTES })));
     }
-    const ctx = await context(req.userId, req.language);
+    const ctx = await context(req.userId, req.language, locale);
     const due = await learner.dueReviews(req.userId, req.language, ctx.now);
     const dueSkills: SkillId[] = [];
     for (const r of [...due].sort((a, b) => a.dueAt.localeCompare(b.dueAt))) {
@@ -90,6 +94,7 @@ export function createSessionService(deps: ServiceDeps): SessionService & {
       id: newId() as SessionId,
       userId: req.userId,
       language: req.language,
+      locale,
       status: "active",
       targetMinutes: Math.round(req.targetMinutes),
       startedAt: ctx.now.toISOString(),
@@ -117,9 +122,9 @@ export function createSessionService(deps: ServiceDeps): SessionService & {
     return db.transaction(async (tx): Promise<Result<Session, AppError>> => {
       const s = await owned(tx, sessionId, userId, true);
       if (!s) return err(notFound());
-      if (s.status !== "active") return err(appError("conflict", "진행 중인 세션이 아닙니다."));
+      if (s.status !== "active") return err(appError("conflict", t(s.locale, "error.sessionNotActive")));
       const next = skipCurrent(s);
-      if (!next) return err(appError("conflict", "건너뛸 문제가 없습니다."));
+      if (!next) return err(appError("conflict", t(s.locale, "error.nothingToSkip")));
       await saveSession(tx, next);
       return ok(toPublicSession(next));
     });
@@ -129,7 +134,7 @@ export function createSessionService(deps: ServiceDeps): SessionService & {
     const s = await owned(db, sessionId, userId);
     if (!s) return err(notFound());
     if (s.status === "completed" && s.summary) return ok(s.summary);
-    if (s.status !== "active") return err(appError("conflict", "중단된 세션은 완료할 수 없습니다."));
+    if (s.status !== "active") return err(appError("conflict", t(s.locale, "error.sessionAbandoned")));
 
     const now = clock.now();
     const horizon = new Date(now.getTime() + NEXT_REVIEW_WINDOW_DAYS * DAY_MS);
@@ -143,7 +148,7 @@ export function createSessionService(deps: ServiceDeps): SessionService & {
       const fresh = await owned(tx, sessionId, userId, true);
       if (!fresh) return err(notFound());
       if (fresh.status === "completed" && fresh.summary) return ok(fresh.summary);
-      if (fresh.status !== "active") return err(appError("conflict", "중단된 세션은 완료할 수 없습니다."));
+      if (fresh.status !== "active") return err(appError("conflict", t(fresh.locale, "error.sessionAbandoned")));
       const summary = summarize(fresh, nextReviews);
       await saveSession(tx, {
         ...fresh,
@@ -166,8 +171,9 @@ export function createSessionService(deps: ServiceDeps): SessionService & {
     userId: UserId,
     language: Language,
     skill?: SkillId,
+    locale?: Locale,
   ): Promise<Result<Recommendation, AppError>> {
-    const ctx = await context(userId, language);
+    const ctx = await context(userId, language, resolveLocale(locale));
     const focus = await chooseFocus(ctx, skill);
     if (!focus.ok) return focus;
     const f = focus.value;

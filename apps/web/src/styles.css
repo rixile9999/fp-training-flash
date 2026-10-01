@@ -29,6 +29,16 @@
   color-scheme: light;
 }
 
+/* Simplified Chinese: Noto Sans SC (Google Fonts, loaded per unicode-range subset only when used). App.tsx sets <html lang>. */
+html:lang(zh) {
+  --font-ui: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+}
+
+/* The "中文" option shown inside a Korean or English page. */
+[lang="zh-Hans"] {
+  font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
 *,
 *::before,
 *::after {
@@ -558,7 +568,7 @@ a {
   height: var(--header-h);
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
   padding: 0 20px;
   background: var(--surface);
   border-bottom: 1px solid var(--line);
@@ -600,6 +610,50 @@ a {
   font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
+}
+
+/* The stepper takes the room between brand and actions. When the five labels do not fit (widths measured per
+   locale: ko ~521px, zh ~537px, en ~662px), only the current step keeps a visible label; the others stay readable
+   to screen readers. */
+.stepper-slot {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+  container: stepper / inline-size;
+}
+
+@container stepper (max-width: 530px) {
+  html:lang(ko) .step:not(.step-current) .step-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+@container stepper (max-width: 538px) {
+  html:lang(zh) .step:not(.step-current) .step-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+@container stepper (max-width: 675px) {
+  html:lang(en) .step:not(.step-current) .step-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
 }
 
 .stepper {
@@ -730,6 +784,81 @@ a {
   font-size: 13.5px;
 }
 
+/* ---------- Language switcher ---------- */
+
+.lang-select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+
+.lang-select-label {
+  position: absolute;
+  left: 10px;
+  display: inline-flex;
+  color: var(--ink-2);
+  pointer-events: none;
+}
+
+.lang-select-input {
+  min-height: 44px;
+  padding: 0 30px 0 32px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2355525c' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+    no-repeat right 10px center;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  appearance: none;
+  cursor: pointer;
+}
+
+.lang-select-input:hover {
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+}
+
+.lang-switch > .icon {
+  margin: 0 4px 0 8px;
+}
+
+.lang-option {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lang-option:hover {
+  color: var(--ink);
+  background: var(--paper);
+}
+
+.lang-option.is-active {
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+
 .app-main {
   flex: 1;
   min-height: 0;
@@ -757,7 +886,17 @@ a {
   align-items: flex-start;
 }
 
+.login-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  width: 100%;
+}
+
 .login-headline {
+  text-wrap: balance;
   font-size: 34px;
   line-height: 1.35;
   font-weight: 700;
@@ -1871,8 +2010,12 @@ a {
     gap: 8px;
   }
 
-  .stepper {
+  .stepper-slot {
     order: 3;
+    flex-basis: 100%;
+  }
+
+  .stepper {
     width: 100%;
     overflow-x: auto;
   }

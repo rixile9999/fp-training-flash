@@ -156,3 +156,5 @@ Rules:
    explanation, an exercise overlay with every test name and all five hints, the family title (in family.<locale>.yaml),
    and a localized starter whenever the Korean starter contains Hangul.
 5. Use docs/i18n-glossary.md for terminology and tone. Chinese is Simplified Chinese (zh-Hans).
+6. Korean inside Gleam string literals of graded code is test data and stays as is in localized starters and in code
+   blocks of translated prompts. New exercises should prefer language-neutral literals (English words, numbers).

@@ -46,7 +46,8 @@ describe("training flow", () => {
     expect(within(stepper).getByText("집중 훈련").closest("li")).toHaveAttribute("aria-current", "step");
 
     // Replace `todo` with a filter-based answer (drops non-matching orders) through the real editor.
-    const editor = EditorView.findFromDOM(screen.getByRole("textbox", { name: /코드 편집기/ }))!;
+    // The CodeMirror view is created in an effect after the panel renders, so wait for it.
+    const editor = EditorView.findFromDOM(await screen.findByRole("textbox", { name: /코드 편집기/ }))!;
     const doc = editor.state.doc.toString();
     const at = doc.indexOf("todo");
     editor.dispatch({ changes: { from: at, to: at + 4, insert: "list.filter(orders, fn(o) { o.coupon == Some(code) })" } });

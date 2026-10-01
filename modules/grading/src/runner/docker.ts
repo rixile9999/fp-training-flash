@@ -121,9 +121,9 @@ export function createDockerGleamRunner(opts: DockerGleamRunnerOptions): CodeRun
       try {
         runner = await info();
       } catch (e) {
-        return { kind: "system_error", message: `Docker 채점 환경을 사용할 수 없습니다: ${String(e)}`, runner: unknownInfo };
+        return { kind: "system_error", message: `Docker grading environment unavailable: ${String(e)}`, runner: unknownInfo };
       }
-      if (job.language !== "gleam") return { kind: "system_error", message: `지원하지 않는 언어: ${job.language}`, runner };
+      if (job.language !== "gleam") return { kind: "system_error", message: `unsupported language: ${job.language}`, runner };
       const nonce = newNonce();
       const layout = layoutJob(job, nonce);
       if (!layout.ok) return { kind: "system_error", message: layout.message, runner };
@@ -145,7 +145,7 @@ export function createDockerGleamRunner(opts: DockerGleamRunnerOptions): CodeRun
           },
         });
         if (proc.exitCode !== null && DOCKER_EXIT_CODES.has(proc.exitCode) && !proc.stdout.includes(`@@FP:${nonce}@@`)) {
-          return { kind: "system_error", message: `docker run 실패 (exit ${proc.exitCode}): ${proc.stderr.trim().slice(0, 1000)}`, runner };
+          return { kind: "system_error", message: `docker run failed (exit ${proc.exitCode}): ${proc.stderr.trim().slice(0, 1000)}`, runner };
         }
         return toRunOutput(proc, nonce, layout, runner, "/work/project");
       } finally {

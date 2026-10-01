@@ -6,7 +6,12 @@ Command-line client for learners who solve exercises in their own editor. Thin a
 ## Invariants
 
 - Only the API client is used; never import module roots or contracts for behaviour (types only).
-- Human-readable Korean output by default; `--json` prints the API data (errors as `{ error: {...} }`).
+- Human-readable output in ko/en/zh (Korean default); `--json` prints the API data (errors as `{ error: {...} }`).
+- Display locale: `--lang` > `FP_LANG` > account `user.locale` (live `/v1/me` for API commands, else the
+  `locale` cached in config) > system `LC_ALL`/`LC_MESSAGES`/`LANG` prefix > ko. `fp lang <ko|en|zh>` calls
+  `updateMe` and stores `locale` in config (logged out: stored only, sent with the next `fp login`).
+  The server renders content (problems, hints, feedback, PROMPT.md body) in the account locale; the CLI
+  only localizes its own chrome. Every CLI string lives in `src/messages.ts` (missing en/zh -> ko).
 - Exit codes: 0 ok, 1 expected failure (failing tests, API error, missing login/project), 2 usage error.
 - The config file (`$FP_CONFIG_DIR` or `~/.config/fp`)/config.json holds a bearer token: written atomically,
   mode 0600. Env `FP_API_URL` / `FP_TOKEN` override the file. Default API URL `http://localhost:8787`.
@@ -28,13 +33,16 @@ Command-line client for learners who solve exercises in their own editor. Thin a
 - `src/config.ts` config file load/save.
 - `src/project.ts` local Gleam project generation (gleam.toml, starter, public test module, PROMPT.md, .fp.json)
   and reading the learner's code back.
-- `src/format.ts` Korean text rendering of trial runs, submissions, feedback, hints, sessions, progress.
+- `src/format.ts` text rendering (locale param) of trial runs, submissions, feedback, hints, sessions, progress.
+- `src/messages.ts` message catalog (ko/en/zh), `LocalizedError`, locale normalization and resolution. Mirrors
+  kernel's `pickLocale`/`formatMessage` because the CLI depends only on `@fp/api-contract`.
 
 ## Testing
 
 `pnpm check:module @fp/cli`. Tests use a temp config dir + temp cwd and the recording fake in
 `test/fixtures.ts` (implements `CliApi`); `test/project.test.ts` checks the generated layout,
-`test/cli.test.ts` drives commands end to end through `runCli`.
+`test/cli.test.ts` drives commands end to end through `runCli`; `test/locale.test.ts` covers the catalog
+(every key has en/zh with the same placeholders), locale resolution, `fp lang` and per-locale output.
 
 ## Gotchas
 

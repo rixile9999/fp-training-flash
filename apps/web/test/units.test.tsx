@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { Session } from "@fp/api-contract";
 import { stepStates } from "../src/session.ts";
 import { parseExpectedActual } from "../src/screens/FeedbackView.tsx";
-import { formatClock, relativeDay } from "../src/ui/labels.ts";
+import { formatClock } from "../src/ui/labels.ts";
+import { translator } from "../src/i18n/translator.ts";
 import { AUTH_KEY, memoryStore, readAuth } from "../src/storage.ts";
 import { parseBlocks } from "../src/ui/Markdown.tsx";
 import { errorMessage, loadApiFactory } from "../src/api/client.ts";
@@ -34,6 +35,7 @@ describe("helpers", () => {
     expect(formatClock(65_000)).toBe("01:05");
     expect(formatClock(-5)).toBe("00:00");
     const now = new Date(2026, 8, 30, 10).getTime();
+    const { relativeDay } = translator("ko");
     expect(relativeDay(new Date(2026, 8, 30, 23).toISOString(), now)).toBe("오늘");
     expect(relativeDay(new Date(2026, 9, 1, 1).toISOString(), now)).toBe("내일");
     expect(relativeDay(new Date(2026, 8, 28).toISOString(), now)).toBe("2일 지남");

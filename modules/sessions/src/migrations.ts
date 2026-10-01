@@ -54,4 +54,11 @@ create table sessions.attempts (
 create index attempts_user_recent on sessions.attempts (user_id, evaluated_at desc);
 `,
   },
+  {
+    id: "0002_session_locale",
+    sql: `
+-- Locale the session's reasons were written in; later messages for the session reuse it.
+alter table sessions.sessions add column locale text not null default 'ko';
+`,
+  },
 ];

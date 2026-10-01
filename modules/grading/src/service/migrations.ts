@@ -26,4 +26,12 @@ create table grading.submissions (
 create index submissions_user_exercise on grading.submissions (user_id, exercise_id, created_at);
 `,
   },
+  {
+    id: "0002_submission_locale",
+    sql: `
+-- Locale of the learner-facing texts in the stored evaluation (SubmitRequest.locale). Rows from before this
+-- migration were evaluated in Korean.
+alter table grading.submissions add column locale text not null default 'ko';
+`,
+  },
 ];

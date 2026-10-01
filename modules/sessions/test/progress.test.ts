@@ -14,7 +14,7 @@ function item(index: number, status: StoredItem["status"], exercise = `f${index}
 
 function session(items: StoredItem[], currentIndex: number | null): StoredSession {
   return {
-    id: asId<SessionId>("s"), userId: asId<UserId>("u"), language: "gleam", status: "active", targetMinutes: 15,
+    id: asId<SessionId>("s"), userId: asId<UserId>("u"), language: "gleam", locale: "ko", status: "active", targetMinutes: 15,
     startedAt: "2026-09-30T00:00:00.000Z", items, currentIndex, summary: null,
   };
 }

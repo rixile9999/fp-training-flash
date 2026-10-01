@@ -4,7 +4,7 @@
  * reference, the exercise's notes, and run code in the grading sandbox so examples are checked before they
  * are shown. The final answer follows the same rules as the single-call chat.
  */
-import type { ExerciseId, Logger } from "@fp/kernel";
+import type { ExerciseId, Locale, Logger } from "@fp/kernel";
 import type { ConceptNote, ExerciseDetail, TheoryTopic } from "@fp/content/contract";
 import type { GradingService, SnippetResult } from "@fp/grading/contract";
 import { lookupStdlib, lookupSyntax, syntaxTopics } from "./gleam-reference.ts";
@@ -29,6 +29,8 @@ export interface ChatAgentInput {
   readonly theoryTopics: readonly TheoryTopic[];
   /** The single-call chat request (system prompt + data blocks + conversation) to start from. */
   readonly request: LlmRequest;
+  /** Learner locale: test names/messages from run_public_tests come back in it. The request already carries the reply-language rule. */
+  readonly locale?: Locale;
   readonly maxToolCalls?: number;
   readonly timeoutMs: number;
 }
@@ -141,7 +143,11 @@ async function runTool(call: ToolCall, input: ChatAgentInput): Promise<string> {
       return r.ok ? formatSnippet(r.value) : `error: ${r.error.message}`;
     }
     case "run_public_tests": {
-      const r = await input.grading.trialRun({ exerciseId: input.exercise.id as ExerciseId, code: str(args.code) });
+      const r = await input.grading.trialRun({
+        exerciseId: input.exercise.id as ExerciseId,
+        code: str(args.code),
+        ...(input.locale ? { locale: input.locale } : {}),
+      });
       if (!r.ok) return `error: ${r.error.message}`;
       const t = r.value;
       const lines = [`outcome: ${t.outcome}`];

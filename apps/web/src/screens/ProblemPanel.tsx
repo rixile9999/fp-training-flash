@@ -2,19 +2,12 @@ import { useState } from "react";
 import type { ApiClient, ExerciseView, Hint, Skill } from "@fp/api-contract";
 import type { SessionItem } from "../api/types.ts";
 import { errorMessage } from "../api/client.ts";
+import { useI18n } from "../i18n/I18n.tsx";
 import { CodeBlock } from "../ui/CodeBlock.tsx";
 import { Disclosure } from "../ui/Disclosure.tsx";
 import { Icon } from "../ui/Icon.tsx";
 import { Markdown } from "../ui/Markdown.tsx";
-import { KIND_LABEL, percent, skillName } from "../ui/labels.ts";
-
-const HINT_KIND: Record<Hint["kind"], string> = {
-  question: "질문",
-  concept: "개념",
-  approach: "접근",
-  partial_code: "부분 코드",
-  explanation: "해설",
-};
+import { hintKindLabel, kindLabel, skillName } from "../ui/labels.ts";
 
 export function ProblemPanel(props: {
   readonly api: ApiClient;
@@ -23,37 +16,39 @@ export function ProblemPanel(props: {
   readonly skills: readonly Skill[];
 }) {
   const { api, view, item, skills } = props;
+  const tr = useI18n();
+  const { t } = tr;
   const ex = view.exercise;
   const noteOpened = (kind: "concept" | "theory", ids: readonly string[]) => {
     for (const noteId of ids) void api.noteOpened(ex.id, { kind, noteId }).catch(() => undefined);
   };
   return (
     <div className="panel problem-panel">
-      <ul className="chips" aria-label="문제 정보">
-        <li className="chip chip-accent">{KIND_LABEL[ex.kind]}</li>
+      <ul className="chips" aria-label={t("problem.info")}>
+        <li className="chip chip-accent">{kindLabel(tr, ex.kind)}</li>
         <li className="chip">{skillName(skills, ex.primarySkill)}</li>
         <li className="chip">
-          난이도 <span className="mono">{ex.difficulty}</span>
+          {t("problem.difficulty")} <span className="mono">{ex.difficulty}</span>
         </li>
         {item && (
           <li className="chip">
-            예상 성공률 <span className="mono">{percent(item.expectedSuccess)}</span>
+            {t("problem.expectedSuccess")} <span className="mono">{tr.percent(item.expectedSuccess)}</span>
           </li>
         )}
       </ul>
       <h1 className="problem-title">{ex.title}</h1>
       <Markdown source={ex.promptMarkdown} className="prompt" />
-      {ex.predict && <CodeBlock code={ex.predict.code} label="예측할 코드" />}
+      {ex.predict && <CodeBlock code={ex.predict.code} label={t("problem.predictCode")} />}
 
       {ex.publicTests.length > 0 && (
         <section className="public-tests" aria-labelledby="public-tests-h">
           <h2 id="public-tests-h" className="section-label">
-            공개 테스트 <span className="count">{ex.publicTests.length}</span>
+            {t("problem.publicTests")} <span className="count">{ex.publicTests.length}</span>
           </h2>
-          {ex.publicTests.map((t) => (
-            <div key={t.id} className="public-test">
-              <p className="public-test-name">{t.name}</p>
-              <CodeBlock code={t.code} label={`테스트 코드: ${t.name}`} />
+          {ex.publicTests.map((test) => (
+            <div key={test.id} className="public-test">
+              <p className="public-test-name">{test.name}</p>
+              <CodeBlock code={test.code} label={t("problem.testCode", { name: test.name })} />
             </div>
           ))}
         </section>
@@ -61,9 +56,9 @@ export function ProblemPanel(props: {
 
       {view.conceptNotes.length > 0 && (
         <Disclosure
-          title="코딩 개념 노트"
+          title={t("problem.conceptNotes")}
           icon="code"
-          meta={`${view.conceptNotes.length}개`}
+          meta={t("problem.noteCount", { n: view.conceptNotes.length })}
           onFirstOpen={() => noteOpened("concept", view.conceptNotes.map((n) => n.id))}
         >
           {view.conceptNotes.map((n) => (
@@ -76,20 +71,20 @@ export function ProblemPanel(props: {
       )}
       {view.theoryTopics.length > 0 && (
         <Disclosure
-          title="이론 노트"
+          title={t("problem.theoryNotes")}
           icon="book"
-          meta={`${view.theoryTopics.length}개`}
+          meta={t("problem.noteCount", { n: view.theoryTopics.length })}
           onFirstOpen={() => noteOpened("theory", view.theoryTopics.map((n) => n.id))}
         >
           {view.theoryTopics.map((n) => (
             <article key={n.id} className="note">
               <h4>
-                {n.title} <span className="chip chip-small">{n.level === "basic" ? "기초" : "심화"}</span>
+                {n.title} <span className="chip chip-small">{n.level === "basic" ? t("problem.basic") : t("problem.advanced")}</span>
               </h4>
               <Markdown source={n.markdown} />
               {n.furtherReading.length > 0 && (
                 <p className="further">
-                  더 읽을거리: {n.furtherReading.map((c) => c.text + (c.verified ? "" : " (서지 확인 전)")).join(" · ")}
+                  {t("problem.furtherReading", { items: n.furtherReading.map((c) => c.text + (c.verified ? "" : t("problem.unverified"))).join(" · ") })}
                 </p>
               )}
             </article>
@@ -103,6 +98,8 @@ export function ProblemPanel(props: {
 }
 
 export function HintPanel(props: { readonly api: ApiClient; readonly exerciseId: string; readonly total: number; readonly initial: readonly Hint[] }) {
+  const tr = useI18n();
+  const { t } = tr;
   const [hints, setHints] = useState<readonly Hint[]>(() => [...props.initial].sort((a, b) => a.level - b.level));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -115,7 +112,7 @@ export function HintPanel(props: { readonly api: ApiClient; readonly exerciseId:
       const res = await props.api.revealHint(props.exerciseId, { level: next });
       setHints([...res].sort((a, b) => a.level - b.level));
     } catch (e) {
-      setError(errorMessage(e));
+      setError(errorMessage(e, tr));
     } finally {
       setBusy(false);
     }
@@ -124,21 +121,21 @@ export function HintPanel(props: { readonly api: ApiClient; readonly exerciseId:
     <section className="hints" aria-labelledby="hints-h">
       <div className="hints-head">
         <h2 id="hints-h" className="section-label">
-          <Icon name="bulb" /> 힌트
+          <Icon name="bulb" /> {t("hint.title")}
         </h2>
-        <span className="hint-dots" role="img" aria-label={`힌트 ${props.total}단계 중 ${used}단계 사용`}>
+        <span className="hint-dots" role="img" aria-label={t("hint.progress", { total: props.total, used })}>
           {[1, 2, 3, 4, 5].map((l) => (
             <span key={l} className={`hint-dot${l <= used ? " is-used" : ""}${l > props.total ? " is-absent" : ""}`} />
           ))}
         </span>
       </div>
-      <p className="hint-note">힌트 사용은 감점하지 않고 기록만 합니다</p>
+      <p className="hint-note">{t("hint.note")}</p>
       {hints.length > 0 && (
-        <ol className="hint-list" aria-label="공개한 힌트">
+        <ol className="hint-list" aria-label={t("hint.revealed")}>
           {hints.map((h) => (
             <li key={h.level} className="hint">
               <p className="hint-level">
-                {h.level}단계 · {HINT_KIND[h.kind]}
+                {t("hint.level", { level: h.level, kind: hintKindLabel(tr, h.kind) })}
               </p>
               <Markdown source={h.markdown} />
             </li>
@@ -147,13 +144,13 @@ export function HintPanel(props: { readonly api: ApiClient; readonly exerciseId:
       )}
       {next <= props.total ? (
         <>
-          {next === 3 && <p className="hint-warn">3단계부터는 이 문제의 첫 제출이 레이팅 계산에서 빠집니다.</p>}
+          {next === 3 && <p className="hint-warn">{t("hint.warn")}</p>}
           <button type="button" className="btn btn-secondary btn-block" onClick={reveal} disabled={busy}>
-            <Icon name="bulb" /> 힌트 {next}단계 보기
+            <Icon name="bulb" /> {t("hint.reveal", { level: next })}
           </button>
         </>
       ) : (
-        <p className="muted small">모든 힌트를 확인했습니다.</p>
+        <p className="muted small">{t("hint.allShown")}</p>
       )}
       {error && (
         <p className="inline-error" role="alert">

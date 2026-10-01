@@ -11,6 +11,7 @@ import type {
   ExerciseSummary,
   Hint,
   IssuedToken,
+  Locale,
   ProgressView,
   RatingChange,
   Session,
@@ -21,7 +22,8 @@ import type {
   TrialRun,
   User,
 } from "@fp/api-contract";
-import { CONCEPT_NOTES, FAKE_EXERCISES, SKILLS, THEORY_TOPICS } from "./fake-data.ts";
+import { isLocale } from "../i18n/locale.ts";
+import { CONCEPT_NOTES, FAKE_EXERCISES, THEORY_TOPICS, localizedSkills } from "./fake-data.ts";
 import type { FakeExercise } from "./fake-data.ts";
 import type {
   ErrorTagStat,
@@ -81,6 +83,10 @@ export function createFakeApi(opts: FakeApiOptions = {}): ApiClient {
   const nextId = (prefix: string) => `${prefix}-${++seq}`;
 
   let user: User | null = null;
+  /** Accounts by display name, so a returning learner keeps their locale. */
+  const users = new Map<string, User>();
+  const demoUser = (): User => ({ id: "user-demo" as User["id"], displayName: "학습자", locale: "ko", createdAt: iso() });
+  const locale = (): Locale => user?.locale ?? "ko";
   const tokens: TokenInfo[] = [];
   const ledgers = new Map<string, Ledger>();
   const submissions = new Map<string, SubmissionView>();
@@ -295,10 +301,10 @@ export function createFakeApi(opts: FakeApiOptions = {}): ApiClient {
     const fx = find(exerciseId);
     const last = messages.filter((m) => m.role === "user").at(-1)?.content ?? "";
     ledger(exerciseId).coachMessages++;
-    if (/정답|답\s*코드|풀이\s*코드|전체\s*코드/.test(last)) {
+    if (/정답|답\s*코드|풀이\s*코드|전체\s*코드|solution|答案/i.test(last)) {
       return { role: "assistant", content: "정답 코드는 '전체 해설 보기'를 요청하기 전까지 보여 드리지 않습니다. 대신 지금 코드에서 어느 줄이 결과 개수를 바꾸는지 함께 찾아볼까요?" };
     }
-    if (/개념|설명/.test(last)) {
+    if (/개념|설명|concept|explain|概念|讲解|解释/i.test(last)) {
       const note = CONCEPT_NOTES.find((n) => fx.detail.conceptNoteIds.includes(n.id));
       return { role: "assistant", content: note ? `'${note.title}' 개념이 이 문제의 핵심입니다. map은 원소 개수를 유지하고, filter는 조건에 맞지 않는 원소를 버립니다. 이 문제에서 결과 개수는 어떻게 되어야 할까요?` : "이 문제는 입력의 모양을 유지하면서 값만 바꾸는 연습입니다. 어떤 값이 바뀌고 어떤 값이 그대로여야 하나요?" };
     }
@@ -338,12 +344,25 @@ export function createFakeApi(opts: FakeApiOptions = {}): ApiClient {
       wait(() => {
         const name = req.displayName.trim();
         if (!name) throw new ApiError(400, { code: "invalid_input", message: "이름을 입력해 주세요." });
-        user = { id: `user-${encodeURIComponent(name)}` as User["id"], displayName: name, createdAt: iso() };
+        const existing = users.get(name);
+        const u: User = existing
+          ? { ...existing, ...(req.locale ? { locale: req.locale } : {}) }
+          : { id: `user-${encodeURIComponent(name)}` as User["id"], displayName: name, locale: req.locale ?? "ko", createdAt: iso() };
+        users.set(name, u);
+        user = u;
         const token: IssuedToken = { token: `fake-token-${nextId("t")}`, tokenId: nextId("tok"), label: "web", createdAt: iso() };
         tokens.push({ tokenId: token.tokenId, label: token.label, createdAt: token.createdAt });
-        return { user, token };
+        return { user: u, token };
       }),
-    me: () => wait(() => user ?? { id: "user-demo" as User["id"], displayName: "학습자", createdAt: iso() }),
+    me: () => wait(() => user ?? demoUser()),
+    updateMe: (req) =>
+      wait(() => {
+        if (!isLocale(req.locale)) throw new ApiError(400, { code: "invalid_input", message: "지원하지 않는 언어입니다." });
+        const u: User = { ...(user ?? demoUser()), locale: req.locale };
+        users.set(u.displayName, u);
+        user = u;
+        return u;
+      }),
     issueToken: (req) =>
       wait(() => {
         const t: IssuedToken = { token: `fake-token-${nextId("t")}`, tokenId: nextId("tok"), label: req.label, createdAt: iso() };
@@ -357,7 +376,7 @@ export function createFakeApi(opts: FakeApiOptions = {}): ApiClient {
         if (i >= 0) tokens.splice(i, 1);
         return null;
       }),
-    skills: () => wait(() => [...SKILLS]),
+    skills: () => wait(() => localizedSkills(locale())),
     exercises: (filter = {}) =>
       wait(() =>
         FAKE_EXERCISES.filter(
@@ -511,7 +530,7 @@ export function createFakeApi(opts: FakeApiOptions = {}): ApiClient {
             errorTags: [...errorTags.values()].sort((a, b) => b.count - a.count),
             policyVersion: "elo-fake-1",
           },
-          skills: [...SKILLS],
+          skills: localizedSkills(locale()),
         };
       }),
   };

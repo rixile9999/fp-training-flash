@@ -94,6 +94,9 @@ export function fakeCatalog(): FakeCatalog {
     getConceptNotes: async () => [],
     getTheoryTopics: async () => [],
     listTheoryTopics: async () => [],
+    listLessonUnits: async () => [],
+    getLesson: async () => null,
+    getLessonAnswer: async () => null,
     currentBundle: async () => null,
   };
 }

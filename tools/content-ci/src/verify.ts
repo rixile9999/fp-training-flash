@@ -1,9 +1,10 @@
 /**
  * Content CI checks for one exercise, using only public module APIs:
  * reference passes, runs are deterministic, wrong answers fail their mustFail tests,
- * starter compiles and (except refactor) fails, performance baselines are measured.
+ * starter compiles and (except refactor) fails, each localized starter (translated comments) compiles and gives
+ * the same per-test results as the Korean starter, performance baselines are measured.
  */
-import type { ExerciseDetail, GradingSpec, ReferenceMaterial } from "@fp/content/contract";
+import type { ExerciseDetail, FileContent, GradingSpec, ReferenceMaterial } from "@fp/content/contract";
 import type { CodeRunner, Evaluation } from "@fp/grading/contract";
 import { buildRunJob, interpretRunOutput, staticChecks } from "@fp/grading";
 
@@ -20,6 +21,8 @@ export interface VerifyInput {
   readonly reference: ReferenceMaterial;
   readonly runner: CodeRunner;
   readonly now: () => string;
+  /** Starter files of each locale whose starter differs from the Korean one (starter.<locale>/). */
+  readonly localizedStarters?: readonly { readonly locale: string; readonly files: readonly FileContent[] }[];
 }
 
 const failedIds = (e: Evaluation) => new Set(e.tests.filter((t) => t.status !== "passed").map((t) => t.id));
@@ -99,6 +102,14 @@ export async function verifyExercise(input: VerifyInput): Promise<ExerciseCheck>
       problems.push(`refactor starter must pass all tests: ${describe(s)}`);
     } else if (detail.kind !== "refactor" && s.correctness) {
       problems.push("starter already passes all tests");
+    }
+    for (const loc of input.localizedStarters ?? []) {
+      const l = await evaluate(input, loc.files);
+      if (l.outcome === "compile_error" || l.outcome === "rejected" || l.outcome === "system_error") {
+        problems.push(`starter.${loc.locale}: ${describe(l)}`);
+      } else if (l.outcome !== s.outcome || statusKey(l) !== statusKey(s)) {
+        problems.push(`starter.${loc.locale}: results differ from the Korean starter (${describe(l)} vs ${describe(s)})`);
+      }
     }
   }
 

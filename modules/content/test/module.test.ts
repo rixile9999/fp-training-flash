@@ -84,7 +84,8 @@ describe("importing the repository /content", () => {
     expect(ref?.wrongSolutions.map((w) => w.key)).toEqual(["filter-drops"]);
 
     const skills = await content.catalog.listSkills();
-    expect(skills[0]?.id).toBe("data-transformation");
+    expect(skills[0]?.id).toBe("gleam-basics");
+    expect(skills.find((s) => s.track === "core")?.id).toBe("data-transformation");
     expect(skills.map((s) => s.order)).toEqual([...skills.map((s) => s.order)].sort((a, b) => a - b));
     const notes = await content.catalog.getConceptNotes(detail?.conceptNoteIds ?? []);
     expect(notes.map((n) => n.id)).toEqual(["gleam-list-transform", "gleam-record-update"]);

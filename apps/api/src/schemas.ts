@@ -1,7 +1,8 @@
 /** zod request schemas mirroring the DTOs in @fp/api-contract. */
 import { z } from "zod";
-import { asId, isLanguage } from "@fp/kernel";
-import type { ExerciseId, FamilyId, Language, SessionId, SkillId, SubmissionId } from "@fp/kernel";
+import { asId, isLanguage, isLocale, SUPPORTED_LOCALES } from "@fp/kernel";
+import type { ExerciseId, FamilyId, Language, Locale, SessionId, SkillId, SubmissionId } from "@fp/kernel";
+import type { ApiMessageId } from "./messages.ts";
 
 export const MAX_CODE_CHARS = 100_000;
 export const MAX_CHAT_MESSAGES = 40;
@@ -14,15 +15,29 @@ const submissionIdSchema = idString.transform((v) => asId<SubmissionId>(v));
 const skillIdSchema = idString.transform((v) => asId<SkillId>(v));
 const familyIdSchema = idString.transform((v) => asId<FamilyId>(v));
 
-export const languageSchema = z.custom<Language>((v) => typeof v === "string" && isLanguage(v), {
-  message: "지원하지 않는 언어입니다.",
+/** Custom-check params read by `zodErrorMap` in http.ts, which renders the message in the request locale. */
+const messageParams = (messageId: ApiMessageId, messageParams: Record<string, string> = {}) => ({
+  params: { messageId, messageParams },
 });
+
+export const languageSchema = z.custom<Language>(
+  (v) => typeof v === "string" && isLanguage(v),
+  messageParams("unsupportedLanguage"),
+);
+
+export const localeSchema = z.custom<Locale>(
+  (v) => typeof v === "string" && isLocale(v),
+  messageParams("unsupportedLocale", { supported: SUPPORTED_LOCALES.join(", ") }),
+);
 
 const code = z.string().max(MAX_CODE_CHARS);
 
 export const devLoginSchema = z.object({
   displayName: z.string().trim().min(1).max(40),
+  locale: localeSchema.optional(),
 });
+
+export const updateMeSchema = z.object({ locale: localeSchema });
 
 export const issueTokenSchema = z.object({
   label: z.string().trim().min(1).max(80),

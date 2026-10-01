@@ -30,4 +30,6 @@ Do not load those for module work; they are not needed to change code.
 - Time comes from the injected `Clock`, ids from `newId()`; no `Date.now()` in domain logic.
 - Tests: vitest in `<pkg>/test/*.test.ts`, in-memory PGlite via `@fp/kernel/testing`. Fake other modules with
   small hand-written objects implementing their contracts.
-- User-facing text (prompts, hints, coach output, UI) is Korean. Code, identifiers, commit messages are English.
+- User-facing text exists in ko (source), en and zh (Simplified). Each package keeps one message catalog
+  (LocalizedText + formatMessage from @fp/kernel); content uses per-locale overlay files (content/README.md).
+  Terminology and tone: docs/i18n-glossary.md. Code, identifiers and commit messages are English.

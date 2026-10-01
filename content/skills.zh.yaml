@@ -1,0 +1,31 @@
+skills:
+  gleam-basics:
+    name: Gleam 基础
+    description: 值与 let、函数与管道、case，以及 Gleam 没有的东西。初次学习 Gleam 语法的课程。
+  gleam-types:
+    name: Gleam 类型
+    description: 用自定义类型与记录、泛型和不透明类型来设计数据。
+  gleam-lists-recursion:
+    name: 列表与递归
+    description: 列表与递归、尾递归与累加器、函数作为值，以及 list 模块。
+  data-transformation:
+    name: 数据转换
+    description: 用 map、filter、fold 和记录更新把列表与记录变成新的值，并判断是否需要保持结构。
+  explicit-failure:
+    name: 显式错误处理
+    description: 用 Option 和 Result 表示缺失值与错误，并通过 use 表达式和 result 函数把它们串联起来。
+  function-decomposition:
+    name: 函数分解与组合
+    description: 把冗长的处理拆分成小的纯函数，再用管道组合起来，并将计算与副作用分离。
+  recursive-algorithms:
+    name: 递归与分治
+    description: 用结构递归、累加器和分治来设计算法。
+  dynamic-programming:
+    name: 动态规划
+    description: 定义子问题，并借助不可变数据结构复用其结果。
+  search-and-graphs:
+    name: 搜索与图
+    description: 用不可变状态实现回溯、网格搜索和图搜索。
+  functional-data-structures:
+    name: 函数式数据结构
+    description: 理解持久化数据结构与摊还成本，并亲手实现它们。
