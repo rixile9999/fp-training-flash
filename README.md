@@ -19,7 +19,8 @@ Requirements: Node 25+, pnpm, Docker Desktop. One script does everything (instal
 builds the grader image on first run, starts API + web in the background, opens the browser):
 
 ```sh
-./fpctl up              # start (learning data kept in .data/pglite)
+./fpctl up              # start the last commit (learning data kept in .data/pglite)
+./fpctl up --dev        # start the working tree instead (uncommitted changes, e.g. while agents are editing)
 ./fpctl up --memory     # start with a throwaway in-memory DB
 ./fpctl up --agent      # start with the tool-using chat coach
 ./fpctl status          # processes and API health
@@ -29,7 +30,9 @@ builds the grader image on first run, starts API + web in the background, opens 
 ./fpctl reset           # stop and delete local learning data (asks first; --yes to skip)
 ```
 
-Web: http://localhost:5173, API: http://localhost:8787. Coaching uses `DASHSCOPE_API_KEY` (or
+By default fpctl runs the last commit from a separate git worktree (.data/stable), so edits in progress cannot break
+or skew the running app; `./fpctl status` shows the mode and commit. Web: http://localhost:5173, API:
+http://localhost:8787. Coaching uses `DASHSCOPE_API_KEY` (or
 `ANTHROPIC_API_KEY`) from the environment; without a key it is rule-based.
 
 API configuration (environment variables):

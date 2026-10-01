@@ -6,7 +6,7 @@
 //   reset    종료하고 로컬 학습 기록(.data/pglite) 삭제 (--yes 가 없으면 확인을 묻습니다)
 //   status   실행 상태와 API 상태 확인
 //   logs     로그 보기 (api, web 또는 둘 다)
-// up/restart 옵션: --memory (끄면 사라지는 임시 DB), --agent (도구를 쓰는 채팅 코치), --no-open (브라우저 안 열기)
+// up/restart 옵션: --memory (끄면 사라지는 임시 DB), --agent (도구를 쓰는 채팅 코치), --no-open (브라우저 안 열기), --dev (마지막 커밋 대신 작업 폴더 코드로 실행)
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, openSync, readFileSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import { createInterface } from "node:readline/promises";
@@ -25,7 +25,12 @@ const WEB_URL = `http://localhost:${WEB_PORT}`;
 // ---------- i18n ----------
 
 const MESSAGES = {
-  help: { ko: "로컬 플랫폼 제어: ./fpctl up | down | restart | reset | status | logs [api|web]\n  up       API와 웹을 백그라운드로 실행 (필요하면 의존성 설치, Docker 기동, 채점 이미지 빌드)\n  down     둘 다 종료\n  restart  종료 후 다시 실행\n  reset    종료하고 로컬 학습 기록(.data/pglite) 삭제 (--yes 가 없으면 확인을 묻습니다)\n  status   실행 상태와 API 상태 확인\n  logs     로그 보기 (api, web 또는 둘 다)\nup/restart 옵션: --memory (끄면 사라지는 임시 DB), --agent (도구를 쓰는 채팅 코치), --no-open (브라우저 안 열기)\n공통 옵션: --lang ko|en|zh (또는 FP_LANG)", en: "Local platform control: ./fpctl up | down | restart | reset | status | logs [api|web]\n  up       start API and web in the background (installs deps, starts Docker, builds the grader image if needed)\n  down     stop both\n  restart  stop, then start again\n  reset    stop and delete local learning data (.data/pglite); asks first unless --yes\n  status   show processes and API health\n  logs     follow logs (api, web or both)\nup/restart options: --memory (throwaway in-memory DB), --agent (tool-using chat coach), --no-open (don't open the browser)\nCommon option: --lang ko|en|zh (or FP_LANG)", zh: "本地平台控制：./fpctl up | down | restart | reset | status | logs [api|web]\n  up       在后台启动 API 和网页（按需安装依赖、启动 Docker、构建评测镜像）\n  down     停止两者\n  restart  停止后重新启动\n  reset    停止并删除本地学习记录（.data/pglite）；未加 --yes 时会先确认\n  status   查看进程与 API 状态\n  logs     查看日志（api、web 或全部）\nup/restart 选项：--memory（关闭即丢失的临时数据库）、--agent（使用工具的聊天教练）、--no-open（不打开浏览器）\n通用选项：--lang ko|en|zh（或 FP_LANG）" },
+  stableAt: { ko: "• 마지막 커밋으로 실행 준비 중: {commit} {subject}", en: "• preparing the last commit: {commit} {subject}", zh: "• 正在准备最新提交：{commit} {subject}" },
+  devDirty: { ko: "! 작업 중인 코드로 실행합니다 (커밋되지 않은 변경 {n}개). 안정 실행은 --dev 없이 실행하세요.", en: "! running the working tree ({n} uncommitted changes). Omit --dev for a stable run.", zh: "! 正在运行工作区代码（{n} 处未提交更改）。如需稳定运行请去掉 --dev。" },
+  modeLine: { ko: "  모드   {mode} ({commit})", en: "  mode   {mode} ({commit})", zh: "  模式   {mode}（{commit}）" },
+  modeStable: { ko: "안정 실행: 마지막 커밋", en: "stable: last commit", zh: "稳定：最新提交" },
+  modeDev: { ko: "개발: 작업 폴더", en: "dev: working tree", zh: "开发：工作区" },
+  help: { ko: "로컬 플랫폼 제어: ./fpctl up | down | restart | reset | status | logs [api|web]\n  up       API와 웹을 백그라운드로 실행 (필요하면 의존성 설치, Docker 기동, 채점 이미지 빌드)\n  down     둘 다 종료\n  restart  종료 후 다시 실행\n  reset    종료하고 로컬 학습 기록(.data/pglite) 삭제 (--yes 가 없으면 확인을 묻습니다)\n  status   실행 상태와 API 상태 확인\n  logs     로그 보기 (api, web 또는 둘 다)\nup/restart 옵션: --memory (끄면 사라지는 임시 DB), --agent (도구를 쓰는 채팅 코치), --no-open (브라우저 안 열기), --dev (마지막 커밋 대신 작업 폴더 코드로 실행)\n공통 옵션: --lang ko|en|zh (또는 FP_LANG)", en: "Local platform control: ./fpctl up | down | restart | reset | status | logs [api|web]\n  up       start API and web in the background (installs deps, starts Docker, builds the grader image if needed)\n  down     stop both\n  restart  stop, then start again\n  reset    stop and delete local learning data (.data/pglite); asks first unless --yes\n  status   show processes and API health\n  logs     follow logs (api, web or both)\nup/restart options: --memory (throwaway in-memory DB), --agent (tool-using chat coach), --no-open (don't open the browser), --dev (run the working tree instead of the last commit)\nCommon option: --lang ko|en|zh (or FP_LANG)", zh: "本地平台控制：./fpctl up | down | restart | reset | status | logs [api|web]\n  up       在后台启动 API 和网页（按需安装依赖、启动 Docker、构建评测镜像）\n  down     停止两者\n  restart  停止后重新启动\n  reset    停止并删除本地学习记录（.data/pglite）；未加 --yes 时会先确认\n  status   查看进程与 API 状态\n  logs     查看日志（api、web 或全部）\nup/restart 选项：--memory（关闭即丢失的临时数据库）、--agent（使用工具的聊天教练）、--no-open（不打开浏览器）、--dev（运行工作区代码而非最新提交）\n通用选项：--lang ko|en|zh（或 FP_LANG）" },
   stopped: { ko: "■ {name} 종료", en: "■ {name} stopped", zh: "■ {name} 已停止" },
   installing: { ko: "• 의존성 설치 중 (pnpm install)…", en: "• installing dependencies (pnpm install)…", zh: "• 正在安装依赖（pnpm install）…" },
   installFailed: { ko: "pnpm install 실패", en: "pnpm install failed", zh: "pnpm install 失败" },
@@ -108,11 +113,11 @@ function alive(pid) {
   }
 }
 
-function startDetached(name, cmd, argv, env) {
+function startDetached(name, cmd, argv, env, cwd = ROOT) {
   mkdirSync(RUN_DIR, { recursive: true });
   const out = openSync(logFile(name), "a");
   writeFileSync(logFile(name), `\n===== ${new Date().toISOString()} ${cmd} ${argv.join(" ")} =====\n`, { flag: "a" });
-  const child = spawn(cmd, argv, { cwd: ROOT, env: { ...process.env, ...env }, detached: true, stdio: ["ignore", out, out] });
+  const child = spawn(cmd, argv, { cwd, env: { ...process.env, ...env }, detached: true, stdio: ["ignore", out, out] });
   child.unref();
   writeFileSync(pidFile(name), String(child.pid));
   return child.pid;
@@ -192,6 +197,38 @@ function ensureImage() {
   if (r.status !== 0) fail(t("imageFailed"));
 }
 
+
+// ---------- stable snapshot ----------
+
+const STABLE_DIR = join(ROOT, ".data", "stable");
+const modeFile = join(RUN_DIR, "mode.json");
+
+/**
+ * Default mode runs the last commit from a separate git worktree (.data/stable), so coding agents editing the
+ * working tree cannot break or skew the running app. --dev runs the live working tree instead.
+ */
+function prepareStable() {
+  const git = (...a) => spawnSync("git", a, { cwd: ROOT, encoding: "utf8" });
+  const head = git("rev-parse", "HEAD").stdout.trim();
+  if (!existsSync(join(STABLE_DIR, ".git"))) {
+    spawnSync("git", ["worktree", "prune"], { cwd: ROOT, stdio: "ignore" });
+    const r = git("worktree", "add", "--detach", STABLE_DIR, head);
+    if (r.status !== 0) fail(`git worktree add failed: ${r.stderr}`);
+  } else {
+    const r = spawnSync("git", ["checkout", "--detach", "--force", head], { cwd: STABLE_DIR, encoding: "utf8" });
+    if (r.status !== 0) fail(`git checkout failed: ${r.stderr}`);
+  }
+  say(t("stableAt", { commit: head.slice(0, 7), subject: git("log", "-1", "--format=%s", head).stdout.trim() }));
+  const r = spawnSync("pnpm", ["install", "--frozen-lockfile", "--prefer-offline"], { cwd: STABLE_DIR, stdio: ["ignore", "ignore", "inherit"] });
+  if (r.status !== 0) fail(t("installFailed"));
+  return { dir: STABLE_DIR, commit: head };
+}
+
+function dirtyFiles() {
+  const r = spawnSync("git", ["status", "--porcelain"], { cwd: ROOT, encoding: "utf8" });
+  return (r.stdout ?? "").split("\n").filter(Boolean).length;
+}
+
 // ---------- commands ----------
 
 async function up() {
@@ -204,12 +241,17 @@ async function up() {
   ensureDeps();
   await ensureDocker();
   ensureImage();
+  const dev = flags.has("--dev");
+  const tree = dev ? { dir: ROOT, commit: "working tree" } : prepareStable();
+  if (dev && dirtyFiles() > 0) say(t("devDirty", { n: dirtyFiles() }));
+  mkdirSync(RUN_DIR, { recursive: true });
+  writeFileSync(modeFile, JSON.stringify({ mode: dev ? "dev" : "stable", commit: tree.commit }));
 
   const memory = flags.has("--memory");
   const env = { FP_DATA_DIR: memory ? "memory" : DATA_DIR, PORT: String(API_PORT) };
   if (flags.has("--agent")) env.FP_COACH_CHAT_AGENT = "on";
   say(t("startingApi", { db: memory ? t("memoryDb") : `DB ${DATA_DIR}`, agent: flags.has("--agent") ? t("agentOn") : "" }));
-  startDetached("api", "node", ["apps/api/src/main.ts"], env);
+  startDetached("api", "node", ["apps/api/src/main.ts"], env, tree.dir);
   const health = await waitFor(`${API_URL}/v1/health`, 90);
   if (!health) {
     await stop("api");
@@ -218,9 +260,8 @@ async function up() {
   const h = await health.json();
 
   say(t("startingWeb"));
-  startDetached("web", "pnpm", ["--filter", "@fp/web", "exec", "vite", "--port", String(WEB_PORT), "--strictPort"], {
-    VITE_API_URL: API_URL,
-  });
+  // vite directly (not via pnpm), so stopping it does not log a misleading pnpm failure.
+  startDetached("web", join(tree.dir, "apps/web/node_modules/.bin/vite"), ["--port", String(WEB_PORT), "--strictPort"], { VITE_API_URL: API_URL }, join(tree.dir, "apps/web"));
   if (!(await waitFor(WEB_URL, 60))) {
     await stop("web");
     fail(t("webFailed", { log: tail("web", 20) }));
@@ -230,6 +271,7 @@ async function up() {
   say(t("running"));
   say(`  web    ${WEB_URL}`);
   say(t("apiLine", { url: API_URL, bundle: h.contentBundle, runner: h.runner, llm: h.llm }));
+  say(t("modeLine", { mode: dev ? t("modeDev") : t("modeStable"), commit: tree.commit.slice(0, 7) }));
   say(t("hintLine"));
   if (!flags.has("--no-open") && process.platform === "darwin") spawnSync("open", [WEB_URL]);
 }
@@ -277,6 +319,10 @@ async function status() {
     say(t("healthDown"));
   }
   say(`data   ${existsSync(DATA_DIR) ? DATA_DIR : t("dataNone")}`);
+  try {
+    const m = JSON.parse(readFileSync(modeFile, "utf8"));
+    say(t("modeLine", { mode: m.mode === "dev" ? t("modeDev") : t("modeStable"), commit: String(m.commit).slice(0, 7) }));
+  } catch {}
 }
 
 function logs() {
