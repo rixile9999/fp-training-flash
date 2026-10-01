@@ -1,0 +1,35 @@
+title: Find the lexicographically first queen placement
+tests:
+  four_queens_test: The first placement on a 4x4 board is [1, 3, 0, 2]
+  single_queen_test: The first placement on a 1x1 board is [0]
+  no_solution_test: 2x2 and 3x3 boards, which have no placement, return Error(Nil)
+  five_queens_test: Lists the first placement on a 5x5 board starting from the top row
+  six_queens_needs_backtracking_test: When stuck, goes back to the row above and tries the next column
+  eight_queens_test: The first placement on an 8x8 board is [0, 4, 7, 5, 2, 6, 1, 3]
+requirements:
+  R1: The result is the column number of each row, starting from the top row
+  R2: Returns the lexicographically first placement
+  R3: Error(Nil) when there is no placement
+hints:
+  1: "If you try the columns of each row from the left and stop the moment the board is filled, which placement do you find first? What should you do when a row has nowhere to place a queen?"
+  2: "In backtracking, \"find the first solution\" can be expressed as a recursion that returns its result as a `Result`. If the search of the rows below gives `Error(Nil)`, try the next column of this row; if it gives `Ok`, return it as is without looking any further."
+  3: "`search(n, row, placed)` returns `Ok(placed)` if row is n, and otherwise calls `try_columns(n, row, placed, 0)`. `try_columns` returns `Error(Nil)` once col reaches n; for a safe column it tries `search(n, row + 1, [col, ..placed])`, and if that fails it moves on to col + 1. `placed` has the lower rows at the front, so you have to reverse it at the end."
+  4: |
+    ```gleam
+    fn try_columns(n: Int, row: Int, placed: List(Int), col: Int) -> Result(List(Int), Nil) {
+      case col >= n {
+        True -> Error(Nil)
+        False -> {
+          let found = case is_safe(placed, col) {
+            True -> todo
+            False -> Error(Nil)
+          }
+          case found {
+            Ok(solution) -> Ok(solution)
+            Error(Nil) -> todo
+          }
+        }
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

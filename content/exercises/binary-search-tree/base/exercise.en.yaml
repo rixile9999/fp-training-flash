@@ -1,0 +1,32 @@
+tests:
+  data_is_retained_test: A tree built from one element is a single node holding that value
+  smaller_goes_left_test: A smaller value goes into the left subtree
+  greater_goes_right_test: A greater value goes into the right subtree
+  equal_goes_left_test: An equal value goes into the left subtree
+  complex_tree_test: Inserting in list order builds a tree with several levels
+  sorted_data_test: sorted_data returns the values in ascending order
+  sorted_data_keeps_duplicates_test: sorted_data keeps every copy of equal values
+  sorted_data_empty_test: For an empty list, sorted_data is also an empty list
+requirements:
+  R1: Insert to the left if smaller or equal, to the right if greater
+  R2: Insert in order, starting from the first element of the list
+  R3: sorted_data is an ascending list from an in-order traversal
+hints:
+  1: "What tree do you get when you insert a value into an empty tree? When you insert into a tree that has a node, does only one side (left or right) change, or both?"
+  2: "Inserting a value into an immutable tree means returning a new tree in which only the nodes along the path you walked down are rebuilt, while the other subtree is shared as is. An in-order traversal (left, self, right) lists the values of a binary search tree in ascending order."
+  3: "Write a separate `insert(tree, value)`, and have `to_tree` fold over the list from the front, calling `insert`. `sorted_data` builds the tree and then joins the left result, its own value and the right result, in that order."
+  4: |
+    ```gleam
+    fn insert(tree: Tree, value: Int) -> Tree {
+      case tree {
+        Empty -> Node(value, Empty, Empty)
+        Node(data, left, right) if value <= data -> todo
+        Node(data, left, right) -> todo
+      }
+    }
+
+    pub fn to_tree(data: List(Int)) -> Tree {
+      list.fold(data, Empty, insert)
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

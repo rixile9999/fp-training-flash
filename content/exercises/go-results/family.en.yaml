@@ -1,0 +1,13 @@
+title: Chain Go rules with Result
+rubric:
+  R-02:
+    title: The pipeline shows the intent
+    description: The order in which rules are applied matches the order in which you read the code, and steps that can fail (result.try) are clearly told apart from steps that cannot (result.map).
+  R-07:
+    title: Do not swallow errors
+    description: Do not overwrite an Error with result.unwrap or a default value; pass the first error unchanged all the way back to the caller.
+    message: result.unwrap turned an error into a default value. Check that the error is passed all the way through.
+  R-09:
+    title: No let assert or panic
+    description: Express the possibility of failure in the types.
+    message: let assert or panic was used.

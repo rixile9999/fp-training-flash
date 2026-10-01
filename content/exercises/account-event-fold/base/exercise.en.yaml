@@ -1,0 +1,28 @@
+tests:
+  apply_deposit_test: A deposit increases the balance
+  apply_withdraw_test: A withdrawal within the balance decreases the balance
+  apply_withdraw_insufficient_test: A withdrawal larger than the balance is ignored
+  apply_after_close_test: A closed account does not change for any event
+  replay_test: Returns the account after applying the events in order
+  replay_order_matters_test: Events are applied from the front of the list
+  replay_empty_test: With no events, the result is an open account with balance 0
+requirements:
+  R1: Deposits are added; only withdrawals within the balance are subtracted
+  R2: After Closed, every event is ignored
+  R3: replay starts from Account(0, True) and applies the events in order
+hints:
+  1: "If you can decide how the account changes for a single event, how would you repeat that rule when there are many events?"
+  2: "`list.fold(list, initial_state, transition)` carries a state while walking the list once from the front. The type of `apply_event`, `fn(Account, Event) -> Account`, has exactly the shape of function that fold expects."
+  3: "In `apply_event`, first check whether the account is open, and only when it is, split on the kind of event with `case`. `replay` only needs to pass `apply_event` to fold."
+  4: |
+    ```gleam
+    pub fn apply_event(account: Account, event: Event) -> Account {
+      case account.open, event {
+        False, _ -> account
+        True, Deposited(amount) -> todo
+        True, Withdrawn(amount) -> todo
+        True, Closed -> todo
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

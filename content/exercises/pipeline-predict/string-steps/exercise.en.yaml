@@ -1,0 +1,14 @@
+title: Predicting the result of a string clean-up pipeline
+hints:
+  1: "What exactly is the string right before `string.split(\" \")`? Which piece is the comma attached to?"
+  2: "`string.trim` only removes whitespace at both ends, and `string.split` only splits on the separator without touching punctuation. `string.length` counts characters."
+  3: "Write down the resulting string or list at each step exactly, including the quotation marks."
+  4: |
+    ```gleam
+    "  Hello, Gleam World  "
+    |> string.trim          // "Hello, Gleam World"
+    |> string.lowercase     // "hello, gleam world"
+    |> string.split(" ")    // todo
+    |> list.map(string.length)
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

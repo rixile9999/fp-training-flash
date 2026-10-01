@@ -1,0 +1,13 @@
+title: 统计互不攻击的皇后摆法
+rubric:
+  R-02:
+    title: 立即剪掉部分解
+    description: 每放一个皇后就检查是否安全，在不安全的格子上不再往下搜索。不要先生成所有完整摆法再筛选。
+    message: 先生成所有排列再筛选，就没有发生剪枝。
+  R-05:
+    title: 把安全检查分离出来
+    description: 把判断一个格子是否安全的规则拆分成 is_safe 这样有名字的函数，以便单独验证。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 用类型来表达可能的失败。
+    message: 使用了 let assert 或 panic。

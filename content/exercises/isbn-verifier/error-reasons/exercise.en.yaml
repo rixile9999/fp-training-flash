@@ -1,0 +1,34 @@
+title: Tell why an ISBN is wrong
+tests:
+  valid_returns_values_test: A valid ISBN returns the list of character values in Ok, with X as 10
+  wrong_length_test: If the number of characters without hyphens is not 10, returns WrongLength holding that count
+  invalid_character_position_test: An invalid character is reported with its position (from 0) after removing hyphens
+  checksum_mismatch_test: If the weighted sum is not divisible by 11, returns ChecksumMismatch
+  x_in_middle_test: An X anywhere other than the last position is an invalid character
+  length_checked_before_characters_test: If both the length and a character are wrong, the length error is returned first
+  lowercase_x_rejected_test: A lowercase x is not accepted as a check digit
+requirements:
+  R1: Check the length first
+  R2: Report the position and the character of an invalid character
+  R3: Check the weighted sum
+  R4: On success, return the list of character values
+hints:
+  1: "Does each of the three checks (length, characters, weighted sum) need the result of the step before it? What has to be ready before you can compute the weighted sum?"
+  2: "`use x <- result.try(step)` ends the function with the error if `step` is an `Error`, and continues with the next line if it is `Ok(x)`. `result.replace_error(r, e)` lets you turn an `Error(Nil)` into a more detailed error."
+  3: "Remove the hyphens first. Then chain `check_length`, `parse_values` and the weighted-sum check in that order with `use`. In `parse_values`, attach the positions (after removing hyphens) with `list.index_map` and compute the values with `list.try_map`."
+  4: |
+    ```gleam
+    pub fn validate(isbn: String) -> Result(List(Int), IsbnError) {
+      let chars =
+        isbn
+        |> string.to_graphemes
+        |> list.filter(fn(char) { char != "-" })
+      use chars <- result.try(check_length(chars))
+      use values <- result.try(parse_values(chars))
+      case checksum(values) % 11 {
+        0 -> todo
+        _ -> todo
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

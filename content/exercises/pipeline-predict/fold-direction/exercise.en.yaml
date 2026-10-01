@@ -1,0 +1,13 @@
+title: Predicting a fold result that reveals the accumulation direction
+hints:
+  1: "Inside the function given to `list.fold`, is the new element `s` attached to the front or the back of the accumulator `acc`?"
+  2: "The index of `list.index_map` starts at 0. `list.fold` goes through the list from the front, and the value returned by the function becomes the next accumulator."
+  3: "First write down the list produced by `index_map`, then make a table of how the fold's accumulator changes for each element."
+  4: |
+    ```gleam
+    ["a", "b", "c"]
+    |> list.index_map(...)  // ["a", "bb", "ccc"]
+    |> list.fold("", ...)
+    // acc: "" -> "a" -> todo -> todo
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

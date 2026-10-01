@@ -1,0 +1,27 @@
+title: Casting spells in a role-playing game
+tests:
+  successful_cast_test: With enough mana, spend mana equal to the cost and deal twice the cost in damage
+  insufficient_mana_test: With too little mana, the player is unchanged and the damage is 0
+  no_mana_pool_costs_health_test: If mana is None, health drops by the cost and the damage is 0
+  exact_mana_test: If the remaining mana equals the cost, the spell succeeds and mana becomes 0
+  health_not_below_zero_test: Casting without mana never drops health below 0
+  zero_mana_is_not_no_pool_test: If mana is Some(0), it counts as too little mana and health is not reduced
+requirements:
+  R1: With enough mana, deduct mana and deal damage
+  R2: With too little mana, nothing changes
+  R3: Without mana, deduct health (keeping it at 0 or above)
+hints:
+  1: "Is a player with mana `Some(0)` in the same situation as a player with mana `None`? How do the rules treat them differently?"
+  2: "In a `case`, using a pattern together with a guard, as in `Some(mana) if mana >= cost`, lets you take the value out of the `Option` and check a condition at the same time. `int.max(0, x)` raises a negative number to 0."
+  3: "Make a `case` on `player.mana` and split it three ways: `Some` with enough mana, `Some` with too little mana, and `None`. In each branch, build a `#(new player, damage)` tuple."
+  4: |
+    ```gleam
+    pub fn cast_spell(player: Player, cost: Int) -> #(Player, Int) {
+      case player.mana {
+        Some(mana) if mana >= cost -> todo
+        Some(_) -> #(player, 0)
+        None -> todo
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

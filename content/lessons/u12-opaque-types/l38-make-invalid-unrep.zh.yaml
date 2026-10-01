@@ -1,0 +1,78 @@
+title: 让非法状态无法表示（make invalid states unrepresentable）
+blocks:
+  intro:
+    markdown: |-
+      再进一步的原则：**“让非法状态根本无法表示（make invalid states unrepresentable）”**。
+
+      用验证来*阻止*错误的值固然不错，但更好的做法是把类型本身设计成“错误的组合从一开始就无法构造”。
+
+      常见的反模式：`User(is_member: Bool, name: String, points: Int)`——它允许出现自相矛盾的组合，比如明明是访客却填了 `name`，或者明明是会员，`points` 却是空的。改为拆成和类型（sum type）后，每种状态都*只携带自己需要的数据*。
+  member-greeting:
+    prompt: '对于下面的类型和函数，`greeting(Member("苏敏", 50))` 的值是？'
+    code: |-
+      pub type User {
+        Guest
+        Member(name: String, points: Int)
+      }
+
+      fn greeting(u: User) -> String {
+        case u {
+          Guest -> "欢迎光临，访客"
+          Member(name, points) -> name <> ": " <> int.to_string(points) <> "p"
+        }
+      }
+    choices:
+      - '`"欢迎光临，访客"`'
+      - '`"苏敏: 50p"`'
+      - '`"苏敏"`'
+      - '`"Member"`'
+    feedback:
+      correct: '答对了！匹配到 `Member` 分支，取出 `name` 和 `points`，拼成 `"苏敏: 50p"`。'
+      choices:
+        "0": '那是 `Guest` 分支的结果。输入是 `Member`。'
+        "2": '`points` 也会一起拼到字符串里——不会只得到名字。'
+        "3": 'case 返回的是分支的*结果表达式*，而不是构造器的名字。'
+  data-per-state:
+    markdown: |-
+      关键在于 `Guest` *根本没有* `name`/`points` 字段。“访客却有积分”这种状态无从构造。每种状态只携带自己的数据，自相矛盾的组合就在类型层面消失了。
+
+      还有一个好处：用 `case` 处理时，编译器会检查你是否“处理了所有状态”（穷尽性检查，exhaustiveness）。
+  connection-state:
+    prompt: '`describe(Connected("abc"))` 的值是？'
+    choices:
+      - '`"offline"`'
+      - '`"online:abc"`'
+      - '`"online:"`'
+      - '`"abc"`'
+    feedback:
+      correct: '完全正确！`Connected` 分支取出 `session`（"abc"），拼成 `"online:" <> "abc"`。'
+      choices:
+        "0": '那是 `Disconnected` 分支。输入是 `Connected`。'
+        "2": '`session` 不是空的——后面会接上 "abc"。'
+        "3": 'case 返回的是分支的整个结果表达式——包括前缀 "online:"。'
+  design-choice:
+    prompt: 哪种设计最能表达“只有已连接时才有会话 ID，断开时没有”？
+    choices:
+      - '`Connection(connected: Bool, session: String)`——断开时用空字符串'
+      - '`Connection(connected: Bool, session: Result(String, Nil))`'
+      - '由 `Disconnected` / `Connected(session: String)` 两个变体组成的和类型'
+      - '只保留 `session: String`，断开时用 `"NONE"` 这样约定好的值'
+    feedback:
+      correct: '答对了！拆成和类型后，“已断开却有会话”这种矛盾就无法表示了——这正是 make-invalid-states-unrepresentable。'
+      choices:
+        "0": 空字符串也是一个实实在在的值，所以“已断开却有会话”的状态依然可以表示。
+        "1": '稍好一些，但 `connected:False` 搭配 `session:Ok(..)` 这种矛盾组合仍然可能出现。'
+        "3": '约定好的魔法值（`"NONE"`）很容易出错，类型也无法帮你拦住。'
+  exhaustiveness-benefit:
+    prompt: 用类型消除了非法状态之后，在 `case` 中还能额外得到什么安全保障？
+    choices:
+      - 运行时变得更快
+      - 编译器会检查是否处理了所有变体（穷尽性检查），防止遗漏
+      - 字段的值会被自动验证
+      - 可以省略模式匹配
+    feedback:
+      correct: 答对了！变体都明确写出来了，编译器就能抓出遗漏的分支——新增一种状态时，所有没处理它的 case 都会以编译错误的形式暴露出来。
+      choices:
+        "0": 穷尽性检查关乎的是*防止遗漏*，而不是速度。
+        "2": 值的验证是另一回事——那是智能构造器的职责。
+        "3": 恰恰相反，你必须处理所有变体——关键在于不遗漏，而不是省略。

@@ -1,0 +1,31 @@
+tests:
+  one_word_test: Counts a single word once
+  repeated_words_test: When the same word appears several times, the counts add up
+  ignores_case_test: Words that differ only in case are counted as the same word
+  punctuation_separates_words_test: Punctuation splits words and does not remain in the result
+  cramped_list_test: Also splits words joined only by commas with no spaces
+  repeated_whitespace_is_not_a_word_test: Does not count empty words between repeated spaces, newlines and tabs
+  numbers_are_words_test: Numbers count as words too
+  empty_input_test: An empty string gives an empty dict
+requirements:
+  R1: The number of times each word appears
+  R2: Case-insensitive
+  R3: Every character that isn't a letter or a digit is a separator, and there are no empty words
+hints:
+  1: "How many words are there in `\"one,two\"` and in `\"one  two\"`? What do you get if you split only on spaces?"
+  2: "Get a list of characters with `string.to_graphemes`, and if you replace every separator character with a single space, a single `string.split(\" \")` can do the splitting. Consecutive separators produce empty string pieces."
+  3: "Try chaining five pipeline steps: lowercase, replace separators with spaces, split, filter out empty pieces, and count into a dict. Do the counting with `list.fold` and `dict.upsert`."
+  4: |
+    ```gleam
+    input
+    |> string.lowercase
+    |> string.to_graphemes
+    |> list.map(fn(g) { todo })
+    |> string.concat
+    |> string.split(" ")
+    |> list.filter(todo)
+    |> list.fold(dict.new(), fn(counts, word) {
+      dict.upsert(counts, word, fn(previous) { todo })
+    })
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

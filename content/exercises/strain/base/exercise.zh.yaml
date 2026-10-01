@@ -1,0 +1,30 @@
+tests:
+  keep_on_empty_list_test: 对空列表调用 keep 得到空列表
+  keeps_odd_numbers_test: keep 只保留条件为真的元素
+  discards_odd_numbers_test: discard 丢弃条件为真的元素
+  keeps_words_starting_with_z_test: 保留下来的字符串保持原来的顺序
+  keeps_nothing_test: 条件始终为假时，keep 的结果是空列表
+  discards_nothing_test: 条件始终为假时，discard 保留全部元素
+  discards_lists_containing_five_test: 对列表的列表，discard 也保持顺序
+requirements:
+  R1: keep 只保留条件为真的元素
+  R2: discard 丢弃条件为真的元素
+  R3: 剩余元素保持原来的顺序
+hints:
+  1: "`keep` 和 `discard` 有什么不同？能用其中一个函数来表达另一个吗？"
+  2: "把列表分成 `[]` 和 `[first, ..rest]` 来递归，`first` 是否放入结果由条件函数的结果决定。你也可以接收一个函数，再用它构造出新的函数。"
+  3: "先用递归完成 `keep`，然后让 `discard` 把一个对条件取反的匿名函数传给 `keep`。如果使用累加器，最后必须恢复顺序。"
+  4: |
+    ```gleam
+    pub fn keep(items: List(t), predicate: fn(t) -> Bool) -> List(t) {
+      case items {
+        [] -> []
+        [first, ..rest] ->
+          case predicate(first) {
+            True -> todo
+            False -> keep(rest, predicate)
+          }
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

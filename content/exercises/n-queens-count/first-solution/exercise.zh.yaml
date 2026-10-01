@@ -1,0 +1,35 @@
+title: 找出字典序最小的皇后摆法
+tests:
+  four_queens_test: 4x4 棋盘的第一种摆法是 [1, 3, 0, 2]
+  single_queen_test: 1x1 棋盘的第一种摆法是 [0]
+  no_solution_test: 没有摆法的 2x2 和 3x3 棋盘返回 Error(Nil)
+  five_queens_test: 从最上面一行开始列出 5x5 棋盘的第一种摆法
+  six_queens_needs_backtracking_test: 走不通时回到上一行尝试下一列
+  eight_queens_test: 8x8 棋盘的第一种摆法是 [0, 4, 7, 5, 2, 6, 1, 3]
+requirements:
+  R1: 结果是从最上面一行开始各行的列号
+  R2: 返回字典序最小的摆法
+  R3: 没有摆法时返回 Error(Nil)
+hints:
+  1: "如果每一行都从左边的列开始尝试，并在填满的那一刻停止，会先找到哪种摆法？某一行没有地方可放时，应该怎么办？"
+  2: "在回溯中，“找第一个解”可以表达为以 `Result` 返回结果的递归。下面各行的搜索结果是 `Error(Nil)` 时，尝试这一行的下一列；是 `Ok` 时就不再继续查看，直接原样返回。"
+  3: "`search(n, row, placed)` 在 row 等于 n 时返回 `Ok(placed)`，否则调用 `try_columns(n, row, placed, 0)`。`try_columns` 在 col 达到 n 时返回 `Error(Nil)`；遇到安全的列就尝试 `search(n, row + 1, [col, ..placed])`，失败则转到 col + 1。`placed` 中下面的行排在前面，所以最后需要反转。"
+  4: |
+    ```gleam
+    fn try_columns(n: Int, row: Int, placed: List(Int), col: Int) -> Result(List(Int), Nil) {
+      case col >= n {
+        True -> Error(Nil)
+        False -> {
+          let found = case is_safe(placed, col) {
+            True -> todo
+            False -> Error(Nil)
+          }
+          case found {
+            Ok(solution) -> Ok(solution)
+            Error(Nil) -> todo
+          }
+        }
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

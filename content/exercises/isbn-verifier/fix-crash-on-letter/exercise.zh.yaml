@@ -1,0 +1,32 @@
+title: 修复遇到误读条码就崩溃的 ISBN 检查
+tests:
+  valid_isbn_test: 正确的 ISBN 为 True
+  valid_with_x_check_digit_test: 最后一个字符 X 按 10 计算
+  invalid_check_digit_test: 校验位错误时为 False
+  letter_does_not_crash_test: 数字位上出现英文字母时，不崩溃，而是返回 False
+  invalid_character_not_zero_test: 不把错误字符换成 0 来计算
+  x_in_middle_test: 出现在非最后位置的 X 为 False
+  lowercase_x_test: 以小写 x 结尾时，不崩溃，而是返回 False
+requirements:
+  R1: 有错误字符时不崩溃，返回 False
+  R2: 对正确输入的判定保持不变
+hints:
+  1: "调用 `char_value(\"A\", 5)` 会发生什么？这个函数的返回类型能表达“转换失败”吗？"
+  2: "`let assert` 在模式不匹配时会让程序崩溃。可能失败的转换应直接返回 `Result`，再用 `result.all(list)` 把 `List(Result(a, e))` 汇总成 `Result(List(a), e)`。"
+  3: "把 `char_value` 的返回类型改成 `Result(Int, Nil)`。在 `is_valid` 中汇总所有字符的结果：只要有一个是 `Error` 就返回 `False`，全部是 `Ok` 时再做原有的加权和检查。"
+  4: |
+    ```gleam
+    fn char_value(char: String, index: Int) -> Result(Int, Nil) {
+      case char, index {
+        "X", 9 -> Ok(10)
+        _, _ -> todo
+      }
+    }
+
+    // 在 is_valid 中
+    case chars |> list.index_map(char_value) |> result.all {
+      Ok(values) -> todo
+      Error(Nil) -> todo
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

@@ -1,0 +1,27 @@
+title: Transcribe a batch of samples at once
+tests:
+  empty_batch_test: With no samples, returns Ok([])
+  all_valid_test: If every sample is valid, returns pairs of sample ID and RNA in the original order
+  invalid_sample_test: If there is an invalid sample, returns its sample ID as Error
+  first_invalid_sample_test: If several samples are invalid, returns the ID of the one that comes first in the list
+  empty_dna_sample_is_valid_test: A sample with empty DNA counts as valid and gives an empty RNA
+requirements:
+  R1: If every sample is valid, return the conversions in the original order
+  R2: Return the ID of the first invalid sample as Error
+hints:
+  1: "`to_rna` already exists. When the result for one sample is `Error(Nil)`, what information do you need to give the caller?"
+  2: "`result.replace_error(r, e)` turns `Error(_)` into `Error(e)` and leaves `Ok` unchanged. `list.try_map` returns `Ok(list)` if everything succeeds, and the first `Error` otherwise."
+  3: "Write a function that turns one sample into a `Result(#(String, String), String)`, and pass it to `list.try_map`. On success it is `#(id, rna)`; on failure the error value is the `id`."
+  4: |
+    ```gleam
+    pub fn transcribe_samples(
+      samples: List(Sample),
+    ) -> Result(List(#(String, String)), String) {
+      list.try_map(samples, fn(sample) {
+        to_rna(sample.dna)
+        |> result.map(todo)
+        |> result.replace_error(todo)
+      })
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

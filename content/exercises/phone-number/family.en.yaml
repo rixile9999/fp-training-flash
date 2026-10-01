@@ -1,0 +1,15 @@
+title: Clean up phone numbers with typed validation errors
+rubric:
+  R-11:
+    title: Error causes are told apart by type
+    description: Each failure reason uses a different constructor, so the caller can split the causes with case. Errors are not squashed into a string or Nil.
+  R-02:
+    title: The order of checks shows in the code
+    description: The checking steps are chained in order with use or result.try, so you can tell which error is reported first by reading the code from top to bottom.
+  R-05:
+    title: Checking steps are separated
+    description: If steps such as the character check, the length check and country code handling are split into small named functions, each can be checked on its own.
+  R-09:
+    title: No let assert or panic
+    description: The possibility of failure is expressed in the types.
+    message: let assert or panic was used.

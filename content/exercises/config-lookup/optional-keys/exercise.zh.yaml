@@ -1,0 +1,33 @@
+title: 区分缺失的配置和错误的配置
+tests:
+  get_int_or_reads_value_test: get_int_or 把已有的值读成整数
+  get_int_or_uses_default_when_missing_test: 键不存在时 get_int_or 使用默认值
+  get_optional_int_missing_is_none_test: 键不存在时 get_optional_int 返回 Ok(None)
+  get_optional_int_present_is_some_test: get_optional_int 把已有的值作为 Ok(Some(整数)) 返回
+  get_int_or_invalid_is_error_test: get_int_or 不把不合法的值换成默认值，而是返回 NotAnInt
+  get_optional_int_invalid_is_error_test: get_optional_int 不把不合法的值变成 None，而是返回 NotAnInt
+  empty_value_is_not_missing_test: 值为空字符串时是 NotAnInt，而不是键不存在
+requirements:
+  R1: 键不存在返回 Ok(None)，已有的整数返回 Ok(Some)
+  R2: 只在键不存在时使用默认值
+  R3: 键存在但不是整数时一律返回 NotAnInt
+hints:
+  1: "`workers` 配置完全没写，和写成了 `\"many\"`，这两种情况给运维人员看同样的结果合适吗？"
+  2: "`Result(Option(Int), e)` 能区分三种情况：`Ok(Some(n))` 表示有值，`Ok(None)` 表示没有值（这是正常的），`Error(e)` 表示值不合法。`option.unwrap(opt, 默认值)` 只在 `None` 时使用默认值。"
+  3: "在 `get_optional_int` 中用 `case` 拆开 `dict.get` 的结果，只让键不存在的情况走向 `Ok(None)`。`get_int_or` 调用 `get_optional_int`，只对 `Ok` 里面的 `Option` 应用默认值即可。"
+  4: |
+    ```gleam
+    case dict.get(config, key) {
+      Error(Nil) -> todo
+      Ok(value) ->
+        case int.parse(value) {
+          Ok(number) -> todo
+          Error(Nil) -> todo
+        }
+    }
+
+    // get_int_or
+    get_optional_int(config, key)
+    |> result.map(todo)
+    ```
+  5: "现在可以打开完整讲解。看完讲解后，将用一道新题确认掌握程度。"

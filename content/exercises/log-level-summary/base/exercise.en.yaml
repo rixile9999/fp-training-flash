@@ -1,0 +1,34 @@
+tests:
+  empty_lines_test: Returns an empty dictionary when there are no lines
+  counts_single_level_test: Counts the lines with the same level
+  counts_several_levels_test: When several levels are mixed, counts each level separately
+  normalizes_case_test: Levels that differ only in case are counted together in uppercase
+  skips_malformed_lines_test: Lines that don't match the format are not counted
+  level_without_space_test: Reads the level even when there is no space right after it
+requirements:
+  R1: Treats the text between the first [ and the first ] as the level and counts lines per level
+  R2: Levels are converted to uppercase before counting
+  R3: Lines that don't start with [ or have no ] are not counted
+hints:
+  1: "Can you think separately about pulling the level out of one line and counting the levels of many lines? How will you represent a line you can't pull a level out of?"
+  2: "`string.split_once(s, \"]\")` gives `Ok(#(before, after))`, split only once at the first `]`, or `Error(Nil)` if there is no `]`. `dict.upsert` receives `None` when the key is missing and puts in a new value."
+  3: "Write `fn level_of(line: String) -> Result(String, Nil)` first. Then go through the lines with `list.fold`: on `Ok(level)`, increase the count by 1; on `Error`, leave the accumulator as is."
+  4: |
+    ```gleam
+    fn level_of(line: String) -> Result(String, Nil) {
+      case line {
+        "[" <> rest -> todo
+        _ -> Error(Nil)
+      }
+    }
+
+    pub fn count_levels(lines: List(String)) -> Dict(String, Int) {
+      list.fold(lines, dict.new(), fn(counts, line) {
+        case level_of(line) {
+          Ok(level) -> todo
+          Error(Nil) -> counts
+        }
+      })
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

@@ -1,0 +1,29 @@
+title: 修复优惠券叠加代码中的 bug
+tests:
+  apply_coupon_percent_test: "百分比优惠券按比例降低价格"
+  apply_coupon_fixed_floor_test: "固定金额优惠券的结果不会小于 0"
+  apply_all_stacks_test: "叠加使用多张优惠券时，折扣会累积"
+  apply_all_order_test: "按列表顺序应用优惠券"
+  apply_all_empty_test: "没有优惠券时价格保持不变"
+  best_single_test: "只用一张优惠券时，找出最低价格"
+  best_single_no_coupons_test: "没有优惠券时，原价就是最低价格"
+requirements:
+  R1: "apply_all 按列表顺序，把下一张优惠券应用到上一张优惠券的结果上"
+  R2: "best_single 返回只用一张优惠券时的最低价，没有优惠券时返回原价"
+hints:
+  1: "在 `apply_all` 的 fold 里，传给优惠券的价格是从哪里来的？累加器真的被用到了吗？"
+  2: "在 `list.fold(列表, 初始值, fn(累加器, 元素) { ... })` 中，函数返回的值会成为下一步的累加器。求最小值的 fold，初始值必须是不影响结果的值。"
+  3: "`apply_all` 和 `best_single` 各有一个 bug。编译器警告（未使用的变量）也是线索。别忘了，一张优惠券都不用也是一种选择。"
+  4: |
+    ```gleam
+    pub fn apply_all(price: Int, coupons: List(Coupon)) -> Int {
+      list.fold(coupons, price, fn(total, coupon) { todo })
+    }
+
+    pub fn best_single(price: Int, coupons: List(Coupon)) -> Int {
+      coupons
+      |> list.map(apply_coupon(price, _))
+      |> list.fold(todo, int.min)
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

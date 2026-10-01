@@ -1,0 +1,12 @@
+title: Binary search tree
+rubric:
+  R-01:
+    title: Let tree patterns show the shape
+    description: "Split the two cases `Empty` and `Node` with `case`, and recurse only into subtrees."
+  R-05:
+    title: Keep insertion and traversal separate
+    description: With one function that inserts a single element and another that flattens the tree into a list, you can reuse and check each one on its own.
+  R-09:
+    title: No let assert or panic
+    description: Express the possibility of failure in the types.
+    message: let assert or panic was used.

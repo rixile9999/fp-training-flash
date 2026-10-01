@@ -1,0 +1,37 @@
+title: 区分缩写和引号来统计字幕单词
+tests:
+  trim_quotes_keeps_inner_apostrophe_test: 去掉首尾所有单引号，保留中间的单引号
+  tokens_split_on_non_word_chars_test: 单引号留在片段中，只按其他分隔符拆分
+  contractions_are_single_words_test: 缩写算作一个单词
+  quotes_around_word_are_removed_test: 用引号括起来的单词与不带引号的同一单词合并计数
+  quoted_contraction_test: 用引号括起来的缩写也按缩写本身计数
+  alternating_separators_test: 即使混有多种分隔符，也不计空单词
+  lone_quotes_are_not_words_test: 只有单引号的片段不是单词
+  full_subtitle_test: 统计混有双引号、数字和换行的整段字幕
+requirements:
+  R1: 单引号不分隔单词
+  R2: 去掉单词首尾的单引号，若什么都不剩则不是单词
+  R3: 按小写统计每个单词出现的次数
+hints:
+  1: "在 `'can't'` 中，三个单引号里哪个是单词的一部分，哪些是引号？能通过位置区分这两类吗？"
+  2: "先把单引号当作单词字符来拆分，再只去掉每个片段首尾的单引号，中间的单引号自然就留下了。`list.drop_while` 会从前面开始，在条件为真期间一直丢弃元素。"
+  3: "用 `tokens` 拆分，对每个片段应用 `trim_quotes`，丢掉空字符串，再在 dict 中计数。`trim_quotes` 只需对字符列表从前面应用一次 `drop_while`，反转后再应用一次即可。"
+  4: |
+    ```gleam
+    pub fn trim_quotes(token: String) -> String {
+      token
+      |> string.to_graphemes
+      |> list.drop_while(fn(g) { g == "'" })
+      |> todo
+      |> string.concat
+    }
+
+    pub fn count_words(input: String) -> Dict(String, Int) {
+      input
+      |> string.lowercase
+      |> tokens
+      |> list.map(trim_quotes)
+      |> todo
+    }
+    ```
+  5: "现在可以打开完整讲解。看完讲解后，将用一道新题确认掌握程度。"

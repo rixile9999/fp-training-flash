@@ -1,0 +1,31 @@
+tests:
+  no_items_test: 没有物品时，最大价值为 0
+  example_test: 在重量上限内选出价值总和最大的组合
+  eight_items_test: 从八件物品中找出最大价值
+  one_item_too_heavy_test: 比上限还重的物品不放入
+  greedy_by_weight_test: 找到比“先放轻的或单位重量价值高的物品”更好的组合
+  greedy_by_value_test: 找到比“先放贵的物品”更好的组合
+  item_used_once_test: 同一件物品不会放入两次
+  many_items_test: 即使有 50 件物品也能在时间限制内算完
+requirements:
+  R1: 在总重量不超过上限的组合中，价值总和最大
+  R2: 每件物品要么放入，要么不放（最多一次）
+  R3: 时间与物品数 x 重量上限成正比
+hints:
+  1: "只看最后一件物品，选择只有“放入”和“不放”两种。每种情况下，剩下的物品要解决的是什么问题？重量上限又会怎样变化？"
+  2: "子问题是“用前 k 件物品、在重量上限 w 之内能得到的最大价值”。不同的 (k, w) 组合只有 物品数 x (上限 + 1) 个，存进表里就不会重复求解同一个子问题。"
+  3: "把表 `Dict(重量上限, 最大价值)` 初始化为空表（所有上限都是 0），逐件折叠物品（`list.fold`），每次生成一张新表。新表的第 w 格 = max(旧表的第 w 格, 旧表的第 (w - 重量) 格 + 价值)。读取时一定要从**旧表**读。"
+  4: |
+    ```gleam
+    fn add_item(previous: Dict(Int, Int), item: Item, maximum_weight: Int) -> Dict(Int, Int) {
+      int.range(from: item.weight, to: maximum_weight + 1, with: previous, run: fn(table, capacity) {
+        let take = best(previous, capacity - item.weight) + item.value
+        todo
+      })
+    }
+
+    fn best(table: Dict(Int, Int), capacity: Int) -> Int {
+      dict.get(table, capacity) |> result.unwrap(0)
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

@@ -1,0 +1,32 @@
+tests:
+  data_is_retained_test: 由一个元素构成的树是只含该值的单个节点
+  smaller_goes_left_test: 较小的值进入左子树
+  greater_goes_right_test: 较大的值进入右子树
+  equal_goes_left_test: 相等的值进入左子树
+  complex_tree_test: 按列表顺序插入，构成多层的树
+  sorted_data_test: sorted_data 按升序返回各值
+  sorted_data_keeps_duplicates_test: sorted_data 保留相等值的每一个副本
+  sorted_data_empty_test: 输入空列表时 sorted_data 也返回空列表
+requirements:
+  R1: 小于或等于时插入左边，大于时插入右边
+  R2: 从列表的第一个元素开始依次插入
+  R3: sorted_data 通过中序遍历得到升序列表
+hints:
+  1: "往空树里插入一个值，会得到什么样的树？往有节点的树里插入时，是只有左右某一侧改变，还是两侧都改变？"
+  2: "往不可变的树里插入值，意思是返回一棵新树：只重新创建沿途经过的节点，另一侧的子树原样共享。中序遍历（左、自身、右）会按升序列出二叉搜索树中的值。"
+  3: "单独写一个 `insert(tree, value)`，让 `to_tree` 从前往后折叠列表并调用 `insert`。`sorted_data` 先建好树，再依次拼接左边的结果、自身的值和右边的结果。"
+  4: |
+    ```gleam
+    fn insert(tree: Tree, value: Int) -> Tree {
+      case tree {
+        Empty -> Node(value, Empty, Empty)
+        Node(data, left, right) if value <= data -> todo
+        Node(data, left, right) -> todo
+      }
+    }
+
+    pub fn to_tree(data: List(Int)) -> Tree {
+      list.fold(data, Empty, insert)
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

@@ -1,0 +1,29 @@
+title: Collecting and reporting every error in a signup form
+tests:
+  valid_form_test: "When every check passes, returns a NewUser"
+  single_error_is_a_list_test: "Even a single error is returned as a list"
+  collects_two_errors_test: "When the username and the age are wrong, returns both errors"
+  all_four_errors_in_field_order_test: "When all four fields are wrong, returns four errors in field order"
+  email_and_password_errors_test: "Collects the email and password errors in order"
+  only_age_error_test: "Returns the error even when only the age, the last check, is wrong"
+requirements:
+  R1: "NewUser when every check passes"
+  R2: "Collects the errors of every failed check, leaving none out"
+  R3: "Errors are in the order username, email, password, age"
+hints:
+  1: "If you chain with `use` and `result.try`, do the checks after the first error run? To know every error, do the checks need to wait for each other?"
+  2: "The four checks are independent of each other, so you can run them all up front. Their success values have different types (`String`, `Nil`, `Int`), so you cannot put them in one list, but the `List(SignupError)` you get by taking only the error out of each result can be joined into one list."
+  3: "Store the four results in variables and match all four at once with `case`. Build a `NewUser` only when all are `Ok`; in every other case, turn each result's error into a list of 0 or 1 elements and join them in order."
+  4: |
+    ```gleam
+    case username, email, password, age {
+      Ok(username), Ok(email), Ok(_), Ok(age) -> todo
+      _, _, _, _ ->
+        Error(list.flatten([errors_of(username), todo]))
+    }
+
+    fn errors_of(result: Result(a, e)) -> List(e) {
+      todo
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

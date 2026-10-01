@@ -1,0 +1,32 @@
+title: Build map and filter with foldr
+tests:
+  foldr_empty_returns_initial_test: Folding an empty list from the right returns the initial value as is
+  foldr_goes_right_to_left_test: foldr accumulates starting from the last element
+  map_test: map applies the function to every element and keeps the order
+  map_changes_type_test: The element type of the map result may differ from the input
+  filter_test: filter keeps only the elements that satisfy the condition
+  filter_keeps_order_test: The filter result keeps the original order
+  map_large_list_test: A list of 200,000 elements is mapped within the time limit
+requirements:
+  R1: foldr accumulates from the back with function(accumulator, element)
+  R2: map keeps the length and order
+  R3: filter keeps only the elements that satisfy the condition, in order
+  R4: Time proportional to the length of the list
+hints:
+  1: "When turning `[1, 2, 3]` into `[f(1), f(2), f(3)]`, which element's result forms the tail that is finished first? To build the result list only by prepending, which end should you process first?"
+  2: "`foldr` folds the rest of the list first and then combines the current element with that result. When building a result list, it prepends starting from the last element, so the original order is kept."
+  3: "Build `foldr` first. Then write `map` as a fold that starts from an empty list and prepends each transformed element, and `filter` as a fold that prepends only when the condition holds."
+  4: |
+    ```gleam
+    pub fn foldr(over list: List(a), from initial: b, with function: fn(b, a) -> b) -> b {
+      case list {
+        [] -> initial
+        [first, ..rest] -> function(todo, first)
+      }
+    }
+
+    pub fn map(list: List(a), function: fn(a) -> b) -> List(b) {
+      foldr(over: list, from: [], with: fn(acc, item) { todo })
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

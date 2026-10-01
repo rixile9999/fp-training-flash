@@ -1,0 +1,26 @@
+title: Fix a leftist heap that gets slower the more you insert
+tests:
+  drains_in_ascending_order_test: Repeatedly taking out the minimum gives ascending order
+  make_moves_taller_child_left_test: If the right child has the higher rank, make moves it to the left
+  ascending_inserts_keep_right_spine_short_test: Even after inserting 1 to 63 in order, the right branch has 6 nodes or fewer
+  make_keeps_taller_child_left_test: If the left child has the higher rank, make leaves it in place
+  make_rank_from_shorter_side_test: The rank of a new node is the shorter child's rank + 1
+  stays_leftist_after_deletes_test: Every node keeps the leftist property even after delete_min
+requirements:
+  R1: At every node, rank(left) >= rank(right) and rank = rank(right) + 1
+  R2: Keep min-heap order
+  R3: merge, insert and delete_min are O(log n)
+hints:
+  1: "When you insert 0, 1, 2, ... in order, which branch does each new value go down? How does the length of the right branch of the nodes built by `make` change?"
+  2: "merge only walks down the right branch. If the leftist property (`rank(left) >= rank(right)`) holds, the right branch has length O(log n), but if it breaks, it can grow to O(n)."
+  3: "`merge`, `insert` and `delete_min` all build nodes with `make`. Fix only `make`: compare the ranks of the two children, put the larger one on the left, and set the rank to the right (smaller) child's rank + 1."
+  4: |
+    ```gleam
+    pub fn make(value: Int, a: Heap, b: Heap) -> Heap {
+      case rank(a) >= rank(b) {
+        True -> Node(rank: todo, value: value, left: a, right: b)
+        False -> todo
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

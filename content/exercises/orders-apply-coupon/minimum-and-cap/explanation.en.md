@@ -1,0 +1,7 @@
+Every order stays in the result, so the skeleton is the same `list.map` and `case` as in the base exercise. Two things have changed.
+
+First, the eligibility condition is now compound: "the status is `Pending` and the amount is at least the minimum amount". Attaching a guard after the pattern, as in `Pending if order.amount >= coupon.min_amount ->`, shows the condition on one line, and every other case returns `order` unchanged. "At least" means `>=`.
+
+Second, the discount calculation has grown. If you pull it out into `discount(amount, coupon) -> Int`, you can check "how much is subtracted" on its own. The discount is `amount * percent / 100`, rounding **the discount** down, and then `int.min` applies the cap. If you round the amount after the discount first, as in the base exercise's `amount * { 100 - percent } / 100`, applying 15% to 999 gives a discount of 150 instead of 149. Which value gets rounded down is part of the rule, so it is safest to write the formula exactly as the rule states it.
+
+Common mistakes are writing the guard with `>` and so missing orders exactly at the minimum amount, not applying the cap, and the rounding direction above. The structure-preserving `map` (theory note "Structure-preserving transformations: functors") and the branching by status (theory note "Sum types and exhaustive matching") are the same as in the base exercise; only the condition and the calculation have grown into named pieces.

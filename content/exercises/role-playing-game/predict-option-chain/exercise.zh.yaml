@@ -1,0 +1,12 @@
+title: 预测 Option 链的结果
+hints:
+  1: "在 `spell_power(None)` 中，传给 `option.map` 的函数会执行吗？"
+  2: "`option.map` 只改变 `Some` 里的值，`None` 原样保留。`option.then` 在 `Some(x)` 时调用函数，并把该函数返回的 `Option` 直接作为结果。所以 `Some` 可能变成 `None`。"
+  3: "逐个追踪 `a`、`b`、`c`。记下每一步的值是 `Some(...)` 还是 `None`，再确认最后的 `unwrap` 用的是哪个默认值。"
+  4: |
+    ```gleam
+    // a: Some(8) -> map -> Some(16) -> then(16 >= 10) -> Some(16) -> unwrap -> 16
+    // b: Some(4) -> map -> Some(8)  -> then(8 >= 10)  -> ?        -> unwrap -> ?
+    // c: None    -> map -> ?        -> then           -> ?        -> unwrap -> ?
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

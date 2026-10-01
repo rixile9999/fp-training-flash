@@ -1,0 +1,12 @@
+title: A persistent priority queue with a leftist heap
+rubric:
+  R-02:
+    title: Keep the invariant in one place
+    description: Placing the children and computing rank happen only in make; merge and the other operations build nodes through make.
+  R-05:
+    title: Reduce the operations to merge
+    description: Express insert and delete_min as short functions that each call merge once.
+  R-09:
+    title: No let assert or panic
+    description: Express the possibility of failure in the types.
+    message: let assert or panic was used.

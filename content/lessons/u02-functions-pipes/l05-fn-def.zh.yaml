@@ -1,0 +1,65 @@
+title: 函数定义与类型标注
+blocks:
+  intro:
+    markdown: |-
+      函数按 `pub fn 名称(参数: 类型) -> 返回类型 { 函数体 }` 的形式定义。
+
+      例如：`pub fn double(x: Int) -> Int { x * 2 }`
+
+      每个参数都要写上类型，`->` 后面写返回类型。很多时候编译器能帮你推断类型，但类型标注起着函数“契约”的作用，所以惯例是顶层函数总要写上。
+  return-type:
+    prompt: "在 `pub fn double(x: Int) -> ??? { x * 2 }` 中，`???` 处应该填什么返回类型？"
+    choices:
+      - "`Int`"
+      - "`Float`"
+      - "`String`"
+      - "`Bool`"
+    feedback:
+      correct: 没错！`*` 是 Int 运算符，Int * Int 的结果是 Int。
+      choices:
+        "1": "`*` 是 Int 运算符。如果是 Float，就需要 `*.` 和 `2.0`。"
+        "2": 数字相乘的结果不可能是字符串。
+        "3": 乘法的结果是数，而不是真/假。
+  no-return:
+    markdown: |-
+      Gleam **没有** `return` 关键字。函数体的**最后一个表达式**就是返回值。
+
+      ```gleam
+      pub fn double(x: Int) -> Int {
+        x * 2
+      }
+      ```
+
+      `x * 2` 是最后一个表达式，所以它会被原样返回。也没有中途跳出的提前返回（early return）——这也为后面单元里“用 case 分支来思考”的方式埋下了伏笔。
+  last-expr:
+    prompt: "`double(21)` 的值是多少？（`fn double(x: Int) -> Int { x * 2 }`）"
+    code: |-
+      pub fn double(x: Int) -> Int {
+        x * 2
+      }
+
+      // double(21) 是多少？
+    choices:
+      - "`42`"
+      - "`21`"
+      - "`23`"
+      - "`2`"
+    feedback:
+      correct: 完全正确！最后一个表达式 `x * 2` = 21 * 2 = 42 被原样返回。
+      choices:
+        "1": 返回的不是原样的输入，而是 `x * 2`——21 * 2 = 42。
+        "2": "`x * 2` 是乘法，不是加法。21 * 2 = 42。"
+        "3": "`2` 只是乘数，返回值是 `x * 2` = 42。"
+  return-keyword:
+    prompt: Gleam 函数返回值的正确方式是哪一个？
+    choices:
+      - 像 `return x` 这样使用 return 关键字
+      - 函数体的最后一个表达式自动成为返回值
+      - 用 `yield x` 返回
+      - 把值赋给函数名
+    feedback:
+      correct: 没错！Gleam 没有 return，最后一个表达式就是返回值。
+      choices:
+        "0": Gleam 根本没有 `return` 关键字。
+        "2": "`yield` 不是 Gleam 的语法。"
+        "3": Gleam 没有给函数名赋值这种方式——最后一个表达式就是返回值。

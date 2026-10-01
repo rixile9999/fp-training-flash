@@ -1,0 +1,31 @@
+tests:
+  get_int_reads_number_test: get_int reads the key's value as an integer
+  get_int_missing_key_test: A missing key gives MissingKey holding the key
+  get_port_reads_port_test: get_port returns the port value as an integer
+  get_int_not_a_number_test: A value that is not an integer is NotAnInt, not MissingKey
+  get_port_keeps_parse_error_test: get_port passes get_int's error through unchanged
+  get_port_too_large_test: A port greater than 65535 is OutOfRange
+  get_port_zero_test: Port 0 is OutOfRange
+  get_port_upper_bound_test: Port 65535 is allowed
+requirements:
+  R1: get_int tells a missing key and a non-integer value apart with different errors
+  R2: get_port takes the result of get_int and checks the range 1..65535
+hints:
+  1: "How many reasons can reading a config value fail for? Does the caller need to be told which of the two reasons it was?"
+  2: "`dict.get` and `int.parse` both give `Error(Nil)` with no reason attached. Use `result.replace_error` at each step to turn it into the right error, then chain the steps with `use ... <- result.try(...)`."
+  3: "In `get_int`, turn the key lookup and the integer conversion into errors separately and chain them. `get_port` should take only the success value of `get_int(config, \"port\")` and check its range, letting any failure flow through as is."
+  4: |
+    ```gleam
+    pub fn get_int(config: Dict(String, String), key: String) -> Result(Int, ConfigError) {
+      use value <- result.try(
+        dict.get(config, key) |> result.replace_error(todo),
+      )
+      int.parse(value) |> result.replace_error(todo)
+    }
+
+    pub fn get_port(config: Dict(String, String)) -> Result(Int, ConfigError) {
+      use port <- result.try(get_int(config, "port"))
+      todo
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

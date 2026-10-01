@@ -1,0 +1,37 @@
+title: Build a league table that takes goal difference into account
+tests:
+  parse_line_test: Parses the two teams and their goals from one match line
+  record_updates_both_teams_test: Applies the match result and goals scored and conceded to both teams, each from its own point of view
+  compare_rows_goal_difference_test: If points are equal, the team with the larger goal difference ranks higher
+  compare_rows_name_tiebreak_test: If points and goal difference are equal, teams are in ascending order of name
+  format_row_signed_goal_difference_test: A positive goal difference is printed with a + sign
+  format_row_zero_goal_difference_test: A goal difference of 0 is printed without a sign
+  standings_test: Builds a table ordered by points, goal difference and name from several matches
+  standings_skips_invalid_lines_test: Blank lines and lines with an invalid score format are skipped
+requirements:
+  R1: parse_line accepts only the "home;away;home goals-away goals" format
+  R2: record applies wins, draws and losses and goals scored and conceded to both teams
+  R3: Rank by points descending, then goal difference descending, then name ascending
+  R4: format_row prints the goal difference with its sign, right-aligned in 3 columns
+hints:
+  1: "What information (win/draw/loss, goals scored, goals conceded) does one match line leave for each of the two teams? How do the home team's and the away team's points of view differ?"
+  2: "With three sort keys, chain `order.break_tie` twice. For a descending key, swap the arguments, as in `int.compare(b's value, a's value)`. You can decide win, draw or loss from the result of comparing the goals (`int.compare(scored, conceded)`)."
+  3: "In `record`, write a helper that adds `(goals scored, goals conceded)` to one team's record, and call it twice: with `(home goals, away goals)` for the home team and `(away goals, home goals)` for the away team. Keep adding the sign to the goal difference in its own small function too."
+  4: |
+    ```gleam
+    fn add_game(stats: Stats, scored: Int, conceded: Int) -> Stats {
+      let stats = Stats(..stats, goals_for: todo, goals_against: todo)
+      case int.compare(scored, conceded) {
+        order.Gt -> todo
+        order.Eq -> todo
+        order.Lt -> todo
+      }
+    }
+
+    pub fn compare_rows(a: #(String, Stats), b: #(String, Stats)) -> Order {
+      int.compare(points(b.1), points(a.1))
+      |> order.break_tie(todo)
+      |> order.break_tie(string.compare(a.0, b.0))
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

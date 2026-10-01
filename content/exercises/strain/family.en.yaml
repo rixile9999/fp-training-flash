@@ -1,0 +1,13 @@
+title: Build keep and discard to filter by a condition
+rubric:
+  R-04:
+    title: Implement it yourself, without the standard filter
+    description: The goal of this exercise is to build filtering yourself with recursion. Do not use `list.filter` or `list.partition`.
+    message: A list.filter-family function was used. Implement it yourself with recursion.
+  R-07:
+    title: Reuse without duplication
+    description: A function like discard, which is keep with the opposite condition, is built from keep and a negated condition instead of writing the recursion again.
+  R-09:
+    title: No let assert or panic
+    description: The possibility of failure is expressed in the types.
+    message: let assert or panic was used.

@@ -1,0 +1,32 @@
+title: 把数字位列表转成整数
+tests:
+  binary_digits_test: 二进制 [1, 0, 1] 变成 5
+  decimal_digits_test: 十进制 [4, 2] 变成 42
+  digit_equal_to_base_test: 等于进制的数字位报告为 InvalidDigit
+  empty_digits_is_zero_test: 空数字位列表的值是 0
+  negative_digit_test: 负数数字位报告为 InvalidDigit
+  first_invalid_digit_test: 有多个错误数字位时，报告最前面的那个
+  base_below_two_test: 进制小于 2 时，先于数字位报告 InvalidBase
+requirements:
+  R1: 从最高位开始累加，得到整数
+  R2: 不满足“大于等于 0 且小于 base”的数字位是 InvalidDigit
+  R3: 在第一个错误处停止
+  R4: 先检查进制，再检查数字位
+hints:
+  1: "从左往右读 [4, 2] 时，怎样从读到 4 时的值得到再读入 2 之后的值？"
+  2: "`list.try_fold(list, 初始值, fn(累加值, 元素) -> Result(累加值, e))` 在函数返回 `Error` 时立即停止，并把这个 `Error` 作为结果。"
+  3: "先检查进制；通过后，对每个数字位检查范围，同时用 `累加值 * base + 数字位` 让数值增长。"
+  4: |
+    ```gleam
+    case base < 2 {
+      True -> Error(InvalidBase(base))
+      False ->
+        list.try_fold(digits, 0, fn(total, digit) {
+          case todo {
+            True -> Ok(todo)
+            False -> Error(todo)
+          }
+        })
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

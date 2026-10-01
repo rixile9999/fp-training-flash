@@ -1,0 +1,32 @@
+title: Turn a list of digits into an integer
+tests:
+  binary_digits_test: Binary [1, 0, 1] becomes 5
+  decimal_digits_test: Decimal [4, 2] becomes 42
+  digit_equal_to_base_test: A digit equal to the base is reported as InvalidDigit
+  empty_digits_is_zero_test: An empty digit list is 0
+  negative_digit_test: A negative digit is reported as InvalidDigit
+  first_invalid_digit_test: If there are several invalid digits, the first one is reported
+  base_below_two_test: If the base is less than 2, InvalidBase is reported before any digit error
+requirements:
+  R1: Build the integer by accumulating from the most significant digit
+  R2: A digit that is not at least 0 and less than base is InvalidDigit
+  R3: Stop at the first error
+  R4: Check the base before the digits
+hints:
+  1: "Reading [4, 2] from the left, how do you get the value after reading 2 from the value you had after reading 4?"
+  2: "`list.try_fold(list, initial, fn(acc, element) -> Result(acc, e))` stops immediately when the function returns an `Error` and makes that `Error` the result."
+  3: "Check the base first. If it passes, check the range of each digit while growing the value with `acc * base + digit`."
+  4: |
+    ```gleam
+    case base < 2 {
+      True -> Error(InvalidBase(base))
+      False ->
+        list.try_fold(digits, 0, fn(total, digit) {
+          case todo {
+            True -> Ok(todo)
+            False -> Error(todo)
+          }
+        })
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

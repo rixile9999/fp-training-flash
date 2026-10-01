@@ -1,0 +1,25 @@
+title: 修复皇后摆法计数：只统计一条分支的错误
+tests:
+  four_queens_test: 4x4 棋盘有 2 种摆法
+  single_queen_board_test: 1x1 棋盘有 1 种摆法
+  five_queens_test: 5x5 棋盘有 10 种摆法
+  boards_without_solution_test: 2x2 和 3x3 棋盘没有摆法
+  six_queens_test: 6x6 棋盘有 4 种摆法
+  eight_queens_test: 8x8 棋盘有 92 种摆法
+requirements:
+  R1: 统计 n x n 棋盘的摆法数
+  R2: 在不安全的格子上停止搜索（剪枝）
+hints:
+  1: "4x4 棋盘的第一行有 4 个安全的列。如果从各列出发的摆法数分别是 0、1、1、0，那么整体答案应该是多少？现在的代码返回的又是什么？"
+  2: "`int.range` 的 `run` 函数接收累加值（`total`）和当前值（`col`），返回新的累加值。如果不使用累加值就返回新值，前面各列的结果就被丢掉了。"
+  3: "对安全的列，要把从该列出发的摆法数加到目前为止的和上。`is_safe` 和基本情况（`row == n` 时为 1）都是正确的，不要改动。"
+  4: |
+    ```gleam
+    int.range(from: 0, to: n, with: 0, run: fn(total, col) {
+      case is_safe(placed, col) {
+        True -> todo // total 与 place(n, row + 1, [col, ..placed])
+        False -> total
+      }
+    })
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

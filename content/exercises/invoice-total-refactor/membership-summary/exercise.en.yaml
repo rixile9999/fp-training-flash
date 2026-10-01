@@ -1,0 +1,31 @@
+title: Build a membership checkout statement step by step
+tests:
+  subtotal_test: The subtotal is the sum of price times quantity
+  member_discount_test: The tier discount is the given percentage, with fractions of a won dropped
+  shipping_fee_test: Under 30,000 won, shipping is 2,500 won
+  shipping_fee_free_at_threshold_test: At exactly 30,000 won, there is no shipping fee
+  summarize_test: Computes each item of the statement
+  summarize_shipping_after_discount_test: The shipping fee is decided by the discounted amount
+  summarize_vat_excludes_shipping_test: VAT is calculated without the shipping fee
+  summarize_empty_test: The statement for an empty cart is all zeros
+requirements:
+  R1: subtotal is the sum of the line amounts
+  R2: member_discount contains only the tier discount rule
+  R3: shipping_fee contains only the shipping rule
+  R4: summarize combines the step functions in the given order
+hints:
+  1: "What amount is each of shipping and VAT based on? The subtotal, or the discounted amount?"
+  2: "Naming the intermediate values between steps with `let` makes it visible in the code what each next step takes as input. Each step is a pure function, so you can test it on its own."
+  3: "In `summarize`, stack up `let`s in the order subtotal → discount → discounted amount → shipping and VAT → total, getting each value by calling a step function. Gather them at the end with `Summary(...)`."
+  4: |
+    ```gleam
+    pub fn summarize(lines: List(Line), tier: Tier) -> Summary {
+      let sub = subtotal(lines)
+      let discount = member_discount(tier, sub)
+      let discounted = sub - discount
+      let shipping = todo
+      let tax = todo
+      Summary(sub, discount, shipping, tax, todo)
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

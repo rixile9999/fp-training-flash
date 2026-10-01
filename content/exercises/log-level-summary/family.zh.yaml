@@ -1,0 +1,12 @@
+title: 按日志级别计数
+rubric:
+  R-02:
+    title: 管道清楚表达意图
+    description: 解析单行和把多行折叠汇总这两件事被分开，读起来一目了然。
+  R-05:
+    title: 分离计算逻辑
+    description: 把从一行中取出级别的解析逻辑拆成一个有名字的小函数，就能单独验证它。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 不符合格式的行用 Result 表示并跳过。
+    message: 使用了 let assert 或 panic。

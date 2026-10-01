@@ -1,0 +1,29 @@
+title: 解析整个订单文件并报告出错的行
+tests:
+  parses_every_line_test: 所有行都正确时返回 OrderLine 列表
+  reports_failing_line_number_test: LineError 中放入出错行的行号（从 1 开始）和原始错误
+  skips_blank_lines_test: 跳过只有空白的行和末尾的空行
+  empty_text_test: 空字符串得到空列表
+  blank_lines_count_in_numbering_test: 跳过的空行也计入行号
+  first_failing_line_test: 多行出错时报告最靠前的一行
+  keeps_line_order_test: 结果保持文件中的行顺序
+requirements:
+  R1: 对每一行应用 parse_line 并按顺序收集
+  R2: 把第一个出错行从 1 开始计的行号和 ParseError 作为 LineError 返回
+  R3: 跳过只有空白的行
+hints:
+  1: "如果先把空行过滤掉，之后标上的行号还会和原文件中的行号一致吗？"
+  2: "`list.try_map` 对每个元素应用返回 `Result` 的函数：全部为 `Ok` 时返回 `Ok(列表)`，否则在第一个 `Error` 处停下并返回它。`result.map_error` 只改变错误值。"
+  3: "拆分成行之后立刻用 `list.index_map` 标上行号，然后再过滤空行。最后在 `list.try_map` 中把 `parse_line` 的错误包装成 `LineError(行号, 错误)`。"
+  4: |
+    ```gleam
+    text
+    |> string.split("\n")
+    |> list.index_map(fn(line, index) { #(todo, line) })
+    |> list.filter(todo)
+    |> list.try_map(fn(numbered) {
+      let #(line_number, line) = numbered
+      parse_line(line) |> result.map_error(todo)
+    })
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

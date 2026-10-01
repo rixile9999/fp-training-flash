@@ -1,0 +1,74 @@
+title: 泛型自定义类型
+blocks:
+  intro:
+    markdown: |-
+      类型变量不仅能用在函数上，也能用在**自定义类型**上。其实你一直在用的 `List(a)`、`Option(a)`、`Result(a, e)`，全都是这样的**泛型自定义类型**——你也可以自己动手写。
+
+      ```gleam
+      pub type Box(a) {
+        Box(inner: a)
+      }
+      ```
+
+      `Box(a)` 是“装着某一样东西的盒子”。`Box(42)` 是 `Box(Int)`，`Box("hi")` 是 `Box(String)`。盒子里值的类型就是 `a`。
+  unbox:
+    markdown: |-
+      从盒子里取出值的函数也写成泛型的。它接收 `Box(a)`，原样返回里面的 `a`。
+
+      ```gleam
+      pub fn unbox(box: Box(a)) -> a {
+        box.inner
+      }
+      ```
+
+      记录字段访问（`box.inner`）和 U4 里学的完全一样——是不是泛型都不影响。
+  unbox-int:
+    prompt: '把 `Box(42)` 拆开会得到什么？（`unbox(box) -> a` 返回 `box.inner`）'
+    choices:
+      - '`42`'
+      - '`Box(42)`'
+      - '`Box(inner: 42)`'
+      - '`a`'
+    feedback:
+      correct: '完全正确！`unbox` 原样取出盒子里的值——拆掉包装后的 `42`。'
+      choices:
+        "1": '`unbox` 会**拆掉**包装——不会把整个盒子还给你。'
+        "2": '那是查看盒子*本身*时的样子。`unbox` 只取出 `inner` 的值。'
+        "3": '`a` 只是类型变量（占位符），不是实际的值——这里实际得到的是 `42`。'
+  map-box:
+    markdown: |-
+      接下来看一个“不打开盒子，只转换里面的值”的函数。输入类型 `a` 和输出类型 `b` 可能不同，所以用两个类型变量。
+
+      ```gleam
+      pub fn map_box(box: Box(a), f: fn(a) -> b) -> Box(b) {
+        Box(f(box.inner))
+      }
+      ```
+
+      是不是很眼熟？它和 `result.map`、`option.map` 是**一模一样的形状**——你刚刚亲手写出了它们的“表亲”。
+  map-box-incr:
+    prompt: 给里面的值加 1 会怎样？请选出用 `string.inspect` 打印出来的样子。
+    choices:
+      - '`Box(6)`'
+      - '`6`'
+      - '`Box(5)`'
+      - '`Box(5, 6)`'
+    feedback:
+      correct: '答对了！`f` 把里面的 5 变成 6，结果**重新装回盒子**，得到 `Box(6)`。'
+      choices:
+        "1": '`map_box` 返回的是整个盒子——不是拆开后的值（`6`），而是 `Box(6)`。（要拆开得用 `unbox`。）'
+        "2": '`f` 会被应用，5 变成 6——原来的值不会保留。'
+        "3": '盒子里只装转换后的一个值——旧值和新值不会同时保留。'
+  map-box-upper:
+    prompt: 这次把字符串转成大写。结果是什么样子？
+    choices:
+      - '`Box("GLEAM")`'
+      - '`"GLEAM"`'
+      - '`Box("gleam")`'
+      - 编译错误
+    feedback:
+      correct: '完全正确！这里 `a = String`，`b = String`。里面的 "gleam" 变成 "GLEAM"，再重新装回盒子。'
+      choices:
+        "1": '结果是一个盒子——不是拆开后的字符串，而是 `Box("GLEAM")`。'
+        "2": '`string.uppercase` 会被应用，变成大写——不会保持原样。'
+        "3": '这是 `String -> String` 的函数，正好符合 `fn(a) -> b`——能正常编译。'

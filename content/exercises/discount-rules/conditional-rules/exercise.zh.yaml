@@ -1,0 +1,31 @@
+title: 应用带条件的折扣规则并记录应用明细
+tests:
+  try_rule_applies_test: "满足条件时，用 Ok 返回打折后的购物车"
+  try_rule_skips_test: "不满足条件时返回 Error"
+  run_rules_test: "返回已应用规则的名称和最终的购物车"
+  run_rules_checks_current_total_test: "条件根据前面规则应用之后的金额来判断"
+  run_rules_names_in_order_test: "应用明细按应用的先后顺序排列"
+  run_rules_none_apply_test: "没有规则适用时，购物车保持不变，明细为空"
+requirements:
+  R1: "try_rule 先检查条件，再返回只修改了金额的购物车"
+  R2: "run_rules 按顺序应用规则，并根据当前购物车判断条件"
+  R3: "应用明细按应用顺序记录已应用规则的名称"
+hints:
+  1: "检查第二条规则的条件时，用的是原来的购物车，还是已经应用了第一条规则的购物车？"
+  2: "`list.fold` 的累加器可以是任何值。可以像 `#(Cart, List(String))` 这样同时携带当前状态和记录。只修改记录（record）的一部分时，使用 `Cart(..cart, total: ...)`。"
+  3: "先完成 `try_rule`，然后在 `run_rules` 中针对每条规则，根据 `try_rule` 的结果（`Ok`/`Error`）更新累加器。名称可以加在列表前面，最后再反转。"
+  4: |
+    ```gleam
+    pub fn run_rules(cart: Cart, rules: List(Rule)) -> #(Cart, List(String)) {
+      let #(final, applied) =
+        list.fold(rules, #(cart, []), fn(acc, rule) {
+          let #(current, names) = acc
+          case try_rule(current, rule) {
+            Ok(next) -> todo
+            Error(Nil) -> todo
+          }
+        })
+      todo
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

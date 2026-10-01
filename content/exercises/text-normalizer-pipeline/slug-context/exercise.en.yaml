@@ -1,0 +1,35 @@
+title: Make a URL slug from a product name
+tests:
+  clean_word_test: Lowercases a word and keeps only English letters and digits
+  to_words_test: Turns a sentence into a list of cleaned words
+  to_words_drops_symbol_only_test: A word made only of symbols drops out of the list after cleaning
+  to_words_multiple_spaces_test: Consecutive spaces and leading or trailing spaces do not produce empty words
+  slugify_test: Joins the words with hyphens
+  short_slug_test: Uses only the given number of words from the front
+  short_slug_skips_symbol_words_test: Words made only of symbols do not count toward the number of words
+requirements:
+  R1: clean_word cleans up just one word
+  R2: to_words reuses clean_word and drops empty words
+  R3: slugify reuses to_words
+  R4: short_slug picks words from the result of to_words
+hints:
+  1: "What does the `\"-\"` in `\"tea - cup\"` become after cleaning? Should dropping empty words happen before or after cleaning?"
+  2: "In a pipeline, moving the filtering step (`list.filter`) changes the result. You can only tell whether a value is \"empty\" after the step that produces that value has finished."
+  3: "Finish `clean_word` first. `to_words` goes in this order: split → `clean_word` on each word → drop empty words. `slugify` and `short_slug` only need the result of `to_words`."
+  4: |
+    ```gleam
+    pub fn to_words(text: String) -> List(String) {
+      text
+      |> string.split(" ")
+      |> todo
+      |> list.filter(fn(word) { word != "" })
+    }
+
+    pub fn short_slug(text: String, max_words: Int) -> String {
+      text
+      |> to_words
+      |> todo
+      |> string.join("-")
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

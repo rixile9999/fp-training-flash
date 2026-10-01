@@ -1,0 +1,26 @@
+tests:
+  empty_list_test: "An empty list returns an empty list"
+  restocks_low_item_test: "When stock is below the reorder point, adds the reorder quantity"
+  keeps_other_items_test: "Items that are not restocked stay in the result as they are"
+  restocks_at_reorder_point_test: "Restocks even when stock equals the reorder point"
+  keeps_other_fields_test: "Fields other than the stock quantity do not change"
+  keeps_order_test: "Keeps the original order"
+requirements:
+  R1: "Only items whose on_hand is at most reorder_point are increased by reorder_qty"
+  R2: "Every item is kept, in the original order"
+  R3: "Fields other than on_hand are left unchanged"
+hints:
+  1: "Where inside `Item` is the value you need to change? Of the outer record and the inner record, which one needs to be built anew?"
+  2: "The record update syntax `Stock(..stock, on_hand: new_value)` builds a new record with one field changed. If you change the inner record, you also have to build a new outer record that holds it."
+  3: "Go through every item with `list.map`. When the restock condition holds, build a new `Stock` and then a new `Item` with it. The condition is \"less than or equal to\"."
+  4: |
+    ```gleam
+    list.map(items, fn(item) {
+      let stock = item.stock
+      case stock.on_hand <= stock.reorder_point {
+        True -> Item(..item, stock: todo)
+        False -> item
+      }
+    })
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

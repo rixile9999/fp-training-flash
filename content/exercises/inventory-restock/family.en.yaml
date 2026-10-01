@@ -1,0 +1,12 @@
+title: Restocking inventory
+rubric:
+  R-02:
+    title: The pipeline shows the intent
+    description: Transform the whole list once, and decide with a single case whether each element changes.
+  R-05:
+    title: Calculation logic is extracted
+    description: Extracting the restock condition or the update of a single item into small named functions lets you verify them separately.
+  R-09:
+    title: No let assert or panic
+    description: Express the possibility of failure in the types.
+    message: let assert or panic was used.

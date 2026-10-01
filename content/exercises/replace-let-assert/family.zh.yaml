@@ -1,0 +1,12 @@
+title: 把因 let assert 崩溃的代码改成 Result
+rubric:
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 用类型来表达可能的失败。
+    message: 使用了 let assert 或 panic。
+  R-07:
+    title: 不吞掉错误
+    description: 不要为了消除崩溃而改用默认值或丢弃输入。用错误值返回到底哪里出了问题。
+  R-11:
+    title: 用 use 串联，而不是嵌套 case
+    description: 用 use 和 result.try 串联多个步骤的 Result，成功路径就能从上往下读。

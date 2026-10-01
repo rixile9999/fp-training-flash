@@ -1,0 +1,24 @@
+title: 修复会留下大写停用词的搜索词规范化
+tests:
+  split_words_test: 把搜索词拆成不含空词的单词列表
+  remove_stopwords_test: 从列表中去掉小写停用词
+  normalize_query_lowercase_test: 把搜索词的单词转为小写
+  normalize_query_capital_stopword_test: 首字母大写的停用词也会去掉
+  normalize_query_all_caps_test: 全部大写的停用词也会去掉
+  normalize_query_only_stopwords_test: 只有停用词时结果为空列表
+requirements:
+  R1: 停用词的比较不区分大小写
+hints:
+  1: "`\"The Art of War\"` 经过管道的每个步骤时，`\"The\"` 是什么样子？`remove_stopwords` 看到它时，它是大写还是小写？"
+  2: "管道中的每个步骤只能看到前一步传来的值。后面的步骤期望的输入形式（这里是小写），必须由前面的步骤先准备好。"
+  3: "不要往停用词列表里添加大写形式，而是调整步骤的顺序，让 `remove_stopwords` 总是接收小写单词。"
+  4: |
+    ```gleam
+    pub fn normalize_query(text: String) -> List(String) {
+      text
+      |> split_words
+      |> todo
+      |> todo
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

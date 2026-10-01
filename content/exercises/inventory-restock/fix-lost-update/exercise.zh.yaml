@@ -1,0 +1,25 @@
+title: 补满货架——修复丢失的更新
+tests:
+  refills_empty_shelf_test: "数量少于最低数量的货架补到最大容量"
+  keeps_stocked_shelf_test: "货量充足的货架保持不变"
+  mixed_shelves_test: "需要补货和不需要补货的货架混在一起时，全部保留"
+  fills_to_capacity_not_adds_test: "不是在剩余数量上相加，而是设为最大容量"
+  at_minimum_not_refilled_test: "数量等于最低数量时不补货"
+  keeps_order_test: "保持货架的顺序"
+requirements:
+  R1: "on_hand 少于 minimum 时，把 on_hand 改为 capacity 的新货架放入结果"
+  R2: "其他货架原样放入结果"
+  R3: "保持顺序"
+hints:
+  1: "在 `list.each` 里创建的新 `Shelf` 值去了哪里？函数最后返回的是什么？"
+  2: "Gleam 的值不会改变。记录更新只是创建一个新值，而 `list.each` 会丢弃函数的结果并返回 `Nil`。要收集结果，请使用 `list.map`。"
+  3: "条件判断和创建新记录的部分已经是对的。只需改变遍历方式，让它们的结果成为返回值。"
+  4: |
+    ```gleam
+    pub fn refill(shelves: List(Shelf)) -> List(Shelf) {
+      list.map(shelves, fn(shelf) {
+        todo
+      })
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

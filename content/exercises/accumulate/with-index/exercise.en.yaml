@@ -1,0 +1,26 @@
+title: Build your own map that also passes the position
+tests:
+  empty_list_test: An empty list returns an empty list
+  index_starts_at_zero_test: The position of the first element is 0
+  numbers_lines_test: The position can be used to number the items
+  single_element_gets_zero_test: With a single element, the function is called once with position 0
+  combines_value_and_index_test: Equal values still get a different number at each position
+  keeps_order_of_long_list_test: Keeps the original order even for a long list
+requirements:
+  R1: Apply the function to every element and keep the length
+  R2: Pass a position that starts at 0 and increases by 1
+  R3: Keep the original order
+hints:
+  1: "As the recursion walks down one element at a time, where can you keep track of which element you are on right now?"
+  2: "The public function's arguments have no position. A common approach is to write a separate helper that takes the position as an argument, and have the public function call it with a starting value of 0."
+  3: "Make the helper `go(list, fun, index, acc)` recurse with `index + 1` each time it handles an element. If you stacked results in front of `acc`, you have to reverse them at the end."
+  4: |
+    ```gleam
+    fn go(items: List(a), fun: fn(a, Int) -> b, index: Int, acc: List(b)) -> List(b) {
+      case items {
+        [] -> todo
+        [first, ..rest] -> go(rest, fun, index + 1, todo)
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

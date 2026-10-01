@@ -1,0 +1,31 @@
+title: 保持相同优先级顺序的排序
+tests:
+  sorts_by_priority_test: 按比较函数升序排序
+  keeps_input_order_on_ties_test: 优先级相同的配送保持原来的顺序
+  empty_list_test: 空列表返回空列表
+  follows_compare_function_test: 给出降序比较函数时按降序排序
+  many_ties_stay_in_order_test: 即使有多组相同优先级，每组都保持原来的顺序
+  sort_large_list_test: 15 万个元素的列表也能在时间限制内排好序
+requirements:
+  R1: 按 compare 升序
+  R2: 稳定排序（compare 为 Eq 时保持原来的顺序）
+  R3: O(n log n)
+hints:
+  1: "在合并步骤中，两个头元素的比较结果为 `Eq` 时，哪一边的元素在原列表中更靠前？"
+  2: "稳定排序会保持比较结果相同的元素的原有顺序。把列表分成前一半和后一半时，左边的每个元素原本都在右边所有元素之前。"
+  3: "分成前后两半（`list.split`），分别递归排序后再合并。在合并时，想清楚 `compare(x, y)` 为 `Eq` 的情况应该和 `Lt` 还是 `Gt` 一样处理，才能保持原来的顺序。"
+  4: |
+    ```gleam
+    fn merge(left: List(a), right: List(a), compare: fn(a, a) -> Order) -> List(a) {
+      case left, right {
+        [], _ -> right
+        _, [] -> left
+        [x, ..xs], [y, ..ys] ->
+          case compare(x, y) {
+            order.Gt -> todo
+            order.Lt | order.Eq -> todo
+          }
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

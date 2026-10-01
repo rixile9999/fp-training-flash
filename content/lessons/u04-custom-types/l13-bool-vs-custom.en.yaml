@@ -71,15 +71,15 @@ blocks:
   connection-message:
     prompt: Here's a message per connection state. What is the value of `message(Connected)`?
     choices:
-      - '`"연결 중..."`'
-      - '`"연결됨"`'
-      - '`"끊김"`'
+      - '`"Connecting..."`'
+      - '`"Connected"`'
+      - '`"Disconnected"`'
       - "`Connected`"
     feedback:
-      correct: Exactly! It matches the `Connected` branch and becomes "연결됨" — if it were a `Bool` you couldn't have held these three states.
+      correct: Exactly! It matches the `Connected` branch and becomes the string "Connected" — if it were a `Bool` you couldn't have held these three states.
       choices:
-        "0": '"연결 중..." is the `Connecting` branch — the input is `Connected`.'
-        "2": '"끊김" is the `Disconnected` branch — not `Connected`.'
+        "0": '"Connecting..." is the `Connecting` branch — the input is `Connected`.'
+        "2": '"Disconnected" is the `Disconnected` branch — not `Connected`.'
         "3": "`case` returns the result (a string) of the matched branch, not the input variant."
     code: |-
       pub type Connection {
@@ -90,9 +90,9 @@ blocks:
 
       pub fn message(c: Connection) -> String {
         case c {
-          Connecting -> "연결 중..."
-          Connected -> "연결됨"
-          Disconnected -> "끊김"
+          Connecting -> "Connecting..."
+          Connected -> "Connected"
+          Disconnected -> "Disconnected"
         }
       }
 

@@ -1,0 +1,12 @@
+title: Split a sales report into parsing, aggregation and output functions
+rubric:
+  R-02:
+    title: The pipeline shows the intent
+    description: The top-level function only connects the parsing, aggregation and output steps in order; the detailed calculations live in each step function.
+  R-05:
+    title: One function per step
+    description: No single function does parsing, aggregation and string assembly together. Each step is a small function you can call and check on its own.
+  R-09:
+    title: No let assert or panic
+    description: Invalid lines are expressed as a Result and skipped. The program does not stop just because the input looks odd.
+    message: let assert or panic was used.

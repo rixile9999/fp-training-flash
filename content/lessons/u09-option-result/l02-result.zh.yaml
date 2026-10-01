@@ -1,0 +1,105 @@
+title: 可能失败的运算——Result
+blocks:
+  intro:
+    markdown: |-
+      Gleam **没有**异常（exception）。不会用 `try/catch` 去捕获从某处抛出来的错误。取而代之的是把失败的可能性**写进返回类型**：`Result(成功类型, 失败类型)`。
+
+      `Result(a, e)` 同样是只有两种形态的自定义类型：
+
+      - `Ok(值)`——**成功**，里面是成功的值
+      - `Error(原因)`——**失败**，里面是失败的原因
+
+      调用者必须用 `case` **同时处理两种情况**才能编译通过（U4 穷尽性检查再次登场）。类型系统里根本不存在“忘了处理错误”这个选项。
+  result-ok:
+    prompt: '`safe_div` 会防止除以 0。`safe_div(20, 4)` 的值是？'
+    code: |-
+      fn safe_div(a: Int, b: Int) -> Result(Int, Nil) {
+        case b {
+          0 -> Error(Nil)
+          _ -> Ok(a / b)
+        }
+      }
+
+      // safe_div(20, 4) 是什么？
+    choices:
+      - '`Ok(5)`'
+      - '`5`'
+      - '`Error(Nil)`'
+      - '`Ok(20)`'
+    feedback:
+      correct: '没错！除法成功，商 5 被包装进 `Ok`——`Ok(5)`。成功的值也不会直接裸露出来。'
+      choices:
+        "1": '值确实是 5，但因为是 `Result` 类型，会被包装成 `Ok(5)`——要取出它，需要模式匹配。'
+        "2": '`Error(Nil)` 是 `b` 为 0 时的结果。这里除数是 4，所以能成功。'
+        "3": '结果是商 `20 / 4 = 5`——是 `Ok(5)`，不是 `Ok(20)`。'
+  result-error:
+    prompt: '同一个函数中，`safe_div(20, 0)` 的值是？'
+    code: |-
+      fn safe_div(a: Int, b: Int) -> Result(Int, Nil) {
+        case b {
+          0 -> Error(Nil)
+          _ -> Ok(a / b)
+        }
+      }
+
+      // safe_div(20, 0) 是什么？
+    choices:
+      - '`Error(Nil)`'
+      - '`Ok(0)`'
+      - '程序崩溃'
+      - '`0`'
+    feedback:
+      correct: '完全正确！`b` 是 0，所以选中 `Error(Nil)` 分支——失败被表示为*值*，因此不会崩溃。'
+      choices:
+        "1": '除以 0 不是成功——不是 `Ok`，而是用 `Error(Nil)` 拦下来。'
+        "2": 'Gleam 没有异常，所以不会崩溃。失败会以 `Error` 值的形式安全地返回。'
+        "3": '失败用 `Error(Nil)` 表示，而不是裸的 `0`——这样调用者才能用 `case` 区分。'
+  handle-both:
+    markdown: |-
+      要使用 `Result` 中的值，必须用 `case` **同时**拆解 `Ok` 和 `Error`。
+
+      ```gleam
+      case result {
+        Ok(n) -> "值是 " <> int.to_string(n)
+        Error(Nil) -> "没有值"
+      }
+      ```
+
+      如果只写了 `Ok(n)` 分支、漏掉了 `Error`，就会出现和 U4 中**完全相同**的“Inexhaustive patterns”编译错误。不处理错误不是一种选择，而是编译失败。
+  result-case-ok:
+    prompt: '用上面的模式写成 `describe` 函数，`describe(Ok(20))` 的值是？'
+    code: |-
+      import gleam/int
+
+      fn describe(r: Result(Int, Nil)) -> String {
+        case r {
+          Ok(n) -> "值是 " <> int.to_string(n)
+          Error(Nil) -> "没有值"
+        }
+      }
+
+      // describe(Ok(20)) 是什么？
+    choices:
+      - '`"值是 20"`'
+      - '`"没有值"`'
+      - '`Ok(20)`'
+      - '`20`'
+    feedback:
+      correct: '没错！`Ok(20)` 匹配 `Ok(n)` 分支，`n` 绑定为 20，于是生成 "值是 20"。'
+      choices:
+        "1": '"没有值" 是 `Error` 分支的结果——输入是 `Ok(20)`，所以走成功分支。'
+        "2": '`case` 返回的不是原样的输入，而是分支的*结果字符串*——是 "值是 20"，不是 `Ok(20)`。'
+        "3": '结果是从 `Ok(n)` 分支取出 `n`（= 20）并嵌入字符串得到的 "值是 20"。'
+  inexhaustive:
+    prompt: '在接收 `Result(Int, Nil)` 的 `case` 中，只写了 `Ok(n) -> ...` 分支，没写 `Error`。会发生什么？'
+    choices:
+      - '运行时如果遇到 `Error`，那时才会崩溃'
+      - '编译错误——缺少 `Error` 情况，报“Inexhaustive patterns”'
+      - '`Error` 会被自动忽略'
+      - '遇到 `Error` 时会自动返回 `Nil`'
+    feedback:
+      correct: '没错！必须同时处理 `Ok`/`Error` 才能编译通过。类型系统中不存在“不处理”错误的选项——这就是用 `Result` 代替异常的代价，也是回报。'
+      choices:
+        "0": '根本到不了运行时——在*编译期*就会发现遗漏的情况，连运行都不让。'
+        "2": 'Gleam 不会悄悄忽略遗漏的分支——它会用编译错误明确告诉你。'
+        "3": '没有什么自动默认值。所有情况都必须自己明确写出来。'

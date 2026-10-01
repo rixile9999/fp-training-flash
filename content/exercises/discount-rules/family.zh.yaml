@@ -1,0 +1,12 @@
+title: 按顺序应用折扣规则函数
+rubric:
+  R-02:
+    title: 规则的应用顺序一目了然
+    description: 用一次 fold 依次应用规则列表，前一个结果成为下一条规则的输入。
+  R-05:
+    title: 规则是独立的函数
+    description: 每条折扣规则都是接收一个值、返回一个值的小函数，应用规则的代码不需要知道规则的具体内容。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 空列表这样的情况也作为值来处理。
+    message: 使用了 let assert 或 panic。

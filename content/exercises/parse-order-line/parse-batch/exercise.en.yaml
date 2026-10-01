@@ -1,0 +1,29 @@
+title: Parse a whole order file and report the failing line
+tests:
+  parses_every_line_test: If every line is valid, return the list of OrderLine
+  reports_failing_line_number_test: LineError holds the failing line's number (from 1) and the original error
+  skips_blank_lines_test: Lines of only whitespace and the empty line at the end are skipped
+  empty_text_test: An empty string gives an empty list
+  blank_lines_count_in_numbering_test: Skipped blank lines still count toward the line numbers
+  first_failing_line_test: If several lines are wrong, report the earliest one
+  keeps_line_order_test: The result keeps the line order of the file
+requirements:
+  R1: Apply parse_line to each line and collect the results in order
+  R2: Return the first failing line's number, counted from 1, and its ParseError as a LineError
+  R3: Skip lines of only whitespace
+hints:
+  1: "If you filter out the blank lines first, will the line numbers you assign afterwards match the line numbers in the original file?"
+  2: "`list.try_map` applies a function that returns a `Result` to each element: if all are `Ok`, it returns `Ok(list)`; otherwise it stops at the first `Error` and returns it. `result.map_error` changes only the error value."
+  3: "Right after splitting into lines, attach numbers with `list.index_map`, and only then filter out the blank lines. Finally, in `list.try_map`, wrap the error from `parse_line` as `LineError(number, error)`."
+  4: |
+    ```gleam
+    text
+    |> string.split("\n")
+    |> list.index_map(fn(line, index) { #(todo, line) })
+    |> list.filter(todo)
+    |> list.try_map(fn(numbered) {
+      let #(line_number, line) = numbered
+      parse_line(line) |> result.map_error(todo)
+    })
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

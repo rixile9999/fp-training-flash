@@ -1,0 +1,24 @@
+tests:
+  empty_list_test: 空列表返回空列表
+  squares_test: 返回每个整数平方后的列表
+  uppercases_strings_test: 对字符串也以同样方式应用函数
+  changes_element_type_test: 结果元素的类型可以与输入不同
+  keeps_order_of_long_list_test: 列表很长时也保持原来的顺序
+  nested_accumulate_test: 在函数内部再次调用 accumulate 也能正常工作
+requirements:
+  R1: 对所有元素应用函数，并保持长度不变
+  R2: 保持原来的顺序
+hints:
+  1: "对空列表应用 accumulate，应该得到什么？如果至少有一个元素，能否把它看成“第一个元素”加“剩余列表”？"
+  2: "列表只有两种形状：`[]` 或 `[first, ..rest]`。用 `case` 区分这两种形状，并用同一个函数处理 `rest`，这就是结构递归。"
+  3: "把 `fun(first)` 放在结果的最前面，后面接上对剩余列表递归转换的结果。"
+  4: |
+    ```gleam
+    pub fn accumulate(list: List(a), fun: fn(a) -> b) -> List(b) {
+      case list {
+        [] -> []
+        [first, ..rest] -> todo
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

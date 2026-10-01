@@ -1,0 +1,12 @@
+title: Validate an ISBN-10
+rubric:
+  R-08:
+    title: A total function that answers every input
+    description: Whatever string comes in, it returns a result without crashing. Conversion failures come back as a Result and are handled.
+  R-05:
+    title: Separate parsing from calculation
+    description: Splitting the parsing step, which turns the string into a list of numbers, from the calculation step, which computes the weighted sum, lets you verify each one on its own.
+  R-09:
+    title: No let assert or panic
+    description: Express the possibility of failure in the types.
+    message: let assert or panic was used.

@@ -1,0 +1,12 @@
+title: 统计单词数
+rubric:
+  R-02:
+    title: 管道清楚表达意图
+    description: 规范化、拆分、过滤、计数各自体现为一个步骤，阅读顺序与处理顺序一致。
+  R-05:
+    title: 分离计算逻辑
+    description: 像整理单词、增加计数这样针对单个元素的规则，拆成有名字的小函数。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 用类型表达失败的可能性。
+    message: 使用了 let assert 或 panic。

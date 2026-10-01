@@ -1,0 +1,12 @@
+title: Predicting the placeholder in function captures
+hints:
+  1: "In `int.subtract(10, _)`, the list element goes where the `_` is. So what expression is computed for the element 2?"
+  2: "The function capture `f(a, _)` is shorthand for `fn(x) { f(a, x) }`. `int.subtract(a, b)` is `a - b`."
+  3: "Write each of the two captures out as an anonymous function of the form `fn(x) { ... }`, then compute it for each element."
+  4: |
+    ```gleam
+    [1, 2, 3]
+    |> list.map(fn(x) { 10 - x })  // todo
+    |> list.map(fn(x) { todo })
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

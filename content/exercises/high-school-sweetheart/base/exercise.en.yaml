@@ -1,0 +1,34 @@
+tests:
+  first_letter_test: Returns the first letter of the name
+  first_letter_keeps_case_test: The first letter's case is not changed
+  first_letter_trims_whitespace_test: Finds the first letter while ignoring leading and trailing whitespace and newlines
+  first_letter_empty_test: Returns an empty string for an empty string
+  initial_test: Adds a period after the first letter
+  initial_uppercases_test: A lowercase name also gets an uppercase initial
+  initials_test: Joins the initials of the first and last name with a space
+  pair_test: Puts both people's initials inside the heart
+requirements:
+  R1: first_letter returns the first letter after stripping whitespace, keeping its case
+  R2: initial reuses first_letter and makes it uppercase with a period
+  R3: initials reuses initial
+  R4: pair reuses initials to build the heart string
+hints:
+  1: "When you build `initial`, what does `first_letter` already do for you, and what is left to do?"
+  2: "`|>` passes the value on its left as the first argument to the function on its right. `string.first` returns a `Result`, so you can give it a default with `result.unwrap`."
+  3: "Write the four functions in order from the top, and have each one call the function just before it as one step of its pipeline."
+  4: |
+    ```gleam
+    pub fn first_letter(name: String) -> String {
+      name
+      |> string.trim
+      |> todo
+    }
+
+    pub fn initials(full_name: String) -> String {
+      full_name
+      |> string.split(" ")
+      |> list.map(initial)
+      |> todo
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

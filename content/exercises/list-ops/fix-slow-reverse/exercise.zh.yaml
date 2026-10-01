@@ -1,0 +1,23 @@
+title: 修复缓慢的 reverse
+tests:
+  reverse_small_test: reverse 反转元素顺序
+  reverse_large_list_test: 有 20 万个元素的列表也能在时间限制内反转
+  reverse_empty_test: 反转空列表得到空列表
+  reverse_log_lines_test: 字符串日志列表也被反转，最新的一行排在最前面
+  append_still_works_test: 修复后 append 仍按顺序拼接两个列表
+  foldl_still_works_test: 修复后 foldl 仍从第一个元素开始累加
+requirements:
+  R1: reverse 是顺序反转后的列表
+  R2: 时间与列表长度成正比
+  R3: 保持 append 和 foldl 的行为
+hints:
+  1: "`reverse` 每处理一个元素，`append` 要复制多少个元素？有 n 个元素时，总复制量是多少？"
+  2: "在不可变列表中，在前面添加 `[x, ..acc]` 是 O(1)，而接到末尾则要复制与前面列表等长的元素。从前往后读、往前面堆，顺序自然就反转了。"
+  3: "利用已有的 `foldl`。从空列表开始，把元素逐个添加到累加值前面即可。`append` 和 `foldl` 不用改动。"
+  4: |
+    ```gleam
+    pub fn reverse(list: List(a)) -> List(a) {
+      foldl(over: list, from: [], with: fn(reversed, item) { todo })
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

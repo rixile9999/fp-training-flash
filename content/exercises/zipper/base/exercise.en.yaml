@@ -1,0 +1,29 @@
+tests:
+  data_is_retained_test: "Turning a tree into a zipper and back gives the original tree"
+  left_right_and_value_test: "Goes down left and right and reads the value at the focus"
+  dead_end_test: "You cannot go further down from an empty spot (Leaf)"
+  up_from_root_test: "up at the root returns Error(Nil)"
+  tree_from_deep_focus_test: "Rebuilds the whole tree even from a deep focus"
+  left_right_and_up_test: "Going down and back up repeatedly returns to the same spot"
+  descend_and_return_test: "Going down two levels and up twice gives the root"
+  different_paths_to_same_zipper_test: "Reaching the same spot by different paths gives the same zipper"
+requirements:
+  R1: "left and right move the focus to a child and record the path; Error(Nil) at a Leaf"
+  R2: "up rebuilds the parent node from the recorded path; Error(Nil) at the root"
+  R3: "to_tree returns the whole tree from any focus"
+hints:
+  1: "After going down from a parent to its left child, what do you need to know, besides the left child, to rebuild the parent node?"
+  2: "A zipper carries \"the subtree the focus points to\" together with \"the path from the root to the focus\". Each step of the path (a crumb) holds the direction, the parent's value and the child you did not go down into. If you stack them in a list with the nearest parent first, both going down and going up are O(1)."
+  3: "If the focus is `Node(v, l, r)`, `left` changes the focus to `l` and prepends `WentLeft(v, r)` to the path. `up` takes the first crumb off the path and rebuilds the `Node` according to its direction. `to_tree` repeats `up` until it returns `Error`."
+  4: |
+    ```gleam
+    pub fn up(zipper: Zipper(a)) -> Result(Zipper(a), Nil) {
+      case zipper.crumbs {
+        [] -> Error(Nil)
+        [WentLeft(value, right), ..crumbs] ->
+          Ok(Zipper(focus: todo, crumbs: crumbs))
+        [WentRight(value, left), ..crumbs] -> todo
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

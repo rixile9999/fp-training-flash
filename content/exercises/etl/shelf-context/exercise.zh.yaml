@@ -1,0 +1,29 @@
+title: 把按货架列出的商品编码转成按编码查位置
+tests:
+  single_code_test: 把商品编码转成大写键，并以货架名称作为值
+  several_shelves_test: 把多个货架的所有编码合并到一个 dict 中
+  trims_spaces_test: 去掉编码前后的空格
+  skips_blank_codes_test: 跳过只有空格或为空的编码
+  shelf_without_codes_adds_nothing_test: 没有编码的货架不往结果里添加任何东西
+  empty_input_test: 一个货架都没有时，结果是空 dict
+  shelf_name_is_kept_as_is_test: 货架名称不改动空格和大小写，原样作为值
+requirements:
+  R1: 每个编码对应一个货架名称条目
+  R2: 编码去掉前后空格后转成大写，货架名称保持原样
+  R3: 整理后为空的编码不计入
+hints:
+  1: "`\"   \"` 算空编码吗？判断是否为空编码，应该在整理（去掉空格）之前还是之后？"
+  2: "`string.trim` 去掉前后空格，`string.uppercase` 统一大小写。在 `dict.fold` 里面再跑一个 `list.fold`，就能为每个货架插入多个编码。"
+  3: "先写一个整理单个编码的 `normalize` 函数。整理后的结果是空字符串时保持累加器不变，否则用 `dict.insert` 添加。"
+  4: |
+    ```gleam
+    dict.fold(shelves, dict.new(), fn(index, shelf, codes) {
+      list.fold(codes, index, fn(acc, raw) {
+        case normalize(raw) {
+          "" -> todo
+          code -> todo
+        }
+      })
+    })
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

@@ -1,0 +1,12 @@
+title: 处理想学的语言列表
+rubric:
+  R-01:
+    title: 用列表模式体现形状
+    description: 列表开头部分和长度的条件，如果直接用 `[first, ..rest]`、`[_, x]` 这样的模式表达，条件就一目了然。
+  R-03:
+    title: 复用标准函数
+    description: 求长度、反转这类标准库中已有的操作，不要自己重写，使用 `list` 模块的函数。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 用类型来表达可能的失败。
+    message: 使用了 let assert 或 panic。

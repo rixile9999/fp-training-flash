@@ -1,0 +1,25 @@
+title: Fix the order bug in the VAT calculation
+tests:
+  with_vat_keeps_order_test: Prices with VAT added come out in the original order
+  with_vat_rounds_down_test: The VAT calculation drops anything below 1 won
+  accumulate_keeps_order_test: accumulate itself keeps the original order
+  accumulate_empty_list_test: Given an empty list, accumulate returns an empty list
+  with_vat_empty_list_test: With no prices, returns an empty list
+  accumulate_long_list_keeps_order_test: accumulate keeps the order even with six elements
+requirements:
+  R1: Keep the order of the price list
+  R2: Fix the cause in the shared function accumulate
+hints:
+  1: "Is the result of `with_vat([1000, 2500, 300])` only in the wrong order, or are the values wrong too? Which function contains the code that changes the order?"
+  2: "If you prepend onto the accumulator with `[x, ..acc]`, the elements processed first keep getting pushed further back, so once everything is stacked up the order is the reverse of the input."
+  3: "It is not just `with_vat`: every place that uses `accumulate` suffers from the same problem. Restore the order once, at the point where the accumulation finishes."
+  4: |
+    ```gleam
+    fn go(items: List(a), fun: fn(a) -> b, acc: List(b)) -> List(b) {
+      case items {
+        [] -> todo
+        [first, ..rest] -> go(rest, fun, [fun(first), ..acc])
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

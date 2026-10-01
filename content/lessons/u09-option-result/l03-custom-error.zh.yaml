@@ -1,0 +1,108 @@
+title: 自定义错误类型
+blocks:
+  intro:
+    markdown: |-
+      `Result(Int, Nil)` 中的 `Nil` 只能说明“失败了”，却无法说明*为什么*失败。如果失败的原因有好几种，就把这些原因做成**你自己的自定义类型**，放到 `Error` 的位置上（就是 U4 中的 variant）。
+
+      ```gleam
+      pub type AgeError {
+        NotANumber
+        Negative
+      }
+      ```
+
+      现在，只看类型 `Result(Int, AgeError)` 就能知道：“成功时是 `Int`，失败时是*这两个原因之一*”。
+  parse-age:
+    markdown: |-
+      `int.parse(input)` 会尝试把字符串转换成整数，并返回 `Result(Int, Nil)`（不是数字时返回 `Error(Nil)`）。我们接收这个结果，把它转换成自己的错误类型，再顺便过滤掉负数，写一个 `parse_age`：
+
+      ```gleam
+      import gleam/int
+
+      pub fn parse_age(input: String) -> Result(Int, AgeError) {
+        case int.parse(input) {
+          Error(Nil) -> Error(NotANumber)
+          Ok(n) ->
+            case n < 0 {
+              True -> Error(Negative)
+              False -> Ok(n)
+            }
+        }
+      }
+      ```
+
+      外层的 `case` 区分解析成功还是失败，内层的 `case` 判断是否为负数。
+  parse-neg:
+    prompt: '在上面的 `parse_age` 中，`parse_age("-3")` 的值是？'
+    code: |-
+      // parse_age("-3") 是什么？
+      // （int.parse("-3") == Ok(-3)，并且 -3 < 0）
+    choices:
+      - '`Error(Negative)`'
+      - '`-3`'
+      - '`Error(NotANumber)`'
+      - '`Ok(-3)`'
+    feedback:
+      correct: '没错！"-3" 能解析成数字，得到 `Ok(-3)`，但在内层 `case` 中 `-3 < 0` 为真，于是被过滤为 `Error(Negative)`。'
+      choices:
+        "1": '在 `Result` 中，值绝不会直接裸露出来——失败会被包装成 `Error(...)`。而且它是负数，也不算成功。'
+        "2": '`NotANumber` 是*解析本身*失败时的情况。"-3" 能正常解析成数字，但因为是负数而被拦下。'
+        "3": '"-3" 能被解析，但因为是负数，所以不是 `Ok`——会被过滤为 `Error(Negative)`。'
+  parse-abc:
+    prompt: '同一个函数中，`parse_age("abc")` 的值是？'
+    code: |-
+      // parse_age("abc") 是什么？
+      // （int.parse("abc") == Error(Nil)）
+    choices:
+      - '`Error(NotANumber)`'
+      - '`Error(Negative)`'
+      - '`Error(Nil)`'
+      - '`Ok(0)`'
+    feedback:
+      correct: '完全正确！"abc" 无法解析成整数，`int.parse` 返回 `Error(Nil)`，外层 `case` 再把它转换为 `Error(NotANumber)`。'
+      choices:
+        "1": '`Negative` 是*解析成功但为负数*时的情况。"abc" 根本无法解析成数字。'
+        "2": '我们的函数会把 `int.parse` 原本的 `Error(Nil)` 转换成有意义的 `Error(NotANumber)` 再返回。'
+        "3": '解析失败不是成功值 0——不是 `Ok`，而是 `Error(NotANumber)`。'
+  parse-8:
+    prompt: '同一个函数中，`parse_age("8")` 的值是？'
+    code: |-
+      // parse_age("8") 是什么？
+      // （int.parse("8") == Ok(8)，并且 8 >= 0）
+    choices:
+      - '`Ok(8)`'
+      - '`8`'
+      - '`Error(NotANumber)`'
+      - '`Some(8)`'
+    feedback:
+      correct: '没错！"8" 能解析成数字，也不是负数，所以是 `Ok(8)`——成功的值也会被包装在 `Ok` 里返回。'
+      choices:
+        "1": '值确实是 8，但因为是 `Result`，会被包装成 `Ok(8)`——要取出它，需要模式匹配。'
+        "2": '"8" 是正常的数字，解析会成功——是 `Ok(8)`，不是 `NotANumber`。'
+        "3": '`Some` 是 `Option` 的构造器。`Result` 的成功值用 `Ok` 包装。'
+  use-error-type:
+    markdown: |-
+      自定义错误类型真正的好处体现在**调用者这一侧**。用 `case` 拆解时，可以针对每种失败原因给出不同的消息；如果漏掉了某个原因，编译器会帮你发现。
+
+      ```gleam
+      pub fn age_message(input: String) -> String {
+        case parse_age(input) {
+          Ok(n) -> "年龄：" <> int.to_string(n)
+          Error(NotANumber) -> "这不是数字"
+          Error(Negative) -> "不能是负数"
+        }
+      }
+      ```
+  message-negative:
+    prompt: '用上面的 `age_message` 代码调用 `age_message("-3")`，会得到哪个字符串？'
+    choices:
+      - '`"不能是负数"`'
+      - '`"这不是数字"`'
+      - '`"年龄：-3"`'
+      - '`"年龄：0"`'
+    feedback:
+      correct: '没错！`parse_age("-3")` 是 `Error(Negative)`，所以选中 `Error(Negative)` 分支的 "不能是负数"——能针对不同原因给出不同消息，这就是自定义错误的威力。'
+      choices:
+        "1": '"这不是数字" 是 `Error(NotANumber)` 分支。"-3" 能解析成数字，但因为是负数，会走 `Negative`。'
+        "2": '负数不会走 `Ok` 分支——不会输出 "年龄：-3"，而是输出错误消息。'
+        "3": '值不会被修正为 0——负数会原样以 `Error(Negative)` 被拒绝。'

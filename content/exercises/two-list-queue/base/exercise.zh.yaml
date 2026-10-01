@@ -1,0 +1,32 @@
+tests:
+  pop_empty_queue_test: 对空队列 pop 时返回 Error(Nil)
+  pops_in_insertion_order_test: 按放入的顺序取出
+  to_list_front_to_back_test: to_list 从最先放入的元素开始列出
+  old_version_unchanged_test: push 和 pop 之后原来的队列保持不变
+  interleaved_push_pop_test: 在取出过程中放入元素，顺序也保持不变
+  to_list_after_pop_test: pop 之后又放入元素的队列，其 to_list 顺序也正确
+requirements:
+  R1: 先放入的元素先取出（FIFO）
+  R2: 对空队列 pop 返回 Error(Nil)
+  R3: to_list 按取出顺序列出
+  R4: 操作返回新队列，不改变原来的队列
+  R5: n 次 push 和 n 次 pop 的总开销为 O(n)
+hints:
+  1: "在列表最前面添加和在最后面添加，开销分别是多少？队列应该从哪一端放入、从哪一端取出？"
+  2: "列表只能在最前面以 O(1) 添加和移除。放入时添加到 `back` 的前面，取出时从 `front` 的前面移除，两种操作就都只用到前端。记住 `back` 是放入顺序的逆序。"
+  3: "在 `pop` 中，如果 `front` 为空，就把 `back` 反转一次作为新的 `front`，然后再取。只有两者都为空时才是 `Error(Nil)`。`to_list` 也要把 `back` 反转后接在后面。"
+  4: |
+    ```gleam
+    pub fn push(queue: Queue(a), item: a) -> Queue(a) {
+      Queue(..queue, back: [item, ..queue.back])
+    }
+
+    pub fn pop(queue: Queue(a)) -> Result(#(a, Queue(a)), Nil) {
+      case queue.front, queue.back {
+        [first, ..rest], back -> todo
+        [], [] -> Error(Nil)
+        [], back -> todo
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

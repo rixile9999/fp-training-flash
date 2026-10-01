@@ -1,0 +1,28 @@
+title: 报告错误碱基的位置
+tests:
+  valid_strand_test: 合法的链转换为 RNA 后以 Ok 返回
+  invalid_first_test: 第一个字符错误时，报告位置 0 和该字符
+  rna_base_in_dna_test: DNA 中不存在的 U 也作为错误碱基，连同位置一起报告
+  first_invalid_reported_test: 有多个错误字符时，报告最靠前的那个
+  empty_strand_test: 空链为 Ok("")
+requirements:
+  R1: 合法的链以 Ok 返回转换结果
+  R2: 错误中包含错误字符本身及其位置（从 0 开始计）
+  R3: 报告最靠前的错误
+hints:
+  1: "检查单个字符时，要构造错误值需要知道什么？只有字符本身够吗？"
+  2: "`list.index_map(list, fn(x, i) { ... })` 会把元素和从 0 开始的位置一起给你。`result.replace_error(r, e)` 把 `Error(_)` 换成 `Error(e)`。"
+  3: "先给每个字符附上位置，再用 `list.try_map` 转换。转换失败时，用该字符的位置和字符本身构造 `InvalidNucleotide`。`try_map` 在第一次失败时停下，所以得到的是最靠前的错误。"
+  4: |
+    ```gleam
+    dna
+    |> string.to_graphemes
+    |> list.index_map(fn(nucleotide, position) { #(position, nucleotide) })
+    |> list.try_map(fn(pair) {
+      let #(position, nucleotide) = pair
+      complement(nucleotide)
+      |> todo
+    })
+    |> result.map(string.concat)
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

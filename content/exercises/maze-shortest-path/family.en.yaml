@@ -1,0 +1,16 @@
+title: Finding the shortest path through a maze with breadth-first search
+rubric:
+  R-02:
+    title: The search state is visible
+    description: Make the queue (cells still to visit), the visited set and the distance explicit arguments of the recursive function, so it is clear what changes in one step.
+  R-05:
+    title: Neighbor calculation is extracted
+    description: Extract the rule that finds the reachable neighboring cells into a small named function.
+  R-08:
+    title: A data structure with fast visited checks
+    description: Keep visited cells in a Set or Dict. Looking them up in a list gets slower in proportion to the number of cells.
+    message: Checking visited cells with list.contains is slow on large grids. Use a set.
+  R-09:
+    title: No let assert or panic
+    description: Express the possibility of failure in the types.
+    message: let assert or panic was used.

@@ -1,0 +1,25 @@
+title: Fix a tree traversal that sorts wrongly
+tests:
+  sorted_small_test: Returns three values in ascending order
+  sorted_complex_test: A tree with several levels also comes back in ascending order
+  sorted_duplicates_test: Keeps every copy of equal values
+  sorted_descending_input_test: Values given in descending order also come back in ascending order
+  sorted_empty_test: Returns an empty list for an empty list
+  to_tree_unchanged_test: The tree shape built by to_tree stays the same
+requirements:
+  R1: sorted_data is in ascending order
+  R2: Keep the behavior of to_tree
+hints:
+  1: "Draw the shape of `to_tree([2, 1, 3])`. In what order does `walk` visit the three nodes right now? What order would give ascending order?"
+  2: "There are three tree traversals: pre-order (self, left, right), in-order (left, self, right) and post-order (left, right, self). Only one of them gives ascending order on a binary search tree."
+  3: "`to_tree` is correct. In `walk`, change only where the node's own value goes in the result."
+  4: |
+    ```gleam
+    fn walk(tree: Tree) -> List(Int) {
+      case tree {
+        Empty -> []
+        Node(data, left, right) -> list.flatten([todo, todo, todo])
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

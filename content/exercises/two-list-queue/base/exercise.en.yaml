@@ -1,0 +1,32 @@
+tests:
+  pop_empty_queue_test: Popping an empty queue returns Error(Nil)
+  pops_in_insertion_order_test: Items come out in the order they were put in
+  to_list_front_to_back_test: to_list lists the earliest-added item first
+  old_version_unchanged_test: Pushing and popping leave the original queue unchanged
+  interleaved_push_pop_test: The order is kept even when pushing in the middle of popping
+  to_list_after_pop_test: to_list is also in order for a queue that had more items pushed after a pop
+requirements:
+  R1: The item added first comes out first (FIFO)
+  R2: pop on an empty queue is Error(Nil)
+  R3: to_list lists items in the order they come out
+  R4: Operations return a new queue and do not change the original
+  R5: The total cost of n pushes and n pops is O(n)
+hints:
+  1: "What does it cost to add to the front of a list, and to the end of a list? At which end should a queue add items, and at which end should it take them out?"
+  2: "A list can only add and remove at the front in O(1). If you add to the front of `back` when pushing and take from the front of `front` when popping, both operations use only the front. Remember that `back` is in reverse insertion order."
+  3: "In `pop`, if `front` is empty, reverse `back` once, move it over as the new `front`, then take from it again. It is `Error(Nil)` only when both are empty. `to_list` also has to reverse `back` and put it after `front`."
+  4: |
+    ```gleam
+    pub fn push(queue: Queue(a), item: a) -> Queue(a) {
+      Queue(..queue, back: [item, ..queue.back])
+    }
+
+    pub fn pop(queue: Queue(a)) -> Result(#(a, Queue(a)), Nil) {
+      case queue.front, queue.back {
+        [first, ..rest], back -> todo
+        [], [] -> Error(Nil)
+        [], back -> todo
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

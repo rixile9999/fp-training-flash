@@ -1,0 +1,38 @@
+tests:
+  empty_input_header_only_test: If the input is empty, returns only the header
+  parse_line_test: Parses one match line into a Match
+  record_win_test: Applies a match result to the records of both teams
+  format_row_test: Turns a team name and its record into one row of fixed widths
+  typical_input_test: Builds a table in descending order of points from several matches
+  loss_credits_away_team_test: A loss is recorded as a win for the away team
+  ties_broken_alphabetically_test: If points are equal, teams are in ascending order of name
+  many_teams_tied_sorted_by_name_test: Even with many teams, teams with equal points are in ascending order of name
+  skips_invalid_lines_test: Blank lines and lines with the wrong format are skipped
+requirements:
+  R1: parse_line accepts only the "home;away;win|draw|loss" format
+  R2: record applies one match to the records of both teams, each from its own point of view
+  R3: format_row builds one row with the team name in 30 columns and numbers right-aligned in 2 columns
+  R4: tally builds the table in descending order of points, and in ascending order of name on ties
+hints:
+  1: "Before the input string becomes the table string, what shapes does the data pass through? Write down the type at each step."
+  2: "Drop lines that fail to parse with `list.filter_map`, and collect each team's record with `list.fold` and `dict.upsert`. When there are two sort keys, chain them with `order.break_tie`. For padding to width, use `string.pad_end` and `string.pad_start`."
+  3: "In `record`, turn the match result into a pair of results, one from the home team's point of view and one from the away team's, then apply them to both teams with the same helper function. `tally` connects split → filter_map(parse_line) → fold(record) → to_list → sort → map(format_row), in that order."
+  4: |
+    ```gleam
+    pub fn record(table: Dict(String, Stats), match: Match) -> Dict(String, Stats) {
+      let #(home_result, away_result) = case match.outcome {
+        Win -> #(Win, Loss)
+        Draw -> todo
+        Loss -> todo
+      }
+      table
+      |> dict.upsert(match.home, fn(current) { todo })
+      |> dict.upsert(match.away, fn(current) { todo })
+    }
+
+    fn compare_rows(a: #(String, Stats), b: #(String, Stats)) -> order.Order {
+      int.compare(points(b.1), points(a.1))
+      |> order.break_tie(todo)
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

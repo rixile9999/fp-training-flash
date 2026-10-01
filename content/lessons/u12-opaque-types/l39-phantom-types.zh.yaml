@@ -1,0 +1,64 @@
+title: 初探 phantom type（幻影类型）
+blocks:
+  intro:
+    markdown: |-
+      最后是**进阶内容的尝鲜**（随便看看就好，不必有压力）。
+
+      类型参数可以*完全不出现在值里*，只在类型层面用作**区分标记**。这叫作 **phantom type**（幻影类型）。
+
+      ```
+      pub type Meters
+
+      pub type Feet
+
+      pub type Length(unit) {
+        Length(amount: Float)
+      }
+
+      pub fn add_lengths(a: Length(unit), b: Length(unit)) -> Length(unit) {
+        Length(a.amount +. b.amount)
+      }
+      ```
+
+      `unit` 参数在 `Length` 的任何字段里都没有用到——它纯粹是一个标记，用来*在类型上*区分“这是米，那是英尺”。
+  add-meters:
+    prompt: 把相同单位的值相加时，这段代码输出什么？
+    choices:
+      - '`5.0`'
+      - '`6.0`'
+      - '`5`'
+      - '`Length(5.0)`'
+    feedback:
+      correct: '答对了！两个都是 `Meters`，类型一致，输出 `3.0 +. 2.0 = 5.0`。'
+      choices:
+        "1": '这是加法——不是乘法（3.0 *. 2.0 = 6.0），而是 3.0 +. 2.0 = 5.0。'
+        "2": '它是 `Float`，所以输出 `5.0` 而不是 `5`。'
+        "3": '`total.amount` 只取出里面的 `Float` 来输出——是 5.0，而不是整个记录。'
+  type-guard:
+    markdown: 那 `unit` 有什么用呢？`add_lengths` 的签名明确规定 `a` 和 `b` 必须是**相同的 `unit`**。所以把米和英尺混在一起时，编译器会拦下来——把单位混淆当作*编译错误*抓出来。而且不会给值带来任何开销（运行时 `unit` 就消失了）。
+  mix-units:
+    prompt: '把一个 `Length(Meters)` 和一个 `Length(Feet)` 传给 `add_lengths` 会怎样？'
+    choices:
+      - '得到两者相加后的 `Length`'
+      - 运行时会进行单位换算
+      - '类型不匹配（type mismatch）编译错误——因为 `unit` 不同'
+      - 自动统一为第一个参数的单位
+    feedback:
+      correct: '答对了！签名要求 `a` 和 `b` 的 `unit` 相同，所以混用 `Meters` 和 `Feet` 会在编译阶段被拒绝。'
+      choices:
+        "0": '`unit` 不同，根本无法编译——也就不会得到相加后的 `Length`。'
+        "1": phantom type 没有任何运行时行为。哪里都没有换算逻辑。
+        "3": 没有自动统一这种魔法——只会被编译错误拦下。
+  phantom-runtime:
+    prompt: '关于 phantom type 的参数（`Meters`、`Feet`），下面哪项说法是正确的？'
+    choices:
+      - 运行时会作为值存储，占用内存
+      - 不出现在值中，只用于编译期区分，没有运行时开销
+      - 必须用作某个字段的类型
+      - '只能用在 `opaque` 类型上'
+    feedback:
+      correct: 完全正确！所以才叫“幻影（phantom）”——它只存在于类型检查中，运行时不留任何痕迹。
+      choices:
+        "0": 它不进入值里，所以没有运行时开销——这正是它被称为幻影的原因。
+        "2": 恰恰相反，正因为*没有*用在字段里才叫 phantom——如果用在字段里，就只是普通的泛型了。
+        "3": '它是与 `opaque` 无关的独立技巧——任何类型都可以带 phantom 参数。'

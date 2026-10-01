@@ -1,0 +1,5 @@
+`push` puts each new item at the **front** of `back`, so `back` is in reverse insertion order. When `front` was empty, the original code moved `back` into `front` as is, so the most recently added item came first and the queue behaved like a stack. The fix is one line: reverse it with `list.reverse(back)` when moving it, and the earliest-added item ends up at the front.
+
+In this queue, `push`, `pop` and `to_list` work together on top of the invariant "front is in the order items come out, back is in reverse insertion order". If you try to make the symptom go away by flipping the order in `push` with `list.append(back, [item])`, `pop` may look right, but `to_list`, which reverses `back`, goes wrong, and every push copies everything, making it O(n^2). When fixing a bug, find the place that breaks the invariant and fix it there.
+
+Reversing is O(k), but each item is moved from `back` to `front` only once, so the total cost of n operations is O(n) (`amortized-analysis`). A half-fix that takes out the newest item first and reverses the rest still returns the wrong item on the very first `pop`.

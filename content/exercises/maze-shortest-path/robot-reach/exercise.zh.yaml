@@ -1,0 +1,37 @@
+title: 统计仓库机器人在 n 步内能到达的格子
+tests:
+  zero_steps_counts_start_test: "移动上限为 0 时，只计算起点这一格"
+  corridor_limit_test: "在笔直的通道里，一直计算到距离等于上限的格子"
+  walls_block_test: "需要绕过货架的格子，按绕行的距离来判断"
+  counts_each_cell_once_test: "从两个方向都能到达的格子也只算一次"
+  open_floor_uses_shortest_distance_test: "即使在宽阔的地面上，也按每个格子的最少移动次数来判断"
+  stays_inside_grid_test: "不计算网格外的格子"
+  walled_off_area_not_counted_test: "即使上限足够大，也不计算被封闭区域里的格子"
+  no_robot_test: "没有 S 时返回 0"
+requirements:
+  R1: "计算包括起点在内、在 max_steps 步以内能到达的格子数"
+  R2: "只能上下左右移动，避开货架和网格外部"
+  R3: "每个格子只计算一次"
+  R4: "没有 S 时为 0"
+hints:
+  1: "如果知道到每个格子的最少移动次数，要计算的格子满足什么条件？要依次求出最少移动次数，应该按什么顺序查看格子？"
+  2: "广度优先搜索先取出近的格子，所以取出格子时附带的距离就是该格子的最少移动次数。在把格子放入队列时就在已访问集合中标记，这样同一个格子就不会两次进入队列。"
+  3: "写一个递归函数 `explore(queue, seen, count)`。每从队列中取出一个 `#(pos, dist)`，就把 count 加 1；只有当 `dist < max_steps` 时，才把还没看过的邻格以 `dist + 1` 放入。队列为空时返回 count。"
+  4: |
+    ```gleam
+    fn explore(cells, max_steps, queue, seen, count) -> Int {
+      case pop(queue) {
+        Error(Nil) -> count
+        Ok(#(#(pos, dist), rest)) -> {
+          let next = case dist < max_steps {
+            True -> todo // 不在 seen 中的 open_neighbors
+            False -> []
+          }
+          let seen = list.fold(next, seen, set.insert)
+          let queue = todo // 把 next 以 #(p, dist + 1) 的形式 push 到 rest
+          explore(cells, max_steps, queue, seen, count + 1)
+        }
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

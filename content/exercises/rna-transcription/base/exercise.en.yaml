@@ -1,0 +1,31 @@
+tests:
+  empty_strand_test: An empty strand returns an empty RNA as Ok
+  each_nucleotide_complement_test: G, C, T and A become C, G, A and U respectively
+  long_strand_test: A long strand is converted in order too
+  invalid_strand_test: Returns Error(Nil) if a character that is not a nucleotide is mixed in
+  invalid_at_end_test: Returns Error(Nil) even if only the last character is invalid
+  lowercase_rejected_test: A lowercase nucleotide is invalid input
+requirements:
+  R1: Replace each nucleotide with its partner
+  R2: Error(Nil) if there is even one invalid character
+hints:
+  1: "Can converting a single character fail? If even one fails, what should the overall result be?"
+  2: "`list.try_map(list, f)` is the `map` to use when `f` returns a `Result`. If everything is `Ok`, it returns `Ok(list of results)`; if even one is an `Error`, it returns the first `Error`."
+  3: "First write a helper that takes one nucleotide and returns `Result(String, Nil)`. Then split the characters with `string.to_graphemes`, convert them with `try_map`, and join them back together with `result.map`."
+  4: |
+    ```gleam
+    pub fn to_rna(dna: String) -> Result(String, Nil) {
+      dna
+      |> string.to_graphemes
+      |> list.try_map(complement)
+      |> todo
+    }
+
+    fn complement(nucleotide: String) -> Result(String, Nil) {
+      case nucleotide {
+        "G" -> Ok("C")
+        _ -> todo
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

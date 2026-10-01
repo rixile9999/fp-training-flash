@@ -1,0 +1,31 @@
+title: Build an account state while recording rejected events
+tests:
+  apply_event_deposit_test: A deposit into an open account returns the new account in Ok
+  apply_event_insufficient_test: A withdrawal larger than the balance is rejected with the requested amount and the balance
+  apply_event_closed_first_test: A withdrawal from a closed account is rejected with AccountClosed regardless of the balance
+  replay_collects_rejections_test: Collects the rejected events and applies the rest
+  replay_continues_after_rejection_test: Keeps applying the following events after a rejection
+  replay_rejections_in_order_test: The rejection list is in the order the rejections happened
+requirements:
+  R1: apply_event returns Ok(new account) on success and Error(reason) when a rule is violated
+  R2: Every event on a closed account is rejected with AccountClosed
+  R3: replay skips rejected events and keeps going, collecting the rejection reasons in order
+hints:
+  1: "The result of processing one event is either \"a new account\" or \"a rejection reason\". What do you need to express both in a single type?"
+  2: "Split success from rejection with `Result(Account, Rejection)`, and make the `list.fold` accumulator `#(Account, List(Rejection))` so you can carry the account and the rejection history together."
+  3: "In `apply_event`, check whether the account is closed before anything else. In `replay`, if `apply_event` returns `Ok`, update the account; if it returns `Error`, leave the account as it is and only record the reason."
+  4: |
+    ```gleam
+    pub fn replay(events: List(Event)) -> #(Account, List(Rejection)) {
+      let #(account, rejections) =
+        list.fold(events, #(Account(0, True), []), fn(acc, event) {
+          let #(account, rejections) = acc
+          case apply_event(account, event) {
+            Ok(next) -> todo
+            Error(reason) -> todo
+          }
+        })
+      todo
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

@@ -1,0 +1,29 @@
+tests:
+  data_is_retained_test: "把树变成拉链再还原，得到原来的树"
+  left_right_and_value_test: "向左、向右下移，并读取焦点处的值"
+  dead_end_test: "在空位（Leaf）处不能再往下走"
+  up_from_root_test: "在根处调用 up 返回 Error(Nil)"
+  tree_from_deep_focus_test: "即使焦点很深，也能恢复整棵树"
+  left_right_and_up_test: "反复下移再上移，仍会回到同一个位置"
+  descend_and_return_test: "下移两层再上移两次，就回到了根"
+  different_paths_to_same_zipper_test: "经由不同路径到达同一位置，得到的是同一个拉链"
+requirements:
+  R1: "left、right 把焦点移到子节点并记录路径；在 Leaf 处返回 Error(Nil)"
+  R2: "up 根据记录的路径重新构建父节点；在根处返回 Error(Nil)"
+  R3: "to_tree 无论焦点在哪里，都返回整棵树"
+hints:
+  1: "从父节点下到左子节点之后，要重新构建父节点，除了左子节点之外还需要知道哪些信息？"
+  2: "拉链同时携带“焦点所指的子树”和“从根到焦点的路径”。路径的每一步（crumb）记录方向、父节点的值，以及没有走下去的那一侧的子节点。把它们存进一个列表，让最近的父节点排在最前面，这样下移和上移就都是 O(1)。"
+  3: "焦点为 `Node(v, l, r)` 时，`left` 把焦点换成 `l`，并把 `WentLeft(v, r)` 加到路径前面。`up` 从路径中取出第一个 crumb，按照它的方向重新构建 `Node`。`to_tree` 反复调用 `up`，直到它返回 `Error`。"
+  4: |
+    ```gleam
+    pub fn up(zipper: Zipper(a)) -> Result(Zipper(a), Nil) {
+      case zipper.crumbs {
+        [] -> Error(Nil)
+        [WentLeft(value, right), ..crumbs] ->
+          Ok(Zipper(focus: todo, crumbs: crumbs))
+        [WentRight(value, left), ..crumbs] -> todo
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

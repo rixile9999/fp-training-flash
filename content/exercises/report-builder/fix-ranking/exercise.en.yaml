@@ -1,0 +1,26 @@
+title: Fix the bugs in a sales ranking report
+tests:
+  parse_line_test: 'Parses a "product,quantity" line into a tuple'
+  total_by_product_test: Adds up the quantities per product
+  rank_orders_by_quantity_desc_test: Products with larger quantities come first
+  rank_breaks_ties_by_name_test: If quantities are equal, products are in ascending order of name
+  format_row_test: Turns a rank and a product into a one-line string
+  build_ranking_numbers_from_one_test: Rank numbers start from 1
+  build_ranking_full_test: Skips invalid lines and builds the full ranking table
+requirements:
+  R1: Rank by quantity in descending order, and by name in ascending order on ties
+  R2: Rank numbers start from 1
+hints:
+  1: "If you call each helper function separately, which step's output differs from what you expect?"
+  2: "If the comparison function passed to `list.sort` returns `Lt`, the first argument comes first. `order.break_tie` uses the second comparison only when the first comparison is `Eq`. The index from `list.index_map` starts at 0."
+  3: "The bugs are in two places: `rank` and `build_ranking`. The other functions don't need fixing."
+  4: |
+    ```gleam
+    pub fn rank(totals: List(#(String, Int))) -> List(#(String, Int)) {
+      list.sort(totals, fn(a, b) {
+        int.compare(todo, todo)
+        |> order.break_tie(todo)
+      })
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

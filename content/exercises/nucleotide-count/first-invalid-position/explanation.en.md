@@ -1,0 +1,5 @@
+As in the base exercise, the shape is "accumulate, and stop on failure", so you use `list.try_fold`. What changed is that the error has to carry a position. The folding function receives only one element, so if you first turn each letter into a `#(letter, position)` pair with `list.index_map`, the folding side can use the position directly. The positions from `index_map` start at 0, so you can use them as they are.
+
+`try_fold` stops at the first `Error`, so the requirement "the first error" is met automatically. A common mistake is to accumulate a `Result` with `list.fold` or `list.index_fold` and create a new `Error` every time an error turns up. That never stops and runs to the end, so the last error overwrites the earlier ones. Also, if you count positions from 1 the way people do, every position is off by one.
+
+Making the error a meaningful value like `InvalidNucleotide(letter, index)` instead of `Nil` lets the caller show the user an exact message (theory note "Errors are values too"). The point of this variation is that error values are data too.

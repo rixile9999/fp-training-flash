@@ -1,0 +1,31 @@
+title: 分步骤生成会员结算明细
+tests:
+  subtotal_test: 小计是价格乘以数量之和
+  member_discount_test: 等级折扣额按比例计算，不足 1 韩元的部分舍去
+  shipping_fee_test: 不足 3 万韩元时运费为 2500 韩元
+  shipping_fee_free_at_threshold_test: 正好 3 万韩元时免运费
+  summarize_test: 计算明细中的各个项目
+  summarize_shipping_after_discount_test: 运费按折后金额判断
+  summarize_vat_excludes_shipping_test: 增值税不含运费计算
+  summarize_empty_test: 空购物车的明细全部为 0
+requirements:
+  R1: subtotal 是各行金额之和
+  R2: member_discount 只包含等级折扣规则
+  R3: shipping_fee 只包含运费规则
+  R4: summarize 按规定的顺序组合各步骤函数
+hints:
+  1: "运费和增值税分别以哪个金额为基准计算？是小计，还是折后金额？"
+  2: "用 `let` 给步骤之间的中间值起名字，代码就能清楚表明下一步以什么为输入。每个步骤都是纯函数，可以单独测试。"
+  3: "在 `summarize` 中按小计 → 折扣额 → 折后金额 → 运费和增值税 → 总额的顺序依次写 `let`，每个值都通过调用步骤函数得到，最后用 `Summary(...)` 汇总。"
+  4: |
+    ```gleam
+    pub fn summarize(lines: List(Line), tier: Tier) -> Summary {
+      let sub = subtotal(lines)
+      let discount = member_discount(tier, sub)
+      let discounted = sub - discount
+      let shipping = todo
+      let tax = todo
+      Summary(sub, discount, shipping, tax, todo)
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

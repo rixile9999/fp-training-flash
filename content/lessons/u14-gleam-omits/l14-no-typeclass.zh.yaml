@@ -1,0 +1,68 @@
+title: 为什么没有类型类
+blocks:
+  intro:
+    markdown: |-
+      如果你来自 Haskell，最先会觉得少了点什么的就是**类型类**（type class）。像 `Ord`、`Eq`、`Show` 这样“这个类型可以比较”的约定，在 Gleam 里并不存在。
+
+      官方 FAQ 给出了三个理由——**令人困惑的错误信息**、**变慢的编译时间**，以及分派（dispatch）带来的**运行时开销**。为了避开这三点，Gleam 干脆没有加入类型类。
+  instead:
+    markdown: |-
+      Gleam 给出的替代方案很简单：**把需要的行为写成函数，明确地传进去**。
+
+      比如排序就没有“隐藏的 `Ord` 实例”。`list.sort` **直接以参数形式**接收比较函数：
+
+      ```gleam
+      list.sort([3, 1, 2], by: int.compare)
+      ```
+
+      按什么比较，代码里一目了然——没有魔法，也没有隐式分派。
+  sort-explicit:
+    prompt: 直接传入比较函数，这次排序的结果是什么？
+    choices:
+      - "`[1, 2, 3]`"
+      - "`[3, 2, 1]`"
+      - "`[3, 1, 2]`"
+      - 编译错误
+    feedback:
+      correct: 没错！传入的 `int.compare` 是升序比较函数，所以结果是 [1, 2, 3]。决定顺序的不是隐藏的 `Ord`，而是你明确写出的函数。
+      choices:
+        "1": "`int.compare` 是升序的。要降序，得自己反过来传，比如 `fn(a, b) { int.compare(b, a) }`。"
+        "2": "`sort` 返回排好序的新列表——不会原样输出原来的顺序。"
+        "3": "通过 `by:` 传入了比较函数，所以能正常编译——没有类型类，排序也能靠传函数完成。"
+  describe:
+    markdown: "“如何把这个类型表示成文本”（Haskell 的 `Show`）也是同样的道理。不是靠每个类型自动调用的实例，而是**直接把转换函数交过去**。下面的 `describe_all` 只要拿到 `to_text` 函数，对任何类型都能工作——这是类型类的显式替代品。"
+  describe-pass:
+    prompt: 这段代码直接传入函数，把每个元素转换成文本。结果是什么？
+    code: |-
+      fn describe_all(xs, to_text) {
+        list.map(xs, to_text)
+      }
+      fn coin_text(heads) {
+        case heads { True -> "正面"  False -> "反面" }
+      }
+
+      describe_all([True, False, True], coin_text)
+    choices:
+      - '`["正面", "反面", "正面"]`'
+      - '`["反面", "正面", "反面"]`'
+      - "`[True, False, True]`"
+      - 编译错误（没有 Show 实例）
+    feedback:
+      correct: 完全正确！你显式传入了 `coin_text`，把每个 Bool 转成了文字——["正面", "反面", "正面"]。这就是不用类型类来注入行为的方式。
+      choices:
+        "1": '`True` 是 "正面"，`False` 是 "反面"——第一个元素 `True` 对应的是 "正面"。'
+        "2": "`to_text` 把每个元素转成 String，所以结果是字符串列表，而不是 Bool 列表。"
+        "3": Gleam 里根本没有 `Show`，但你把转换函数**作为参数**传了进去，所以完全可以编译。
+  why-no-typeclass:
+    prompt: 下面哪一项**不是**官方 FAQ 给出的 Gleam 没有类型类的理由？
+    choices:
+      - 为了避免令人困惑的编译错误信息
+      - 为了保持较短的编译时间
+      - 为了避免分派的运行时开销
+      - 因为完全放弃了类型推断
+    feedback:
+      correct: 没错！Gleam 的类型推断做得很好——去掉类型类的理由是错误信息、编译时间和运行时开销这三点。
+      choices:
+        "0": 这是真实的理由之一。类型类常常会产生难懂的错误信息。
+        "1": 这也是真实的理由——实例解析可能会拖慢编译。
+        "2": 这同样是成立的理由——动态分派会带来运行时开销。

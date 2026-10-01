@@ -1,0 +1,12 @@
+title: 把销售报表拆分为解析、汇总、输出函数
+rubric:
+  R-02:
+    title: 管道清楚表达意图
+    description: 顶层函数只是按顺序连接解析、汇总、输出这几个步骤，具体计算放在各个步骤函数中。
+  R-05:
+    title: 按步骤拆分函数
+    description: 没有哪个函数同时负责解析、汇总和拼接字符串。每个步骤都是可以单独调用和检查的小函数。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 错误的行用 Result 表达并跳过。不会因为输入看起来不对劲就让程序停止。
+    message: 使用了 let assert 或 panic。

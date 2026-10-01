@@ -1,0 +1,38 @@
+tests:
+  singleton_double_test: A single stone with the same number on both sides forms a chain
+  three_elements_test: Three stones can be reordered into a full loop
+  cant_be_chained_test: If the end numbers do not match, there is no chain
+  empty_input_test: With no stones, there is a chain
+  singleton_that_cant_close_test: A single stone with different numbers on its two sides is not a chain
+  can_reverse_stones_test: Stones can be flipped to connect them
+  disconnected_loops_test: Two separate loops do not form one chain
+  needs_backtracking_test: If the stone chosen first leads to a dead end, tries again with another stone
+requirements:
+  R1: Every stone is used exactly once, and the touching numbers of neighboring stones are equal (stones may be flipped)
+  R2: The outer number of the first stone equals the outer number of the last stone
+  R3: Empty input is True
+  R4: When stuck, go back and try a different choice
+hints:
+  1: "A chain is a loop, so you can start from any stone. Once you have picked the first stone, what information do you need to carry while you keep attaching stones?"
+  2: "Backtracking extends the choices one at a time and, when it gets stuck, changes the most recent choice. If you pass `list.any` a function that asks \"can this choice reach the end?\", it stops as soon as one returns true and otherwise tries the next choice."
+  3: "Write `extend(first, end, remaining)`. When `remaining` is empty, check `first == end`. Otherwise pick one stone with a number matching `end` (flipping included) and recurse on the rest with only that one stone removed. `selections` gives you every \"one stone and the rest\" pair."
+  4: |
+    ```gleam
+    fn extend(first: Int, end: Int, remaining: List(#(Int, Int))) -> Bool {
+      case remaining {
+        [] -> first == end
+        _ ->
+          next_steps(end, remaining)
+          |> list.any(fn(step) {
+            let #(new_end, rest) = step
+            todo
+          })
+      }
+    }
+
+    // For each stone that can attach to end: #(the end number after attaching, the rest without that one stone)
+    fn next_steps(end: Int, stones: List(#(Int, Int))) -> List(#(Int, List(#(Int, Int)))) {
+      todo
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

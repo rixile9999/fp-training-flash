@@ -1,0 +1,30 @@
+title: "Count nucleotides: report where the first error is"
+tests:
+  empty_strand_test: For an empty string, all four nucleotides have a count of 0
+  mixed_strand_test: Counts each nucleotide in a valid string
+  reports_letter_and_index_test: Reports the invalid letter and its position (from 0) as an Error
+  reports_first_of_many_test: If there are several invalid letters, the first one is reported
+  invalid_at_start_test: If the first letter is invalid, position 0 is reported
+  lowercase_is_invalid_test: A lowercase nucleotide is also reported as an invalid letter
+requirements:
+  R1: For valid input, a dictionary with the counts of all four nucleotides
+  R2: Return the invalid letter and its position counted from 0 as InvalidNucleotide
+  R3: If there are several invalid letters, report the first one
+hints:
+  1: "When there are two invalid letters, do you need to look at the second one at all? To know the position, what do you need to carry along with each letter?"
+  2: "`list.index_map` passes each element together with its position, starting from 0. `list.try_fold` stops right where the first `Error` appears."
+  3: "First turn the list of letters into a list of `#(letter, position)` pairs, then fold over the pairs one at a time, starting from a dictionary with all four nucleotides set to 0."
+  4: |
+    ```gleam
+    dna
+    |> string.to_graphemes
+    |> list.index_map(fn(letter, index) { #(letter, index) })
+    |> list.try_fold(zeros, fn(counts, pair) {
+      let #(letter, index) = pair
+      case dict.get(counts, letter) {
+        Ok(count) -> todo
+        Error(Nil) -> todo
+      }
+    })
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

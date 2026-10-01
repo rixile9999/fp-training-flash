@@ -1,0 +1,23 @@
+tests:
+  single_letter_test: Moves a single letter to a lowercase key
+  single_score_with_multiple_letters_test: Creates an entry for every letter grouped under one score
+  multiple_scores_test: Merges the letters of several scores into one dict
+  empty_table_test: An empty score table becomes an empty dict
+  score_without_letters_adds_nothing_test: A score with no letters adds nothing to the result
+  full_table_test: Moves all 26 letters of the full score table
+requirements:
+  R1: One score entry per letter
+  R2: Letters are stored in lowercase
+hints:
+  1: "How many entries in the result dict should one entry of the input dict (one score) create?"
+  2: "`dict.fold` takes the entries of a dict one at a time and updates an accumulator, and `list.fold` does the same with the elements of a list. You can nest the two folds."
+  3: "Start from an empty dict. Let the outer fold go over each score and the inner fold over each letter of that score, inserting `lowercase letter -> score`."
+  4: |
+    ```gleam
+    dict.fold(legacy, dict.new(), fn(result, score, letters) {
+      list.fold(letters, result, fn(acc, letter) {
+        todo
+      })
+    })
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

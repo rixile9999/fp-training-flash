@@ -1,0 +1,27 @@
+title: Separate random selection from discount calculation
+tests:
+  deal_price_test: The deal price is the price with a 30% discount
+  deal_price_rounds_to_hundreds_test: The deal price is rounded down to the nearest 100 won
+  apply_deal_test: Changes only the product at the given position to the deal price
+  apply_deal_first_index_test: Position 0 is the first product
+  apply_deal_out_of_range_test: For a position at or beyond the list length, returns the list unchanged
+  apply_deal_negative_index_test: For a negative position, returns the list unchanged
+requirements:
+  R1: deal_price is a pure function containing only the discount rule
+  R2: apply_deal takes a position as an argument instead of a random value
+hints:
+  1: "Why can't you know the result in advance when testing the existing `pick_daily_deal`? To move that cause out of the function, what should it take as an argument?"
+  2: "Generating a random value is also an effect: the result differs on every call. If you take the randomly chosen result (the position) as an argument, the rest of the calculation becomes a pure function."
+  3: "Use `list.index_map` to look at each product together with its position, and change only the product whose position equals the argument with `deal_price`. A position out of range never equals any product's position, so it needs no special handling."
+  4: |
+    ```gleam
+    pub fn apply_deal(products: List(Product), index: Int) -> List(Product) {
+      list.index_map(products, fn(product, i) {
+        case i == index {
+          True -> todo
+          False -> product
+        }
+      })
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

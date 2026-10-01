@@ -1,0 +1,12 @@
+title: Parse one order line into a record
+rubric:
+  R-05:
+    title: A separate parsing function per field
+    description: Keeping a small function that interprets a single field lets you check each rule and error on its own.
+  R-09:
+    title: No let assert or panic
+    description: The possibility of failure is expressed in the types.
+    message: let assert or panic was used.
+  R-11:
+    title: Chain with use instead of nested case
+    description: Chaining several steps of Result with use and result.try makes the success path read from top to bottom.

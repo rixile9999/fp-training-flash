@@ -1,0 +1,34 @@
+title: Add a total and a skipped-line count to a sales report
+tests:
+  parse_all_splits_valid_and_invalid_test: Returns the valid sales records together with the number of invalid lines
+  parse_all_keeps_input_order_test: Valid sales records keep their input order
+  parse_all_ignores_blank_lines_test: Blank lines are not counted as invalid lines
+  footer_test: Builds the total line and the skipped-line count
+  footer_empty_test: With no sales records, the total is 0
+  build_report_test: Adds the total and the skipped-line count after the category rows
+  build_report_only_invalid_test: If every line is invalid, only the footer lines remain
+requirements:
+  R1: parse_all collects the valid records in input order and counts the invalid lines
+  R2: Blank lines are ignored and not counted as invalid lines
+  R3: footer builds two lines with the overall total and the number of skipped lines
+  R4: build_report adds the footer after the category rows
+hints:
+  1: "To get two things at once (the list of valid records and the number of invalid lines) in a single pass, what shape should the accumulator have?"
+  2: "You can use the tuple `#(List(Sale), Int)` as the accumulator of `list.fold`. If you collect by prepending to the list, you need a `list.reverse` at the end."
+  3: "`parse_all` splits each line into three cases with `case`: a blank line, a successful parse, and a failed parse. `build_report` only needs to append `footer` to the existing `total_by_category` and `format_row`."
+  4: |
+    ```gleam
+    pub fn parse_all(lines: List(String)) -> #(List(Sale), Int) {
+      let #(sales, skipped) =
+        list.fold(lines, #([], 0), fn(acc, line) {
+          let #(sales, skipped) = acc
+          case line, parse_line(line) {
+            "", _ -> acc
+            _, Ok(sale) -> todo
+            _, Error(Nil) -> todo
+          }
+        })
+      #(list.reverse(sales), skipped)
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

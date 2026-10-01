@@ -1,0 +1,13 @@
+title: Merge sort
+rubric:
+  R-04:
+    title: Implement it yourself, without the standard sort
+    description: The goal of this exercise is to build merge sort yourself. Do not use `list.sort`.
+    message: list.sort was used. Implement merge sort yourself.
+  R-05:
+    title: Separate splitting from merging
+    description: Keeping a function that splits the list separate from a function that merges two sorted lists lets you verify and reuse each one.
+  R-09:
+    title: No let assert or panic
+    description: The possibility of failure is expressed in the types.
+    message: let assert or panic was used.

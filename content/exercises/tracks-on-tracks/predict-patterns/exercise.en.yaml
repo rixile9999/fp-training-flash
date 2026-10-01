@@ -1,0 +1,12 @@
+title: Predict the results of list patterns
+hints:
+  1: "`case` checks the patterns from the top. Which pattern does the four-item list match first?"
+  2: "`[_, \"Gleam\"]` matches only lists of length 2, and `[_, \"Gleam\", _]` only lists of length 3. Without `..`, the length is fixed."
+  3: "Try each of the four input lists against the patterns one by one, starting from the top, and remember that `list.map` keeps the order as is."
+  4: |
+    ```gleam
+    // ["Lua", "Gleam", "Go", "Elm"] has length 4, so it matches neither [_, "Gleam"] nor [_, "Gleam", _]
+    // [first, ..rest]: first = "Lua", rest = ["Gleam", "Go", "Elm"]
+    ["Lua 외 ?", todo, todo, todo]
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

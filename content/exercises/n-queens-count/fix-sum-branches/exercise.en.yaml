@@ -1,0 +1,25 @@
+title: Fix the queen placement count - the bug that counts only one branch
+tests:
+  four_queens_test: A 4x4 board has 2 placements
+  single_queen_board_test: A 1x1 board has 1 placement
+  five_queens_test: A 5x5 board has 10 placements
+  boards_without_solution_test: 2x2 and 3x3 boards have no placements
+  six_queens_test: A 6x6 board has 4 placements
+  eight_queens_test: An 8x8 board has 92 placements
+requirements:
+  R1: Count the placements on an n x n board
+  R2: The search stops at unsafe squares (pruning)
+hints:
+  1: "In the first row of a 4x4 board there are 4 safe columns. If the numbers of placements starting from each column are 0, 1, 1 and 0, what should the overall answer be, and what does the current code return?"
+  2: "The `run` function of `int.range` takes the accumulated value (`total`) and the current value (`col`) and returns a new accumulated value. If you return a new value without using the accumulated one, the results for the earlier columns are thrown away."
+  3: "For a safe column, you have to add the number of placements starting from that column to the sum so far. `is_safe` and the base case (1 when `row == n`) are correct, so leave them alone."
+  4: |
+    ```gleam
+    int.range(from: 0, to: n, with: 0, run: fn(total, col) {
+      case is_safe(placed, col) {
+        True -> todo // total and place(n, row + 1, [col, ..placed])
+        False -> total
+      }
+    })
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

@@ -1,0 +1,30 @@
+title: Turn a score table back into groups by score
+tests:
+  single_letter_test: Converts a single tile to uppercase and puts it in its score group
+  letters_with_same_score_are_grouped_test: Tiles with the same score end up in one group
+  several_scores_test: Creates a separate group for each score
+  empty_table_test: An empty score table becomes an empty dict
+  group_is_sorted_alphabetically_test: The tiles inside a group are in alphabetical order
+  full_table_test: Turns the full score table back into seven groups
+  large_table_is_sorted_test: Even in a large score table with two-letter tiles, each group is in alphabetical order
+requirements:
+  R1: For each score, collect the uppercase tiles worth that score
+  R2: Each group is in ascending order by string.compare
+hints:
+  1: "What should happen when one more tile arrives for a score that already has a group? And for a score that has no group yet?"
+  2: "`dict.upsert(dict, key, fn(Option(v)) -> v)` decides the new value from `Some(existing value)` if the key exists, or `None` if it does not. The iteration order of a dict is not guaranteed, so if you need an order you have to sort yourself."
+  3: "Use `dict.fold` to add each uppercase tile to its score group, and once everything is collected, sort each group with `dict.map_values`."
+  4: |
+    ```gleam
+    scores
+    |> dict.fold(dict.new(), fn(groups, letter, score) {
+      dict.upsert(groups, score, fn(existing) {
+        case existing {
+          Some(letters) -> todo
+          None -> todo
+        }
+      })
+    })
+    |> dict.map_values(fn(_score, letters) { todo })
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

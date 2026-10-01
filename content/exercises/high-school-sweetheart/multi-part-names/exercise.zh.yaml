@@ -1,0 +1,33 @@
+title: 多词名字的首字母与花押字（monogram）
+tests:
+  name_parts_test: 按空格把名字拆成单词列表
+  name_parts_extra_spaces_test: 连续空格和首尾空格不会产生空单词
+  initials_three_parts_test: 三个单词的名字得到三个首字母
+  initials_extra_spaces_test: 即使有多个空格，首字母之间也只有一个空格
+  initials_blank_test: 只有空格的名字，首字母是空字符串
+  monogram_test: 花押字把大写的首字母连在一起写
+  monogram_single_name_test: 单个单词名字的花押字只有一个字母
+requirements:
+  R1: name_parts 按顺序返回单词，不含空单词
+  R2: initials 复用 name_parts 和 initial
+  R3: monogram 复用 name_parts
+hints:
+  1: "把 `\"  mary   jane \"` 按一个空格 `split`，会得到什么样的列表？其中哪些元素是问题所在？"
+  2: "可以用 `list.filter` 过滤掉不需要的元素，再用 `list.map` 逐个转换剩下的元素。不需要假定列表长度的模式匹配。"
+  3: "过滤空单词这件事只在 `name_parts` 一个地方做。`initials` 和 `monogram` 只需接收 `name_parts` 的结果，转换每个单词再合并起来。"
+  4: |
+    ```gleam
+    pub fn name_parts(full_name: String) -> List(String) {
+      full_name
+      |> string.split(" ")
+      |> list.filter(todo)
+    }
+
+    pub fn monogram(full_name: String) -> String {
+      full_name
+      |> name_parts
+      |> list.map(todo)
+      |> string.concat
+    }
+    ```
+  5: "现在可以打开完整讲解。看完讲解后，将用一道新题确认掌握程度。"

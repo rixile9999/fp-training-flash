@@ -1,0 +1,32 @@
+tests:
+  identical_test: The distance between identical strings is 0
+  empty_source_test: Building from an empty string takes one insertion per character
+  one_substitution_test: If only one character differs, the distance is 1
+  mixed_edits_test: When several characters differ, counts the fewest edits
+  empty_target_test: Turning a string into an empty string takes one deletion per character
+  substitution_counts_once_test: Substituting a character counts as one edit, not as a deletion plus an insertion
+  korean_graphemes_test: A Hangul character also counts as one edit
+  long_strings_test: Computes the distance between 300-character strings within the time limit
+requirements:
+  R1: The minimum number of insertions, deletions and substitutions, each costing 1
+  R2: If one side is empty, the number of characters in the other
+  R3: Counted by character (grapheme)
+  R4: Time proportional to the product of the two string lengths
+hints:
+  1: "How many ways are there to make the last character of `from` match the last character of `to`? After using each one, the remaining problem is the distance between which two strings?"
+  2: "The subproblem is d(i, j), \"the minimum number of edits to turn the first i characters of `from` into the first j characters of `to`\". d(i, j) = min(d(i-1, j) + 1, d(i, j-1) + 1, d(i-1, j-1) + (0 if the two characters are equal, otherwise 1)). d(0, j) = j and d(i, 0) = i."
+  3: "A row d(i, ·) can be computed from just the row above it, d(i-1, ·). Start from the first row `[0, 1, ..., m]`, use a fold that builds the next row for each character of `from`, and take the last value of the last row as the answer."
+  4: |
+    ```gleam
+    // previous: the row above [d(i-1, 0), d(i-1, 1), ...], left: the value just computed in the current row
+    fn fill(previous: List(Int), target: List(String), char: String, left: Int, acc: List(Int)) -> List(Int) {
+      case previous, target {
+        [diagonal, above, ..rest], [t, ..ts] -> {
+          let value = todo
+          fill([above, ..rest], ts, char, value, [value, ..acc])
+        }
+        _, _ -> list.reverse(acc)
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

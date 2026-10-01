@@ -1,0 +1,28 @@
+tests:
+  apply_deposit_test: 存款会增加余额
+  apply_withdraw_test: 不超过余额的取款会减少余额
+  apply_withdraw_insufficient_test: 超过余额的取款会被忽略
+  apply_after_close_test: 已销户的账户不会因任何事件而改变
+  replay_test: 返回按顺序应用事件列表后的账户
+  replay_order_matters_test: 事件从列表开头依次应用
+  replay_empty_test: 没有事件时，结果是余额为 0、未销户的账户
+requirements:
+  R1: 存款就加上，只有不超过余额的取款才减去
+  R2: Closed 之后忽略所有事件
+  R3: replay 从 Account(0, True) 开始，按顺序应用事件
+hints:
+  1: "如果你能确定单个事件会让账户怎样变化，那么事件有多个时，该怎样重复这条规则？"
+  2: "`list.fold(列表, 初始状态, 转换函数)` 带着一个状态，从头到尾把列表遍历一次。`apply_event` 的类型 `fn(Account, Event) -> Account` 正好就是 fold 需要的函数形状。"
+  3: "在 `apply_event` 中先检查账户是否处于开户状态，只有开户时才用 `case` 按事件类型分支。`replay` 只需把 `apply_event` 传给 fold。"
+  4: |
+    ```gleam
+    pub fn apply_event(account: Account, event: Event) -> Account {
+      case account.open, event {
+        False, _ -> account
+        True, Deposited(amount) -> todo
+        True, Withdrawn(amount) -> todo
+        True, Closed -> todo
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

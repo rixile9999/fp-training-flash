@@ -1,0 +1,12 @@
+title: 把一行订单解析成记录
+rubric:
+  R-05:
+    title: 按字段拆分解析函数
+    description: 为解析单个字段单独写一个小函数，就能分别检查每条规则和错误。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 用类型表达失败的可能性。
+    message: 使用了 let assert 或 panic。
+  R-11:
+    title: 用 use 串联，而不是嵌套 case
+    description: 用 use 和 result.try 把多个步骤的 Result 串起来，成功路径就能从上往下阅读。

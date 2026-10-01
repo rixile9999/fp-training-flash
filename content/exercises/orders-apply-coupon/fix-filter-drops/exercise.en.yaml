@@ -1,0 +1,25 @@
+title: Applying a coupon - bring back the missing orders
+tests:
+  discounts_pending_test: Discounts the amount of Pending orders
+  keeps_shipped_orders_test: Shipped orders also stay in the result unchanged
+  keeps_cancelled_orders_test: Cancelled orders also stay in the result unchanged
+  does_not_discount_others_test: Does not change the amount of orders that are not Pending
+  keeps_order_test: Keeps the original order of the orders
+requirements:
+  R1: Change the amount of Pending orders only
+  R2: Keep the orders that are not targeted
+  R3: Keep the order of the list
+hints:
+  1: "If there are 3 input orders, how many orders should the result have? How many does the current code return?"
+  2: "`list.filter` throws away elements that do not match the condition, while `list.map` changes every element one by one and keeps the length."
+  3: "Instead of picking out the targets first, go through every order and decide for each one whether to discount it."
+  4: |
+    ```gleam
+    list.map(orders, fn(o) {
+      case o.status {
+        Pending -> todo
+        Shipped | Cancelled -> o
+      }
+    })
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

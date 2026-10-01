@@ -1,0 +1,26 @@
+title: 自己实现同时传入位置序号的 map
+tests:
+  empty_list_test: 空列表返回空列表
+  index_starts_at_zero_test: 第一个元素的位置序号是 0
+  numbers_lines_test: 可以用位置序号给各项编号
+  single_element_gets_zero_test: 只有一个元素时，以位置序号 0 调用一次函数
+  combines_value_and_index_test: 即使值相同，不同位置也得到不同的序号
+  keeps_order_of_long_list_test: 列表很长时也保持原来的顺序
+requirements:
+  R1: 对所有元素应用函数，并保持长度不变
+  R2: 传入从 0 开始、每次加 1 的位置序号
+  R3: 保持原来的顺序
+hints:
+  1: "递归一格一格往下走时，“现在是第几个元素”这一信息可以保存在哪里？"
+  2: "公开函数的参数里没有位置序号。常见做法是另写一个以序号为参数的辅助函数，由公开函数以初始值 0 调用它。"
+  3: "让辅助函数 `go(list, fun, index, acc)` 每处理一个元素就以 `index + 1` 递归。如果把结果堆在 `acc` 前面，最后需要反转。"
+  4: |
+    ```gleam
+    fn go(items: List(a), fun: fn(a, Int) -> b, index: Int, acc: List(b)) -> List(b) {
+      case items {
+        [] -> todo
+        [first, ..rest] -> go(rest, fun, index + 1, todo)
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

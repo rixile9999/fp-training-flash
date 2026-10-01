@@ -1,0 +1,15 @@
+title: 把多米诺骨牌连成一个环
+rubric:
+  R-02:
+    title: 搜索状态清晰可见
+    description: 把链的第一个数、当前末端的数和剩余的骨牌明确作为递归参数，让人看出每一步改变了什么。
+  R-05:
+    title: 候选生成单独分离
+    description: 把“挑出能接到当前末端的骨牌（及翻转后的方向）”这件事拆成一个有名字的函数。
+  R-06:
+    title: 相同的骨牌只消耗一块
+    description: 使用一块骨牌时，不会把形状相同的其他骨牌也删掉。不要按值过滤，而是按位置只去掉一个。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 用类型表达失败的可能性。
+    message: 使用了 let assert 或 panic。

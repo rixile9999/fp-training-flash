@@ -1,0 +1,28 @@
+title: Report the position of an invalid nucleotide
+tests:
+  valid_strand_test: A valid strand is converted to RNA and returned as Ok
+  invalid_first_test: If the first character is invalid, reports position 0 and that character
+  rna_base_in_dna_test: U, which does not occur in DNA, is also reported as an invalid nucleotide with its position
+  first_invalid_reported_test: If there are several invalid characters, reports the first one
+  empty_strand_test: An empty strand is Ok("")
+requirements:
+  R1: Return the conversion of a valid strand as Ok
+  R2: Put the invalid character and its zero-based position into the error
+  R3: Report the first error
+hints:
+  1: "What do you need to know to build the error value when you check a single character? Is the character alone enough?"
+  2: "`list.index_map(list, fn(x, i) { ... })` gives you each element together with its position, starting from 0. `result.replace_error(r, e)` turns `Error(_)` into `Error(e)`."
+  3: "Attach a position to each character, then convert with `list.try_map`. If a conversion fails, build an `InvalidNucleotide` from that character's position and the character itself. `try_map` stops at the first failure, so the first error is what comes out."
+  4: |
+    ```gleam
+    dna
+    |> string.to_graphemes
+    |> list.index_map(fn(nucleotide, position) { #(position, nucleotide) })
+    |> list.try_map(fn(pair) {
+      let #(position, nucleotide) = pair
+      complement(nucleotide)
+      |> todo
+    })
+    |> result.map(string.concat)
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

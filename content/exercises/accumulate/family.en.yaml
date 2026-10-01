@@ -1,0 +1,13 @@
+title: Build your own map
+rubric:
+  R-04:
+    title: Implement it without the standard map
+    description: The point of this exercise is to build the behavior of map yourself with recursion. Do not use `list.map` or `list.index_map`.
+    message: A list.map-style function was used. Implement it yourself with recursion.
+  R-06:
+    title: With an accumulator, reverse once at the end
+    description: Prepending onto an accumulator reverses the order. Call `list.reverse` exactly once, at the end.
+  R-09:
+    title: No let assert or panic
+    description: Express the possibility of failure in the types.
+    message: let assert or panic was used.

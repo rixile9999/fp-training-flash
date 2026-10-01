@@ -1,0 +1,29 @@
+title: 用拉链只修改树中的一处
+tests:
+  set_value_test: "只修改焦点节点的值，树的其余部分保持不变"
+  set_left_with_leaf_test: "把焦点节点的左子节点换成新的树"
+  set_right_with_empty_test: "把右子节点换成 Leaf，这个分支就消失了"
+  set_value_after_traversing_up_test: "下移再上移之后修改，改的仍是原位置的值"
+  set_right_with_subtree_test: "在根处把右子节点换成由多个节点组成的树"
+  set_value_on_leaf_creates_node_test: "焦点是 Leaf 时，set_value 创建一个没有子节点的新节点"
+  set_child_on_leaf_fails_test: "焦点是 Leaf 时，set_left 和 set_right 返回 Error(Nil)"
+  focus_stays_after_edit_test: "修改之后焦点仍在原位置，可以继续上移"
+requirements:
+  R1: "set_value 只修改焦点节点的值；焦点是 Leaf 时创建没有子节点的节点"
+  R2: "set_left、set_right 只替换焦点节点对应的子节点"
+  R3: "焦点是 Leaf 时，set_left、set_right 返回 Error(Nil)"
+  R4: "保持焦点的位置（路径）不变，返回新的拉链"
+hints:
+  1: "修改焦点节点时，路径（crumbs）也需要修改吗？之后用 `to_tree` 构建整棵树时，修改后的焦点是如何体现出来的？"
+  2: "在拉链中，焦点就是“现在可以修改的位置”。只把焦点换成新节点、保持路径不变，往上走时路径就会包住修改后的焦点，重新构建整棵树。记录更新 `Zipper(..zipper, focus: ...)` 正好表达了这个意思。"
+  3: "三个函数都用 `case zipper.focus` 区分 `Leaf` 和 `Node(value, left, right)`。是 `Node` 时，把只替换了要修改部分的 `Node` 作为焦点。是 `Leaf` 时，`set_value` 创建新节点，`set_left`/`set_right` 返回 `Error(Nil)`。"
+  4: |
+    ```gleam
+    pub fn set_left(zipper: Zipper(a), tree: Tree(a)) -> Result(Zipper(a), Nil) {
+      case zipper.focus {
+        Leaf -> Error(Nil)
+        Node(value, _, right) -> Ok(Zipper(..zipper, focus: todo))
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

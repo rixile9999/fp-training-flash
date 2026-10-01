@@ -1,0 +1,28 @@
+tests:
+  line_log_test: 生成单个商品行的记录字符串
+  quote_total_test: 报价合计是价格乘以数量之和
+  quote_log_test: 记录中商品行之后是合计行
+  quote_log_order_test: 商品记录遵循输入顺序
+  quote_empty_test: 没有商品时也保留合计行
+  render_test: 用换行符把记录连接成一个字符串
+  render_single_line_test: 只有一行的记录不加换行符
+requirements:
+  R1: line_log 只返回字符串，不打印输出
+  R2: quote 把合计和记录作为值返回
+  R3: render 只生成要打印的字符串，不打印输出
+hints:
+  1: "要在测试中检查现有的 `checkout` 打印到屏幕上的内容，该怎么做？如果不打印而是返回点什么，检查会更容易？"
+  2: "打印输出是改变外部世界的效应。把要打印的字符串作为列表返回，计算就成了纯函数，真正的打印只需在接收这个列表的一个外层函数中进行。"
+  3: "不必像原代码那样在一个 `fold` 中同时生成合计和记录。把两者分开计算，每个计算都会变短，也不用操心顺序。在 `render` 中，记住换行符只应放在行与行“之间”。"
+  4: |
+    ```gleam
+    pub fn quote(items: List(Item)) -> Quote {
+      let total =
+        items
+        |> list.map(fn(item) { item.price * item.quantity })
+        |> int.sum
+      let lines = list.map(items, line_log)
+      Quote(total: total, log: todo)
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

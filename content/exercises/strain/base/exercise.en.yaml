@@ -1,0 +1,30 @@
+tests:
+  keep_on_empty_list_test: keep on an empty list gives an empty list
+  keeps_odd_numbers_test: keep leaves only the elements for which the condition is true
+  discards_odd_numbers_test: discard throws away the elements for which the condition is true
+  keeps_words_starting_with_z_test: The kept strings stay in their original order
+  keeps_nothing_test: If the condition is always false, keep gives an empty list
+  discards_nothing_test: If the condition is always false, discard keeps everything
+  discards_lists_containing_five_test: discard keeps the order for a list of lists too
+requirements:
+  R1: keep leaves only the elements for which the condition is true
+  R2: discard throws away the elements for which the condition is true
+  R3: The remaining elements keep their original order
+hints:
+  1: "How do `keep` and `discard` differ? Could you express one function in terms of the other?"
+  2: "Recurse by splitting the list into `[]` and `[first, ..rest]`, and let the result of the condition function decide whether `first` goes into the result. You can also take a function and build a new function from it."
+  3: "Finish `keep` with recursion first, then have `discard` pass `keep` an anonymous function that negates the condition. If you use an accumulator, you have to restore the order at the end."
+  4: |
+    ```gleam
+    pub fn keep(items: List(t), predicate: fn(t) -> Bool) -> List(t) {
+      case items {
+        [] -> []
+        [first, ..rest] ->
+          case predicate(first) {
+            True -> todo
+            False -> keep(rest, predicate)
+          }
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

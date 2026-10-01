@@ -1,0 +1,12 @@
+title: 用管道拼出首字母爱心
+rubric:
+  R-02:
+    title: 管道清楚表达意图
+    description: 每一步只做一种转换，阅读顺序与处理顺序一致。
+  R-05:
+    title: 复用前面的函数
+    description: 后面的函数调用前面写好的小函数逐层搭建，不重复编写同样的规则。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 用类型表达失败的可能性。
+    message: 使用了 let assert 或 panic。

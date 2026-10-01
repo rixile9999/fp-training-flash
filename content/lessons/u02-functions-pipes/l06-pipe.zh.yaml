@@ -1,0 +1,55 @@
+title: 管道 |>
+blocks:
+  intro:
+    markdown: |-
+      `|>`（管道）运算符会把左边的值作为右边函数的**第一个参数**传进去。
+
+      `x |> f`  等同于  `f(x)`，
+      `x |> f(y)`  等同于  `f(x, y)`。（左边的值放在最前面的位置！）
+
+      关键在于：数据按照被转换的顺序，从左往右流动。
+  trim-upper:
+    prompt: 这条管道链的值是什么？
+    choices:
+      - '`"LUCY"`'
+      - '`"  LUCY "`'
+      - '`"lucy"`'
+      - '`"  lucy "`'
+    feedback:
+      correct: 没错！先用 trim 去掉空白得到 "lucy"，再用 uppercase 得到 "LUCY"。
+      choices:
+        "1": trim 会先去掉两端的空白，不会留下空格。
+        "2": uppercase 会转换成大写——不会保持小写。
+        "3": 两个转换都会生效——要经过 trim 和 uppercase。
+  first-arg:
+    markdown: |-
+      最容易混淆的一点是：管道会把值放进**第一个参数**。
+
+      `string.append(first, second)` 会把 `second` 接在 `first` 后面。
+      所以 `"LUCY" |> string.append("!")` 就是 `string.append("LUCY", "!")`，结果是 `"LUCY!"`——`"LUCY"` 是第一个参数，`"!"` 是第二个参数。
+  append-pipe:
+    prompt: 这个表达式的值是什么？
+    choices:
+      - '`"LUCY!"`'
+      - '`"!LUCY"`'
+      - '`"LUCY"`'
+      - 编译错误
+    feedback:
+      correct: 完全正确！管道把 "LUCY" 放进第一个参数，即 string.append("LUCY", "!") → "LUCY!"。
+      choices:
+        "1": 管道把左边的值放进**第一个**参数。这是 `append("LUCY", "!")`，所以 `!` 接在后面。
+        "2": "`\"!\"` 作为参数被拼接上去，所以不会保持原样，而是变成 \"LUCY!\"。"
+        "3": 这是合法的管道调用，可以编译。
+  pipe-meaning:
+    prompt: "`x |> f(y)` 等同于什么？"
+    choices:
+      - "`f(y, x)`"
+      - "`f(x, y)`"
+      - "`f(x)(y)`"
+      - "`x(f, y)`"
+    feedback:
+      correct: 没错！管道把左边的值 x 放进第一个参数，得到 `f(x, y)`。
+      choices:
+        "0": x 进入的是**第一个**参数——是 `f(x, y)`，不是 `f(y, x)`。
+        "2": Gleam 没有柯里化——不是 `f(x)(y)` 这种形式。
+        "3": f 是函数，x 是它的第一个参数——不是 x 调用 f。

@@ -1,0 +1,32 @@
+title: 同时求出装载货物清单的背包问题
+tests:
+  picks_best_pair_test: 按输入顺序返回价值总和最大的那些货物的 id
+  not_greedy_test: 选出比“先装单位重量价值高的货物”更好的组合
+  ids_in_input_order_test: 选中多件货物时，id 按输入列表的顺序排列
+  empty_cargo_test: 没有货物时，结果是价值 0 和空列表
+  nothing_fits_test: 没有能装下的货物时，结果是价值 0 和空列表
+  uses_each_once_test: 同一件货物不会被选两次
+  many_cargo_test: 即使有 40 件货物也能在时间限制内选完
+requirements:
+  R1: 总重量不超过上限且价值总和最大的组合
+  R2: 没有可选的货物时为 Selection(0, [])
+  R3: ids 按输入列表的顺序排列
+  R4: 时间与货物数 x 重量上限成正比
+hints:
+  1: "在只求最大价值的表中，如果每一格还同时记着“选了哪些货物”才得到这个价值，那么从最后一格能知道什么？"
+  2: "DP 表的格子里不仅可以存价值，还可以一起存产生这个价值的选择（所选 id 的列表）。往不可变列表的前面添加 id 时，前一格的列表不会被复制，而是被共享。"
+  3: "把表设为 `Dict(重量上限, #(价值总和, 所选 id))`，逐件折叠货物，从旧表读取并生成新表。如果装上这件货物更好，就放入 `#(价值 + 货物价值, [货物 id, ..之前的 id])`。因为 id 是加在前面的，最后要反转一次。"
+  4: |
+    ```gleam
+    fn add_cargo(previous: Dict(Int, #(Int, List(String))), item: Cargo, max_weight: Int) {
+      int.range(from: item.weight, to: max_weight + 1, with: previous, run: fn(table, capacity) {
+        let #(rest_value, rest_ids) = entry(previous, capacity - item.weight)
+        let #(skip_value, _) = entry(previous, capacity)
+        case rest_value + item.value > skip_value {
+          True -> todo
+          False -> table
+        }
+      })
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

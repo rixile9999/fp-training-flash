@@ -1,0 +1,25 @@
+title: 修复增值税计算结果的顺序错误
+tests:
+  with_vat_keeps_order_test: 加上增值税后的价格按原来的顺序输出
+  with_vat_rounds_down_test: 计算增值税时舍去不足 1 韩元的部分
+  accumulate_keeps_order_test: accumulate 本身保持原来的顺序
+  accumulate_empty_list_test: 给 accumulate 传入空列表时返回空列表
+  with_vat_empty_list_test: 没有价格时返回空列表
+  accumulate_long_list_keeps_order_test: 即使有六个元素，accumulate 也保持顺序
+requirements:
+  R1: 保持价格列表的顺序
+  R2: 在公共函数 accumulate 中修复根本原因
+hints:
+  1: "`with_vat([1000, 2500, 300])` 的结果只是顺序错了，还是值也错了？改变顺序的代码在哪个函数里？"
+  2: "用 `[x, ..acc]` 往累加器前面堆叠时，先处理的元素会被逐渐挤到后面，全部堆完后顺序就与输入相反。"
+  3: "不只是 `with_vat`，所有使用 `accumulate` 的地方都会遇到同样的问题。在累加结束的地方把顺序恢复一次即可。"
+  4: |
+    ```gleam
+    fn go(items: List(a), fun: fn(a) -> b, acc: List(b)) -> List(b) {
+      case items {
+        [] -> todo
+        [first, ..rest] -> go(rest, fun, [fun(first), ..acc])
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

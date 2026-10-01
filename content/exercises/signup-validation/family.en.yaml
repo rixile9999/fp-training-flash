@@ -1,0 +1,12 @@
+title: Validating a signup form
+rubric:
+  R-05:
+    title: Reuse the validation rules
+    description: Combine the existing check_ functions instead of implementing the rules again.
+  R-09:
+    title: No let assert or panic
+    description: Express the possibility of failure in the types.
+    message: let assert or panic was used.
+  R-12:
+    title: Choose between first error and all errors to fit the purpose
+    description: Stop at the first error when later steps depend on the results of earlier ones, and collect all errors when independent checks are shown to the user at once.

@@ -1,0 +1,28 @@
+tests:
+  add_language_prepends_test: Adds a new language to the front of the list
+  count_languages_test: Counts the languages in the list
+  reverse_list_test: Reverses the order of the list
+  gleam_first_is_exciting_test: If the first one is Gleam, the list is exciting
+  gleam_second_of_two_is_exciting_test: If the second of a two-item list is Gleam, the list is exciting
+  gleam_third_is_not_exciting_test: If Gleam is third, the list is not exciting
+  gleam_second_of_four_is_not_exciting_test: If the second of a four-item list is Gleam, the list is not exciting
+  gleam_first_of_four_is_exciting_test: If the first one is Gleam, the list is exciting whatever its length
+requirements:
+  R1: Add a new language to the front
+  R2: Count and reverse with standard list operations
+  R3: Decide whether a list is exciting from position and length conditions
+hints:
+  1: "In how many cases does `exciting_list` become True? In each case, what condition does the list's length have?"
+  2: "In a `case`, the list pattern `[x, ..rest]` matches every list of length 1 or more, and `[a, b]` matches lists of length exactly 2."
+  3: "Solve adding with `[new value, ..existing list]`, and counting and reversing with functions from `gleam/list`. For the check, list the shapes that are true as patterns and send everything else to False."
+  4: |
+    ```gleam
+    pub fn exciting_list(languages: List(String)) -> Bool {
+      case languages {
+        ["Gleam", ..] -> True
+        // the second one is Gleam and the length is 2 or 3
+        _ -> todo
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

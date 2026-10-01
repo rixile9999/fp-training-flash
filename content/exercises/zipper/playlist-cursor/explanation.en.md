@@ -1,0 +1,7 @@
+A list zipper is the simplest form of a tree zipper. It splits the list into "before the focus", "the focus" and "after the focus", and stores the front part in reverse order. Then the song nearest to the focus is always at the head of one of the two lists, so moving the cursor by one becomes "take the head off one list and put it on the head of the other", which is O(1). It is the same principle as the crumb list of a tree zipper being stacked with the nearest parent first.
+
+`remove_current` only needs to change the focus. If `after` has a song, its head is the new focus; otherwise the head of `before` (the song right before) is. If both are empty, nothing can be removed. Writing this order as the three branches of `case cursor.after, cursor.before` makes the rule show directly in the code.
+
+A common mistake is forgetting the reversed storage. If `to_list` does not reverse `before`, the songs in front come out in reverse order. Conversely, if you keep `before` in the original order and attach with `list.append(before, [current])`, the result is right, but every one-step move copies the whole front part, so skipping through 16,000 songs takes O(n^2) (`cost-model-immutable-structures`). If `previous` does not put the old focus onto `after`, a song disappears from the list. Check against the rule that an operation that moves the cursor must never lose or add songs.
+
+Every operation only builds a new cursor and leaves the original one unchanged, so an "undo" feature can be implemented just by keeping the old cursors (`persistent-data-structures`).

@@ -1,0 +1,12 @@
+title: Edit distance (Levenshtein distance)
+rubric:
+  R-07:
+    title: Store subproblem answers in a table and reuse them
+    description: "\"The cost of turning the first i characters into the first j characters\" is stored in a table (a list holding the previous row, or a Dict) and read back from it."
+  R-13:
+    title: Handle strings by character (grapheme)
+    description: Split with `string.to_graphemes` so that characters spanning several bytes, such as Hangul, still count as one character.
+  R-09:
+    title: No let assert or panic
+    description: Express the possibility of failure in the types.
+    message: let assert or panic was used.

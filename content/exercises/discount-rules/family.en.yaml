@@ -1,0 +1,12 @@
+title: Applying discount rule functions in order
+rubric:
+  R-02:
+    title: The order of rule application is visible
+    description: The list of rules is applied one after another in a single fold, and each result becomes the input of the next rule.
+  R-05:
+    title: Rules are independent functions
+    description: Each discount rule is a small function that takes one value and returns one value, and the code that applies rules does not need to know what they contain.
+  R-09:
+    title: No let assert or panic
+    description: Cases like an empty list are handled as values too.
+    message: let assert or panic was used.

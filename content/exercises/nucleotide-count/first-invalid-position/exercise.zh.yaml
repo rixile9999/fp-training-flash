@@ -1,0 +1,30 @@
+title: 统计碱基数量：报告第一个错误的位置
+tests:
+  empty_strand_test: 空字符串时，四种碱基的数量都是 0
+  mixed_strand_test: 统计有效字符串中每种碱基的数量
+  reports_letter_and_index_test: 用 Error 报告错误字母及其位置（从 0 开始）
+  reports_first_of_many_test: 有多个错误字母时，报告最前面的那个
+  invalid_at_start_test: 第一个字母错误时报告位置 0
+  lowercase_is_invalid_test: 小写碱基同样报告为错误字母
+requirements:
+  R1: 输入有效时，返回包含四种碱基数量的字典
+  R2: 把错误字母和从 0 开始计数的位置作为 InvalidNucleotide 返回
+  R3: 有多个错误字母时，报告第一个
+hints:
+  1: "有两个错误字母时，还需要去看第二个吗？要知道位置，每个字母还需要带上什么？"
+  2: "`list.index_map` 会把每个元素和从 0 开始的位置一起传过来。`list.try_fold` 在第一个 `Error` 出现的地方就停止。"
+  3: "先把字母列表转成 `#(字母, 位置)` 对组成的列表，再从四种碱基都为 0 的字典开始，逐个折叠这些对。"
+  4: |
+    ```gleam
+    dna
+    |> string.to_graphemes
+    |> list.index_map(fn(letter, index) { #(letter, index) })
+    |> list.try_fold(zeros, fn(counts, pair) {
+      let #(letter, index) = pair
+      case dict.get(counts, letter) {
+        Ok(count) -> todo
+        Error(Nil) -> todo
+      }
+    })
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

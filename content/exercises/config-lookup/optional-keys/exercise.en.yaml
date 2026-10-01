@@ -1,0 +1,33 @@
+title: Tell missing settings from invalid ones
+tests:
+  get_int_or_reads_value_test: get_int_or reads an existing value as an integer
+  get_int_or_uses_default_when_missing_test: get_int_or uses the default when the key is missing
+  get_optional_int_missing_is_none_test: get_optional_int gives Ok(None) when the key is missing
+  get_optional_int_present_is_some_test: get_optional_int returns an existing value as Ok(Some(integer))
+  get_int_or_invalid_is_error_test: get_int_or returns NotAnInt for an invalid value instead of replacing it with the default
+  get_optional_int_invalid_is_error_test: get_optional_int returns NotAnInt for an invalid value instead of turning it into None
+  empty_value_is_not_missing_test: An empty string value is NotAnInt, not a missing key
+requirements:
+  R1: A missing key gives Ok(None), an existing integer gives Ok(Some)
+  R2: The default is used only for a missing key
+  R3: A key that exists but is not an integer always gives NotAnInt
+hints:
+  1: "When the `workers` setting is not there at all, and when it says `\"many\"`, is it OK to show the operator the same result?"
+  2: "`Result(Option(Int), e)` tells three cases apart: `Ok(Some(n))` means there is a value, `Ok(None)` means there is no value (which is fine), and `Error(e)` means the value is invalid. `option.unwrap(opt, default)` uses the default only for `None`."
+  3: "In `get_optional_int`, split the result of `dict.get` with `case` and send only the missing key to `Ok(None)`. `get_int_or` can call `get_optional_int` and apply the default only to the `Option` inside `Ok`."
+  4: |
+    ```gleam
+    case dict.get(config, key) {
+      Error(Nil) -> todo
+      Ok(value) ->
+        case int.parse(value) {
+          Ok(number) -> todo
+          Error(Nil) -> todo
+        }
+    }
+
+    // get_int_or
+    get_optional_int(config, key)
+    |> result.map(todo)
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

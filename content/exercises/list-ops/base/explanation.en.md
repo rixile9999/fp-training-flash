@@ -1,0 +1,7 @@
+All three functions have the same shape: "walk through the list once from the front and build up a result". So once you get `foldl` right, the others are just a matter of plugging in a different folding function (`fold-universality`).
+
+When `foldl` meets `[first, ..rest]`, it **first** updates the accumulator with `function(initial, first)`, then moves on to `rest` carrying that value. The recursive call is the last thing the function does, so it is tail recursive, and the stack does not grow even with hundreds of thousands of elements (`accumulators-and-tail-recursion`). If you instead fold the rest first, as in `function(foldl(rest...), first)`, accumulation starts from the last element and you get `"cba"` instead of `"abc"`. That is how `foldr` behaves.
+
+For `reverse`, start from an empty list and put each element **at the front**. Prepending, `[item, ..reversed]`, shares the existing list as is, so it takes one step no matter how many elements there are, and the whole thing is O(n).
+
+A common mistake is appending to the end, as in `append(reverse(rest), [first])`. The result is correct, but appending to an immutable list means copying the entire front list, so reversing n elements takes 1 + 2 + ... + n, that is O(n^2), copies. With 200,000 elements that is about 20 billion, which exceeds the time limit. The key point of the cost model of immutable lists is "prepending is cheap, appending is expensive" (`cost-model-immutable-structures`).

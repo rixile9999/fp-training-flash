@@ -1,0 +1,114 @@
+title: 可能不存在的值——Option
+blocks:
+  intro:
+    markdown: |-
+      其他语言中的 `null` 会把“没有值”悄悄塞进任何地方，最终引发 NPE（空引用错误）。Gleam **没有** `null`。取而代之的是 **`Option(a)`**，它把“可能有，也可能没有”直接写进类型里。
+
+      `Option(a)` 是只有两种形态的自定义类型（就是 U4 中见过的 variant）：
+
+      - `Some(值)`——**有**值
+      - `None`——**没有**值
+
+      用 `import gleam/option.{type Option, None, Some}` 导入后使用。
+  some-shape:
+    prompt: '`find_nickname("lucy")` 会查找并返回昵称。这个值是什么形态？'
+    code: |-
+      import gleam/option.{type Option, Some}
+
+      fn find_nickname(name: String) -> Option(String) {
+        case name {
+          "lucy" -> Some("露西")
+          _ -> Some("?")
+        }
+      }
+
+      // find_nickname("lucy") 是什么？
+    choices:
+      - '`Some("露西")`'
+      - '`"露西"`'
+      - '`None`'
+      - '`Ok("露西")`'
+    feedback:
+      correct: '没错！在 `Option` 中，值不会直接裸露出来，而是被包在 `Some(...)` 里——`Some("露西")`。'
+      choices:
+        "1": '值确实是 "露西"，但因为是 `Option` 类型，它会被包在 `Some` 里返回。要取出它，需要模式匹配。'
+        "2": '`None` 是*没有*昵称时的形态。这里 "lucy" 分支找到了值。'
+        "3": '`Ok` 是 `Result` 的构造器。`Option` 用的是 `Some`/`None`。'
+  none-shape:
+    prompt: '把同一个函数改成找不到昵称时（`_` 分支）返回 `None`。`find_nickname("bob")` 的值是？'
+    code: |-
+      import gleam/option.{type Option, None, Some}
+
+      fn find_nickname(name: String) -> Option(String) {
+        case name {
+          "lucy" -> Some("露西")
+          _ -> None
+        }
+      }
+
+      // find_nickname("bob") 是什么？
+    choices:
+      - '`None`'
+      - '`Some("bob")`'
+      - '`""`'
+      - '`Nil`'
+    feedback:
+      correct: '完全正确！"bob" 落入 `_` 分支，得到 `None`——明确地表示“没有值”。'
+      choices:
+        "1": '`bob` 没有对应的昵称，所以选中 `_` 分支——是 `None`，不是 `Some`。'
+        "2": '空字符串 `""` 也是一个实实在在*存在*的值。“没有”要用 `None` 表示。'
+        "3": '`Nil` 是另一种类型（空值）。`Option` 中的“没有”是 `None`。'
+  pattern-match:
+    markdown: |-
+      要区分是 `Some` 还是 `None` 并取出里面的值，就**用 `case` 分支**。在 `Some(x)` 分支中，内部的值会绑定到名字 `x` 上。`Option` 也只有两个 variant，所以和 U4 的穷尽性检查一样——必须**同时**处理 `Some` 和 `None` 才能编译通过。
+
+      ```gleam
+      case nickname {
+        Some(nick) -> "你好，" <> nick <> "！"
+        None -> "你好，客人！"
+      }
+      ```
+  case-none:
+    prompt: '用上面的模式写成 `greet` 函数，`greet(None)` 的值是？'
+    code: |-
+      import gleam/option.{type Option, None, Some}
+
+      fn greet(nickname: Option(String)) -> String {
+        case nickname {
+          Some(nick) -> "你好，" <> nick <> "！"
+          None -> "你好，客人！"
+        }
+      }
+
+      // greet(None) 是什么？
+    choices:
+      - '`"你好，客人！"`'
+      - '`"你好，！"`'
+      - '`None`'
+      - '编译错误'
+    feedback:
+      correct: '没错！输入是 `None`，所以选中 `None` 分支，结果是 "你好，客人！"。'
+      choices:
+        "1": '`None` 里没有内部的值——不会走到 `Some(nick)` 分支，所以不会产生用到 `nick` 的结果。'
+        "2": '`case` 返回的不是匹配的输入，而是分支的*结果*——是 "你好，客人！"，不是 `None`。'
+        "3": '`Some` 和 `None` 都处理了，没有遗漏，所以能正常编译。'
+  unwrap:
+    markdown: |-
+      每次需要“有值就用这个值，没有就用默认值”时都写 `case`，未免太繁琐。`option.unwrap(opt, 默认值)` 用一行就能完成这个模式：如果是 `Some(x)` 就返回 `x`，如果是 `None` 就返回默认值。
+  unwrap-none:
+    prompt: '`option.unwrap` 的结果是？'
+    code: |-
+      import gleam/option.{None}
+
+      option.unwrap(None, "匿名")
+    choices:
+      - '`"匿名"`'
+      - '`None`'
+      - '`Some("匿名")`'
+      - '`""`'
+    feedback:
+      correct: '完全正确！因为是 `None`，所以直接返回默认值 "匿名"——`unwrap` 会拆掉包装，给你里面的裸值。'
+      choices:
+        "1": '`unwrap` 返回的是拆掉 `Option` 包装后的裸值——是默认值 "匿名"，不是 `None`。'
+        "2": '`unwrap` 的结果不再是 `Option`——不会再用 `Some` 包起来。'
+        "3": '默认值给的是 "匿名"，所以结果是 "匿名"，不是空字符串。'

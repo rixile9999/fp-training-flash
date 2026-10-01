@@ -1,0 +1,31 @@
+title: 记录被拒绝的事件，同时构建账户状态
+tests:
+  apply_event_deposit_test: 向未销户的账户存款，返回包在 Ok 中的新账户
+  apply_event_insufficient_test: 超过余额的取款被拒绝，并带上请求金额和余额
+  apply_event_closed_first_test: 已销户账户的取款，无论余额多少都以 AccountClosed 拒绝
+  replay_collects_rejections_test: 收集被拒绝的事件，其余事件照常应用
+  replay_continues_after_rejection_test: 拒绝之后仍继续应用后面的事件
+  replay_rejections_in_order_test: 拒绝列表按发生顺序排列
+requirements:
+  R1: apply_event 成功时返回 Ok(新账户)，违反规则时返回 Error(原因)
+  R2: 针对已销户账户的所有事件都以 AccountClosed 拒绝
+  R3: replay 跳过被拒绝的事件继续执行，并按顺序收集拒绝原因
+hints:
+  1: "处理单个事件的结果，要么是“新账户”，要么是“拒绝原因”。要用一个类型同时表示这两者，需要什么？"
+  2: "用 `Result(Account, Rejection)` 区分成功和拒绝，再把 `list.fold` 的累加器设为 `#(Account, List(Rejection))`，就能把账户和拒绝记录一起带着走。"
+  3: "在 `apply_event` 中最先检查账户是否已销户。`replay` 中，如果 `apply_event` 的结果是 `Ok` 就更新账户；如果是 `Error`，账户保持不变，只记录原因。"
+  4: |
+    ```gleam
+    pub fn replay(events: List(Event)) -> #(Account, List(Rejection)) {
+      let #(account, rejections) =
+        list.fold(events, #(Account(0, True), []), fn(acc, event) {
+          let #(account, rejections) = acc
+          case apply_event(account, event) {
+            Ok(next) -> todo
+            Error(reason) -> todo
+          }
+        })
+      todo
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

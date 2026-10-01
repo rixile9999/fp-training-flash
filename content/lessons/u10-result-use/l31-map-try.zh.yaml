@@ -1,0 +1,84 @@
+title: result.map 与 result.try
+blocks:
+  intro:
+    markdown: |-
+      在铺平阶梯之前，先来认识两个工具。它们的共同点是**“遇到 Error 就原样传下去，遇到 Ok 就对里面的值应用函数”**，区别在于所应用函数的返回类型。
+
+      - `result.map(结果, fn(x) { ... })`——回调返回一个**普通值**，map 会帮你把它重新包装成 `Ok(...)`。
+      - `result.try(结果, fn(x) { ... })`——回调返回**另一个 Result**，try 直接把它当作结果（不会双重包装）。
+  map-ok:
+    prompt: '`result.map` 在遇到 Ok 时会对里面的值应用函数，再重新包装成 Ok。这个值是？'
+    choices:
+      - '`Ok(10)`'
+      - '`10`'
+      - '`Ok(5)`'
+      - '`Ok(Ok(10))`'
+    feedback:
+      correct: '完全正确！对 `Ok(5)` 里的 5 应用 `* 2` 得到 10，再重新包装成 `Ok`，得到 `Ok(10)`。'
+      choices:
+        "1": 'map 会把结果重新包装成 `Ok`——是 `Ok(10)`，不是光秃秃的 `10`。'
+        "2": '函数 `x * 2` 会被应用，所以里面的值会变——是 `Ok(10)`，不是 `Ok(5)`。'
+        "3": '回调返回的是普通值（`10`），所以只有一层包装——是 `Ok(10)`，不是 `Ok(Ok(10))`。'
+  map-error:
+    prompt: '`Error` 进入 `result.map` 时，回调不会被调用，Error 会原样通过。这个值是？'
+    choices:
+      - '`Error("nope")`'
+      - '`Ok("nope")`'
+      - '`Error(0)`'
+      - '`"nope"`'
+    feedback:
+      correct: '答对了！遇到 Error 时，回调 `x * 2` 根本不会执行，`Error("nope")` 原封不动地出来。'
+      choices:
+        "1": '错误不会变成 `Ok`——map 遇到 Error 时不动它，直接原样传下去。'
+        "2": '错误里面的值也不会变。`x * 2` 只作用于 Ok 里面的值——Error 只是通过而已。'
+        "3": 'Result 里的值不会“光着”出来。包装不会被拆掉，结果仍是 `Error("nope")`。'
+  try-chains:
+    markdown: |-
+      现在轮到核心工具 `result.try`。当**回调返回 Result** 时使用它——这样就能把一个个返回 Result 的操作串起来。“Ok 就交给回调继续，Error 就立即短路（short-circuit）”，恰好替代了阶梯里的 `Error(e) -> Error(e)`。
+
+      ```gleam
+      result.try(int.parse("4"), fn(n) {
+        result.try(int.parse("6"), fn(m) {
+          Ok(n + m)
+        })
+      })
+      ```
+  try-chain-ok:
+    prompt: '上面嵌套调用 `result.try` 的值是？（`int.parse` 返回 `Result(Int, Nil)`）'
+    choices:
+      - '`Ok(10)`'
+      - '`10`'
+      - '`Ok(Ok(10))`'
+      - '`Error(Nil)`'
+    feedback:
+      correct: '完全正确！`int.parse("4")` = `Ok(4)`，于是以 `n` = 4 继续；`int.parse("6")` = `Ok(6)`，于是 `m` = 6；最后 `Ok(4 + 6)` = `Ok(10)`。'
+      choices:
+        "1": '最后一行是 `Ok(n + m)`，所以结果包装在 `Ok` 里——是 `Ok(10)`，不是 `10`。'
+        "2": '`try` 直接使用回调返回的 Result（不会双重包装）。最后一层是 `Ok(10)`，所以整体也是 `Ok(10)`。'
+        "3": '两次解析都成功，不会短路——是 `Ok(10)`，不是 `Error(Nil)`。'
+  try-chain-shortcircuit:
+    prompt: '同样的结构，如果第一次解析失败呢？`int.parse("x")` 是 `Error(Nil)`。这个值是？'
+    choices:
+      - '`Ok(6)`'
+      - '`Error(Nil)`'
+      - '`Ok(Error(Nil))`'
+      - '`Ok(0)`'
+    feedback:
+      correct: '答对了！第一个 `int.parse("x")` 是 `Error(Nil)`，`try` 立即短路——回调不会执行，`Error(Nil)` 原样成为结果。'
+      choices:
+        "0": '第一步失败时，内层回调根本不会执行，连 `int.parse("6")` 都到不了——结果是 `Error(Nil)`。'
+        "2": '被短路的 Error 不会被包进 `Ok`。try 会把 Error 原样传下去，得到 `Error(Nil)`。'
+        "3": '失败不会被默认值掩盖——错误原样留在类型里，以 `Error(Nil)` 的形式出来。'
+  map-vs-try:
+    prompt: '当回调**本身就返回另一个 Result** 时，如果用 `result.map` 会怎样？例如：`result.map(int.parse("4"), fn(n) { Ok(n + 1) })`'
+    choices:
+      - '`Ok(5)`——map 会自动展平成一层'
+      - '`Ok(Ok(5))`——map 总会把回调的结果再包一层 Ok，形成双重包装'
+      - 编译错误——map 不能接收返回 Result 的回调
+      - '`Error(Nil)`——混入 Result 就视为失败'
+    feedback:
+      correct: '答对了！不管回调返回什么，map 都会再包一层 `Ok`。如果回调已经返回 `Ok(5)`，就会得到双重包装的 `Ok(Ok(5))`——这种时候应该用 `try`。'
+      choices:
+        "0": '展平是 `try` 的工作。map 总会再套一层，所以这里得到的是 `Ok(Ok(5))`。'
+        "2": '可以通过编译——只是会违背你的本意，得到 `Ok(Ok(5))` 这样双重包装的类型。'
+        "3": '混入 Result 并不会被视为失败。得到的是包了两层的成功值 `Ok(Ok(5))`。'

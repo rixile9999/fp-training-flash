@@ -1,0 +1,30 @@
+tests:
+  parses_valid_line_test: Turn a valid line into an OrderLine
+  trims_fields_test: Trim the surrounding whitespace of each field before interpreting it
+  wrong_field_count_test: If there are not exactly 3 fields, WrongFieldCount holds the actual count
+  invalid_order_id_test: If the order ID is not an integer, InvalidOrderId holds that field
+  empty_sku_test: A SKU of only whitespace is EmptySku
+  zero_quantity_test: A quantity of 0 is InvalidQuantity
+  non_numeric_quantity_test: A non-numeric quantity puts the trimmed field in InvalidQuantity
+  first_error_wins_test: If several fields are wrong, only the first error is reported (order ID, then SKU, then quantity)
+requirements:
+  R1: Interpret the three comma-separated fields, trimmed, as an OrderLine
+  R2: Return the defined error value for each field
+  R3: Check field count, order ID, SKU, then quantity, and return only the first error
+hints:
+  1: "For what reasons can each field fail? Once one fails, do you still need to look at the fields after it?"
+  2: "`use x <- result.try(r)` moves on to the next line if `r` is `Ok(x)`, and ends the whole function with `Error(e)` if it is `Error(e)`. `result.replace_error` lets you turn the `Error(Nil)` from `int.parse` into the error you want."
+  3: "Split on commas, trim, and use `case` to separate the `[a, b, c]` pattern from everything else. Write a small function per field that returns `Result(value, ParseError)` and chain them in order with `use`."
+  4: |
+    ```gleam
+    case line |> string.split(",") |> list.map(string.trim) {
+      [id_field, sku_field, quantity_field] -> {
+        use order_id <- result.try(parse_order_id(id_field))
+        use sku <- result.try(todo)
+        use quantity <- result.try(todo)
+        Ok(OrderLine(order_id:, sku:, quantity:))
+      }
+      fields -> todo
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

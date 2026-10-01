@@ -1,0 +1,28 @@
+title: 选出优等生名单——包括分界处的同分者
+tests:
+  empty_class_test: 没有学生时返回空名单
+  top_n_test: 按分数从高到低选出 n 名学生的姓名
+  includes_ties_at_cutoff_test: 与第 n 名学生分数相同的学生全部列入名单
+  zero_limit_test: n 为 0 时返回空名单
+  limit_exceeds_count_test: n 大于学生人数时选出所有学生
+  tied_names_in_order_test: 分数相同的学生按姓名字典序排列
+requirements:
+  R1: 按分数降序排列，同分则按姓名升序
+  R2: 与第 n 名同分的学生即使超出 n 人也要包括在内
+  R3: n 小于等于 0 时为空名单，大于学生人数时为全体学生
+hints:
+  1: "用 `list.take` 截取 n 名学生时，如果第 n 名和第 (n+1) 名学生分数相同，会发生什么？"
+  2: "`list.take_while` 在条件为真时从前往后取元素，在条件第一次为假的地方停下。`list.last` 以 `Result` 的形式给出列表的最后一个元素。"
+  3: "排序后截取前 n 名，把其中最后一名学生的分数作为分数线。然后从排好序的完整列表中，在分数不低于分数线时一直往后取。先处理截取出的列表为空的情况。"
+  4: |
+    ```gleam
+    let sorted = list.sort(students, by_rank_order)
+    case list.last(list.take(sorted, n)) {
+      Error(Nil) -> []
+      Ok(cutoff) ->
+        sorted
+        |> list.take_while(fn(student) { todo })
+        |> list.map(fn(student) { student.name })
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

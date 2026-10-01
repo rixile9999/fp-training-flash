@@ -1,0 +1,12 @@
+title: 用拉链在树中移动
+rubric:
+  R-02:
+    title: 路径信息体现在类型中
+    description: 把返回父节点所需的信息（方向、父节点的值、兄弟节点）放进一个 crumb，移动函数只负责压入或取出 crumb。
+  R-05:
+    title: 复用返回的操作
+    description: 恢复整棵树时复用已有的移动函数，例如反复调用 up。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 用类型来表达可能的失败。
+    message: 使用了 let assert 或 panic。

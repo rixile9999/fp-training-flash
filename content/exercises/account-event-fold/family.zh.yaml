@@ -1,0 +1,12 @@
+title: 折叠事件，构建账户状态
+rubric:
+  R-02:
+    title: 将状态转换与遍历分开
+    description: 有一个处理单个事件的纯状态转换函数，另有一个函数把它折叠（fold）到事件列表上。
+  R-05:
+    title: 每种事件一个分支
+    description: 状态转换函数按事件类型各用一个 case 分支处理，不掺杂遍历或记录管理。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 被拒绝的事件也作为值来处理。余额不足时不让程序停止。
+    message: 使用了 let assert 或 panic。

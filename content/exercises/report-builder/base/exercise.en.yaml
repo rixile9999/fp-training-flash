@@ -1,0 +1,35 @@
+tests:
+  parse_line_valid_test: A valid line is parsed into a Sale
+  parse_line_rejects_non_number_test: Returns an Error if the amount is not an integer
+  parse_line_rejects_wrong_field_count_test: Returns an Error if splitting on commas does not give exactly two pieces
+  total_by_category_sums_same_category_test: Adds up the amounts of the same category
+  total_by_category_sorted_by_name_test: The aggregated result is in ascending order of category name
+  total_by_category_many_categories_sorted_test: Sorts by name in ascending order even with many categories
+  format_row_test: 'Turns one row into a "category: amount" string'
+  build_report_test: Builds a per-category report from multi-line input
+  build_report_skips_invalid_lines_test: Invalid lines do not appear in the report
+requirements:
+  R1: parse_line accepts only the "category,amount" format
+  R2: total_by_category returns the total per category in name order
+  R3: format_row turns one row into a string in the given format
+  R4: build_report composes the three steps and skips invalid lines
+hints:
+  1: "Before one line of the report is produced, what shapes does the data pass through? Try writing them down in order: string, record, list of totals, and string again."
+  2: "`list.filter_map` keeps only the `Ok` values and drops the `Error`s. To collect values under the same key, use `dict.upsert` together with `list.fold`."
+  3: "Finish each of the three helper functions first, and have `build_report` do nothing but connect the three with pipes (`|>`)."
+  4: |
+    ```gleam
+    pub fn parse_line(line: String) -> Result(Sale, Nil) {
+      case string.split(line, ",") {
+        [category, amount] -> todo
+        _ -> Error(Nil)
+      }
+    }
+
+    pub fn build_report(lines: List(String)) -> List(String) {
+      lines
+      |> list.filter_map(parse_line)
+      |> todo
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

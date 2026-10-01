@@ -1,0 +1,22 @@
+title: Fix a transcription that silently drops invalid nucleotides
+tests:
+  valid_strand_test: A valid strand is converted to RNA and returned as Ok
+  empty_strand_test: An empty strand is Ok("")
+  invalid_in_middle_test: Returns Error(Nil) if there is an invalid character in the middle
+  all_invalid_test: Even if every character is invalid, the result is Error(Nil), not Ok("")
+  rna_base_rejected_test: Returns Error(Nil) if U, which does not occur in DNA, is mixed in
+requirements:
+  R1: Return the conversion of a valid strand as Ok
+  R2: Error(Nil) if there is even one invalid character
+hints:
+  1: "What does the current code return for `\"ACXT\"`? Is the length of the result the same as the length of the input?"
+  2: "`list.filter_map` throws away the elements that produced an `Error` and carries on. `list.try_map` stops when an `Error` comes out and returns that `Error`."
+  3: "Replace the function that throws things away with one that passes failures on, and change the last step, which always wraps the result in `Ok`, so that it only joins the pieces on success."
+  4: |
+    ```gleam
+    dna
+    |> string.to_graphemes
+    |> list.try_map(complement)
+    |> todo
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

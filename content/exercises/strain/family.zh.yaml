@@ -1,0 +1,13 @@
+title: 实现按条件过滤的 keep 和 discard
+rubric:
+  R-04:
+    title: 不用标准 filter，自己实现
+    description: 本题的目的是用递归亲手实现过滤。不要使用 `list.filter`、`list.partition`。
+    message: 使用了 list.filter 系列函数。请用递归自己实现。
+  R-07:
+    title: 复用而不重复
+    description: 像 discard 这样只是条件与 keep 相反的函数，不重新写递归，而是用 keep 加上条件取反来实现。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 用类型表达失败的可能性。
+    message: 使用了 let assert 或 panic。

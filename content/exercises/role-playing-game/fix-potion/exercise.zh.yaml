@@ -1,0 +1,24 @@
+title: 修复法力药水的 bug
+tests:
+  restores_mana_test: 有法力值的玩家按药水的量增加法力值
+  caps_at_max_test: 法力值不超过 100
+  no_mana_pool_returns_none_test: 法力值为 None 的玩家不能喝药水，返回 None
+  empty_mana_can_drink_test: 法力值为 Some(0) 的玩家可以喝药水
+  keeps_other_fields_test: 喝了药水后名字、等级和生命值保持不变
+requirements:
+  R1: 有法力值时最多恢复到 100
+  R2: 没有法力值时返回 None
+hints:
+  1: "传入法力值为 `None` 的玩家时，现在的代码会返回什么？在 `option.unwrap` 的下一行，“原来是 `None`”这一信息还在吗？"
+  2: "`option.map(opt, f)` 对 `Some(x)` 返回 `Some(f(x))`，对 `None` 返回 `None`。这就是“有值时才改变，没有就保持没有”的形状。"
+  3: "不要用默认值把值取出来，而是把 `player.mana` 分成 `Some` 和 `None`。只在 `Some` 时构造新玩家并包进 `Some`。"
+  4: |
+    ```gleam
+    pub fn drink_potion(player: Player, amount: Int) -> Option(Player) {
+      case player.mana {
+        Some(mana) -> todo
+        None -> todo
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

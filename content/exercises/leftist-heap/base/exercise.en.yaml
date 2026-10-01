@@ -1,0 +1,31 @@
+tests:
+  make_puts_higher_rank_left_test: make puts the child with the higher rank on the left
+  insert_then_find_min_test: After inserting several values, the smallest one is at the top
+  drains_in_ascending_order_test: Repeatedly taking out the minimum gives ascending order
+  make_rank_from_shorter_side_test: The rank of a new node is the right child's rank + 1
+  delete_min_empty_test: delete_min on an empty heap returns Error(Nil)
+  keeps_duplicates_test: If the same value is inserted several times, every copy can be taken out
+  merge_keeps_all_values_test: Merging two heaps keeps the values from both
+  stays_leftist_test: Even after inserting 16 values in ascending order, every node keeps the leftist property
+requirements:
+  R1: At every node, rank(left) >= rank(right) and rank = rank(right) + 1
+  R2: merge and insert lose no values and keep min-heap order
+  R3: delete_min is the heap without the minimum, or Error(Nil) for an empty heap
+  R4: merge, insert and delete_min are O(log n)
+hints:
+  1: "When you merge two heaps, whose value should the new root be? Once the root is decided, how can you turn the three remaining pieces (the root's two children and the other heap) into two children?"
+  2: "A leftist heap keeps the right branch short, so merge only walks down the right branch. Since rank is the length of the right branch, rank(right) is O(log n). If you put the side with the smaller rank on the right every time you build a node, this property holds."
+  3: "`make` compares the ranks of the two children, puts the larger one on the left and sets the rank to (smaller rank + 1). `merge` keeps the left child of the heap with the smaller root as is, and passes it to `make` together with the result of recursively merging its right child with the other heap. `insert` and `delete_min` are a single merge each."
+  4: |
+    ```gleam
+    pub fn merge(a: Heap, b: Heap) -> Heap {
+      case a, b {
+        Empty, heap | heap, Empty -> heap
+        Node(value: x, left: left_a, right: right_a, ..), Node(value: y, ..)
+          if x <= y
+        -> todo // make(x, ?, ?)
+        _, Node(value: y, left: left_b, right: right_b, ..) -> todo
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

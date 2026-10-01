@@ -1,0 +1,27 @@
+title: Summarize deployment logs
+tests:
+  empty_entries_test: With no logs, every count is 0 and the first critical message is None
+  counts_by_level_test: Counts the total, warning and critical logs
+  records_critical_message_test: Records the message of a critical log
+  keeps_first_critical_test: With several critical logs, records the message that came first
+  total_includes_debug_test: Debug logs are included in the total too
+  no_critical_is_none_test: With no critical logs, the first critical message is None
+requirements:
+  R1: total is the number of all logs, warnings the number of Warn logs, and criticals the number of Critical logs
+  R2: first_critical is the message of the first Critical log, or None if there is none
+hints:
+  1: "Each time you look at one log, which fields of the summary change? If a critical message is already recorded, what should happen when you meet a new critical log?"
+  2: "The accumulator of `list.fold` can be a record. Use a record update like `Summary(..summary, warnings: summary.warnings + 1)` to build a new summary with just one field changed."
+  3: "Start from the empty summary `Summary(0, 0, 0, None)`, increase `total` for every log, and use `case entry.level` to increase the field for each level. Fill in `first_critical` only while it is still `None`."
+  4: |
+    ```gleam
+    list.fold(entries, Summary(0, 0, 0, None), fn(summary, entry) {
+      let summary = Summary(..summary, total: summary.total + 1)
+      case entry.level {
+        Debug | Info -> summary
+        Warn -> todo
+        Critical -> todo
+      }
+    })
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

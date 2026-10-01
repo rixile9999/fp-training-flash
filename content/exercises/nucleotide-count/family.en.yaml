@@ -1,0 +1,12 @@
+title: Count nucleotides
+rubric:
+  R-02:
+    title: The pipeline shows the intent
+    description: The flow of turning the string into a list of letters and counting them with a single fold reads in the order it runs.
+  R-05:
+    title: Calculation logic is separated
+    description: The step that accounts for one letter is split into a small named function, and the initial dictionary with all four nucleotides set to 0 decides, in one place, both "the keys in the result" and "the valid letters".
+  R-09:
+    title: No let assert or panic
+    description: Invalid input is returned as an Error value.
+    message: let assert or panic was used.

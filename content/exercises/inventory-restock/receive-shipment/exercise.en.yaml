@@ -1,0 +1,31 @@
+title: Recording incoming shipments
+tests:
+  no_deliveries_test: "With no deliveries, the items stay the same"
+  single_delivery_test: "The item's stock grows by the delivered quantity"
+  keeps_undelivered_items_test: "Items that received no delivery also stay in the result unchanged"
+  sums_repeated_deliveries_test: "Several deliveries of the same item are all added up"
+  ignores_unknown_sku_test: "Deliveries for items not in the list are ignored"
+  keeps_order_and_reserved_test: "The order of items and the reserved quantities do not change"
+requirements:
+  R1: "The delivered quantity is added to on_hand of the item with that sku"
+  R2: "Deliveries with the same sku are summed"
+  R3: "Every item is kept in the original order, and reserved is left unchanged"
+  R4: "Deliveries for skus not in the list are ignored"
+hints:
+  1: "Do you need to scan the whole delivery list from the start for every item? What should happen when the same sku arrives twice?"
+  2: "`dict.upsert` receives `None` if the key is missing or `Some(existing value)` if it is present, and stores a new value. With `list.fold` you can fold the deliveries into a dictionary of totals per sku."
+  3: "Try splitting it into two steps. First turn the deliveries into a dictionary of total quantity per sku. Then go through the items with `list.map` and add the quantity you find in the dictionary."
+  4: |
+    ```gleam
+    let totals =
+      list.fold(deliveries, dict.new(), fn(acc, delivery) {
+        dict.upsert(acc, delivery.sku, fn(existing) { todo })
+      })
+    list.map(items, fn(item) {
+      case dict.get(totals, item.sku) {
+        Ok(quantity) -> todo
+        Error(Nil) -> item
+      }
+    })
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

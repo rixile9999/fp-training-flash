@@ -1,0 +1,12 @@
+title: Moving around inside a tree with a zipper
+rubric:
+  R-02:
+    title: The path information shows in the types
+    description: Each crumb holds what is needed to return to the parent (direction, parent value, sibling), and the movement functions only push or pop crumbs.
+  R-05:
+    title: Reuse the move back up
+    description: Rebuild the whole tree by reusing the existing movement functions, for example by repeating up.
+  R-09:
+    title: No let assert or panic
+    description: Express the possibility of failure in the types.
+    message: let assert or panic was used.

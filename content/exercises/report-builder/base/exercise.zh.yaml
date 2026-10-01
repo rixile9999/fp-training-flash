@@ -1,0 +1,35 @@
+tests:
+  parse_line_valid_test: 正确的行被解析为 Sale
+  parse_line_rejects_non_number_test: 金额不是整数时返回 Error
+  parse_line_rejects_wrong_field_count_test: 按逗号分割后不是两段时返回 Error
+  total_by_category_sums_same_category_test: 把同一类别的金额相加
+  total_by_category_sorted_by_name_test: 汇总结果按类别名称升序排列
+  total_by_category_many_categories_sorted_test: 即使类别很多，也按名称升序排列
+  format_row_test: '把一行变成 "类别: 金额" 形式的字符串'
+  build_report_test: 用多行输入生成按类别的报表
+  build_report_skips_invalid_lines_test: 错误的行不会出现在报表中
+requirements:
+  R1: parse_line 只接受“类别,金额”格式
+  R2: total_by_category 按名称顺序返回每个类别的合计
+  R3: format_row 把一行变成规定格式的字符串
+  R4: build_report 组合三个步骤，并跳过错误的行
+hints:
+  1: "报表的一行生成之前，数据经过了哪些形状？按顺序写下来试试：字符串、记录、合计列表，再回到字符串。"
+  2: "`list.filter_map` 只保留 `Ok` 的值，丢掉 `Error`。按同一个键收集值时，把 `dict.upsert` 和 `list.fold` 一起使用。"
+  3: "先分别完成三个辅助函数，`build_report` 只用管道（`|>`）把三个函数连起来即可。"
+  4: |
+    ```gleam
+    pub fn parse_line(line: String) -> Result(Sale, Nil) {
+      case string.split(line, ",") {
+        [category, amount] -> todo
+        _ -> Error(Nil)
+      }
+    }
+
+    pub fn build_report(lines: List(String)) -> List(String) {
+      lines
+      |> list.filter_map(parse_line)
+      |> todo
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

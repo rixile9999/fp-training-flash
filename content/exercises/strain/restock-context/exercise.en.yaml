@@ -1,0 +1,28 @@
+title: Assemble condition functions to pick products to restock
+tests:
+  both_requires_both_conditions_test: A condition made with both is true only when both conditions are true
+  negate_flips_condition_test: A condition made with negate is the opposite of the original
+  needs_restock_finds_low_stock_test: Picks, in order, the active products whose stock is below the threshold
+  discontinued_finds_inactive_test: Picks only the discontinued products
+  threshold_is_exclusive_test: A product whose stock equals the threshold is not restocked
+  needs_restock_skips_inactive_test: A discontinued product is not restocked even if its stock is low
+  both_is_false_when_only_second_holds_test: If only the second condition is true, both gives false
+requirements:
+  R1: Take condition functions and return a new condition function
+  R2: Only products that are active and whose stock is below the threshold are restocked
+  R3: The list of discontinued products
+hints:
+  1: "The return type of `both`, `fn(t) -> Bool`, is a function, not a value. What should that function compute when it receives one element?"
+  2: "An anonymous function `fn(item) { ... }` can use the outer function's arguments `p` and `q` as they are. You can return a function built this way as the result."
+  3: "Finish `both` and `negate` first, then find the products to restock by passing `keep` the condition `both(is_active, is_below_threshold)`. Build the discontinued list with `negate`."
+  4: |
+    ```gleam
+    pub fn both(p: fn(t) -> Bool, q: fn(t) -> Bool) -> fn(t) -> Bool {
+      fn(item) { todo }
+    }
+
+    pub fn needs_restock(products: List(Product), threshold: Int) -> List(Product) {
+      keep(products, both(fn(p) { p.active }, todo))
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

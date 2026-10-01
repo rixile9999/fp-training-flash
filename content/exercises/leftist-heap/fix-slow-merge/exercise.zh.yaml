@@ -1,0 +1,26 @@
+title: 修复左偏堆：插入越多越慢的堆
+tests:
+  drains_in_ascending_order_test: 反复取出最小值，得到升序
+  make_moves_taller_child_left_test: 右子节点的 rank 更大时，make 把它移到左边
+  ascending_inserts_keep_right_spine_short_test: 依次插入 1 到 63 后，右分支也不超过 6 个节点
+  make_keeps_taller_child_left_test: 左子节点的 rank 更大时，make 保持原样
+  make_rank_from_shorter_side_test: 新节点的 rank 是较短一侧子节点的 rank + 1
+  stays_leftist_after_deletes_test: 执行 delete_min 之后，每个节点仍满足左偏性质
+requirements:
+  R1: 在每个节点上 rank(left) >= rank(right)，且 rank = rank(right) + 1
+  R2: 保持最小堆顺序
+  R3: merge、insert、delete_min 为 O(log n)
+hints:
+  1: "依次插入 0、1、2、……时，每个新值都沿哪条分支往下走？`make` 创建的节点的右分支长度会怎样变化？"
+  2: "merge 只沿右分支往下走。左偏性质（`rank(left) >= rank(right)`）成立时，右分支长度是 O(log n)；一旦被破坏，就可能长到 O(n)。"
+  3: "`merge`、`insert`、`delete_min` 都用 `make` 创建节点。只修改 `make` 即可：比较两个子节点的 rank，把较大的放在左边，rank 设为右侧（较小一侧）子节点的 rank + 1。"
+  4: |
+    ```gleam
+    pub fn make(value: Int, a: Heap, b: Heap) -> Heap {
+      case rank(a) >= rank(b) {
+        True -> Node(rank: todo, value: value, left: a, right: b)
+        False -> todo
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

@@ -1,0 +1,24 @@
+title: 修复余额记录函数的 bug
+tests:
+  apply_event_deposit_test: 存款会增加余额
+  apply_event_rejects_overdraft_test: 超过余额的取款会被忽略
+  history_single_event_test: 记录应用单个事件之后的余额
+  history_in_event_order_test: 余额记录与事件顺序相同
+  history_empty_test: 没有事件时，记录也为空
+  history_keeps_balance_on_rejected_test: 被忽略的取款也会记录当时的余额
+requirements:
+  R1: 每个事件都恰好记录一个余额，即应用该事件之后的余额
+  R2: 记录与事件顺序相同
+hints:
+  1: "手动跟踪一遍 `history([Deposited(100)])`。在 fold 中被加进列表的值，是应用事件之前的余额，还是之后的余额？"
+  2: "用加到列表前面（`[x, ..xs]`）的方式收集时，最后放入的值会排在最前面。记录每一步累加结果的 fold 也可以用 `list.scan` 来写。"
+  3: "bug 有两个，都在 `history` 里。检查被记录的值，以及 fold 结束后列表的顺序。`apply_event` 是正确的。"
+  4: |
+    ```gleam
+    list.fold(events, #(0, []), fn(acc, event) {
+      let #(balance, balances) = acc
+      let next = apply_event(balance, event)
+      #(next, todo)
+    })
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

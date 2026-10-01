@@ -1,0 +1,33 @@
+tests:
+  line_amount_bulk_test: A line ordering 10 or more items gets a 10% discount
+  line_amount_bulk_boundary_test: Exactly 10 items also qualifies for the bulk discount
+  subtotal_test: The subtotal is the sum of the discounted line amounts
+  shipping_fee_under_threshold_test: If the subtotal is under 50,000 won, shipping is 3,000 won
+  shipping_fee_free_at_threshold_test: If the subtotal is exactly 50,000 won, there is no shipping fee
+  shipping_fee_empty_test: If the subtotal is 0 won, there is no shipping fee
+  vat_test: VAT is 10%, and fractions of a won are dropped
+  invoice_total_test: The total is the sum of the subtotal, VAT and shipping fee
+requirements:
+  R1: line_amount computes the line amount and the bulk discount
+  R2: subtotal reuses line_amount
+  R3: shipping_fee contains only the shipping rule
+  R4: vat contains only the VAT rule
+  R5: invoice_total combines the step functions
+hints:
+  1: "How many different rules are inside the existing `invoice_total`? If you gave each rule a name, what would it be?"
+  2: "A pure calculation always returns the same value for the same input, so you can pull part of an expression out into a function and replace it with a call without changing the result."
+  3: "Move the rules into functions from the inside out: the amount of one line → the subtotal → shipping and VAT. Finally, make `invoice_total` call only those functions. The tests call each function separately."
+  4: |
+    ```gleam
+    pub fn subtotal(lines: List(Line)) -> Int {
+      lines
+      |> list.map(line_amount)
+      |> todo
+    }
+
+    pub fn invoice_total(lines: List(Line)) -> Int {
+      let amount = subtotal(lines)
+      amount + todo + todo
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

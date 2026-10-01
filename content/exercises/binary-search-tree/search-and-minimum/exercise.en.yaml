@@ -1,0 +1,37 @@
+title: Search and minimum in a binary search tree
+tests:
+  contains_found_test: Returns True when the value is in the tree
+  contains_missing_test: Returns False when the value is not in the tree
+  contains_in_empty_tree_test: No value is found in an empty tree
+  minimum_test: The minimum is the value of the leftmost node
+  minimum_of_empty_tree_test: The minimum of an empty tree is Error(Nil)
+  minimum_without_left_child_test: If the root has no left child, the root value is the minimum
+  many_lookups_in_large_tree_test: "40,000 lookups in a tree of 130,000 nodes finish within the time limit"
+requirements:
+  R1: contains tells whether the value is present
+  R2: minimum is the smallest value, or Error(Nil) for an empty tree
+  R3: Each comparison goes down into only one subtree
+hints:
+  1: "If the value you are looking for is smaller than the current node's value, can it be in the right subtree?"
+  2: "In a binary search tree, every value in the left subtree is less than or equal to the node's value, and every value on the right is greater. So a single comparison narrows the search to one side, and the cost is proportional to the tree's height."
+  3: "In `contains`, split into three cases by comparing the value you are looking for with the node's value, and recurse into only one subtree. For `minimum`, think about where in the tree the smallest value sits, and which pattern tells you that you have arrived there."
+  4: |
+    ```gleam
+    pub fn contains(tree: Tree, value: Int) -> Bool {
+      case tree {
+        Empty -> False
+        Node(data, _, _) if value == data -> True
+        Node(data, left, _) if value < data -> todo
+        Node(_, _, right) -> todo
+      }
+    }
+
+    pub fn minimum(tree: Tree) -> Result(Int, Nil) {
+      case tree {
+        Empty -> Error(Nil)
+        Node(data, Empty, _) -> todo
+        Node(_, left, _) -> todo
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

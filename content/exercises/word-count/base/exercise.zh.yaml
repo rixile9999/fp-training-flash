@@ -1,0 +1,31 @@
+tests:
+  one_word_test: 把一个单词计为 1 次
+  repeated_words_test: 同一个单词出现多次时累加次数
+  ignores_case_test: 大小写不同也算作同一个单词
+  punctuation_separates_words_test: 标点符号分隔单词，且不留在结果中
+  cramped_list_test: 只用逗号、没有空格连在一起的单词也要拆开
+  repeated_whitespace_is_not_a_word_test: 连续的空格、换行、制表符之间不计空单词
+  numbers_are_words_test: 数字也算作单词
+  empty_input_test: 空字符串得到空 dict
+requirements:
+  R1: 每个单词出现的次数
+  R2: 不区分大小写
+  R3: 所有不是字母或数字的字符都是分隔符，且没有空单词
+hints:
+  1: "`\"one,two\"` 和 `\"one  two\"` 各有几个单词？如果只按空格拆分，会得到什么结果？"
+  2: "用 `string.to_graphemes` 得到字符列表，把所有分隔符字符都换成一个空格，就能用一次 `string.split(\" \")` 完成拆分。连续的分隔符会产生空字符串片段。"
+  3: "试着把转小写、把分隔符换成空格、拆分、过滤空片段、在 dict 中计数这五个步骤用管道连起来。计数用 `list.fold` 和 `dict.upsert` 完成。"
+  4: |
+    ```gleam
+    input
+    |> string.lowercase
+    |> string.to_graphemes
+    |> list.map(fn(g) { todo })
+    |> string.concat
+    |> string.split(" ")
+    |> list.filter(todo)
+    |> list.fold(dict.new(), fn(counts, word) {
+      dict.upsert(counts, word, fn(previous) { todo })
+    })
+    ```
+  5: "现在可以打开完整讲解。看完讲解后，将用一道新题确认掌握程度。"

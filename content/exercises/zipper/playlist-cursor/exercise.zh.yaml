@@ -1,0 +1,37 @@
+title: 用列表拉链实现播放列表光标
+tests:
+  next_moves_forward_test: "next 移到下一首歌"
+  previous_at_first_song_fails_test: "在第一首歌上调用 previous 返回 Error(Nil)"
+  to_list_after_moves_test: "即使移动了光标，to_list 也按原来的歌曲顺序返回"
+  next_at_last_song_fails_test: "在最后一首歌上调用 next 返回 Error(Nil)"
+  previous_returns_to_earlier_song_test: "用 previous 往回走也不会丢失歌曲"
+  remove_moves_to_next_song_test: "删除当前歌曲后，下一首歌成为当前歌曲"
+  remove_last_song_moves_back_test: "删除最后一首歌后，前一首歌成为当前歌曲"
+  remove_only_song_fails_test: "只有一首歌时无法删除，返回 Error(Nil)"
+requirements:
+  R1: "next、previous 把光标移动一格，到头时返回 Error(Nil)"
+  R2: "to_list 按原来的歌曲顺序返回"
+  R3: "remove_current 移到下一首歌，没有时移到前一首歌，两者都没有时返回 Error(Nil)"
+  R4: "next、previous、remove_current 都是 O(1)"
+hints:
+  1: "要在 O(1) 内取出当前歌曲前面紧挨着的那首歌，那首歌必须位于 `before` 列表的哪一端？"
+  2: "列表拉链用两个列表把列表分成“焦点之前”和“焦点之后”。把前面的部分按逆序存放，让最近的元素排在最前面，那么移动光标时只需从一个列表取下表头、加到另一个列表的表头即可。只有在需要整个列表时才反转前面的部分。"
+  3: "`next` 把 `after` 的第一首歌作为新的 `current`，并把旧的 `current` 加到 `before` 前面。`previous` 正好相反。`to_list` 在 `list.reverse(before)` 之后接上 `current` 和 `after`。`remove_current` 按 `after`、`before` 的顺序寻找新的 `current`。"
+  4: |
+    ```gleam
+    pub fn next(cursor: Cursor(a)) -> Result(Cursor(a), Nil) {
+      case cursor.after {
+        [] -> Error(Nil)
+        [song, ..rest] -> Ok(Cursor(before: todo, current: song, after: rest))
+      }
+    }
+
+    pub fn remove_current(cursor: Cursor(a)) -> Result(Cursor(a), Nil) {
+      case cursor.after, cursor.before {
+        [song, ..rest], _ -> todo
+        [], [song, ..rest] -> todo
+        [], [] -> Error(Nil)
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

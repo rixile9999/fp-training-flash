@@ -1,0 +1,35 @@
+tests:
+  straight_corridor_test: "In a straight corridor, the answer is the distance between the cells"
+  goes_around_walls_test: "Finds the minimum number of moves for going around walls"
+  unreachable_goal_test: "Returns Error(Nil) when walls make G unreachable"
+  picks_shortest_of_many_routes_test: "Returns the length of the shortest of several routes"
+  no_diagonal_moves_test: "Diagonal moves are not allowed"
+  missing_start_or_goal_test: "Returns Error(Nil) when S or G is missing"
+  goal_next_to_start_test: "Returns 1 when G is right next to S"
+  open_room_test: "Takes 18 moves to the opposite corner of a 10x10 room with no walls"
+requirements:
+  R1: "Finds the minimum number of moves from S to G"
+  R2: "Moves only up, down, left and right, avoiding walls and the outside of the grid"
+  R3: "Error(Nil) when S or G is missing or G is unreachable"
+  R4: "Finishes within O(V log V) for V cells"
+hints:
+  1: "If you look at every cell reachable from S in 1 move before looking at cells reachable in 2 moves, what is the number of moves at the moment you first meet G?"
+  2: "Breadth-first search (BFS) handles cells in the order they were found, so it needs a first-in, first-out queue. With immutable lists you can build a queue from two lists: `front` (in the order to take out) and `back` (in reverse order of insertion). If you prepend new cells to `front`, it becomes a stack and you get depth-first search instead."
+  3: "Write a recursive `search(front, back, seen)`. Put `#(position, distance)` in the queue. If the cell you take out is G, return its distance; otherwise add each up/down/left/right neighbor that is not a wall and not yet in `seen` to `seen`, and put it into `back` with distance + 1. When `front` is empty, reverse `back` and move it over."
+  4: |
+    ```gleam
+    fn search(cells, goal, front, back, seen) -> Result(Int, Nil) {
+      case front, back {
+        [], [] -> Error(Nil)
+        [], _ -> search(cells, goal, list.reverse(back), [], seen)
+        [#(pos, dist), ..], _ if pos == goal -> Ok(dist)
+        [#(pos, dist), ..rest], _ -> {
+          let next = todo // neighbors that are not walls and not in seen
+          let seen = list.fold(next, seen, set.insert)
+          let back = todo // prepend next to back as #(p, dist + 1)
+          search(cells, goal, rest, back, seen)
+        }
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

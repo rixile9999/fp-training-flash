@@ -1,0 +1,23 @@
+title: Fix the slow reverse
+tests:
+  reverse_small_test: reverse reverses the order of the elements
+  reverse_large_list_test: A list of 200,000 elements is reversed within the time limit
+  reverse_empty_test: Reversing an empty list gives an empty list
+  reverse_log_lines_test: A list of log strings is also reversed so the newest line comes first
+  append_still_works_test: After the fix, append still joins two lists in order
+  foldl_still_works_test: After the fix, foldl still accumulates from the first element
+requirements:
+  R1: reverse is a list in reversed order
+  R2: Time proportional to the length of the list
+  R3: append and foldl keep their behavior
+hints:
+  1: "Each time `reverse` handles one element, how many elements does `append` copy? With n elements, what is the total amount of copying?"
+  2: "On an immutable list, prepending `[x, ..acc]` is O(1), while appending to the end copies as many elements as the front list has. If you read from the front and stack at the front, the order is reversed naturally."
+  3: "Make use of the existing `foldl`. Start from an empty list and put each element at the front of the accumulator. You do not need to touch `append` or `foldl`."
+  4: |
+    ```gleam
+    pub fn reverse(list: List(a)) -> List(a) {
+      foldl(over: list, from: [], with: fn(reversed, item) { todo })
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

@@ -1,0 +1,32 @@
+title: 用 foldr 实现 map 和 filter
+tests:
+  foldr_empty_returns_initial_test: 从右折叠空列表时原样返回初始值
+  foldr_goes_right_to_left_test: foldr 从最后一个元素开始依次累加
+  map_test: map 对每个元素应用函数并保持顺序
+  map_changes_type_test: map 结果的元素类型可以与输入不同
+  filter_test: filter 只保留满足条件的元素
+  filter_keeps_order_test: filter 的结果保持原有顺序
+  map_large_list_test: 有 20 万个元素的列表也能在时间限制内完成 map
+requirements:
+  R1: foldr 从后往前用 function(累加值, 元素) 累加
+  R2: map 保持长度和顺序
+  R3: filter 只保留满足条件的元素并保持顺序
+  R4: 时间与列表长度成正比
+hints:
+  1: "把 `[1, 2, 3]` 变成 `[f(1), f(2), f(3)]` 时，最先完成的尾部是哪个元素的结果？如果只靠在前面添加来构造结果列表，应该从哪一端开始处理？"
+  2: "`foldr` 先折叠剩余的列表，再把当前元素和那个结果合并。构造结果列表时，它从最后一个元素开始往前添加，所以原有顺序得以保持。"
+  3: "先实现 `foldr`，然后把 `map` 写成从空列表开始、把变换后的元素添加到前面的折叠，把 `filter` 写成只在满足条件时才添加到前面的折叠。"
+  4: |
+    ```gleam
+    pub fn foldr(over list: List(a), from initial: b, with function: fn(b, a) -> b) -> b {
+      case list {
+        [] -> initial
+        [first, ..rest] -> function(todo, first)
+      }
+    }
+
+    pub fn map(list: List(a), function: fn(a) -> b) -> List(b) {
+      foldr(over: list, from: [], with: fn(acc, item) { todo })
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

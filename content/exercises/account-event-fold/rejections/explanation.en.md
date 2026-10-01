@@ -1,0 +1,7 @@
+The result of processing one event is either "a new account" or "a rejection reason". Expressing this as `Result(Account, Rejection)` means the type of `apply_event` alone tells you that it can fail and what kinds of failure there are. Making the reason a `Rejection` type instead of a string lets the caller handle each reason with `case`, and when you add a new reason the compiler points out every place that misses it (theory topic "Sum types and exhaustive matching").
+
+It matters that `apply_event` matches on the closed state first. If you check the balance for a withdrawal first, a large withdrawal from a closed account gets rejected as `InsufficientFunds`, which is the wrong reason. When rules have a priority, make that priority visible through the order of the `case` branches.
+
+`replay` builds the account and the rejection list together in a single fold. Apart from the accumulator being `#(Account, List(Rejection))`, it has the same structure as `replay` in the base exercise (theory topic "The universality of fold"). A rejection only means "this event is not applied", so processing does not stop. `list.try_fold`, or recursion that returns at the first `Error`, throws away all the events after it. If you collected the reasons by prepending, don't forget to restore the order with `list.reverse` at the end.
+
+Because the rejection record is returned as a value instead of printed, tests only need to compare results, and the caller decides whether to write the record to a log or show it on screen (theory topic "Separating computation from effects").

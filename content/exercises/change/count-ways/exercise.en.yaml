@@ -1,0 +1,28 @@
+title: Count the coin combinations that make an amount
+tests:
+  small_amount_test: There are 4 ways to make 5 from coins 1, 2 and 5
+  order_does_not_matter_test: Coin sequences that differ only in order count as one
+  zero_target_test: There is exactly one way to make 0, using no coins at all
+  impossible_target_test: An amount that cannot be made gives 0
+  negative_target_test: A negative amount gives 0
+  large_target_test: Counting the ways to make 2000 from 8 coin types finishes within the time limit
+requirements:
+  R1: Combinations differ only when the counts of the coins used differ
+  R2: 1 way for 0, and 0 ways for a negative or unreachable amount
+  R3: Time proportional to amount x number of coin types
+hints:
+  1: "When making 4 from 1s and 2s, 1+1+2, 1+2+1 and 2+1+1 are the same combination. If you force the coins to be used \"one type at a time, in order\", how does that avoid these duplicates?"
+  2: "Take \"the number of ways to make amount a using only the first k coin types\" as your subproblem. Splitting it into the case where the k-th coin is not used at all and the case where it is used at least once lets you count every combination exactly once."
+  3: "Start a table of ways per amount with `0 -> 1`, and update the table each time you add one more coin type. Which loop goes outside, the one adding coins or the one walking through amounts, decides whether you count combinations or permutations. Trace `[1, 2]` and amount 3 by hand in both orders."
+  4: |
+    ```gleam
+    let start = dict.from_list([#(0, 1)])
+    let table =
+      list.fold(coins, start, fn(table, coin) {
+        int.range(from: coin, to: target + 1, with: table, run: fn(table, amount) {
+          let with_coin = get(table, amount - coin)
+          todo
+        })
+      })
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

@@ -1,0 +1,58 @@
+title: String 与 Bool，以及 echo/io.println
+blocks:
+  intro:
+    markdown: 还剩下两种基本类型。**`String`** 是用双引号括起来的一串字符（`"你好"`），用 `<>` 运算符拼接。**`Bool`** 是 `True` 或 `False`，用 `&&`（与）、`||`（或）、`!`（非）来组合。
+  string-concat:
+    prompt: 字符串拼接 `<>` 的结果是什么？
+    choices:
+      - '`"abcd"`'
+      - '`"ab cd"`'
+      - '`"cdab"`'
+      - '`"ab+cd"`'
+    feedback:
+      correct: 没错！`<>` 把右边的字符串原样接在左边字符串的后面——得到 "abcd"。
+      choices:
+        "1": "`<>` 不会在中间插入空格——直接拼接得到 \"abcd\"。"
+        "2": 顺序不会颠倒——左边在前，右边在后。
+        "3": "`<>` 不会把运算符号当作字符插进去——它只是单纯地拼接。"
+  bool-and:
+    prompt: Bool 运算 `True && False` 的值是什么？
+    choices:
+      - "`True`"
+      - "`False`"
+      - "`Nil`"
+      - 编译错误
+    feedback:
+      correct: 完全正确！`&&`（AND）只有在两边都为 `True` 时才是 `True`——只要有一边是 `False`，结果就是 `False`。
+      choices:
+        "0": "`&&` 只有两边都为真时才为真。有一边是 `False`，所以结果是 `False`。"
+        "2": "`&&` 的结果总是 `Bool`——是 `False`，不是 `Nil`。"
+        "3": "`&&` 是用于两个 `Bool` 的正确运算符，可以正常编译。"
+  bool-or:
+    prompt: Bool 运算 `False || True` 的值是什么？
+    choices:
+      - "`True`"
+      - "`False`"
+      - "`Nil`"
+      - 编译错误
+    feedback:
+      correct: 没错！`||`（OR）只要有一边为 `True`，结果就是 `True`。
+      choices:
+        "1": "`||` 只要有一边为真就为真——右边是 `True`，所以结果是 `True`。"
+        "2": "`||` 的结果总是 `Bool`——是 `True`，不是 `Nil`。"
+        "3": "`||` 是用于两个 `Bool` 的正确运算符，可以正常编译。"
+  echo-vs-println:
+    markdown: 把值打印到屏幕上有两种方法。**`io.println`** 只接收 `String`，并原样输出这些字符（需要 `import gleam/io`）。**`echo`** 是用于调试的关键字，可以接收**任意类型的值**，并以便于阅读的形式打印出来（无需 import）——所以想快速查看 `Int` 或 `Bool` 时很方便。
+  echo-or-println:
+    prompt: 不额外 import，想最快地把一个整数 `total` 打印到屏幕上确认一下，该怎么写？
+    choices:
+      - "`io.println(total)`"
+      - "`echo total`"
+      - '`io.println("total")`'
+      - "`print(total)`"
+    feedback:
+      correct: 没错！`echo` 接收任意类型，也不需要 import，非常适合调试——`Int` 也会自动以易读的形式打印出来。
+      choices:
+        "0": "`io.println` 只接收 `String`。传入 `Int` 类型的 `total` 会产生类型错误——需要先用 `int.to_string` 转换。"
+        "2": 这样打印出来的是文字 `total` 本身，而不是变量的值——我们想要的是那个数字。
+        "3": Gleam 没有叫 `print` 的函数——请使用 `io.println` 或 `echo`。

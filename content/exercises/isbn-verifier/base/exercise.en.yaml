@@ -1,0 +1,34 @@
+tests:
+  valid_isbn_test: A valid ISBN with hyphens is True
+  invalid_check_digit_test: A wrong check digit gives False
+  valid_with_x_check_digit_test: A final X counts as 10
+  valid_without_dashes_test: A valid ISBN without hyphens is also True
+  x_only_valid_as_check_digit_test: An X anywhere other than the last position gives False
+  invalid_character_not_zero_test: A non-digit character is not treated as 0
+  too_long_test: More than 10 characters after removing hyphens gives False
+  empty_isbn_test: The empty string is False
+requirements:
+  R1: Exactly 10 characters after removing hyphens
+  R2: The first 9 characters are digits; the last is a digit or X
+  R3: The weighted sum is divisible by 11
+hints:
+  1: "If this function must never crash, what should happen when the step that turns a character into a number fails?"
+  2: "`int.parse(\"7\")` is `Ok(7)`, and `int.parse(\"P\")` is `Error(Nil)`. With `list.try_map` you can turn the whole list of characters into a `Result(List(Int), Nil)`, which becomes `Error` if even one of them fails."
+  3: "Split it into two steps. (1) Parsing: remove the hyphens, check the length, then turn the characters into values (`Result(List(Int), Nil)`). (2) Calculation: check whether the weighted sum of the values is divisible by 11. If parsing gives `Error`, the answer is `False`. X is 10 only at position 9 (the last one)."
+  4: |
+    ```gleam
+    pub fn is_valid(isbn: String) -> Bool {
+      case parse(isbn) {
+        Ok(values) -> todo
+        Error(Nil) -> False
+      }
+    }
+
+    fn char_value(char: String, index: Int) -> Result(Int, Nil) {
+      case char, index {
+        "X", 9 -> Ok(10)
+        _, _ -> todo
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

@@ -1,0 +1,29 @@
+tests:
+  empty_class_test: With no students, return an empty list
+  ranks_by_score_test: Assign ranks 1, 2, 3 starting from the highest score
+  single_student_test: A single student is ranked 1st
+  tie_broken_by_name_test: On equal scores, the name that comes first alphabetically gets the higher rank
+  many_ties_test: Even with many ties, ranks continue in name order
+  result_does_not_depend_on_input_order_test: The same ranking comes out regardless of input order
+requirements:
+  R1: Sort by score in descending order
+  R2: Assign ranks in sequence starting from 1
+  R3: On a tie, the name in ascending order comes first
+hints:
+  1: "Before attaching ranks, in what order should the students be laid out? When two students have the same score, what decides their order?"
+  2: "`list.sort` takes a comparison function. Swapping the arguments, as in `int.compare(b, a)`, gives descending order, and `order.break_tie` uses the second comparison only when the first one is `Eq`. `list.index_map` gives you a position starting from 0."
+  3: "Put \"score descending, then name ascending on a tie\" into a single comparison function and sort with it, then add 1 to each position and use that as the rank."
+  4: |
+    ```gleam
+    fn by_rank_order(a: Student, b: Student) -> Order {
+      int.compare(b.score, a.score)
+      |> order.break_tie(todo)
+    }
+
+    pub fn rank(students: List(Student)) -> List(#(Int, String)) {
+      students
+      |> list.sort(by_rank_order)
+      |> list.index_map(fn(student, index) { todo })
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

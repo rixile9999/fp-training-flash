@@ -1,0 +1,22 @@
+title: Fix an invoice total broken by copied rules
+tests:
+  line_amount_bulk_test: A line ordering 10 or more items gets a 10% discount
+  shipping_fee_threshold_test: If the subtotal is exactly 50,000 won, there is no shipping fee
+  invoice_total_small_test: Total of a small order with no discount
+  invoice_total_bulk_test: The bulk discount is reflected in the total too
+  invoice_total_threshold_test: If the subtotal is exactly 50,000 won, the total has no shipping fee
+  invoice_total_empty_test: The total of an empty invoice is 0 won
+requirements:
+  R1: invoice_total calls the step functions instead of rewriting the rules
+hints:
+  1: "The tests for the step functions pass, but `invoice_total` alone is wrong. Does `invoice_total` actually call those functions?"
+  2: "When the same rule lives in two places, only one copy gets fixed, or one is written slightly differently, and the results drift apart. Keep each rule in a single function and have everything else call it."
+  3: "Go through the calculations inside `invoice_total` one by one, and wherever a step function does the same job, replace the calculation with a call to it. You don't need to add any new rules."
+  4: |
+    ```gleam
+    pub fn invoice_total(lines: List(Line)) -> Int {
+      let amount = todo
+      amount + vat(amount) + todo
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

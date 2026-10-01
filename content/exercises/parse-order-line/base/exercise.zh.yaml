@@ -1,0 +1,30 @@
+tests:
+  parses_valid_line_test: 把正确的行转换成 OrderLine
+  trims_fields_test: 去掉每个字段首尾的空白后再解析
+  wrong_field_count_test: 字段不是 3 个时，WrongFieldCount 中放入实际个数
+  invalid_order_id_test: 订单号不是整数时，InvalidOrderId 中放入该字段
+  empty_sku_test: 只有空白的商品编码是 EmptySku
+  zero_quantity_test: 数量为 0 是 InvalidQuantity
+  non_numeric_quantity_test: 数量不是数字时，把去掉空白的字段放入 InvalidQuantity
+  first_error_wins_test: 多个字段出错时，按订单号、商品编码、数量的顺序只报告第一个错误
+requirements:
+  R1: 把按逗号分隔、去掉空白的三个字段解析为 OrderLine
+  R2: 每个字段返回规定的错误值
+  R3: 按字段个数、订单号、商品编码、数量的顺序检查，只返回第一个错误
+hints:
+  1: "每个字段分别可能因为什么原因失败？一旦失败，还需要看后面的字段吗？"
+  2: "`use x <- result.try(r)` 在 `r` 为 `Ok(x)` 时继续执行下一行，为 `Error(e)` 时整个函数就以 `Error(e)` 结束。用 `result.replace_error` 可以把 `int.parse` 的 `Error(Nil)` 换成你想要的错误。"
+  3: "按逗号拆分并去掉空白后，用 `case` 把 `[a, b, c]` 模式和其余情况分开。为每个字段写一个返回 `Result(值, ParseError)` 的小函数，再用 `use` 依次串联。"
+  4: |
+    ```gleam
+    case line |> string.split(",") |> list.map(string.trim) {
+      [id_field, sku_field, quantity_field] -> {
+        use order_id <- result.try(parse_order_id(id_field))
+        use sku <- result.try(todo)
+        use quantity <- result.try(todo)
+        Ok(OrderLine(order_id:, sku:, quantity:))
+      }
+      fields -> todo
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

@@ -1,0 +1,12 @@
+title: 用左偏堆实现持久化优先队列
+rubric:
+  R-02:
+    title: 在一处维护不变式
+    description: 子节点的摆放和 rank 的计算只在 make 这一个函数里完成，merge 和其他操作都通过 make 创建节点。
+  R-05:
+    title: 把操作归结为 merge
+    description: 把 insert 和 delete_min 写成只调用一次 merge 的简短函数。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 用类型来表达可能的失败。
+    message: 使用了 let assert 或 panic。

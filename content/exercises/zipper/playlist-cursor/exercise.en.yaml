@@ -1,0 +1,37 @@
+title: Building a playlist cursor as a list zipper
+tests:
+  next_moves_forward_test: "next moves to the next song"
+  previous_at_first_song_fails_test: "previous on the first song returns Error(Nil)"
+  to_list_after_moves_test: "Even after moving the cursor, to_list gives the original song order"
+  next_at_last_song_fails_test: "next on the last song returns Error(Nil)"
+  previous_returns_to_earlier_song_test: "Going back with previous does not lose any songs"
+  remove_moves_to_next_song_test: "Removing the current song makes the next song the current one"
+  remove_last_song_moves_back_test: "Removing the last song makes the previous song the current one"
+  remove_only_song_fails_test: "When there is only one song, it cannot be removed and Error(Nil) is returned"
+requirements:
+  R1: "next and previous move the cursor by one; Error(Nil) at the ends"
+  R2: "to_list gives the original song order"
+  R3: "remove_current moves to the next song, or to the previous song if there is none, and returns Error(Nil) if there is neither"
+  R4: "next, previous and remove_current are O(1)"
+hints:
+  1: "To take out the song right before the current one in O(1), at which end of the `before` list must that song be?"
+  2: "A list zipper splits the list into \"before the focus\" and \"after the focus\" as two lists. If you keep the front part in reverse order so the nearest element comes first, moving the cursor is just taking the head off one list and putting it on the head of the other. You only reverse the front part when you need the whole list."
+  3: "`next` makes the first song of `after` the new `current` and prepends the old `current` to `before`. `previous` does the opposite. `to_list` joins `list.reverse(before)` with `current` and then `after`. `remove_current` looks for the new `current` in `after` first, then in `before`."
+  4: |
+    ```gleam
+    pub fn next(cursor: Cursor(a)) -> Result(Cursor(a), Nil) {
+      case cursor.after {
+        [] -> Error(Nil)
+        [song, ..rest] -> Ok(Cursor(before: todo, current: song, after: rest))
+      }
+    }
+
+    pub fn remove_current(cursor: Cursor(a)) -> Result(Cursor(a), Nil) {
+      case cursor.after, cursor.before {
+        [song, ..rest], _ -> todo
+        [], [song, ..rest] -> todo
+        [], [] -> Error(Nil)
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

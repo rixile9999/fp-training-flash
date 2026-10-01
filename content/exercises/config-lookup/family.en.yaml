@@ -1,0 +1,12 @@
+title: Look up config values and tell errors apart
+rubric:
+  R-09:
+    title: No let assert or panic
+    description: The possibility of failure is expressed in the types.
+    message: let assert or panic was used.
+  R-07:
+    title: Errors are not swallowed
+    description: A missing value and an invalid value are different situations. Don't use result.unwrap or option.from_result to turn invalid values into a default as well.
+  R-11:
+    title: Chain with use instead of nested case
+    description: When several Result steps are chained with use and result.try, the success path reads from top to bottom.

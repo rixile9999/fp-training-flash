@@ -1,0 +1,67 @@
+title: Dict 与 Set 速览
+blocks:
+  intro:
+    markdown: |-
+      最后来看两个泛型集合。**`Dict(k, v)`** 是用键（`k`）查找值（`v`）的字典（`import gleam/dict`）。它有*两个*类型变量，所以能装“任意的键、任意的值”。
+
+      ```gleam
+      let scores = dict.from_list([#("lucy", 10), #("max", 7)])
+      ```
+
+      重点：键可能不存在，所以 `dict.get` **返回 `Result`**（U9 的内容又登场了！）。存在时是 `Ok(值)`，不存在时是 `Error(Nil)`。
+  dict-get-hit:
+    prompt: 键存在时，`dict.get` 的值是？
+    choices:
+      - '`Ok(10)`'
+      - '`10`'
+      - '`Some(10)`'
+      - '`Error(Nil)`'
+    feedback:
+      correct: '答对了！即使值存在，它也不会“光着”出来——而是包装成 `Ok(10)` 返回。要取出它，得用模式匹配。'
+      choices:
+        "1": 'Dict 查询可能失败，所以结果包装在 `Result` 里——是 `Ok(10)`，不是 `10`。'
+        "2": '`dict.get` 返回的是 `Result` 而不是 `Option`——所以是 `Ok`，不是 `Some`。'
+        "3": '`Error(Nil)` 是键*不存在*时的结果。"lucy" 在字典里。'
+  dict-get-miss:
+    prompt: 查找不存在的键会怎样？
+    choices:
+      - '`Error(Nil)`'
+      - '`Nil`'
+      - '`None`'
+      - 运行时崩溃
+    feedback:
+      correct: '完全正确！键不存在时是 `Error(Nil)`——不是崩溃，而是*写在类型里的失败*。调用方必须用 case 处理它。'
+      choices:
+        "1": '不是光秃秃的 `Nil`，而是包装成 `Error(Nil)`——`dict.get` 返回的是 `Result`。'
+        "2": '`None` 表示 `Option` 中的“没有值”。`dict.get` 返回 `Result`，所以用的是 `Error(Nil)`。'
+        "3": '不存在的键不会导致崩溃，而是安全地表示为 `Error(Nil)`——因为 Gleam 没有异常。'
+  dict-insert:
+    markdown: Dict 也是不可变的。`dict.insert(d, 键, 值)` 不会修改原来的 Dict，而是返回一个*新的 Dict*。而且**对同一个键再次插入会覆盖原值**——键不会重复。
+  dict-insert-overwrite:
+    prompt: '对同一个键 `"a"` 插入两次之后，大小（`dict.size`）是多少？'
+    choices:
+      - '`1`'
+      - '`2`'
+      - '`99`'
+      - '`0`'
+    feedback:
+      correct: 答对了！同一个键会被覆盖、合并为一项——大小是 1（值更新为 99）。
+      choices:
+        "1": '键 `"a"` 相同，不会变成两项——第二次 insert 覆盖了第一次。'
+        "2": '`99` 是存储的*值*，不是*大小*——只有一项。'
+        "3": 已经插入了一项，所以不是空的——大小是 1。
+  set:
+    markdown: '**`Set(a)`** 是“没有重复的集合”（`import gleam/set`）。同一个值插入多次也会合并为一个，而 `set.contains` 只问某个值在不在里面——不关心顺序和次数。'
+  set-dedup:
+    prompt: '把 1 插入两次、2 插入一次后，Set 的大小（`set.size`）是多少？'
+    choices:
+      - '`2`'
+      - '`3`'
+      - '`1`'
+      - '`0`'
+    feedback:
+      correct: 完全正确！Set 会合并重复项——1 插入了两次也只算一个，不同的值只有 1 和 2，所以大小是 2。
+      choices:
+        "1": 数的是*不同值*的个数，而不是插入的*次数*——重复的 1 被合并，所以是 2。
+        "2": 值有两种（1 和 2），所以大小不是 1。只有重复项才会合并。
+        "3": 已经插入了元素，所以不是空的——大小是 2。

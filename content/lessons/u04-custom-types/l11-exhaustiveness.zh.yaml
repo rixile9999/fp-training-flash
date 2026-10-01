@@ -1,0 +1,110 @@
+title: 一个都不漏——穷尽性（exhaustiveness）
+blocks:
+  intro:
+    markdown: |-
+      对自定义类型使用 `case` 时，Gleam 真正的安全网就打开了：**必须处理所有变体才能通过编译**。哪怕漏掉一个，都无法编译。
+
+      ```gleam
+      pub type Shape {
+        Circle(radius: Float)
+        Rectangle(width: Float, height: Float)
+      }
+
+      pub fn area(shape: Shape) -> Float {
+        case shape {
+          Circle(radius: r) -> 3.14159 *. r *. r
+          Rectangle(width: w, height: h) -> w *. h
+        }
+      }
+      ```
+
+      面积是 Float 运算，所以用 `*.`。在模式中，`radius: r` 会把该字段绑定到名字 `r`，以便在结果表达式中使用。
+  area-circle:
+    prompt: "在上面的 `area` 中，`area(Circle(radius: 2.0))` 的值是？"
+    code: |-
+      pub type Shape {
+        Circle(radius: Float)
+        Rectangle(width: Float, height: Float)
+      }
+
+      pub fn area(shape: Shape) -> Float {
+        case shape {
+          Circle(radius: r) -> 3.14159 *. r *. r
+          Rectangle(width: w, height: h) -> w *. h
+        }
+      }
+
+      // area(Circle(radius: 2.0)) 的值是？
+    choices:
+      - "`12.56636`"
+      - "`6.28318`"
+      - "`4.0`"
+      - "`12`"
+    feedback:
+      correct: 没错！3.14159 *. 2.0 *. 2.0 = 12.56636。`r` 绑定为 2.0，用半径的平方乘以圆周率。
+      choices:
+        "1": 这是 3.14159 *. 2.0（乘以直径）。面积要把半径乘**两次**——r *. r。
+        "2": 4.0 只是 2.0 *. 2.0（r 的平方），还没有乘以圆周率（3.14159）。
+        "3": 结果是 `Float`，所以是 `12.56636` 而不是 `12`（Int）——类型不同。
+  inexhaustive:
+    markdown: |-
+      如果删掉 `Rectangle` 分支会怎样？Gleam 会给出这样的编译错误：
+
+      ```
+      error: Inexhaustive patterns
+
+      This case expression does not have a pattern for all possible values.
+      The missing patterns are:
+
+          Rectangle(width:, height:)
+      ```
+
+      编译器会**准确指出漏掉的变体**。这就是安全网：以后添加 `Triangle` 时，编译器会告诉你包括这个 `case` 在内所有需要修改的地方。
+  missing-pattern:
+    prompt: 编译删掉了 `Rectangle` 分支的 `area` 时，会出现 “Inexhaustive patterns” 错误。修复这个错误最正确的方法是？
+    choices:
+      - "添加 `Rectangle(width: w, height: h) -> w *. h` 分支"
+      - 添加 `_ -> 0.0` 分支
+      - 把 `case` 改成 `if`
+      - 从类型定义中删掉 `Rectangle` 变体
+    feedback:
+      correct: 没错！正确做法是显式处理漏掉的变体——把编译器指出的 `Rectangle` 加上即可。
+      choices:
+        "1": 能编译，但这是个陷阱。`_` 会关掉穷尽性检查，以后即使添加了 `Triangle`，编译器也会保持沉默——请明确写出变体。
+        "2": Gleam 没有单独的 `if` 语句，而且问题不在于用什么来分支，而在于漏掉的分支——添加 `Rectangle` 分支即可。
+        "3": 那样就无法表示矩形了——目的是处理它，而不是从类型中删掉它。
+  wildcard-trap:
+    prompt: 为了满足穷尽性，习惯性地在每个 case 的末尾都加上 `_ -> ...`，为什么危险？
+    choices:
+      - 因为编译会变慢
+      - "因为 `_` 会把将来新增的变体也悄悄吞掉，关掉编译器“需要修改的地方”的提醒"
+      - "因为 `_` 是语法错误"
+      - 因为运行时会变慢
+    feedback:
+      correct: 完全正确！添加变体时由编译器提醒你的安全网，会因为 `_` 而失效——新变体会悄无声息地落进 `_`。
+      choices:
+        "0": 与编译速度无关。问题在于你会失去未来的安全网。
+        "2": "`_` 是合法的语法——危险的不是语法，而是它会“吞掉将来所有的改动”。"
+        "3": 这不是运行时性能问题，问题在于它让编译期检查失效。
+  area-rectangle:
+    prompt: "在同一个 `area` 中，`area(Rectangle(width: 3.0, height: 4.0))` 的值是？"
+    code: |-
+      pub fn area(shape: Shape) -> Float {
+        case shape {
+          Circle(radius: r) -> 3.14159 *. r *. r
+          Rectangle(width: w, height: h) -> w *. h
+        }
+      }
+
+      // area(Rectangle(width: 3.0, height: 4.0)) 的值是？
+    choices:
+      - "`12.0`"
+      - "`7.0`"
+      - "`12`"
+      - "`14.0`"
+    feedback:
+      correct: 没错！`Rectangle` 分支返回 `w *. h` = 3.0 *. 4.0 = 12.0。
+      choices:
+        "1": 7.0 是 3.0 +. 4.0（加法）。面积是乘积（`*.`），所以是 12.0。
+        "2": 结果是 `Float`，所以是 `12.0` 而不是 `12`（Int）——类型不同。
+        "3": 14.0 大概是周长之类的值。面积是 w *. h = 12.0。

@@ -1,0 +1,31 @@
+title: A sort that keeps the order of equal priorities
+tests:
+  sorts_by_priority_test: Sorts in ascending order according to the compare function
+  keeps_input_order_on_ties_test: Shipments with the same priority keep their original order
+  empty_list_test: An empty list returns an empty list
+  follows_compare_function_test: Given a descending compare function, sorts in descending order
+  many_ties_stay_in_order_test: Even with several groups of equal priority, each group keeps its original order
+  sort_large_list_test: Sorts a list of 150,000 elements within the time limit
+requirements:
+  R1: Ascending order according to compare
+  R2: Stable sort (when compare gives Eq, the original order is kept)
+  R3: O(n log n)
+hints:
+  1: "In the merge step, when comparing the two head elements gives `Eq`, which of them came earlier in the original list?"
+  2: "A stable sort keeps the original order of elements that compare as equal. If you split the list into a front half and a back half, every element on the left originally came before every element on the right."
+  3: "Split into front and back halves (`list.split`), sort each recursively, then merge. In the merge, decide whether the `Eq` case of `compare(x, y)` should be handled like `Lt` or like `Gt` to keep the original order."
+  4: |
+    ```gleam
+    fn merge(left: List(a), right: List(a), compare: fn(a, a) -> Order) -> List(a) {
+      case left, right {
+        [], _ -> right
+        _, [] -> left
+        [x, ..xs], [y, ..ys] ->
+          case compare(x, y) {
+            order.Gt -> todo
+            order.Lt | order.Eq -> todo
+          }
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

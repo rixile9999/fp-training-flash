@@ -1,0 +1,27 @@
+tests:
+  percent_off_test: "percent_off(10) takes 10% off the price"
+  percent_off_rounds_down_test: "The result of a percentage discount is rounded down"
+  amount_off_test: "amount_off(1000) subtracts 1000 from the price"
+  amount_off_never_negative_test: "The result of a fixed-amount discount never goes below 0"
+  apply_rules_in_order_test: "Rules are applied in list order"
+  apply_rules_order_matters_test: "Changing the order of the rules changes the result"
+  apply_rules_empty_test: "With no rules, the price stays the same"
+requirements:
+  R1: "percent_off builds and returns a percentage discount function"
+  R2: "amount_off returns a fixed-amount discount function that never goes below 0"
+  R3: "apply_rules applies each rule to the result of the previous one"
+hints:
+  1: "Is the value returned by `percent_off(10)` a number or a function? What do you pass to that value to get the discounted price?"
+  2: "If you build and return `fn(price) { ... }` inside a function, that anonymous function remembers the outer argument (`percent`). This is called a closure. To apply the functions in a list one after another, use `list.fold`."
+  3: "Let the accumulator be \"the price discounted so far\". Each time you meet a rule, pass the accumulator to that rule and use the result as the new accumulator."
+  4: |
+    ```gleam
+    pub fn amount_off(amount: Int) -> fn(Int) -> Int {
+      fn(price) { todo }
+    }
+
+    pub fn apply_rules(price: Int, rules: List(fn(Int) -> Int)) -> Int {
+      list.fold(rules, price, fn(current, rule) { todo })
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

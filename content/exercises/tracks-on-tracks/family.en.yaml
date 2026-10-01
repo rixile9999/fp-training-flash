@@ -1,0 +1,12 @@
+title: Work with a list of languages to learn
+rubric:
+  R-01:
+    title: Let list patterns show the shape
+    description: If you express conditions on the front of a list and its length directly with patterns such as `[first, ..rest]` and `[_, x]`, the conditions are clear at a glance.
+  R-03:
+    title: Reuse standard functions
+    description: For operations the standard library already has, such as counting the length or reversing, use the `list` module's functions instead of rebuilding them.
+  R-09:
+    title: No let assert or panic
+    description: Express the possibility of failure in the types.
+    message: let assert or panic was used.

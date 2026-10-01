@@ -1,0 +1,29 @@
+tests:
+  empty_class_test: 没有学生时返回空列表
+  ranks_by_score_test: 从分数最高的学生开始依次标上第 1、2、3 名
+  single_student_test: 只有一名学生时他是第 1 名
+  tie_broken_by_name_test: 分数相同时，姓名按字典序靠前的学生名次在前
+  many_ties_test: 即使有多名同分者，也按姓名顺序接着排名
+  result_does_not_depend_on_input_order_test: 输入顺序不同，也得到同样的排名表
+requirements:
+  R1: 按分数降序排序
+  R2: 名次从 1 开始依次标上
+  R3: 同分时姓名升序在前
+hints:
+  1: "在标上名次之前，学生们应该按什么顺序排好？两名学生分数相同时，由什么决定他们的先后？"
+  2: "`list.sort` 接收一个比较函数。像 `int.compare(b, a)` 这样交换参数顺序就得到降序；`order.break_tie` 只在第一次比较结果为 `Eq` 时才使用第二个比较。`list.index_map` 会给出从 0 开始的位置。"
+  3: "把“分数降序，同分则姓名升序”放进一个比较函数里进行排序，然后把位置加 1 当作名次。"
+  4: |
+    ```gleam
+    fn by_rank_order(a: Student, b: Student) -> Order {
+      int.compare(b.score, a.score)
+      |> order.break_tie(todo)
+    }
+
+    pub fn rank(students: List(Student)) -> List(#(Int, String)) {
+      students
+      |> list.sort(by_rank_order)
+      |> list.index_map(fn(student, index) { todo })
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

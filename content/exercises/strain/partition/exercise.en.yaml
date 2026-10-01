@@ -1,0 +1,27 @@
+title: Build partition to split a list in two in a single pass
+tests:
+  empty_list_test: An empty list splits into two empty lists
+  splits_even_and_odd_test: Elements for which the condition is true go to the left, false ones to the right
+  all_match_test: If every element satisfies the condition, the right side is empty
+  none_match_test: If no element satisfies the condition, the left side is empty
+  both_sides_keep_order_test: Both sides keep their original order
+  duplicates_are_kept_test: Values that appear several times are all kept
+requirements:
+  R1: Every element goes to exactly one side
+  R2: Both sides keep their original order
+hints:
+  1: "To build two results at the same time while walking the list only once, what do you need to carry between recursive calls?"
+  2: "You don't need to have just one accumulator. If the helper function takes two accumulators as arguments, each element can be stacked onto just one of them."
+  3: "Write a helper `go(items, predicate, kept, rejected)`, and when the list ends, reverse each of the two accumulators and return them as a tuple."
+  4: |
+    ```gleam
+    case items {
+      [] -> #(list.reverse(kept), todo)
+      [first, ..rest] ->
+        case predicate(first) {
+          True -> go(rest, predicate, [first, ..kept], rejected)
+          False -> todo
+        }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

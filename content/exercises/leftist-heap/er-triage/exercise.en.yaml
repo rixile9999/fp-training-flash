@@ -1,0 +1,31 @@
+title: Decide the ER treatment order with a heap
+tests:
+  higher_severity_goes_first_test: The patient with higher severity goes first
+  earlier_arrival_breaks_tie_test: With equal severity, the patient who arrived first goes first
+  treatment_order_by_severity_test: The treatment order is from highest severity down
+  empty_waiting_room_test: With no waiting patients, returns an empty list
+  same_severity_in_arrival_order_test: If every severity is the same, patients are treated in arrival order
+  mixed_severity_and_arrival_test: Sorts by the rules even when severity and arrival order are mixed
+  merge_two_waiting_rooms_test: After merging two waiting queues, the most urgent patient is still at the front
+requirements:
+  R1: Severity descending; if equal, arrival ascending
+  R2: treatment_order returns every patient's name in treatment order
+  R3: merge builds a leftist heap ordered by goes_first
+hints:
+  1: "If you pull the rule that decides which of two patients goes first out into its own function, what does the heap's merge need to ask that function?"
+  2: "A leftist heap's merge picks \"the root that comes out first\", then recursively merges that root's right child with the other heap. Only the comparison changes, from `<=` to `goes_first`; the rest of the structure is the same as the integer heap."
+  3: "`goes_first` compares by severity if the severities differ, and by arrival if they are equal. `merge` returns `make(p, left_a, merge(right_a, b))` if `goes_first(p, q)` is true, and otherwise calls itself again with the arguments swapped. `treatment_order` inserts everyone with `add`, then takes patients out until `next` gives an `Error`."
+  4: |
+    ```gleam
+    pub fn merge(a: Queue, b: Queue) -> Queue {
+      case a, b {
+        Empty, queue | queue, Empty -> queue
+        Node(patient: p, left: left_a, right: right_a, ..), Node(patient: q, ..) ->
+          case goes_first(p, q) {
+            True -> todo
+            False -> todo
+          }
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

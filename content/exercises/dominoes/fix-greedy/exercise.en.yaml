@@ -1,0 +1,26 @@
+title: Fix the domino chain - back out of dead ends
+tests:
+  three_elements_test: Three stones can be reordered into a full loop
+  needs_backtracking_test: If the stone chosen first leads to a dead end, tries again with another stone
+  cant_be_chained_test: If the end numbers do not match, there is no chain
+  empty_input_test: With no stones, there is a chain
+  doubles_need_backtracking_test: If the wrong spot is chosen for a double stone, goes back and chooses again
+  duplicate_stones_test: Stones of the same shape are used separately, one at a time
+requirements:
+  R1: Decide whether every stone can be used once to build a chain that loops all the way around
+  R2: When stuck, go back and try a different stone
+  R3: Stones of the same shape are each used separately, once
+hints:
+  1: "If both `[2|3]` and `[2|4]` can follow `[1|2]`, which one does the current code try? What happens if that choice is a dead end?"
+  2: "Backtracking tries the next option when one option fails. `list.any(candidates, reaches_the_end)` expresses this backing out in one line: it tries the candidates in turn until one returns true."
+  3: "`next_steps` already returns every candidate. In `extend`, don't take only the first candidate; try recursing on every one. Just retrying with a different starting stone is not enough."
+  4: |
+    ```gleam
+    _ ->
+      next_steps(end, remaining)
+      |> list.any(fn(step) {
+        let #(new_end, rest) = step
+        todo
+      })
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

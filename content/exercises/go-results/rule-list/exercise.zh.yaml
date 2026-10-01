@@ -1,0 +1,23 @@
+title: 依次应用规则列表
+tests:
+  no_rules_changes_player_test: 没有规则时，以 Ok 返回只交换了轮次的游戏
+  all_rules_pass_test: 所有规则都通过时，在规则修改后的游戏中交换轮次，以 Ok 返回
+  failing_rule_returns_error_test: 一条规则失败时，以 Error 返回它的消息
+  each_rule_sees_previous_result_test: 每条规则接收前一条规则返回的游戏
+  rules_apply_in_list_order_test: 规则按列表顺序应用
+  first_error_wins_test: 多条规则失败时，返回列表中最靠前的规则的错误
+requirements:
+  R1: 全部通过时以 Ok 返回交换了轮次的游戏
+  R2: 以 Error 返回第一个错误
+  R3: 按列表顺序依次衔接应用规则
+hints:
+  1: "事先不知道有几条规则时，一条条应用规则的过程中，应该把什么作为“到目前为止的结果”带着走？"
+  2: "`list.try_fold(list, 初始值, fn(acc, x) { ... })` 和 `list.fold` 一样，只是函数返回 `Result`。一旦出现 `Error`，就在那里停下并返回这个 `Error`。"
+  3: "把累加器设为游戏，将每条规则应用到累积的游戏上。整体以 `Ok` 结束时，再用 `result.map` 交换轮次。"
+  4: |
+    ```gleam
+    rules
+    |> list.try_fold(game, fn(current, rule) { todo })
+    |> result.map(todo)
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

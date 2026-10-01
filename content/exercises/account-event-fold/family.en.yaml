@@ -1,0 +1,12 @@
+title: Fold events into an account state
+rubric:
+  R-02:
+    title: Separate the state transition from the iteration
+    description: There is a pure state-transition function that handles one event, and a separate function that folds it over the list of events.
+  R-05:
+    title: One branch per event
+    description: The state-transition function handles each kind of event in its own case branch and does not mix in iteration or history bookkeeping.
+  R-09:
+    title: No let assert or panic
+    description: Rejected events are handled as values too. Insufficient funds never stops the program.
+    message: let assert or panic was used.

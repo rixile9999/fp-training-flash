@@ -1,0 +1,27 @@
+tests:
+  percent_off_test: "percent_off(10) 把价格减少 10%"
+  percent_off_rounds_down_test: "百分比折扣的结果向下取整"
+  amount_off_test: "amount_off(1000) 从价格中减去 1000"
+  amount_off_never_negative_test: "固定金额折扣的结果不会小于 0"
+  apply_rules_in_order_test: "按列表顺序应用规则"
+  apply_rules_order_matters_test: "改变规则顺序，结果也会改变"
+  apply_rules_empty_test: "没有规则时价格保持不变"
+requirements:
+  R1: "percent_off 创建并返回一个百分比折扣函数"
+  R2: "amount_off 返回一个结果不会低于 0 的固定金额折扣函数"
+  R3: "apply_rules 把下一条规则应用到上一条规则的结果上"
+hints:
+  1: "`percent_off(10)` 返回的值是数字还是函数？要把什么传给这个值才能得到折后价格？"
+  2: "在函数内部创建并返回 `fn(price) { ... }`，这个匿名函数会记住外层的参数（`percent`），这就是闭包。要依次应用列表中的函数，可以使用 `list.fold`。"
+  3: "把累加器设为“到目前为止的折后价格”。每遇到一条规则，就把累加器传给这条规则，并把结果作为新的累加器。"
+  4: |
+    ```gleam
+    pub fn amount_off(amount: Int) -> fn(Int) -> Int {
+      fn(price) { todo }
+    }
+
+    pub fn apply_rules(price: Int, rules: List(fn(Int) -> Int)) -> Int {
+      list.fold(rules, price, fn(current, rule) { todo })
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

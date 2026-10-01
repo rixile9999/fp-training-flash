@@ -1,0 +1,13 @@
+title: 归并排序
+rubric:
+  R-04:
+    title: 不用标准排序函数，自己实现
+    description: 本题的目的是亲手实现归并排序。不要使用 `list.sort`。
+    message: 使用了 list.sort。请自己实现归并排序。
+  R-05:
+    title: 拆分与合并分开
+    description: 把拆分列表的函数和合并两个有序列表的函数分开，就能分别验证和复用它们。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 用类型表达失败的可能性。
+    message: 使用了 let assert 或 panic。

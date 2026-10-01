@@ -1,0 +1,27 @@
+title: "Fixing the shortest path: a bug that counts dequeued cells as distance"
+tests:
+  straight_corridor_test: "In a straight corridor, the answer is the distance between the cells"
+  goes_around_walls_test: "Finds the minimum number of moves for going around walls"
+  goal_next_to_start_test: "Returns 1 when G is right next to S, even if other cells are looked at first"
+  side_branch_not_counted_test: "Looking at cells beside the route does not count as moves"
+  open_room_test: "Finds the minimum number of moves to the opposite corner of a room with no walls"
+  unreachable_goal_test: "Returns Error(Nil) when walls make G unreachable"
+requirements:
+  R1: "Finds the minimum number of moves from S to G"
+  R2: "Error(Nil) when G is unreachable"
+  R3: "Finishes within O(V log V) for V cells"
+hints:
+  1: "Why does `\"S..G\"` give the right answer while `[\"..\", \"SG\"]` gives 2? Each time `steps` goes up by 1, what is it counting?"
+  2: "In breadth-first search, the distance is not a single value for the whole search; each cell has its own. The distance of a cell is the distance of the cell that discovered it + 1."
+  3: "Do not put only positions in the queue; put `#(position, distance)`. When you take out G, return the distance stored in that entry. Keep the queue order (put in at the back, take out from the front) as it is."
+  4: |
+    ```gleam
+    [#(pos, dist), ..], _ if pos == goal -> Ok(dist)
+    [#(pos, dist), ..rest], _ -> {
+      let next = todo // open_neighbors that are not in seen
+      let seen = list.fold(next, seen, set.insert)
+      let back = list.fold(next, back, fn(acc, p) { todo })
+      search(cells, goal, rest, back, seen)
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

@@ -1,0 +1,36 @@
+title: 去掉购物车计算辅助函数中的 let assert
+tests:
+  line_total_multiplies_price_test: line_total 把单价与数量相乘
+  unknown_sku_is_error_test: 价格表中没有的商品不崩溃，而是返回 UnknownSku
+  cart_total_sums_lines_test: cart_total 把所有行的金额相加
+  line_without_separator_is_bad_line_test: 没有分隔符 " x " 的行，把整行放进 BadLine
+  non_numeric_quantity_test: 数量不是整数时，把数量部分放进 BadQuantity
+  zero_quantity_test: 数量为 0 是 BadQuantity
+  cart_total_reports_first_bad_line_test: cart_total 不跳过错误的行，而是返回第一个错误
+  empty_cart_is_zero_test: 空购物车的合计为 0
+requirements:
+  R1: 对正确输入的结果保持不变
+  R2: 辅助函数的失败以 CheckoutError 值返回
+  R3: cart_total 传递第一个失败行的错误
+hints:
+  1: "`parse_line` 和 `price_of` 可能失败这一事实，现在体现在它们的返回类型里了吗？如果没有体现，`line_total` 又怎么能知道呢？"
+  2: "要把失败传给调用方，首先得把辅助函数的返回类型改成 `Result(值, CheckoutError)`。这样调用的地方就能用 `use x <- result.try(辅助函数(...))` 串联起来。在列表上累加且可能失败时，使用 `list.try_fold`。"
+  3: "从最里层开始修改。先把 `price_of` 和 `parse_line` 的返回类型改成 `Result`，让每处 `let assert` 都返回合适的错误；再用 `use` 串联 `line_total`；最后把 `cart_total` 中的 `fold` 改成 `try_fold`。"
+  4: |
+    ```gleam
+    fn parse_line(line: String) -> Result(#(String, Int), CheckoutError) {
+      case string.split(line, " x ") {
+        [sku, quantity_text] -> todo
+        _ -> Error(BadLine(line))
+      }
+    }
+
+    fn price_of(prices: Dict(String, Int), sku: String) -> Result(Int, CheckoutError) {
+      todo
+    }
+
+    pub fn cart_total(prices: Dict(String, Int), lines: List(String)) -> Result(Int, CheckoutError) {
+      list.try_fold(lines, 0, fn(sum, line) { todo })
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

@@ -1,0 +1,32 @@
+title: Fix an ISBN check that crashes on a misread barcode
+tests:
+  valid_isbn_test: A valid ISBN is True
+  valid_with_x_check_digit_test: A final X counts as 10
+  invalid_check_digit_test: A wrong check digit gives False
+  letter_does_not_crash_test: A letter in a digit position returns False instead of crashing
+  invalid_character_not_zero_test: An invalid character is not turned into 0 for the calculation
+  x_in_middle_test: An X anywhere other than the last position gives False
+  lowercase_x_test: Ending with a lowercase x returns False instead of crashing
+requirements:
+  R1: An invalid character gives False instead of crashing
+  R2: Valid inputs are judged exactly as before
+hints:
+  1: "What happens when you call `char_value(\"A\", 5)`? Can this function's return type express \"the conversion failed\"?"
+  2: "`let assert` crashes the program when the pattern does not match. A conversion that can fail should return its `Result` as it is, and `result.all(list)` gathers a `List(Result(a, e))` into a `Result(List(a), e)`."
+  3: "Change the return type of `char_value` to `Result(Int, Nil)`. In `is_valid`, gather the results for all characters: if any is an `Error`, return `False`; if all are `Ok`, run the existing weighted-sum check."
+  4: |
+    ```gleam
+    fn char_value(char: String, index: Int) -> Result(Int, Nil) {
+      case char, index {
+        "X", 9 -> Ok(10)
+        _, _ -> todo
+      }
+    }
+
+    // inside is_valid
+    case chars |> list.index_map(char_value) |> result.all {
+      Ok(values) -> todo
+      Error(Nil) -> todo
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

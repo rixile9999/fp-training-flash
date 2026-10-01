@@ -1,0 +1,29 @@
+title: Changing just one spot in a tree with a zipper
+tests:
+  set_value_test: "Changes only the value of the focus node; the rest of the tree stays the same"
+  set_left_with_leaf_test: "Replaces the left child of the focus node with a new tree"
+  set_right_with_empty_test: "Replacing the right child with Leaf removes that branch"
+  set_value_after_traversing_up_test: "Changing a value after going down and back up changes the value in the right spot"
+  set_right_with_subtree_test: "Replaces the right child of the root with a tree of several nodes"
+  set_value_on_leaf_creates_node_test: "When the focus is a Leaf, set_value creates a new node with no children"
+  set_child_on_leaf_fails_test: "When the focus is a Leaf, set_left and set_right return Error(Nil)"
+  focus_stays_after_edit_test: "After the change the focus stays in the same spot, so you can still go up"
+requirements:
+  R1: "set_value changes only the value of the focus node; at a Leaf it creates a node with no children"
+  R2: "set_left and set_right change only the corresponding child of the focus node"
+  R3: "set_left and set_right return Error(Nil) when the focus is a Leaf"
+  R4: "Returns a new zipper with the position (path) of the focus left as it is"
+hints:
+  1: "When you change the focus node, do you also need to change the path (crumbs)? Later, when `to_tree` builds the whole tree, how does the changed focus get reflected?"
+  2: "In a zipper, the focus is \"the spot you can change right now\". If you replace only the focus with a new node and leave the path as it is, then on the way up the path wraps around the changed focus and rebuilds the whole tree. The record update `Zipper(..zipper, focus: ...)` says exactly that."
+  3: "In all three functions, split `Leaf` and `Node(value, left, right)` with `case zipper.focus`. For a `Node`, make the focus a `Node` with only the part to change replaced by the new value. For a `Leaf`, `set_value` creates a new node, and `set_left`/`set_right` return `Error(Nil)`."
+  4: |
+    ```gleam
+    pub fn set_left(zipper: Zipper(a), tree: Tree(a)) -> Result(Zipper(a), Nil) {
+      case zipper.focus {
+        Leaf -> Error(Nil)
+        Node(value, _, right) -> Ok(Zipper(..zipper, focus: todo))
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

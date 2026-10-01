@@ -1,0 +1,38 @@
+tests:
+  singleton_double_test: 两侧数字相同的单块骨牌能构成链
+  three_elements_test: 三块骨牌调换顺序后能连成一个环
+  cant_be_chained_test: 两端数字对不上时不能构成链
+  empty_input_test: 没有骨牌时算作能构成链
+  singleton_that_cant_close_test: 两侧数字不同的单块骨牌不能构成链
+  can_reverse_stones_test: 可以把骨牌翻转后再连接
+  disconnected_loops_test: 两个分开的环不能构成一条链
+  needs_backtracking_test: 先选的骨牌走进死胡同时，换另一块骨牌重新尝试
+requirements:
+  R1: 每块骨牌恰好用一次，相邻骨牌相接的数字相同（骨牌可以翻转）
+  R2: 第一块骨牌的外侧数字与最后一块骨牌的外侧数字相同
+  R3: 空输入为 True
+  R4: 走不通时回退，尝试其他选择
+hints:
+  1: "链是一个环，所以从哪块骨牌开始都可以。选定第一块骨牌后，在继续往后接的过程中需要带着哪些信息？"
+  2: "回溯每次多做一个选择，走不通时就改掉上一个选择。给 `list.any` 传入一个询问“这个选择能否走到底”的函数，它会在得到真值时立刻停下，否则尝试下一个选择。"
+  3: "编写 `extend(first, end, remaining)`。当 `remaining` 为空时，检查 `first == end`。否则挑一块含有与 `end` 相同数字的骨牌（包括翻转的情况），用只去掉这一块后的剩余骨牌递归。`selections` 会生成所有“一块骨牌与其余骨牌”的组合。"
+  4: |
+    ```gleam
+    fn extend(first: Int, end: Int, remaining: List(#(Int, Int))) -> Bool {
+      case remaining {
+        [] -> first == end
+        _ ->
+          next_steps(end, remaining)
+          |> list.any(fn(step) {
+            let #(new_end, rest) = step
+            todo
+          })
+      }
+    }
+
+    // 对每块能接到 end 上的骨牌：#(接上之后的末端数字, 去掉这一块后的剩余骨牌)
+    fn next_steps(end: Int, stones: List(#(Int, Int))) -> List(#(Int, List(#(Int, Int)))) {
+      todo
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

@@ -1,0 +1,37 @@
+title: Count subtitle words, telling contractions from quotes
+tests:
+  trim_quotes_keeps_inner_apostrophe_test: Removes all leading and trailing apostrophes and keeps the one in the middle
+  tokens_split_on_non_word_chars_test: Keeps apostrophes in the pieces and splits only on other separators
+  contractions_are_single_words_test: A contraction counts as one word
+  quotes_around_word_are_removed_test: A word wrapped in quotes counts the same as the word without quotes
+  quoted_contraction_test: A contraction wrapped in quotes still counts as the contraction
+  alternating_separators_test: Does not count empty words even when several kinds of separators are mixed
+  lone_quotes_are_not_words_test: A piece made only of apostrophes is not a word
+  full_subtitle_test: Counts a whole subtitle mixing double quotes, numbers and newlines
+requirements:
+  R1: Apostrophes do not split words
+  R2: Apostrophes at either end of a word are removed, and if nothing is left, it is not a word
+  R3: The number of times each word appears, based on lowercase
+hints:
+  1: "In `'can't'`, which of the three apostrophes is part of the word and which are quote marks? Can you tell the two kinds apart by their position?"
+  2: "If you first treat apostrophes as word characters when splitting, and then strip only the apostrophes stuck to either end of each piece, the apostrophe in the middle naturally stays. `list.drop_while` drops elements from the front for as long as the condition is true."
+  3: "Split with `tokens`, apply `trim_quotes` to each piece, drop empty strings, then count into a dict. For `trim_quotes`, apply `drop_while` once to the front of the character list, and once more after reversing it."
+  4: |
+    ```gleam
+    pub fn trim_quotes(token: String) -> String {
+      token
+      |> string.to_graphemes
+      |> list.drop_while(fn(g) { g == "'" })
+      |> todo
+      |> string.concat
+    }
+
+    pub fn count_words(input: String) -> Dict(String, Int) {
+      input
+      |> string.lowercase
+      |> tokens
+      |> list.map(trim_quotes)
+      |> todo
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

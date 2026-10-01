@@ -1,0 +1,12 @@
+title: Build a league table
+rubric:
+  R-02:
+    title: The pipeline shows the intent
+    description: The top-level function only connects the steps of splitting lines, parsing, aggregating, sorting and output, in order.
+  R-05:
+    title: One function per step
+    description: Parsing, updating a record, the sort order and row output are each a small named function that can be tested separately.
+  R-09:
+    title: No let assert or panic
+    description: Lines with the wrong format are expressed as a Result and skipped.
+    message: let assert or panic was used.

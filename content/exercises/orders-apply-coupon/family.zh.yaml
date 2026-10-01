@@ -1,0 +1,12 @@
+title: 只对待发货订单使用优惠券
+rubric:
+  R-02:
+    title: 管道体现意图
+    description: 每一步只做一种转换，阅读顺序与处理顺序一致。
+  R-05:
+    title: 分离计算逻辑
+    description: 把折扣计算这类计算式拆成有名字的小函数，就能单独验证。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 用类型来表达可能的失败。
+    message: 使用了 let assert 或 panic。

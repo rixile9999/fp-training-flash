@@ -1,0 +1,37 @@
+title: 制作计入净胜球的联赛积分榜
+tests:
+  parse_line_test: 从一行比赛记录中解析出两支球队和进球数
+  record_updates_both_teams_test: 按各自的视角把比赛结果和进球、失球计入两支球队
+  compare_rows_goal_difference_test: 积分相同时，净胜球多的球队排在前面
+  compare_rows_name_tiebreak_test: 积分和净胜球都相同时，按球队名称升序排列
+  format_row_signed_goal_difference_test: 正的净胜球带 + 号输出
+  format_row_zero_goal_difference_test: 净胜球为 0 时不带符号输出
+  standings_test: 用多场比赛生成按积分、净胜球、名称排序的积分榜
+  standings_skips_invalid_lines_test: 跳过空行和比分格式错误的行
+requirements:
+  R1: parse_line 只接受“主队;客队;主队进球-客队进球”格式
+  R2: record 把胜平负和进球、失球同时计入两支球队
+  R3: 排名依次按积分降序、净胜球降序、名称升序
+  R4: format_row 把净胜球连同符号右对齐输出在 3 格中
+hints:
+  1: "一行比赛记录分别给两支球队留下了哪些信息（胜平负、进球、失球）？主队和客队的视角有什么不同？"
+  2: "排序依据有三个时，把 `order.break_tie` 连接两次。降序的依据要像 `int.compare(b 的值, a 的值)` 那样交换参数顺序。可以用进球比较的结果（`int.compare(scored, conceded)`）来区分胜平负。"
+  3: "在 `record` 中写一个辅助函数，把 `(进球, 失球)` 加到一支球队的战绩上，然后调用两次：主队传 `(主队进球, 客队进球)`，客队传 `(客队进球, 主队进球)`。给净胜球加符号也单独放进一个小函数。"
+  4: |
+    ```gleam
+    fn add_game(stats: Stats, scored: Int, conceded: Int) -> Stats {
+      let stats = Stats(..stats, goals_for: todo, goals_against: todo)
+      case int.compare(scored, conceded) {
+        order.Gt -> todo
+        order.Eq -> todo
+        order.Lt -> todo
+      }
+    }
+
+    pub fn compare_rows(a: #(String, Stats), b: #(String, Stats)) -> Order {
+      int.compare(points(b.1), points(a.1))
+      |> order.break_tie(todo)
+      |> order.break_tie(string.compare(a.0, b.0))
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

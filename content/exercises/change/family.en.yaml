@@ -1,0 +1,12 @@
+title: Make change with the fewest coins
+rubric:
+  R-07:
+    title: Store subproblem answers in a table and reuse them
+    description: To avoid computing the answer for the same amount twice, fill a table (such as a Dict) starting from the smallest amounts and read answers back from it.
+  R-08:
+    title: Represent unreachable amounts as values
+    description: An amount that cannot be made is represented as missing from the table (Error) or as a Result, not as a special value such as 0 or a huge number.
+  R-09:
+    title: No let assert or panic
+    description: The possibility of failure is expressed in the types.
+    message: let assert or panic was used.

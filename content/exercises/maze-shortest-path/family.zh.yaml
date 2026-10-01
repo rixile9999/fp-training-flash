@@ -1,0 +1,16 @@
+title: 用广度优先搜索求迷宫的最短路径
+rubric:
+  R-02:
+    title: 搜索状态一目了然
+    description: 把队列（接下来要看的格子）、已访问集合和距离明确作为递归函数的参数，让人看出每一步改变了什么。
+  R-05:
+    title: 分离邻居计算
+    description: 把求可移动邻格的规则拆成一个有名字的小函数。
+  R-08:
+    title: 能快速检查是否已访问的数据结构
+    description: 用 Set 或 Dict 管理已访问的格子。在列表里查找会随格子数成比例变慢。
+    message: 用 list.contains 检查是否已访问，在网格很大时会很慢。请使用 set。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 用类型来表达可能的失败。
+    message: 使用了 let assert 或 panic。

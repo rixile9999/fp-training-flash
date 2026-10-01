@@ -1,0 +1,29 @@
+title: Return the effects of a price change as values
+tests:
+  drop_percent_test: The drop rate is the amount reduced divided by the original price, as a percentage
+  drop_percent_increase_test: If the price goes up, the drop rate is 0
+  change_price_updates_product_test: Returns the product with the new price applied
+  change_price_small_drop_logs_only_test: If the drop rate is under 20%, only a log entry is produced
+  change_price_notifies_watchers_test: For a large drop, creates a notification for each watching customer after the log entry
+  change_price_threshold_test: A drop of exactly 20% also creates notifications
+  change_price_watcher_order_test: Notifications follow the order of the watcher list
+requirements:
+  R1: drop_percent only performs a pure calculation
+  R2: change_price does not run any effects; it returns a list of effects
+hints:
+  1: "Is there any way for a test to check \"who was sent which notification\" by the existing `update_price`? Instead of sending notifications, what could it return?"
+  2: "If, instead of running effects right away, you return a list of values that describe \"what to do\" (`Log`, `Notify`), the calculation becomes a pure function and an outer function takes care of running them."
+  3: "Compute the drop rate with `drop_percent`, then join one log entry with a list of notifications built with `list.map` (when the condition holds). If the condition doesn't hold, the notification list is empty."
+  4: |
+    ```gleam
+    pub fn change_price(product, new_price, watchers) {
+      let percent = drop_percent(product.price, new_price)
+      let log = Log(todo)
+      let notices = case percent >= 20 {
+        True -> list.map(watchers, fn(customer) { todo })
+        False -> []
+      }
+      #(Product(..product, price: new_price), [log, ..notices])
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

@@ -1,0 +1,27 @@
+title: 验证注册表单，遇到第一个错误就停止
+tests:
+  valid_form_test: "所有检查都通过时，返回不含密码的 NewUser"
+  short_username_test: "用户名太短时返回 UsernameTooShort"
+  invalid_email_test: "邮箱中没有 @ 时返回 InvalidEmail"
+  short_password_test: "密码太短时返回 PasswordTooShort"
+  underage_test: "未满 14 周岁时返回 Underage"
+  first_error_in_field_order_test: "多个字段出错时，按用户名、邮箱、密码、年龄的顺序只返回第一个错误"
+requirements:
+  R1: "用通过检查的值创建 NewUser"
+  R2: "应用全部四项检查"
+  R3: "按字段顺序检查，遇到第一个错误就停止"
+hints:
+  1: "四个检查函数分别返回什么？成功时返回的值可以怎样用来创建 `NewUser`？"
+  2: "`use x <- result.try(r)` 在 `r` 为 `Ok(x)` 时继续执行下一行；为 `Error(e)` 时，整个函数就在这里以 `Error(e)` 结束。不需要这个值时，用 `use _ <- ...` 接收。"
+  3: "按用户名、邮箱、密码、年龄的顺序写四行 `use`，在最后一行用取出的值创建 `Ok(NewUser(...))`。"
+  4: |
+    ```gleam
+    pub fn validate(form: SignupForm) -> Result(NewUser, SignupError) {
+      use username <- result.try(check_username(form.username))
+      use email <- result.try(todo)
+      use _ <- result.try(todo)
+      use age <- result.try(todo)
+      todo
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

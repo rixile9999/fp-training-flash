@@ -1,0 +1,12 @@
+title: Learn Option with a role-playing game
+rubric:
+  R-06:
+    title: Tells "nothing" apart from a default value
+    description: Instead of first squashing None into a default such as 0 or an empty string, handle the missing case separately with case or option functions.
+  R-02:
+    title: The branches reveal the rules
+    description: Each case branch corresponds to one rule, so a reader can match the list of rules against the code line by line.
+  R-09:
+    title: No let assert or panic
+    description: The possibility of failure is expressed in the types.
+    message: let assert or panic was used.

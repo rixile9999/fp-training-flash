@@ -1,0 +1,24 @@
+tests:
+  empty_list_test: An empty list returns an empty list
+  squares_test: Returns a list with each integer squared
+  uppercases_strings_test: Applies the function to strings in the same way
+  changes_element_type_test: The result elements may have a different type from the input
+  keeps_order_of_long_list_test: Keeps the original order even for a long list
+  nested_accumulate_test: Works even when accumulate is called again inside the function
+requirements:
+  R1: Apply the function to every element and keep the length
+  R2: Keep the original order
+hints:
+  1: "What should accumulate return for an empty list? If there is at least one element, can you think of the list as the first element plus the rest of the list?"
+  2: "A list has only two shapes: `[]` or `[first, ..rest]`. Splitting those two shapes with `case` and handling `rest` with the same function is structural recursion."
+  3: "Put `fun(first)` at the front of the result, and follow it with the result of recursively transforming the rest of the list."
+  4: |
+    ```gleam
+    pub fn accumulate(list: List(a), fun: fn(a) -> b) -> List(b) {
+      case list {
+        [] -> []
+        [first, ..rest] -> todo
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

@@ -1,0 +1,12 @@
+title: Predict the result of an Option chain
+hints:
+  1: "In `spell_power(None)`, does the function passed to `option.map` run?"
+  2: "`option.map` only changes the value inside `Some` and leaves `None` as it is. `option.then` calls the function on `Some(x)` and uses the `Option` that function returns as the result. So a `Some` can turn into a `None`."
+  3: "Trace `a`, `b` and `c` one at a time. Write down whether the value is `Some(...)` or `None` at each step, and check which default the final `unwrap` uses."
+  4: |
+    ```gleam
+    // a: Some(8) -> map -> Some(16) -> then(16 >= 10) -> Some(16) -> unwrap -> 16
+    // b: Some(4) -> map -> Some(8)  -> then(8 >= 10)  -> ?        -> unwrap -> ?
+    // c: None    -> map -> ?        -> then           -> ?        -> unwrap -> ?
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

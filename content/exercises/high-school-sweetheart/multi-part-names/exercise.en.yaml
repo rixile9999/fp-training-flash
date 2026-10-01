@@ -1,0 +1,33 @@
+title: Initials and monograms for multi-word names
+tests:
+  name_parts_test: Splits a name into a list of words on spaces
+  name_parts_extra_spaces_test: Repeated spaces and leading or trailing spaces don't create empty words
+  initials_three_parts_test: A three-word name gives three initials
+  initials_extra_spaces_test: Even with several spaces, there is exactly one space between initials
+  initials_blank_test: The initials of a name made only of spaces are an empty string
+  monogram_test: A monogram writes the uppercase first letters together
+  monogram_single_name_test: The monogram of a one-word name is a single letter
+requirements:
+  R1: name_parts returns the words in order, with no empty words
+  R2: initials reuses name_parts and initial
+  R3: monogram reuses name_parts
+hints:
+  1: "If you `split` `\"  mary   jane \"` on a single space, what list do you get? Which of its elements are the problem?"
+  2: "You can drop unwanted elements with `list.filter` and transform the remaining ones one by one with `list.map`. You don't need pattern matching that assumes the list's length."
+  3: "Filter out empty words in one place only, `name_parts`. `initials` and `monogram` just take the result of `name_parts`, transform each word and combine them."
+  4: |
+    ```gleam
+    pub fn name_parts(full_name: String) -> List(String) {
+      full_name
+      |> string.split(" ")
+      |> list.filter(todo)
+    }
+
+    pub fn monogram(full_name: String) -> String {
+      full_name
+      |> name_parts
+      |> list.map(todo)
+      |> string.concat
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

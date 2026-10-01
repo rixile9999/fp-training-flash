@@ -1,0 +1,27 @@
+title: Validating a signup form, stopping at the first error
+tests:
+  valid_form_test: "When every check passes, returns a NewUser without the password"
+  short_username_test: "Returns UsernameTooShort when the username is too short"
+  invalid_email_test: "Returns InvalidEmail when the email has no @"
+  short_password_test: "Returns PasswordTooShort when the password is too short"
+  underage_test: "Returns Underage when the person is under 14"
+  first_error_in_field_order_test: "When several fields are wrong, returns only the first error in the order username, email, password, age"
+requirements:
+  R1: "Builds the NewUser from the values that passed the checks"
+  R2: "Applies all four checks"
+  R3: "Checks in field order and stops at the first error"
+hints:
+  1: "What does each of the four check functions return? How could the value returned on success be used to build the `NewUser`?"
+  2: "`use x <- result.try(r)` continues to the next line if `r` is `Ok(x)`, and if it is `Error(e)`, ends the whole function right there with `Error(e)`. If you do not need the value, bind it with `use _ <- ...`."
+  3: "Write four `use` lines in the order username, email, password, age, and on the last line build `Ok(NewUser(...))` from the values you took out."
+  4: |
+    ```gleam
+    pub fn validate(form: SignupForm) -> Result(NewUser, SignupError) {
+      use username <- result.try(check_username(form.username))
+      use email <- result.try(todo)
+      use _ <- result.try(todo)
+      use age <- result.try(todo)
+      todo
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

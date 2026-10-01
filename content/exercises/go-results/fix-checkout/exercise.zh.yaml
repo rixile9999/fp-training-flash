@@ -1,0 +1,24 @@
+title: 修复吞掉库存错误的结账处理
+tests:
+  successful_checkout_test: 所有步骤都通过时，返回已使用积分、状态为 Paid 的订单
+  charge_failure_test: 支付失败时返回支付错误
+  stock_failure_test: 库存检查失败时返回库存错误
+  stock_error_wins_over_charge_error_test: 库存和支付都失败时，返回先执行的库存检查的错误
+  charge_sees_discounted_amount_test: 支付步骤收到的是使用积分后的金额
+  points_use_stock_checked_order_test: 积分应用于库存检查步骤返回的订单
+requirements:
+  R1: 成功时以 Ok 返回状态为 Paid 的订单
+  R2: 原样返回最先发生的错误
+  R3: 按库存检查、使用积分、支付的顺序进行
+hints:
+  1: "`check_stock` 返回 `Error` 时，在现在的代码里这个错误去了哪里？"
+  2: "`result.unwrap(r, 默认值)` 会把 `Error` 换成默认值。要把错误传回调用方，用 `result.try` 或 `use x <- result.try(...)`。"
+  3: "改成只有库存检查结果为 `Ok` 时才进入下一步。使用积分不会失败，保持原样即可；支付结果改为 `Paid` 状态后返回。"
+  4: |
+    ```gleam
+    use checked <- result.try(check_stock(order))
+    let discounted = apply_points(checked)
+    use charged <- result.try(todo)
+    todo
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

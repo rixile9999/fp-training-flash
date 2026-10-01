@@ -1,0 +1,12 @@
+title: 验证注册表单
+rubric:
+  R-05:
+    title: 复用验证规则
+    description: 组合已有的 check_ 函数，不要重新实现规则。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 用类型来表达可能的失败。
+    message: 使用了 let assert 或 panic。
+  R-12:
+    title: 按目的选择“第一个错误”还是“所有错误”
+    description: 后面的步骤依赖前面步骤的结果时，在第一个错误处停止；要把相互独立的检查一次性展示给用户时，收集所有错误。

@@ -1,0 +1,73 @@
+title: 在模块边界守住不变式
+blocks:
+  intro:
+    markdown: |-
+      **不变式（invariant）**是指“这个类型的任何值都*始终*成立的性质”。例如：“`Amount` 里的美分数永远不会是负数。”
+
+      使用 `opaque` + 智能构造器后，这个不变式**只需在一个地方——模块边界——守住**就行。因为构造值的唯一途径就是模块内部的函数。一旦某个值成为了 `Amount`，*其余所有代码都可以放心地相信*它里面的美分数不可能是负数。
+  subtract-ok:
+    prompt: '这段代码的结果是？（`subtract` 在模块内部调用 `new(cents(a) - cents(b))`）'
+    code: |-
+      let out = case new(100), new(30) {
+        Ok(a), Ok(b) ->
+          case subtract(a, b) {
+            Ok(r) -> cents(r)
+            Error(_) -> -1
+          }
+        _, _ -> -1
+      }
+    choices:
+      - '`70`'
+      - '`130`'
+      - '`-1`'
+      - '`Ok(70)`'
+    feedback:
+      correct: '答对了！100 - 30 = 70，而 70 >= 0，所以 `new` 返回 `Ok`。用 `cents` 取出来就是 70。'
+      choices:
+        "1": '这是减法——不是加法（130），而是 100 - 30 = 70。'
+        "2": '`-1` 是 `Error` 分支的值。70 不是负数，能通过验证。'
+        "3": '已经用 `cents` 取出过一次，所以 `out` 得到的是 `Int` 70，而不是 `Result`。'
+  subtract-underflow:
+    prompt: '这次呢？（同样的 `subtract`）'
+    choices:
+      - '`Ok(Amount(-70))`'
+      - '`Error("amount must not be negative")`'
+      - '`-70`'
+      - '`Error("setup")`'
+    feedback:
+      correct: '完全正确！30 - 100 = -70，`subtract` 调用了 `new(-70)`，不变式的验证把它拦下，结果是 `Error`。'
+      choices:
+        "0": '负数的 `Amount` 无法被构造出来——这正是不变式的意义所在。'
+        "2": '`subtract` 返回的是 `Result`，而不是裸值。'
+        "3": '`new(30)` 和 `new(100)` 都成功了，所以不会走到 `"setup"` 分支。验证是在 `new(-70)` 处拦下的。'
+  where:
+    markdown: |-
+      这里的关键是：“不要把负数检查散落到每一个调用方。”不变式在模块内部的 `new`/`subtract` 中守住一次，外部代码拿到 `Amount` 时，就可以相信它“已经是正确的值”，直接使用。
+
+      其他领域也一样。对于 `Email`，不变式就是“包含 `@`”。
+  email-invalid:
+    prompt: '`Email` 的智能构造器用 `string.contains(raw, "@")` 来验证时，`new("ab")` 的结果是？'
+    choices:
+      - '`Ok(Email("ab"))`'
+      - '`Error("invalid email")`'
+      - '`"ab"`'
+      - '`True`'
+    feedback:
+      correct: '答对了！`"ab"` 里没有 `@`，所以 `string.contains` 为 `False`——走 `Error` 分支。'
+      choices:
+        "0": '没有 `@` 就不会得到 `Ok`——不变式会拦住它。'
+        "2": '`new` 返回的是 `Result`，而不是裸字符串。'
+        "3": '`string.contains` 只是 `case` 检查的值，`new` 的结果是 `Result`。'
+  boundary-benefit:
+    prompt: 只在“模块边界”守住不变式，这种设计最大的好处是什么？
+    choices:
+      - 必须把验证代码复制粘贴到每个使用该值的调用处
+      - 值一旦构造出来，在任何地方都可以相信它是正确的，防御性代码随之消失
+      - 运行时验证更频繁，因此更安全
+      - '把类型设为 `opaque` 会自动生成验证'
+    feedback:
+      correct: '答对了！构造值的途径被封住了，所以你拿到的 `Amount` 已经是正确的。到处都写的 `if cents < 0` 防御性代码就不再需要了。'
+      choices:
+        "0": 恰恰相反——在边界守住一次，就不用再复制粘贴了。
+        "2": 在构造时验证一次就足够了。频繁验证并不是目的。
+        "3": '`opaque` 只是封住了构造途径，验证逻辑要你自己写在 `new` 里。'

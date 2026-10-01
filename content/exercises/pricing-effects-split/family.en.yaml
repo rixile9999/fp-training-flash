@@ -1,0 +1,12 @@
+title: Separate output and side effects from price calculation
+rubric:
+  R-05:
+    title: Calculation logic is separated
+    description: Price calculation lives in functions that take values and return values, and they never call effects such as printing or random numbers.
+  R-07:
+    title: Effects at the edges
+    description: Effects such as io.println or int.random are used in only one thin outer function, and that function only carries out the result of the pure functions.
+  R-09:
+    title: No let assert or panic
+    description: The possibility of failure is expressed in the types.
+    message: let assert or panic was used.

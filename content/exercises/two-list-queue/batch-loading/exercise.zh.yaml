@@ -1,0 +1,31 @@
+title: 从快递装车队列中每次取出 n 个
+tests:
+  pop_returns_oldest_parcel_test: pop 返回最先到达的快递和剩余的队列
+  pop_empty_queue_test: 对空队列 pop 时返回 Error(Nil)
+  takes_batch_in_arrival_order_test: take 从前面按到达顺序取出 n 个
+  takes_everything_when_short_test: 等待的快递少于 n 个时全部取出
+  take_zero_keeps_queue_test: n 为 0 时什么也不取
+  take_negative_keeps_queue_test: n 为负数时什么也不取
+  consecutive_batches_test: 取出后新到达的快递装在下一批的后面
+requirements:
+  R1: pop 取出最先放入的元素，空队列时返回 Error(Nil)
+  R2: take 从前面按到达顺序最多取出 n 个
+  R3: 处理 n 小于等于 0 或元素不足的情况
+hints:
+  1: "能不能把 `take(queue, n)` 看成一次 `pop` 加上 `take(剩余部分, n - 1)`？什么时候应该停下？"
+  2: "用递归写循环时，把取出的元素添加到累加器列表的前面，它们就会逆序堆积。停下时反转一次即可。`front` 为空时把 `back` 反转后移过去，也是同样的原理。"
+  3: "先完成 `pop`。然后写一个 `take_loop(queue, n, taken)`，在 `n > 0` 且 `pop` 成功时一直重复，只要有一个条件不满足，就返回 `#(list.reverse(taken), queue)`。"
+  4: |
+    ```gleam
+    fn take_loop(queue: Queue(a), n: Int, taken: List(a)) -> #(List(a), Queue(a)) {
+      case n > 0 {
+        False -> #(list.reverse(taken), queue)
+        True ->
+          case pop(queue) {
+            Ok(#(item, rest)) -> todo
+            Error(Nil) -> todo
+          }
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

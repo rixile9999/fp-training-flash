@@ -1,0 +1,26 @@
+title: 修复销售排行报表的 bug
+tests:
+  parse_line_test: '把 "商品,数量" 行解析为元组'
+  total_by_product_test: 按商品把数量相加
+  rank_orders_by_quantity_desc_test: 数量多的商品排在前面
+  rank_breaks_ties_by_name_test: 数量相同时按商品名称升序排列
+  format_row_test: 把名次和商品变成一行字符串
+  build_ranking_numbers_from_one_test: 名次编号从 1 开始
+  build_ranking_full_test: 跳过错误的行，生成完整的排行表
+requirements:
+  R1: 按数量降序排名，数量相同时按名称升序
+  R2: 名次编号从 1 开始
+hints:
+  1: "分别调用每个辅助函数，哪个步骤的输出与预期不同？"
+  2: "`list.sort` 的比较函数返回 `Lt` 时，第一个参数排在前面。`order.break_tie` 只在第一次比较结果为 `Eq` 时才使用第二个比较。`list.index_map` 的索引从 0 开始。"
+  3: "bug 在 `rank` 和 `build_ranking` 两处。其他函数不需要修改。"
+  4: |
+    ```gleam
+    pub fn rank(totals: List(#(String, Int))) -> List(#(String, Int)) {
+      list.sort(totals, fn(a, b) {
+        int.compare(todo, todo)
+        |> order.break_tie(todo)
+      })
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

@@ -1,0 +1,28 @@
+title: 合并两个有序列表
+tests:
+  merge_with_empty_left_test: 左边为空时原样返回右边的列表
+  merge_interleaves_test: 按升序交错合并两个列表的元素
+  merge_with_empty_right_test: 右边为空时原样返回左边的列表
+  merge_leftover_tail_test: 右边先用完时，把左边剩余的元素全部接上
+  merge_keeps_duplicates_test: 两边有相同的值时全部保留
+  merge_negative_numbers_test: 混有负数时也按升序合并
+requirements:
+  R1: 结果为升序
+  R2: 一边用完后，另一边剩下的元素全部包含进来
+  R3: 相同的值有几个就全部包含几个
+hints:
+  1: "如果两个列表都是升序，那么可能成为结果第一个元素的候选有几个？"
+  2: "可以像 `case left, right { ... }` 这样同时对两个值进行模式匹配。把某一边为空的情况与两边都有元素的情况区分开。"
+  3: "把两个头元素中较小或相等的那个放到结果最前面，再把去掉它后的剩余部分与另一边整个列表继续合并。某一边为空时，原样返回另一边。"
+  4: |
+    ```gleam
+    pub fn merge(left: List(Int), right: List(Int)) -> List(Int) {
+      case left, right {
+        [], _ -> right
+        _, [] -> left
+        [x, ..rest], [y, ..] if x <= y -> todo
+        _, [y, ..rest] -> todo
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

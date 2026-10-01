@@ -1,0 +1,31 @@
+tests:
+  foldl_empty_returns_initial_test: 折叠空列表时原样返回初始值
+  foldl_goes_left_to_right_test: foldl 从第一个元素开始依次累加
+  length_counts_items_test: length 统计元素个数
+  length_of_empty_list_test: 空列表的长度是 0
+  reverse_test: reverse 反转元素顺序
+  reverse_empty_test: 反转空列表得到空列表
+  reverse_large_list_test: 有 20 万个元素的列表也能在时间限制内反转
+requirements:
+  R1: foldl 从前往后用 function(累加值, 元素) 累加
+  R2: length 是元素个数
+  R3: reverse 是顺序反转后的新列表
+  R4: 时间与列表长度成正比
+hints:
+  1: "如果能从前往后把列表扫一遍，同时带着“到目前为止的结果”，那么计数和反转分别应该怎样改变这个结果？"
+  2: "累加器（accumulator）是传给递归调用的“到目前为止的结果”。在列表前面添加 `[x, ..acc]` 无论有多少元素都一步完成，而接到末尾则要复制前面的整个列表。"
+  3: "先实现 `foldl`。这样 `length` 就可以写成给累加值加 1 的折叠，`reverse` 可以写成从空列表开始、把元素逐个添加到前面的折叠。"
+  4: |
+    ```gleam
+    pub fn foldl(over list: List(a), from initial: b, with function: fn(b, a) -> b) -> b {
+      case list {
+        [] -> initial
+        [first, ..rest] -> foldl(over: rest, from: todo, with: function)
+      }
+    }
+
+    pub fn reverse(list: List(a)) -> List(a) {
+      foldl(over: list, from: [], with: fn(reversed, item) { todo })
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

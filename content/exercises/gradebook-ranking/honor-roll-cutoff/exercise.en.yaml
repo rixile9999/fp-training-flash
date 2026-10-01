@@ -1,0 +1,28 @@
+title: Pick the honor roll, including ties at the cutoff
+tests:
+  empty_class_test: With no students, return an empty honor roll
+  top_n_test: Pick the names of n students in order of highest score
+  includes_ties_at_cutoff_test: Every student with the same score as the n-th student is on the honor roll
+  zero_limit_test: If n is 0, return an empty honor roll
+  limit_exceeds_count_test: If n is larger than the number of students, pick every student
+  tied_names_in_order_test: Students with equal scores are listed in alphabetical order of name
+requirements:
+  R1: List by score descending, then by name ascending on a tie
+  R2: Students tied with the n-th student are included even beyond n
+  R3: An empty honor roll if n is 0 or less, everyone if it exceeds the number of students
+hints:
+  1: "If you cut n students with `list.take`, what happens when the n-th and (n+1)-th students have the same score?"
+  2: "`list.take_while` takes elements from the front while a condition holds, and stops at the first place it becomes false. `list.last` gives the last element of a list as a `Result`."
+  3: "After sorting, cut the first n students and use the score of the last of them as the cutoff score. Then take from the whole sorted list as long as the score is at or above the cutoff. Handle the case where the cut list is empty first."
+  4: |
+    ```gleam
+    let sorted = list.sort(students, by_rank_order)
+    case list.last(list.take(sorted, n)) {
+      Error(Nil) -> []
+      Ok(cutoff) ->
+        sorted
+        |> list.take_while(fn(student) { todo })
+        |> list.map(fn(student) { student.name })
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

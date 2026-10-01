@@ -1,0 +1,34 @@
+tests:
+  valid_isbn_test: 带连字符的正确 ISBN 为 True
+  invalid_check_digit_test: 校验位错误时为 False
+  valid_with_x_check_digit_test: 最后一个字符 X 按 10 计算
+  valid_without_dashes_test: 没有连字符的正确 ISBN 也为 True
+  x_only_valid_as_check_digit_test: X 出现在非最后的位置时为 False
+  invalid_character_not_zero_test: 不把非数字字符当作 0
+  too_long_test: 去掉连字符后超过 10 个字符时为 False
+  empty_isbn_test: 空字符串为 False
+requirements:
+  R1: 去掉连字符后正好 10 个字符
+  R2: 前 9 个字符是数字，最后一个是数字或 X
+  R3: 加权和能被 11 整除
+hints:
+  1: "如果这个函数绝不能崩溃，那么把一个字符变成数字的步骤失败时，该怎么办？"
+  2: "`int.parse(\"7\")` 是 `Ok(7)`，`int.parse(\"P\")` 是 `Error(Nil)`。用 `list.try_map` 可以把整个字符列表变成 `Result(List(Int), Nil)`，只要有一个失败，结果就是 `Error`。"
+  3: "分成两个步骤。(1) 解析：去掉连字符、检查长度，再把字符变成值（`Result(List(Int), Nil)`）；(2) 计算：看值列表的加权和能否被 11 整除。解析得到 `Error` 时就是 `False`。X 只有在位置 9（最后一位）时才是 10。"
+  4: |
+    ```gleam
+    pub fn is_valid(isbn: String) -> Bool {
+      case parse(isbn) {
+        Ok(values) -> todo
+        Error(Nil) -> False
+      }
+    }
+
+    fn char_value(char: String, index: Int) -> Result(Int, Nil) {
+      case char, index {
+        "X", 9 -> Ok(10)
+        _, _ -> todo
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

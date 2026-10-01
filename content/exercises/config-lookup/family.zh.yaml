@@ -1,0 +1,12 @@
+title: 读取配置值并区分错误
+rubric:
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 用类型表达失败的可能性。
+    message: 使用了 let assert 或 panic。
+  R-07:
+    title: 不吞掉错误
+    description: 值不存在和值不合法是两种不同的情况。不要用 result.unwrap 或 option.from_result 把不合法的值也换成默认值。
+  R-11:
+    title: 用 use 连接而不是嵌套 case
+    description: 用 use 和 result.try 把多步 Result 串起来，成功路径就能从上往下读。

@@ -1,0 +1,27 @@
+tests:
+  introduce_with_name_test: If there is a name, introduce the player by that name
+  introduce_without_name_test: If there is no name, introduce the player as Mighty Magician
+  revive_alive_returns_none_test: A player with health left is not revived and None is returned
+  revive_low_level_test: Below level 10, only health is restored to 100 and mana is left as is
+  revive_level_ten_restores_mana_test: At exactly level 10, mana is also restored to 100
+  revive_high_level_without_mana_pool_test: At level 10 or above, mana becomes Some(100) even if it was None
+  revive_keeps_name_and_level_test: After reviving, the name and level stay the same
+requirements:
+  R1: Use the default introduction when there is no name
+  R2: Revive only players whose health is 0
+  R3: At level 10 or above, restore mana to 100
+hints:
+  1: "What value should `revive` return to signal \"cannot be revived\"? Look at the function's return type again."
+  2: "`Option(a)` is either `Some(value)` or `None`. You can split the two cases with `case`, or decide the value for the missing case with `option.unwrap(opt, default)`."
+  3: "`introduce` needs nothing more than one default value. For `revive`, split on whether health is 0 and whether the level is 10 or above, in that order, using `case` and guards (`if`). Build the new player with the record update syntax."
+  4: |
+    ```gleam
+    pub fn revive(player: Player) -> Option(Player) {
+      case player.health, player.level {
+        0, level if level >= 10 -> todo
+        0, _ -> Some(Player(..player, health: 100))
+        _, _ -> todo
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

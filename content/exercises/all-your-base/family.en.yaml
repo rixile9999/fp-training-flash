@@ -1,0 +1,16 @@
+title: Convert between bases and report invalid input
+rubric:
+  R-04:
+    title: Implement it yourself, without the standard base-conversion functions
+    description: Instead of handing the work to int.digits or int.undigits, express the conversion yourself with accumulation and division.
+    message: int.digits or int.undigits was used.
+  R-05:
+    title: Calculation logic is separated
+    description: If you split turning a digit list into an integer and turning an integer into digits into named functions, you can verify each one separately.
+  R-09:
+    title: No let assert or panic
+    description: The possibility of failure is expressed in the types.
+    message: let assert or panic was used.
+  R-07:
+    title: Errors are not swallowed
+    description: Values that break the rules are not dropped or replaced with a default; an error value says which value is wrong and why.

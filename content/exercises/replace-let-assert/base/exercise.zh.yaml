@@ -1,0 +1,24 @@
+title: 去掉单行配置解析器中的 let assert
+tests:
+  parses_valid_setting_test: 正确的行像现在一样转换为 Setting
+  missing_equals_is_error_test: "没有 = 时，不崩溃，而是把整行放进 MissingEquals"
+  not_a_number_is_error_test: 值不是整数时，不崩溃，而是把该值放进 NotANumber
+  negative_number_is_valid_test: 负数也是合法的值
+  empty_value_is_not_a_number_test: 值为空时是 NotANumber("")
+  splits_at_first_equals_test: 只在第一个 = 处拆分，其余部分视为值
+requirements:
+  R1: 对正确输入的结果保持不变
+  R2: 错误输入不崩溃，而是以 SettingError 值返回
+hints:
+  1: "调用 `parse_setting(\"retries 3\")` 时，现在的代码会怎样？它的返回类型向调用方承诺了什么？"
+  2: "`let assert Ok(x) = r` 在 `r` 为 `Error` 时会让程序崩溃。在同一位置改写成 `use x <- result.try(r)`，就会把 `Error` 作为函数的返回值返回。不过 `r` 的错误类型必须是 `SettingError`。"
+  3: "把两行 `let assert` 分别改成 `use ... <- result.try(...)`。`string.split_once` 和 `int.parse` 返回的 `Error(Nil)`，先用 `result.replace_error` 换成合适的 `SettingError` 再传下去。"
+  4: |
+    ```gleam
+    use #(key, value) <- result.try(
+      string.split_once(line, "=") |> result.replace_error(todo),
+    )
+    use number <- result.try(todo)
+    Ok(Setting(key, number))
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

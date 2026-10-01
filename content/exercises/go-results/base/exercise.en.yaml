@@ -1,0 +1,28 @@
+tests:
+  change_player_if_all_rules_pass_test: If every rule passes, the turn goes to the opponent
+  first_rule_failure_records_error_test: If the first rule fails, only the error is recorded on the original game and the turn stays the same
+  keep_capture_changes_test: If every rule passes, the changes made by the capture rule are kept
+  last_rule_failure_records_error_test: Even if the last rule fails, only the error is recorded on the original game and the turn stays the same
+  discard_capture_changes_on_later_failure_test: If a rule after the capture rule fails, the capture changes are discarded
+  first_error_wins_test: If several rules fail, the error of the rule that failed first is recorded
+requirements:
+  R1: If every rule passes, keep the changes and pass the turn
+  R2: On failure, only record the error on the original game
+  R3: Stop at the first error
+hints:
+  1: "If one rule fails, do the rules after it need to run at all? When something fails, the game you return is the game from which point in time?"
+  2: "`result.try(r, f)` calls `f(x)` only when `r` is `Ok(x)`, and lets an `Error` pass through untouched. To plug in a function that cannot fail, use `result.map`."
+  3: "First chain the four rules into a pipeline that produces a single `Result(Game, String)`. Then split that result with `case`: on `Ok`, change the turn; on `Error`, record the error on the `game` you originally received."
+  4: |
+    ```gleam
+    let outcome =
+      game
+      |> rule1
+      |> result.map(rule2)
+      |> todo
+    case outcome {
+      Ok(updated) -> todo
+      Error(message) -> Game(..game, error: message)
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

@@ -1,0 +1,33 @@
+tests:
+  single_coin_test: If one coin is enough, return just that coin
+  multiple_coins_ascending_test: Return several coins in ascending order
+  not_greedy_test: Find fewer coins than picking the largest coin first
+  impossible_target_test: If no combination can make the amount, return ImpossibleTarget
+  unsorted_coins_test: The result is ascending even if the coin list is not sorted
+  greedy_dead_end_test: Make amounts where picking the largest coin first gets stuck
+  zero_target_test: An amount of 0 needs no coins
+  negative_target_test: A negative amount is ImpossibleTarget
+  large_target_test: An amount of 999 is computed within the time limit
+requirements:
+  R1: The combination with the fewest coins
+  R2: Error(ImpossibleTarget) if the amount cannot be made or is negative
+  R3: The result is in ascending order
+  R4: Time proportional to amount x number of coin types
+hints:
+  1: "If the last coin of the smallest combination for 23 is a 4, the remaining coins must be the smallest combination for what amount?"
+  2: "The smallest combination for amount a is the shortest of \"one coin c + the smallest combination for a - c\". You need the answer for the same small amount many times, so compute amounts in order starting from 0, store them in a table and read them back; then each amount is computed only once."
+  3: "Start a `Dict(Int, combination)` with 0 → `[]` and fill it for every amount from 1 up to target. For each amount and each coin c, if `dict.get(table, amount - c)` exists, build a candidate and store only the shortest one. If there is no candidate, leave that amount out of the table (it cannot be made)."
+  4: |
+    ```gleam
+    // Table value: #(number of coins, coins used)
+    fn best_for(coins: List(Int), table: Dict(Int, #(Int, List(Int))), amount: Int) -> Result(#(Int, List(Int)), Nil) {
+      list.fold(coins, Error(Nil), fn(best, coin) {
+        case dict.get(table, amount - coin), best {
+          Error(Nil), _ -> best
+          Ok(#(count, _)), Ok(#(best_count, _)) if count + 1 >= best_count -> best
+          Ok(#(count, used)), _ -> todo
+        }
+      })
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

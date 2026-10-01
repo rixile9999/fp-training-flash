@@ -1,0 +1,29 @@
+title: 去掉评论平均分计算中的 panic
+tests:
+  average_of_ratings_test: 正确评分的平均值像现在一样计算
+  empty_ratings_is_error_test: 没有评分时，不 panic，而是返回 NoRatings
+  rating_above_five_is_error_test: 大于 5 的评分不崩溃，而是把该评分放进 OutOfRange
+  rating_zero_is_error_test: 评分 0 也是 OutOfRange
+  boundary_ratings_are_valid_test: 评分 1 和 5 是合法的值
+  first_out_of_range_rating_test: 有多个超出范围的评分时，报告最前面的那个
+requirements:
+  R1: 对正确输入的平均值保持不变
+  R2: 空列表为 NoRatings
+  R3: 把第一个超出 1~5 的评分以 OutOfRange 返回
+hints:
+  1: "`let assert True = list.all(...)` 失败时，能知道是哪个评分出了问题吗？要放进 `OutOfRange` 的值应该从哪里得到？"
+  2: "`list.all` 只告诉你一个 `Bool`。`list.find(列表, 条件)` 以 `Ok(元素)` 返回第一个满足条件的元素，没有时返回 `Error(Nil)`。"
+  3: "把原来是 `panic` 的空列表情况改成 `Error(NoRatings)`。用 `list.find` 查找超出范围的评分：找到了就返回 `Error(OutOfRange(该评分))`，只有找不到时才计算平均值。"
+  4: |
+    ```gleam
+    case ratings, list.find(ratings, is_out_of_range) {
+      [], _ -> todo
+      _, Ok(bad) -> todo
+      _, Error(Nil) -> todo
+    }
+
+    fn is_out_of_range(rating: Int) -> Bool {
+      todo
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

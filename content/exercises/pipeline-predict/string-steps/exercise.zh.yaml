@@ -1,0 +1,14 @@
+title: 预测字符串整理管道的结果
+hints:
+  1: "在 `string.split(\" \")` 之前，字符串到底是什么？逗号附在哪一段上？"
+  2: "`string.trim` 只删除两端的空白，`string.split` 只按分隔符拆分，不会动标点符号。`string.length` 计算字符数。"
+  3: "把每一步得到的字符串或列表准确地写下来，连引号也写上。"
+  4: |
+    ```gleam
+    "  Hello, Gleam World  "
+    |> string.trim          // "Hello, Gleam World"
+    |> string.lowercase     // "hello, gleam world"
+    |> string.split(" ")    // todo
+    |> list.map(string.length)
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

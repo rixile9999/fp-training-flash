@@ -1,0 +1,24 @@
+title: Fix the bugs in the balance history function
+tests:
+  apply_event_deposit_test: A deposit increases the balance
+  apply_event_rejects_overdraft_test: A withdrawal larger than the balance is ignored
+  history_single_event_test: Records the balance after applying a single event
+  history_in_event_order_test: The balance history is in the same order as the events
+  history_empty_test: With no events, the history is empty too
+  history_keeps_balance_on_rejected_test: An ignored withdrawal still records the balance at that point
+requirements:
+  R1: For each event, record exactly one balance, taken after applying that event
+  R2: The history is in the same order as the events
+hints:
+  1: "Trace `history([Deposited(100)])` by hand. Inside the fold, is the value added to the list the balance before or after the event is applied?"
+  2: "When you collect by prepending (`[x, ..xs]`), the last value added ends up at the front. A fold that records every accumulated result can also be written with `list.scan`."
+  3: "There are two bugs, both inside `history`. Check the value being recorded and the order of the list after the fold finishes. `apply_event` is correct."
+  4: |
+    ```gleam
+    list.fold(events, #(0, []), fn(acc, event) {
+      let #(balance, balances) = acc
+      let next = apply_event(balance, event)
+      #(next, todo)
+    })
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

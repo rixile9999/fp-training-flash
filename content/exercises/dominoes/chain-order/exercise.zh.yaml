@@ -1,0 +1,37 @@
+title: 实际构建并返回多米诺骨牌链
+tests:
+  empty_input_test: 没有骨牌时返回空链
+  singleton_double_test: 两侧数字相同的单块骨牌本身就是链
+  three_elements_form_chain_test: 返回的链中相邻骨牌相接的数字相同，并且首尾闭合
+  no_chain_test: 无法构成链时返回 Error(Nil)
+  open_path_is_not_a_chain_test: 即使全部连上，两端数字不同时也返回 Error(Nil)
+  flipped_stones_are_written_flipped_test: 翻转摆放的骨牌按翻转后的方向写出
+  needs_backtracking_test: 返回从死胡同回退后找到的链
+  longer_chain_in_order_test: 9 块骨牌的链也从前往后依次相连
+requirements:
+  R1: 返回一条链：输入的每块骨牌都用一次，相邻骨牌相接的数字相同，且两端相同
+  R2: 链中每块骨牌按实际摆放的方向（左，右）写出
+  R3: 空输入返回 Ok([])，没有链时返回 Error(Nil)
+hints:
+  1: "原来的搜索只判断 `True`/`False`。要返回成功分支上的骨牌顺序，递归还需要带着什么？如果骨牌是翻转摆放的，结果里该怎么写？"
+  2: "`list.find_map` 对每个候选调用函数，返回最先得到的 `Ok` 值；如果全是 `Error`，就返回 `Error(Nil)`。它相当于“带结果值”的 `list.any`，很适合用回溯寻找第一个解。"
+  3: "编写 `extend(first, end, remaining, placed)`。`placed` 是把已摆放的骨牌按逆序堆起来的累加器。先调整候选骨牌的方向，让与 `end` 相同的数字位于左侧，再加入 `placed`。没有剩余骨牌且 `first == end` 时，结果是 `Ok(list.reverse(placed))`。"
+  4: |
+    ```gleam
+    fn extend(first: Int, end: Int, remaining: List(#(Int, Int)), placed: List(#(Int, Int))) -> Result(List(#(Int, Int)), Nil) {
+      case remaining {
+        [] -> todo
+        _ ->
+          selections(remaining)
+          |> list.find_map(fn(selection) {
+            let #(#(a, b), rest) = selection
+            case a == end, b == end {
+              True, _ -> extend(first, b, rest, [#(a, b), ..placed])
+              _, True -> todo
+              False, False -> Error(Nil)
+            }
+          })
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

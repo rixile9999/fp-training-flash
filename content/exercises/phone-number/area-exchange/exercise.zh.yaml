@@ -1,0 +1,35 @@
+title: 添加区号和交换码检查步骤
+tests:
+  area_code_zero_test: 区号以 0 开头时返回 InvalidAreaCode("0")
+  area_code_one_test: 区号以 1 开头时也返回 InvalidAreaCode("1")
+  exchange_code_one_test: 交换码（第 4 位数字）以 1 开头时返回 InvalidExchangeCode("1")
+  clean_valid_test: clean 返回通过整理和两项检查的 10 位号码
+  exchange_code_zero_test: 交换码以 0 开头时也返回 InvalidExchangeCode("0")
+  area_after_country_code_test: 国家代码 1 在区号检查之前被去掉
+  area_error_before_exchange_error_test: 区号和交换码都不对时，返回区号错误
+  normalize_error_first_test: 整理步骤的错误先于区号错误
+requirements:
+  R1: 检查区号的第一位数字
+  R2: 检查交换码的第一位数字
+  R3: 按整理、区号、交换码的顺序检查
+hints:
+  1: "`check_area_code` 和 `check_exchange_code` 可以假定收到什么形式的输入？要让这个假定成立，`clean` 必须先做什么？"
+  2: "`string.slice(s, i, 1)` 返回位置 `i`（从 0 开始）上的一个字符。`result.try(r, f)` 只在 `r` 是 `Ok(x)` 时才调用 `f(x)`，所以形状同为 `fn(String) -> Result(String, PhoneError)` 的检查可以用管道串起来。"
+  3: "两个检查函数都取出号码中特定位置的数字，如果是 `\"0\"` 或 `\"1\"` 就返回错误，否则用 `Ok` 原样返回号码。`clean` 在 `normalize` 的结果后面用 `result.try` 依次接上两项检查。"
+  4: |
+    ```gleam
+    pub fn check_area_code(number: String) -> Result(String, PhoneError) {
+      let first = string.slice(number, 0, 1)
+      case first {
+        "0" | "1" -> todo
+        _ -> Ok(number)
+      }
+    }
+
+    pub fn clean(input: String) -> Result(String, PhoneError) {
+      normalize(input)
+      |> result.try(todo)
+      |> result.try(todo)
+    }
+    ```
+  5: "现在可以打开完整讲解。看完讲解后，将用一道新题确认掌握程度。"

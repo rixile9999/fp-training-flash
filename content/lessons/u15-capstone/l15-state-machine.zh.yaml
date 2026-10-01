@@ -1,0 +1,108 @@
+title: 综合实战 2——状态机
+blocks:
+  intro:
+    markdown: |-
+      第二个综合练习是**状态机**（state machine）。把状态和事件分别定义为变体（variant），再用 `case` 写出 `(状态, 事件) -> 下一个状态` 的转移函数。
+
+      例子：投币后才会打开的闸机。
+
+      ```gleam
+      pub type State {
+        Locked
+        Unlocked
+      }
+
+      pub type Event {
+        Coin
+        Push
+      }
+
+      fn next(state: State, event: Event) -> State {
+        case state, event {
+          Locked, Coin -> Unlocked
+          Locked, Push -> Locked
+          Unlocked, Coin -> Unlocked
+          Unlocked, Push -> Locked
+        }
+      }
+      ```
+
+      `case state, event` 可以**同时匹配两个值**。2 种状态 × 2 种事件 = 4 个分支——编译器会检查有没有遗漏的组合（穷尽性检查，U4）。
+  next-coin:
+    prompt: 往锁着的闸机里投一枚硬币。`next(Locked, Coin)` 的值是什么？
+    choices:
+      - "`Unlocked`"
+      - "`Locked`"
+      - "`Coin`"
+      - "`Ok(Unlocked)`"
+    feedback:
+      correct: 没错！它匹配 `Locked, Coin -> Unlocked` 分支——硬币解开了锁闩。
+      choices:
+        "1": 投币后状态会改变——不会停留在 `Locked`。
+        "2": "`next` 返回的是**下一个状态**——而不是事件（`Coin`）。"
+        "3": 这个转移函数只返回 `State`——不会用 `Result` 包装。
+  next-push-locked:
+    prompt: 直接推锁着的闸机。`next(Locked, Push)` 的值是什么？
+    choices:
+      - "`Locked`"
+      - "`Unlocked`"
+      - "`Push`"
+      - "`Error(Locked)`"
+    feedback:
+      correct: 完全正确！`Locked, Push -> Locked`——不投币就推，它依然锁着。
+      choices:
+        "1": 光推是打不开的——要投币才会变成 `Unlocked`。
+        "2": 结果是下一个**状态**——而不是事件。
+        "3": 被挡住只是一次正常的状态转移，不是错误——它就保持 `Locked`。
+  run-fold:
+    markdown: |-
+      如果有**多个**事件呢？用 `list.fold`（U8）：从初始状态开始，把事件一个个喂进去——累加器本身就是状态。
+
+      ```gleam
+      import gleam/list
+
+      fn run(state: State, events: List(Event)) -> State {
+        list.fold(events, state, fn(s, e) { next(s, e) })
+      }
+      ```
+
+      fold 的累加器类型可以和元素类型不同（U8），这一点在这里大放异彩——累加器是 `State`，元素是 `Event`。
+  run-sequence:
+    prompt: 从锁定状态开始，依次处理 4 个事件。`run(Locked, [Coin, Push, Push, Coin])` 的值是什么？
+    choices:
+      - "`Unlocked`"
+      - "`Locked`"
+      - "`[Unlocked, Locked, Locked, Unlocked]`"
+      - "`Coin`"
+    feedback:
+      correct: 没错！Locked →(Coin) Unlocked →(Push) Locked →(Push) Locked →(Coin) Unlocked。最终状态是 `Unlocked`。
+      choices:
+        "1": 最后一个事件是 `Coin`，所以锁被解开了——最终状态是 `Unlocked`。
+        "2": fold **只返回最终的累加器**——而不是中间状态的列表。
+        "3": "`run` 返回的是最终的**状态**——而不是事件。"
+  run-push-first:
+    prompt: 这次先推再投币。`run(Locked, [Push, Coin])` 的值是什么？
+    choices:
+      - "`Unlocked`"
+      - "`Locked`"
+      - "`Error(Push)`"
+      - "`[Locked, Unlocked]`"
+    feedback:
+      correct: 完全正确！Locked →(Push) Locked →(Coin) Unlocked。先推的那一下没有效果，闸机仍锁着，之后投币才解开。
+      choices:
+        "1": 最后投了币，所以会解锁——不会以 `Locked` 结束。
+        "2": 顺序不对的事件也只是被当作“保持状态”吸收掉——并不是错误。
+        "3": fold 不会收集中间过程——只给出**最终状态**。
+  exhaustiveness:
+    prompt: 如果从转移函数中**删掉** `Unlocked, Push -> Locked` 分支，会怎样？
+    choices:
+      - 编译错误——编译器发现有未匹配的组合（Unlocked, Push），会拦下它
+      - 能正常编译，运行时遇到那个组合时会被忽略
+      - 能正常编译，遇到那个组合时会自动变成 `Unlocked`
+      - 只出现警告，编译照样通过
+    feedback:
+      correct: 没错！`case` 必须穷尽处理所有组合（穷尽性检查）。漏掉一个组合，编译本身就会被拒绝——在编译期就能抓住状态机的漏洞。
+      choices:
+        "1": Gleam 里没有“运行时忽略”这种东西——缺少分支会导致无法编译。
+        "2": 不会用任何值自动补上缺失的分支——必须全部亲手写出来。
+        "3": 缺少分支是**错误**而不是警告——编译不会通过。

@@ -1,0 +1,25 @@
+title: 使用优惠券：找回消失的订单
+tests:
+  discounts_pending_test: 对 Pending 订单的金额打折
+  keeps_shipped_orders_test: Shipped 订单也原样留在结果中
+  keeps_cancelled_orders_test: Cancelled 订单也原样留在结果中
+  does_not_discount_others_test: 不修改非 Pending 订单的金额
+  keeps_order_test: 保持订单原来的顺序
+requirements:
+  R1: 只修改 Pending 订单的金额
+  R2: 保留非目标订单
+  R3: 保持顺序
+hints:
+  1: "输入有 3 个订单时，结果应该有几个订单？现在的代码返回几个？"
+  2: "`list.filter` 会丢弃不满足条件的元素，`list.map` 则逐个转换每个元素并保持长度不变。"
+  3: "不要先挑出目标订单，而是遍历所有订单，对每个订单决定是否打折。"
+  4: |
+    ```gleam
+    list.map(orders, fn(o) {
+      case o.status {
+        Pending -> todo
+        Shipped | Cancelled -> o
+      }
+    })
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

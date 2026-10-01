@@ -1,0 +1,11 @@
+title: Predicting a pipeline with the first-argument rule
+hints:
+  1: "In `10 |> int.subtract(3)`, which argument position of `int.subtract` does 10 go into?"
+  2: "`a |> f(b)` is the same as `f(a, b)`. The value on the left of the pipe becomes the **first** argument of the function call on the right. `int.subtract(a, b)` is `a - b`."
+  3: "Rewrite every pipe as an ordinary function call. Then compute from the innermost call outwards."
+  4: |
+    ```gleam
+    int.multiply(int.subtract(10, 3), 2)
+    // int.subtract(10, 3) = todo
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

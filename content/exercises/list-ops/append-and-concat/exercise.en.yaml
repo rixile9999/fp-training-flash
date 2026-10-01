@@ -1,0 +1,34 @@
+title: Appending and flattening lists
+tests:
+  append_empty_lists_test: Appending two empty lists gives an empty list
+  append_keeps_order_test: append puts the second list after the first, in order
+  append_to_empty_first_test: If the first list is empty, return the second list as is
+  concat_lists_test: concat joins several lists into one, in order
+  concat_empty_test: If there are no lists to join, return an empty list
+  concat_keeps_inner_lists_test: Even if the elements are lists, flatten only one level
+  concat_many_small_lists_test: 100,000 small lists are joined within the time limit
+requirements:
+  R1: append(first, second) puts second after first, in order
+  R2: concat joins all the lists in order
+  R3: Time proportional to the total number of elements
+hints:
+  1: "When building the result of `append(first, second)`, which list has to be copied? Can you use `second` as the tail as is, without copying it?"
+  2: "An immutable list can only cheaply gain elements at the front. The cost of `append(a, b)` is proportional to the length of `a` and has nothing to do with the length of `b`."
+  3: "If you accumulate `concat` from the front, the accumulated result keeps getting longer, and you copy it each time as the first argument of `append`. If you join the lists from the back, each list is copied only once."
+  4: |
+    ```gleam
+    pub fn append(first first: List(a), second second: List(a)) -> List(a) {
+      case first {
+        [] -> second
+        [x, ..rest] -> todo
+      }
+    }
+
+    pub fn concat(lists: List(List(a))) -> List(a) {
+      case lists {
+        [] -> []
+        [list, ..rest] -> append(first: list, second: todo)
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

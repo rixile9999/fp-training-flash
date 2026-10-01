@@ -1,0 +1,38 @@
+tests:
+  empty_input_header_only_test: 输入为空时只返回表头
+  parse_line_test: 把一行比赛记录解析为 Match
+  record_win_test: 把比赛结果同时计入两支球队的战绩
+  format_row_test: 把球队名称和战绩变成固定宽度的一行
+  typical_input_test: 用多场比赛生成按积分降序排列的积分榜
+  loss_credits_away_team_test: loss 记为客队获胜
+  ties_broken_alphabetically_test: 积分相同时按球队名称升序排列
+  many_teams_tied_sorted_by_name_test: 即使球队很多，积分相同时也按球队名称升序排列
+  skips_invalid_lines_test: 跳过空行和格式错误的行
+requirements:
+  R1: parse_line 只接受“主队;客队;win|draw|loss”格式
+  R2: record 把一场比赛按各自的视角计入两支球队的战绩
+  R3: format_row 生成一行：球队名称占 30 格，数字占 2 格并右对齐
+  R4: tally 按积分降序、积分相同时按名称升序生成积分榜
+hints:
+  1: "输入字符串变成积分榜字符串之前，数据经过了哪些形状？把每一步的类型写下来。"
+  2: "用 `list.filter_map` 丢掉解析失败的行，用 `list.fold` 和 `dict.upsert` 收集各队的战绩。排序依据有两个时，用 `order.break_tie` 连接起来。对齐宽度用 `string.pad_end` 和 `string.pad_start`。"
+  3: "在 `record` 中，先把比赛结果转成主队视角和客队视角的一对结果，再用同一个辅助函数分别计入两队。`tally` 按 split → filter_map(parse_line) → fold(record) → to_list → sort → map(format_row) 的顺序连接。"
+  4: |
+    ```gleam
+    pub fn record(table: Dict(String, Stats), match: Match) -> Dict(String, Stats) {
+      let #(home_result, away_result) = case match.outcome {
+        Win -> #(Win, Loss)
+        Draw -> todo
+        Loss -> todo
+      }
+      table
+      |> dict.upsert(match.home, fn(current) { todo })
+      |> dict.upsert(match.away, fn(current) { todo })
+    }
+
+    fn compare_rows(a: #(String, Stats), b: #(String, Stats)) -> order.Order {
+      int.compare(points(b.1), points(a.1))
+      |> order.break_tie(todo)
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

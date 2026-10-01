@@ -1,0 +1,33 @@
+tests:
+  line_amount_bulk_test: 订购 10 件及以上的明细行打 9 折
+  line_amount_bulk_boundary_test: 正好 10 件也享受批量折扣
+  subtotal_test: 小计是折后各行金额之和
+  shipping_fee_under_threshold_test: 小计不足 5 万韩元时运费为 3000 韩元
+  shipping_fee_free_at_threshold_test: 小计正好 5 万韩元时免运费
+  shipping_fee_empty_test: 小计为 0 韩元时没有运费
+  vat_test: 增值税为 10%，不足 1 韩元的部分舍去
+  invoice_total_test: 总额是小计、增值税和运费之和
+requirements:
+  R1: line_amount 计算明细行金额和批量折扣
+  R2: subtotal 复用 line_amount
+  R3: shipping_fee 只包含运费规则
+  R4: vat 只包含增值税规则
+  R5: invoice_total 组合各步骤函数
+hints:
+  1: "现有的 `invoice_total` 里混着几条不同的规则？如果给每条规则起个名字，会叫什么？"
+  2: "纯计算对同样的输入总是返回同样的值，所以把表达式的一部分抽成函数、再把原处换成函数调用，结果不会改变。"
+  3: "按照单行金额 → 小计 → 运费和增值税的顺序，从内层规则开始逐个移到函数里，最后让 `invoice_total` 只调用这些函数。测试会分别调用每个函数。"
+  4: |
+    ```gleam
+    pub fn subtotal(lines: List(Line)) -> Int {
+      lines
+      |> list.map(line_amount)
+      |> todo
+    }
+
+    pub fn invoice_total(lines: List(Line)) -> Int {
+      let amount = subtotal(lines)
+      amount + todo + todo
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

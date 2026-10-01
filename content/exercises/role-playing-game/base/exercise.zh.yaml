@@ -1,0 +1,27 @@
+tests:
+  introduce_with_name_test: 有名字时用这个名字介绍
+  introduce_without_name_test: 没有名字时介绍为 Mighty Magician
+  revive_alive_returns_none_test: 还有生命值的玩家不复活，返回 None
+  revive_low_level_test: 等级低于 10 时只把生命值恢复到 100，法力值保持不变
+  revive_level_ten_restores_mana_test: 等级正好是 10 时法力值也恢复到 100
+  revive_high_level_without_mana_pool_test: 等级 10 及以上时，法力值即使是 None 也会变成 Some(100)
+  revive_keeps_name_and_level_test: 复活后名字和等级保持不变
+requirements:
+  R1: 没有名字时使用默认介绍语
+  R2: 只复活生命值为 0 的玩家
+  R3: 等级 10 及以上时把法力值恢复到 100
+hints:
+  1: "`revive` 要表示“无法复活”，应该返回什么值？再看一看这个函数的返回类型。"
+  2: "`Option(a)` 要么是 `Some(值)`，要么是 `None`。可以用 `case` 分开两种情况，也可以用 `option.unwrap(opt, 默认值)` 决定没有值时用什么。"
+  3: "`introduce` 只需要一个默认值就能完成。`revive` 则用 `case` 和守卫（`if`）依次判断生命值是否为 0、等级是否在 10 及以上。新玩家用记录更新语法来构造。"
+  4: |
+    ```gleam
+    pub fn revive(player: Player) -> Option(Player) {
+      case player.health, player.level {
+        0, level if level >= 10 -> todo
+        0, _ -> Some(Player(..player, health: 100))
+        _, _ -> todo
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

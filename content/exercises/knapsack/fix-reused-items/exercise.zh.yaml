@@ -1,0 +1,26 @@
+title: 修复把同一件货物装两次的装载计算
+tests:
+  single_item_once_test: 只有一件货物时只装一次
+  example_test: 在重量上限内选出价值总和最大的组合
+  two_items_each_once_test: 轻的货物不会被装多次
+  no_items_test: 没有货物时，价值总和为 0
+  too_heavy_test: 比上限还重的货物不装
+  greedy_by_value_test: 把多件轻货物一起装上，得到比一件贵重货物更大的价值
+requirements:
+  R1: 每件货物最多装一次
+  R2: 在总重量不超过上限的组合中，价值总和最大
+hints:
+  1: "用一件货物 `Item(value: 10, weight: 3)`、上限 9，手动跟踪一遍 `add_item`。计算上限 6 那一格时，读到的上限 3 那一格的值，是放入这件货物之前的值，还是之后的值？"
+  2: "在 0/1 背包中，新表的第 w 格只能用“考虑这件货物之前”的表中的值来计算。如果读回已经放入本件货物的格子，就等于又放了一次同一件货物。"
+  3: "`add_item` 里同时有旧表 `previous` 和正在生成的表 `table`。确认一下读取和写入各自应该用哪张表。"
+  4: |
+    ```gleam
+    run: fn(table, capacity) {
+      let take = best(todo, capacity - item.weight) + item.value
+      case take > best(todo, capacity) {
+        True -> dict.insert(todo, capacity, take)
+        False -> table
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

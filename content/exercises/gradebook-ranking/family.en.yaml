@@ -1,0 +1,12 @@
+title: Rank students by grade
+rubric:
+  R-02:
+    title: The pipeline shows the intent
+    description: The steps of sorting, attaching ranks and reshaping into the required form appear in reading order.
+  R-05:
+    title: Calculation logic is separated
+    description: Pulling the sort order (score descending, name ascending) out into a named comparison function lets you check it on its own.
+  R-09:
+    title: No let assert or panic
+    description: The possibility of failure is expressed in the types.
+    message: let assert or panic was used.

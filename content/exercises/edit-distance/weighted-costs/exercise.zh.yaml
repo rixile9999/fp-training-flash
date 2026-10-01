@@ -1,0 +1,30 @@
+title: 每种编辑代价不同的编辑距离
+tests:
+  unit_costs_test: 所有代价都为 1 时，与普通编辑距离相同
+  expensive_substitution_test: 替换代价高时，改用删除加插入
+  insert_direction_test: 往 from 中加入字符的编辑按插入代价计算
+  delete_direction_test: 从 from 中去掉字符的编辑按删除代价计算
+  insert_cost_base_case_test: 从空字符串构造时，每个字符都要付插入代价
+  delete_cost_base_case_test: 变成空字符串时，每个字符都要付删除代价
+  long_strings_test: 200 个字符的字符串之间也能在时间限制内算出结果
+requirements:
+  R1: 分别应用插入、删除、替换代价后的最小代价
+  R2: 插入是往 from 中加入，删除是从 from 中去掉
+  R3: 一方为空时，结果是字符数 x 相应代价
+  R4: 时间与两个字符串长度的乘积成正比
+hints:
+  1: "在所有代价都为 1 的递推式里，`+ 1` 出现在三个地方。它们分别对应哪种编辑？涉及空字符串的第一行和第一列的值，是做了哪种编辑多少次？"
+  2: "令 d(i, j) 为“把 from 的前 i 个字符变成 to 的前 j 个字符的最小代价”，那么从 d(i-1, j) 过来表示删除 from 的第 i 个字符，从 d(i, j-1) 过来表示插入 to 的第 j 个字符，从 d(i-1, j-1) 过来表示替换（相同则为 0）。"
+  3: "第一行是 `[0, insert, 2 * insert, ...]`，每一行的第一格是 `i * delete`。保留由上一行生成下一行的 fold 不变，给三个候选分别加上各自的代价。如果替换比删除 + 插入还贵，min 会自动选择删除 + 插入的路径。"
+  4: |
+    ```gleam
+    [diagonal, above, ..rest], [t, ..ts] -> {
+      let replace = case t == char {
+        True -> diagonal
+        False -> diagonal + costs.substitute
+      }
+      let value = int.min(replace, int.min(todo, todo))
+      fill([above, ..rest], ts, char, costs, value, [value, ..acc])
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

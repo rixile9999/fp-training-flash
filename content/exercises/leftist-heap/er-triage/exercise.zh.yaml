@@ -1,0 +1,31 @@
+title: 用堆决定急诊就诊顺序
+tests:
+  higher_severity_goes_first_test: 病情更重的患者优先
+  earlier_arrival_breaks_tie_test: 病情相同时，先到的患者优先
+  treatment_order_by_severity_test: 就诊顺序按病情从重到轻
+  empty_waiting_room_test: 没有候诊患者时返回空列表
+  same_severity_in_arrival_order_test: 病情全都相同时，按到达顺序就诊
+  mixed_severity_and_arrival_test: 病情和到达顺序交错时，也按规则排序
+  merge_two_waiting_rooms_test: 合并两个候诊队列后，最紧急的患者仍排在最前面
+requirements:
+  R1: 按病情降序，相同时按到达时间升序
+  R2: treatment_order 按就诊顺序返回所有患者的姓名
+  R3: merge 构建以 goes_first 为标准的左偏堆
+hints:
+  1: "如果把“两个患者谁先就诊”的规则单独抽成一个函数，堆的 merge 需要向这个函数询问什么？"
+  2: "左偏堆的 merge 先选出“先出来的根”，再把这个根的右子节点与另一个堆递归合并。只要把比较标准从 `<=` 换成 `goes_first`，其余结构与整数堆相同。"
+  3: "`goes_first` 在病情不同时按病情比较，相同时按到达顺序比较。`merge` 在 `goes_first(p, q)` 为真时返回 `make(p, left_a, merge(right_a, b))`，否则交换参数再调用一次。`treatment_order` 先用 `add` 放入所有患者，再不断取出，直到 `next` 返回 `Error`。"
+  4: |
+    ```gleam
+    pub fn merge(a: Queue, b: Queue) -> Queue {
+      case a, b {
+        Empty, queue | queue, Empty -> queue
+        Node(patient: p, left: left_a, right: right_a, ..), Node(patient: q, ..) ->
+          case goes_first(p, q) {
+            True -> todo
+            False -> todo
+          }
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

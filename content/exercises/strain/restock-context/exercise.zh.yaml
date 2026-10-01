@@ -1,0 +1,28 @@
+title: 组装条件函数，挑选需要补货的商品
+tests:
+  both_requires_both_conditions_test: 用 both 构造的条件只有在两个条件都为真时才为真
+  negate_flips_condition_test: 用 negate 构造的条件与原条件相反
+  needs_restock_finds_low_stock_test: 按顺序挑出在售且库存低于基准的商品
+  discontinued_finds_inactive_test: 只挑出已停售的商品
+  threshold_is_exclusive_test: 库存等于基准时不需要补货
+  needs_restock_skips_inactive_test: 已停售的商品即使库存少也不需要补货
+  both_is_false_when_only_second_holds_test: 只有第二个条件为真时，both 的结果为假
+requirements:
+  R1: 接收条件函数，返回新的条件函数
+  R2: 只有在售且库存低于基准的商品才需要补货
+  R3: 已停售商品的列表
+hints:
+  1: "`both` 的返回类型 `fn(t) -> Bool` 不是一个值，而是一个函数。这个函数接收一个元素后，应该计算什么？"
+  2: "匿名函数 `fn(item) { ... }` 可以直接使用外层函数的参数 `p`、`q`。这样构造的函数可以作为返回值返回。"
+  3: "先完成 `both` 和 `negate`，再把 `both(是否在售, 库存是否低于基准)` 传给 `keep` 来求出需要补货的商品。停售列表用 `negate` 来构造。"
+  4: |
+    ```gleam
+    pub fn both(p: fn(t) -> Bool, q: fn(t) -> Bool) -> fn(t) -> Bool {
+      fn(item) { todo }
+    }
+
+    pub fn needs_restock(products: List(Product), threshold: Int) -> List(Product) {
+      keep(products, both(fn(p) { p.active }, todo))
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

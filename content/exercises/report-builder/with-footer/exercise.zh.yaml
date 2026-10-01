@@ -1,0 +1,34 @@
+title: 给销售报表加上合计和跳过的行数
+tests:
+  parse_all_splits_valid_and_invalid_test: 同时返回正确的销售记录和错误行的数量
+  parse_all_keeps_input_order_test: 正确的销售记录保持输入顺序
+  parse_all_ignores_blank_lines_test: 空行不算作错误行
+  footer_test: 生成合计行和跳过的行数
+  footer_empty_test: 没有销售记录时，合计为 0
+  build_report_test: 在类别行之后加上合计和跳过的行数
+  build_report_only_invalid_test: 所有行都错误时，只剩下合计部分的行
+requirements:
+  R1: parse_all 按输入顺序收集正确的记录，并统计错误行的数量
+  R2: 忽略空行，不把它算作错误行
+  R3: footer 用两行给出总合计和跳过的行数
+  R4: build_report 在类别行之后加上 footer
+hints:
+  1: "要在一次遍历中同时得到两样东西（正确记录的列表、错误行的数量），累加器应该是什么形状？"
+  2: "可以用元组 `#(List(Sale), Int)` 作为 `list.fold` 的累加器。如果是加到列表前面来收集的，最后需要 `list.reverse`。"
+  3: "`parse_all` 用 `case` 把每一行分成三种情况：空行、解析成功、解析失败。`build_report` 只需在已有的 `total_by_category`、`format_row` 后面接上 `footer`。"
+  4: |
+    ```gleam
+    pub fn parse_all(lines: List(String)) -> #(List(Sale), Int) {
+      let #(sales, skipped) =
+        list.fold(lines, #([], 0), fn(acc, line) {
+          let #(sales, skipped) = acc
+          case line, parse_line(line) {
+            "", _ -> acc
+            _, Ok(sale) -> todo
+            _, Error(Nil) -> todo
+          }
+        })
+      #(list.reverse(sales), skipped)
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

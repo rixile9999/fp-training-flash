@@ -1,0 +1,29 @@
+tests:
+  empty_strand_test: 空字符串时，四种碱基的数量都是 0
+  single_nucleotide_test: 只有一个碱基的字符串，该碱基为 1 个，其余为 0 个
+  mixed_strand_test: 统计混有多种碱基的字符串中每种碱基的数量
+  invalid_strand_test: 混有错误字母时返回 Error(Nil)
+  repeated_nucleotide_test: 同一碱基重复出现时，按重复次数计数
+  invalid_at_end_test: 即使只有最后一个字母错误，也返回 Error(Nil)
+  lowercase_is_invalid_test: 小写碱基视为错误字母
+requirements:
+  R1: 结果中总是包含 A、C、G、T 四个键
+  R2: 准确统计每种碱基的数量
+  R3: 只要有一个 A、C、G、T 以外的字母，就返回 Error(Nil)
+hints:
+  1: "一次都没出现的碱基也应该出现在结果中吗？遇到错误字母之后，还有必要继续数剩下的吗？"
+  2: "`list.try_fold` 像 `list.fold` 一样累加值，但只要函数返回 `Error` 就立即停止，并把这个 `Error` 作为结果返回。"
+  3: "试着从四种碱基都为 0 的字典开始。对每个字母检查它的键是否在字典里，就能一次完成有效性检查和计数。"
+  4: |
+    ```gleam
+    let zeros = dict.from_list([#("A", 0), #("C", 0), #("G", 0), #("T", 0)])
+    dna
+    |> string.to_graphemes
+    |> list.try_fold(zeros, fn(counts, letter) {
+      case dict.get(counts, letter) {
+        Ok(count) -> todo
+        Error(Nil) -> todo
+      }
+    })
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

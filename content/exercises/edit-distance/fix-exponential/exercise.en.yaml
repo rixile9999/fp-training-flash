@@ -1,0 +1,26 @@
+title: Fix a product name comparison that never finishes
+tests:
+  similar_names_test: The distance between product names that differ by one character is 1
+  long_names_test: Compares 250-character product names within the time limit
+  identical_names_test: The distance between identical product names is 0
+  empty_name_test: The distance to an empty product name is the number of characters in the other
+  korean_names_test: Korean product names are also compared character by character
+  different_names_test: Counts the minimum number of edits even for product names with shuffled characters
+requirements:
+  R1: The minimum number of insertions, deletions and substitutions, each costing 1
+  R2: Time proportional to the product of the two name lengths
+hints:
+  1: "The two lists `go` receives are always \"suffixes\" of the original two names. How many distinct (suffix, suffix) pairs are there? How many times does the current code compute the same pair?"
+  2: "Storing the answer to a subproblem once it has been computed and reading it back when it is needed again is called memoization. To store it in an immutable Dict, you have to return the updated Dict along with the result and pass it on to the next call."
+  3: "A suffix can be identified by the two remaining lengths `#(la, lb)`. Change `go` to take `(a, la, b, lb, memo)` and return `#(distance, new memo)`, and thread the memo through the three recursive calls one after another."
+  4: |
+    ```gleam
+    [_, ..xs], [_, ..ys] -> {
+      let #(replace, memo) = go(xs, la - 1, ys, lb - 1, memo)
+      let #(delete, memo) = go(xs, la - 1, b, lb, memo)
+      let #(insert, memo) = go(a, la, ys, lb - 1, memo)
+      let value = 1 + int.min(replace, int.min(delete, insert))
+      todo
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

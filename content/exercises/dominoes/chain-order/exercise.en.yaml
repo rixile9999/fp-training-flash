@@ -1,0 +1,37 @@
+title: Build and return an actual domino chain
+tests:
+  empty_input_test: With no stones, returns an empty chain
+  singleton_double_test: A single stone with the same number on both sides is a chain as it is
+  three_elements_form_chain_test: In the returned chain, the touching numbers of neighboring stones match and the loop closes
+  no_chain_test: Returns Error(Nil) when no chain can be built
+  open_path_is_not_a_chain_test: Returns Error(Nil) when everything connects but the two end numbers differ
+  flipped_stones_are_written_flipped_test: A stone placed flipped is written in its flipped orientation
+  needs_backtracking_test: Returns the chain found by backing out of a dead end
+  longer_chain_in_order_test: A 9-stone chain is also connected in order from the front
+requirements:
+  R1: Return a chain that uses every input stone once, where the touching numbers of neighboring stones match and the two ends match
+  R2: Write each stone in the chain in the orientation it was actually placed (left, right)
+  R3: Empty input gives Ok([]); if there is no chain, Error(Nil)
+hints:
+  1: "Your search used to answer only `True`/`False`. To return the order of stones on the branch that succeeded, what else does the recursion need to carry? And if a stone was placed flipped, how should it appear in the result?"
+  2: "`list.find_map` calls a function on each candidate and returns the first `Ok` value it gets, or `Error(Nil)` if all of them are `Error`. It is the \"with a result value\" version of `list.any`, which makes it a good fit for finding the first solution with backtracking."
+  3: "Write `extend(first, end, remaining, placed)`. `placed` is an accumulator that stacks the placed stones in reverse order. Orient each candidate stone so that the number matching `end` is on the left, then add it to `placed`. When no stones remain and `first == end`, the answer is `Ok(list.reverse(placed))`."
+  4: |
+    ```gleam
+    fn extend(first: Int, end: Int, remaining: List(#(Int, Int)), placed: List(#(Int, Int))) -> Result(List(#(Int, Int)), Nil) {
+      case remaining {
+        [] -> todo
+        _ ->
+          selections(remaining)
+          |> list.find_map(fn(selection) {
+            let #(#(a, b), rest) = selection
+            case a == end, b == end {
+              True, _ -> extend(first, b, rest, [#(a, b), ..placed])
+              _, True -> todo
+              False, False -> Error(Nil)
+            }
+          })
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

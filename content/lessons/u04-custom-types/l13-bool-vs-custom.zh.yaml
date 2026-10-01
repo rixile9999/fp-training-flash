@@ -1,0 +1,112 @@
+title: 用自定义类型代替 Bool
+blocks:
+  intro:
+    markdown: |-
+      状态只有两种时，你很可能会想用 `Bool`——比如 `is_admin: Bool`。可一旦状态增加到三种以上，`Bool` 就表达不了了。而且 `True`/`False` 让人无法从代码中读出“到底什么为真”（即所谓的 *boolean blindness*，布尔盲）。
+
+      所以在 Gleam 中，我们喜欢创建**名字有意义的变体**。
+
+      ```gleam
+      pub type Access {
+        Guest
+        Member
+        Admin
+      }
+      ```
+
+      `Admin` 本身含义就很明确，以后即使插入 `Moderator`，编译器也会把需要修改的地方全部指出来。
+  why-custom:
+    prompt: "把权限用自定义类型 `Access { Guest Member Admin }` 而不是 `is_admin: Bool` 来表示，正确的理由是？"
+    choices:
+      - 总是比 Bool 快
+      - 即使有三种以上的状态也能表示，而且每种状态的含义通过名字体现出来
+      - 不再需要使用 `case`
+      - 占用更少的内存
+    feedback:
+      correct: 没错！`Bool` 的两个值装不下三种以上的状态，而且 `True`/`False` 会隐藏含义。变体同时带来了含义和可扩展性。
+      choices:
+        "0": 目的不是速度——关键在于表达力和含义的清晰。
+        "2": 恰恰相反，你会用 `case` 处理每个变体，还能获得穷尽性检查这张安全网。
+        "3": 目的不是节省内存，而是“排除不可能的状态、让含义显现出来”。
+  can-delete-member:
+    prompt: 这是按权限判断能否删除的函数。`can_delete(Member)` 的值是？
+    code: |-
+      pub type Access {
+        Guest
+        Member
+        Admin
+      }
+
+      pub fn can_delete(a: Access) -> Bool {
+        case a {
+          Admin -> True
+          Member -> False
+          Guest -> False
+        }
+      }
+
+      // can_delete(Member) 的值是？
+    choices:
+      - "`True`"
+      - "`False`"
+      - "`Member`"
+      - 编译错误
+    feedback:
+      correct: 没错！`Member` 分支返回 `False`——会员没有删除权限。
+      choices:
+        "0": "`True` 是 `Admin` 时的结果。输入是 `Member`，所以是 `False`。"
+        "2": "`case` 返回的不是输入的变体，而是分支的结果（`Bool`）。"
+        "3": 三个变体都处理到了，满足穷尽性检查，所以能正常编译。
+  states-as-type:
+    markdown: |-
+      布尔盲特别让人头疼的地方，是“进行中”这类中间状态。如果把连接状态写成 `is_connected: Bool`，就没有地方表示“连接中”。用变体就很清爽：
+
+      ```gleam
+      pub type Connection {
+        Connecting
+        Connected
+        Disconnected
+      }
+      ```
+  connection-message:
+    prompt: 这是按连接状态返回消息的函数。`message(Connected)` 的值是？
+    code: |-
+      pub type Connection {
+        Connecting
+        Connected
+        Disconnected
+      }
+
+      pub fn message(c: Connection) -> String {
+        case c {
+          Connecting -> "连接中..."
+          Connected -> "已连接"
+          Disconnected -> "已断开"
+        }
+      }
+
+      // message(Connected) 的值是？
+    choices:
+      - '`"连接中..."`'
+      - '`"已连接"`'
+      - '`"已断开"`'
+      - "`Connected`"
+    feedback:
+      correct: 完全正确！它匹配 `Connected` 分支，得到 "已连接"——如果用 `Bool`，就装不下这三种状态了。
+      choices:
+        "0": '"连接中..." 是 `Connecting` 分支——输入是 `Connected`。'
+        "2": '"已断开" 是 `Disconnected` 分支——不是 `Connected`。'
+        "3": "`case` 返回的不是输入的变体，而是匹配到的分支的结果（字符串）。"
+  boolean-blindness:
+    prompt: "函数签名 `fn render(loading: Bool, error: Bool) -> ...` 最主要的问题是？"
+    choices:
+      - Bool 不能用作函数参数
+      - "`(True, True)` 这种自相矛盾的“不可能的状态”在类型上是允许的，而且含义没有通过名字体现出来"
+      - 因为有两个参数，所以很慢
+      - Bool 不能用在 `case` 里
+    feedback:
+      correct: 没错！既在加载又出错的 `(True, True)` 根本说不通，类型却拦不住——把状态合并成一个变体类型，就能彻底消除不可能的组合。
+      choices:
+        "0": "`Bool` 完全可以作为参数——问题在于多个 `Bool` 会允许自相矛盾的状态。"
+        "2": 参数个数与速度无关——关键是类型拦不住不可能的状态。
+        "3": "`Bool` 也可以用 `case True/False` 很好地处理——问题不在这里。"

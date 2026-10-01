@@ -1,0 +1,27 @@
+title: 实现一次遍历分成两部分的 partition
+tests:
+  empty_list_test: 空列表被分成两个空列表
+  splits_even_and_odd_test: 条件为真的元素放在左边，为假的放在右边
+  all_match_test: 所有元素都满足条件时，右边为空列表
+  none_match_test: 没有元素满足条件时，左边为空列表
+  both_sides_keep_order_test: 两边都保持原来的顺序
+  duplicates_are_kept_test: 同一个值出现多次时全部保留
+requirements:
+  R1: 每个元素恰好进入其中一边
+  R2: 两边都保持原来的顺序
+hints:
+  1: "要在只遍历一次列表的同时生成两个结果，递归调用之间需要带着什么？"
+  2: "累加器不一定只有一个。给辅助函数设两个累加器参数，每个元素就可以只堆到其中一个上。"
+  3: "编写辅助函数 `go(items, predicate, kept, rejected)`，列表结束时把两个累加器分别反转，再作为元组返回。"
+  4: |
+    ```gleam
+    case items {
+      [] -> #(list.reverse(kept), todo)
+      [first, ..rest] ->
+        case predicate(first) {
+          True -> go(rest, predicate, [first, ..kept], rejected)
+          False -> todo
+        }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

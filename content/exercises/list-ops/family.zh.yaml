@@ -1,0 +1,13 @@
+title: 亲手实现列表操作
+rubric:
+  R-04:
+    title: 不用标准列表模块，亲手实现
+    description: 本题的目的是用递归亲手实现列表操作。不要导入 `gleam/list`。
+    message: 导入了 gleam/list。请用递归亲手实现列表操作。
+  R-06:
+    title: 使用累加器时最后反转一次
+    description: 在累加器前面堆积会使顺序颠倒。不要每一步都接到末尾，而是在最后只反转一次。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 用类型表达失败的可能性。
+    message: 使用了 let assert 或 panic。

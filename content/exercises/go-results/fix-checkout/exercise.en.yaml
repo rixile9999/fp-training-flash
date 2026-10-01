@@ -1,0 +1,24 @@
+title: Fix a checkout that swallows stock errors
+tests:
+  successful_checkout_test: If every step passes, returns the order with points applied in the Paid state
+  charge_failure_test: If the payment fails, returns the payment error
+  stock_failure_test: If the stock check fails, returns the stock error
+  stock_error_wins_over_charge_error_test: If both the stock check and the payment fail, returns the stock error, which happened first
+  charge_sees_discounted_amount_test: The payment step receives the amount with points applied
+  points_use_stock_checked_order_test: Points are applied to the order returned by the stock check step
+requirements:
+  R1: On success, return the order in the Paid state as Ok
+  R2: Return the error that happened first, unchanged
+  R3: Go in the order stock check, apply points, payment
+hints:
+  1: "When `check_stock` returns an `Error`, where does that error go in the current code?"
+  2: "`result.unwrap(r, default)` turns an `Error` into the default value. To pass the error back to the caller, use `result.try` or `use x <- result.try(...)`."
+  3: "Change it so that you move on to the next step only when the stock check result is `Ok`. Applying points cannot fail, so leave it as is, and turn the payment result into the `Paid` state before returning it."
+  4: |
+    ```gleam
+    use checked <- result.try(check_stock(order))
+    let discounted = apply_points(checked)
+    use charged <- result.try(todo)
+    todo
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

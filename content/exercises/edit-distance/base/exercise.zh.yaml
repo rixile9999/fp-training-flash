@@ -1,0 +1,32 @@
+tests:
+  identical_test: 相同字符串的距离是 0
+  empty_source_test: 从空字符串构造时，需要插入与字符数相同的次数
+  one_substitution_test: 只有一个字符不同时，距离是 1
+  mixed_edits_test: 多个字符不同时，计算最少的编辑次数
+  empty_target_test: 变成空字符串时，需要删除与字符数相同的次数
+  substitution_counts_once_test: 替换一个字符算一次编辑，而不是删除加插入两次
+  korean_graphemes_test: 韩文的一个字符也算一次编辑
+  long_strings_test: 300 个字符的字符串之间也能在时间限制内算出结果
+requirements:
+  R1: 插入、删除、替换每次代价为 1 时的最少次数
+  R2: 一方为空时，结果是另一方的字符数
+  R3: 按字符（grapheme）计数
+  R4: 时间与两个字符串长度的乘积成正比
+hints:
+  1: "让 `from` 的最后一个字符与 `to` 的最后一个字符对上，有几种方法？用了每种方法之后，剩下的问题是哪两个字符串之间的距离？"
+  2: "子问题是 d(i, j)：“把 `from` 的前 i 个字符变成 `to` 的前 j 个字符所需的最少次数”。d(i, j) = min(d(i-1, j) + 1, d(i, j-1) + 1, d(i-1, j-1) + (两个字符相同为 0，不同为 1))。d(0, j) = j，d(i, 0) = i。"
+  3: "d(i, ·) 的一行只需要它正上方的一行 d(i-1, ·) 就能算出。从第一行 `[0, 1, ..., m]` 出发，用 fold 对 `from` 的每个字符生成下一行，取最后一行的最后一个值作为答案。"
+  4: |
+    ```gleam
+    // previous：上一行 [d(i-1, 0), d(i-1, 1), ...]，left：当前行中刚算出的值
+    fn fill(previous: List(Int), target: List(String), char: String, left: Int, acc: List(Int)) -> List(Int) {
+      case previous, target {
+        [diagonal, above, ..rest], [t, ..ts] -> {
+          let value = todo
+          fill([above, ..rest], ts, char, value, [value, ..acc])
+        }
+        _, _ -> list.reverse(acc)
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

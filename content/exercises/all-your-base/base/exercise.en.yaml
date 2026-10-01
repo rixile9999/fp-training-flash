@@ -1,0 +1,38 @@
+tests:
+  binary_to_decimal_test: Converts binary 101010 to the decimal digits [4, 2]
+  trinary_to_hexadecimal_test: Converts ternary 1120 to the hexadecimal digits [2, 10]
+  input_base_one_is_error_test: An input base of 1 returns InvalidBase(1)
+  zero_value_test: If the value is 0 (including an empty list), the result is [0], not an empty list
+  digit_too_large_test: A digit greater than or equal to the base is reported as InvalidDigit
+  negative_digit_test: A negative digit is reported as InvalidDigit
+  output_base_zero_is_error_test: An output base of 0 returns InvalidBase(0)
+  input_base_checked_first_test: If both bases are invalid, the input base error is reported first
+requirements:
+  R1: Express the same number as a list of digits in the output base
+  R2: A base less than 2 is InvalidBase
+  R3: An out-of-range digit is InvalidDigit
+  R4: Check the input base, then the output base, then the digits
+hints:
+  1: "Should you go straight from one digit list to the digit list of another base, or is there a value you could pass through in between?"
+  2: "`list.try_fold` accumulates like `fold`, but the moment the function returns an `Error` it stops and makes that error the result."
+  3: "First check both bases. Then check the input digits while combining them into a single integer, and finally divide that integer by the output base, collecting the remainders. Check separately what is left when the value is 0."
+  4: |
+    ```gleam
+    fn to_value(digits: List(Int), base: Int) -> Result(Int, RebaseError) {
+      list.try_fold(digits, 0, fn(total, digit) {
+        case digit >= 0 && digit < base {
+          True -> todo
+          False -> todo
+        }
+      })
+    }
+
+    fn to_digits(value: Int, base: Int, acc: List(Int)) -> List(Int) {
+      let acc = [value % base, ..acc]
+      case value < base {
+        True -> acc
+        False -> todo
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

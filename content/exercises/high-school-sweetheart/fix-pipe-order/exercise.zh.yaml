@@ -1,0 +1,24 @@
+title: 修正步骤顺序颠倒的首字母管道
+tests:
+  first_letter_test: 返回名字的第一个字母
+  initial_test: 在第一个字母后面加上句点
+  initials_test: 用空格连接名和姓的首字母
+  initial_lowercase_test: 小写的名字也得到大写首字母
+  initial_trims_whitespace_test: 即使首尾有空白，首字母也只是一个字母加句点
+requirements:
+  R1: initial 把 first_letter 的结果变成大写并加上句点
+  R2: initials 复用 initial
+hints:
+  1: "手动把 `initial(\"Betty\")` 沿着管道一步一步走一遍。句点是在哪一步消失的？"
+  2: "管道从上到下依次执行。前一步的结果是下一步的输入，所以即使用的是同样的函数，顺序变了结果也会不同。"
+  3: "把三个步骤分成“缩短文字的步骤”和“修饰文字的步骤”。如果先修饰再缩短，修饰的结果可能会被切掉。"
+  4: |
+    ```gleam
+    pub fn initial(name: String) -> String {
+      name
+      |> first_letter
+      |> todo
+      |> todo
+    }
+    ```
+  5: "现在可以打开完整讲解。看完讲解后，将用一道新题确认掌握程度。"

@@ -1,0 +1,13 @@
+title: 用 Result 串联围棋规则
+rubric:
+  R-02:
+    title: 管道体现意图
+    description: 规则的应用顺序与阅读代码的顺序一致，并且能区分每一步是可能失败（result.try）还是不会失败（result.map）。
+  R-07:
+    title: 不吞掉错误
+    description: 不用 result.unwrap 或默认值覆盖 Error，而是把第一个错误原样传回调用方。
+    message: 用 result.unwrap 把错误换成了默认值。请确认错误被一直传递到最后。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 用类型来表达可能的失败。
+    message: 使用了 let assert 或 panic。

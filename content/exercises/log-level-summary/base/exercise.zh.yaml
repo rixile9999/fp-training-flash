@@ -1,0 +1,34 @@
+tests:
+  empty_lines_test: 没有行时返回空字典
+  counts_single_level_test: 统计同一级别的行数
+  counts_several_levels_test: 多个级别混在一起时按级别分别计数
+  normalizes_case_test: 级别大小写不同时也统一成大写合并计数
+  skips_malformed_lines_test: 不符合格式的行不计数
+  level_without_space_test: 即使级别后面没有紧跟空格，也能读出级别
+requirements:
+  R1: 把第一个 [ 和第一个 ] 之间的文字当作级别，按级别统计行数
+  R2: 级别转换成大写后再计数
+  R3: 不以 [ 开头或没有 ] 的行不计数
+hints:
+  1: "能不能把“从一行中取出级别”和“统计多行的级别”分开来想？取不出级别的行要怎么表示？"
+  2: "`string.split_once(s, \"]\")` 只在第一个 `]` 处切分一次，返回 `Ok(#(前, 后))`；没有 `]` 时返回 `Error(Nil)`。`dict.upsert` 在键不存在时收到 `None`，并放入新值。"
+  3: "先写出 `fn level_of(line: String) -> Result(String, Nil)`。然后用 `list.fold` 遍历各行：遇到 `Ok(level)` 就把计数加 1，遇到 `Error` 就让累加器保持不变。"
+  4: |
+    ```gleam
+    fn level_of(line: String) -> Result(String, Nil) {
+      case line {
+        "[" <> rest -> todo
+        _ -> Error(Nil)
+      }
+    }
+
+    pub fn count_levels(lines: List(String)) -> Dict(String, Int) {
+      list.fold(lines, dict.new(), fn(counts, line) {
+        case level_of(line) {
+          Ok(level) -> todo
+          Error(Nil) -> counts
+        }
+      })
+    }
+    ```
+  5: "现在可以打开完整讲解。看完讲解后，将用一道新题确认掌握程度。"

@@ -1,0 +1,36 @@
+title: Remove let assert from the cart calculation helpers
+tests:
+  line_total_multiplies_price_test: line_total multiplies the unit price by the quantity
+  unknown_sku_is_error_test: A product missing from the price list returns UnknownSku instead of crashing
+  cart_total_sums_lines_test: cart_total adds up the amounts of all lines
+  line_without_separator_is_bad_line_test: A line without the separator " x " puts the whole line in BadLine
+  non_numeric_quantity_test: A quantity that is not an integer puts the quantity part in BadQuantity
+  zero_quantity_test: A quantity of 0 is BadQuantity
+  cart_total_reports_first_bad_line_test: cart_total does not skip invalid lines and returns the first error
+  empty_cart_is_zero_test: The total of an empty cart is 0
+requirements:
+  R1: Results for valid input stay the same
+  R2: Failures in the helper functions are returned as CheckoutError values
+  R3: cart_total passes on the error of the first line that fails
+hints:
+  1: "Does the return type of `parse_line` or `price_of` currently show that they can fail? If it does not, how could `line_total` ever find out?"
+  2: "To pass a failure up to the caller, you first have to change the helper's return type to `Result(value, CheckoutError)`. Then the caller can chain it with `use x <- result.try(helper(...))`. When accumulating over a list can fail, use `list.try_fold`."
+  3: "Fix things from the innermost function outward. Change the return types of `price_of` and `parse_line` to `Result` and make each `let assert` return the appropriate error, then chain `line_total` with `use`, and finally change the `fold` in `cart_total` to `try_fold`."
+  4: |
+    ```gleam
+    fn parse_line(line: String) -> Result(#(String, Int), CheckoutError) {
+      case string.split(line, " x ") {
+        [sku, quantity_text] -> todo
+        _ -> Error(BadLine(line))
+      }
+    }
+
+    fn price_of(prices: Dict(String, Int), sku: String) -> Result(Int, CheckoutError) {
+      todo
+    }
+
+    pub fn cart_total(prices: Dict(String, Int), lines: List(String)) -> Result(Int, CheckoutError) {
+      list.try_fold(lines, 0, fn(sum, line) { todo })
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

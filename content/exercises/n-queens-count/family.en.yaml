@@ -1,0 +1,13 @@
+title: Count non-attacking queen placements
+rubric:
+  R-02:
+    title: Prune partial solutions right away
+    description: Every time a queen is placed, check that it is safe, and do not go any deeper from an unsafe square. Do not build every complete placement and filter afterwards.
+    message: Building every permutation and filtering afterwards does no pruning.
+  R-05:
+    title: Separate the safety check
+    description: Pull the rule that decides whether a square is safe out into a named function such as is_safe, so it can be verified on its own.
+  R-09:
+    title: No let assert or panic
+    description: Express the possibility of failure in the types.
+    message: let assert or panic was used.

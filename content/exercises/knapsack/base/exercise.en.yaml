@@ -1,0 +1,31 @@
+tests:
+  no_items_test: With no items, the maximum value is 0
+  example_test: Picks the combination with the largest total value within the weight limit
+  eight_items_test: Finds the maximum value among eight items
+  one_item_too_heavy_test: An item heavier than the limit is not packed
+  greedy_by_weight_test: Finds a better combination than packing the lightest items, or those with the most value per weight, first
+  greedy_by_value_test: Finds a better combination than packing the most valuable items first
+  item_used_once_test: The same item is not packed twice
+  many_items_test: Even 50 items are computed within the time limit
+requirements:
+  R1: The largest total value among combinations whose total weight is within the limit
+  R2: Each item is either packed or not (at most once)
+  R3: Running time proportional to the number of items x the weight limit
+hints:
+  1: "If you look only at the last item, there are just two choices: pack it or don't. In each case, what problem is left to solve with the remaining items? How does the weight limit change?"
+  2: "The subproblem is \"the maximum value you can get from the first k items within weight limit w\". There are only (number of items) x (limit + 1) distinct (k, w) pairs, so if you store them in a table you never solve the same subproblem twice."
+  3: "Start the table `Dict(weight limit, maximum value)` empty (0 for every limit) and fold over the items one at a time (`list.fold`), building a new table each time. Cell w of the new table is max(cell w of the previous table, cell (w - weight) of the previous table + value). Always read from the **previous table**."
+  4: |
+    ```gleam
+    fn add_item(previous: Dict(Int, Int), item: Item, maximum_weight: Int) -> Dict(Int, Int) {
+      int.range(from: item.weight, to: maximum_weight + 1, with: previous, run: fn(table, capacity) {
+        let take = best(previous, capacity - item.weight) + item.value
+        todo
+      })
+    }
+
+    fn best(table: Dict(Int, Int), capacity: Int) -> Int {
+      dict.get(table, capacity) |> result.unwrap(0)
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

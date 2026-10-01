@@ -1,0 +1,13 @@
+title: Predicting the result of a filter, map and fold pipeline
+hints:
+  1: "In a pipeline, the value flows from top to bottom, one step at a time. What does the list look like after the first step?"
+  2: "`list.filter` keeps only the elements for which the condition is `True`, `list.map` transforms every element, and `list.fold` folds the list into a single value."
+  3: "Write down the result of each step on paper, one line at a time. Once you have written down an intermediate value, you only need to focus on that value for the next step."
+  4: |
+    ```gleam
+    [1, 2, 3, 4, 5]
+    |> list.filter(...)  // [1, 3, 5]
+    |> list.map(...)     // todo
+    |> list.fold(...)    // todo
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

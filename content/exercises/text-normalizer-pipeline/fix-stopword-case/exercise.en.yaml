@@ -1,0 +1,24 @@
+title: Fix query normalization that leaves capitalized stopwords behind
+tests:
+  split_words_test: Splits the query into a list of words with no empty words
+  remove_stopwords_test: Removes lowercase stopwords from the list
+  normalize_query_lowercase_test: Converts the query words to lowercase
+  normalize_query_capital_stopword_test: Also removes stopwords whose first letter is uppercase
+  normalize_query_all_caps_test: Also removes stopwords written in all caps
+  normalize_query_only_stopwords_test: A query with only stopwords gives an empty list
+requirements:
+  R1: Stopwords are compared regardless of letter case
+hints:
+  1: "As `\"The Art of War\"` passes through each step of the pipeline, what does `\"The\"` look like? When `remove_stopwords` sees it, is it uppercase or lowercase?"
+  2: "Each step of a pipeline sees only the value the previous step handed over. The earlier step has to produce the input shape the later step expects (here, lowercase) first."
+  3: "Instead of adding uppercase forms to the stopword list, change the order of the steps so that `remove_stopwords` always receives lowercase words."
+  4: |
+    ```gleam
+    pub fn normalize_query(text: String) -> List(String) {
+      text
+      |> split_words
+      |> todo
+      |> todo
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

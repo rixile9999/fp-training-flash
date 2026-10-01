@@ -1,0 +1,22 @@
+title: 修复悄悄丢弃错误碱基的转录
+tests:
+  valid_strand_test: 合法的链转换为 RNA 后以 Ok 返回
+  empty_strand_test: 空链为 Ok("")
+  invalid_in_middle_test: 中间有错误字符时返回 Error(Nil)
+  all_invalid_test: 即使所有字符都错误，结果也是 Error(Nil)，而不是 Ok("")
+  rna_base_rejected_test: 混有 DNA 中不存在的 U 时返回 Error(Nil)
+requirements:
+  R1: 合法的链以 Ok 返回转换结果
+  R2: 只要有一个错误字符就返回 Error(Nil)
+hints:
+  1: "输入 `\"ACXT\"` 时，现在的代码返回什么？结果的长度和输入的长度一样吗？"
+  2: "`list.filter_map` 会丢弃产生 `Error` 的元素并继续执行。`list.try_map` 遇到 `Error` 就停下并返回这个 `Error`。"
+  3: "把丢弃元素的函数换成传递失败的函数，并把最后那一步（无条件用 `Ok` 包裹）改为只在成功时才拼接。"
+  4: |
+    ```gleam
+    dna
+    |> string.to_graphemes
+    |> list.try_map(complement)
+    |> todo
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

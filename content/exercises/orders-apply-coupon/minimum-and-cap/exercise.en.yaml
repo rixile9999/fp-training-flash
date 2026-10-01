@@ -1,0 +1,33 @@
+title: A coupon with a minimum order amount and a discount cap
+tests:
+  discounts_pending_test: Discounts Pending orders at or above the minimum amount
+  skips_below_minimum_test: Does not discount orders below the minimum amount
+  caps_discount_test: The discount does not exceed the cap
+  applies_at_exact_minimum_test: Discounts an order whose amount equals the minimum amount
+  rounds_discount_down_test: Rounds the discount down before subtracting it
+  keeps_other_orders_test: Leaves orders that are not Pending unchanged even if their amount is large, and keeps the order
+requirements:
+  R1: Discount only orders that are Pending and whose amount is at least min_amount
+  R2: The discount is amount * percent / 100 (rounded down)
+  R3: The discount does not exceed max_discount
+  R4: Leave the other orders unchanged and keep the order
+hints:
+  1: "For each order, can you ask \"is it eligible for the discount?\" first and \"how much do I subtract?\" separately afterwards? Which one should be rounded down: the discount, or the amount after the discount?"
+  2: "`int.min(a, b)` returns the smaller of the two. You can use it to cut the discount down to the cap. An `if` guard after a `case` pattern lets you check the status and the amount condition together."
+  3: "First write `fn discount(amount: Int, coupon: Coupon) -> Int`, a function that only calculates the discount. Then, in `list.map`, change the amount of an eligible order to `amount - discount(...)`."
+  4: |
+    ```gleam
+    pub fn apply_coupon(orders: List(Order), coupon: Coupon) -> List(Order) {
+      list.map(orders, fn(order) {
+        case order.status {
+          Pending if order.amount >= coupon.min_amount -> todo
+          _ -> order
+        }
+      })
+    }
+
+    fn discount(amount: Int, coupon: Coupon) -> Int {
+      int.min(todo, coupon.max_discount)
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

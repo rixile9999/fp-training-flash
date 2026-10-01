@@ -1,0 +1,30 @@
+title: 把计分表还原为按分数分组
+tests:
+  single_letter_test: 把单个字母块转成大写，放进对应分数的组
+  letters_with_same_score_are_grouped_test: 分数相同的字母块归入同一组
+  several_scores_test: 每个分数各建一个组
+  empty_table_test: 空计分表变成空 dict
+  group_is_sorted_alphabetically_test: 组内的字母块按字典序排列
+  full_table_test: 把完整计分表还原成七个组
+  large_table_is_sorted_test: 即使是混有双字母块的大计分表，组内也按字典序排列
+requirements:
+  R1: 为每个分数收集该分数的大写字母块
+  R2: 组内按 string.compare 升序排列
+hints:
+  1: "某个分数已经有组了，又来了一个字母块，该怎么办？如果这个分数还没有组呢？"
+  2: "`dict.upsert(dict, key, fn(Option(v)) -> v)` 在键存在时接收 `Some(已有值)`，不存在时接收 `None`，据此决定新值。dict 的遍历顺序没有保证，需要顺序时必须自己排序。"
+  3: "用 `dict.fold` 把每个大写字母块加入对应分数的组，全部收集完后，再用 `dict.map_values` 对每个组排序。"
+  4: |
+    ```gleam
+    scores
+    |> dict.fold(dict.new(), fn(groups, letter, score) {
+      dict.upsert(groups, score, fn(existing) {
+        case existing {
+          Some(letters) -> todo
+          None -> todo
+        }
+      })
+    })
+    |> dict.map_values(fn(_score, letters) { todo })
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

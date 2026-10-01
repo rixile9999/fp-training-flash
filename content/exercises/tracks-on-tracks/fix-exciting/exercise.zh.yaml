@@ -1,0 +1,24 @@
+title: 修复“令人兴奋的语言列表”判断 bug
+tests:
+  single_gleam_is_exciting_test: 只有 Gleam 一个元素的列表是令人兴奋的列表
+  gleam_second_of_three_is_exciting_test: 三个元素的列表中第二个是 Gleam 时，是令人兴奋的列表
+  gleam_second_of_four_is_not_exciting_test: 四个元素的列表中第二个是 Gleam 时，不是令人兴奋的列表
+  empty_list_is_not_exciting_test: 空列表不是令人兴奋的列表
+  single_other_language_is_not_exciting_test: 只有一个非 Gleam 语言时，不是令人兴奋的列表
+  gleam_first_of_five_is_exciting_test: 第一个是 Gleam 时，五个元素的列表也是令人兴奋的列表
+requirements:
+  R1: 长度为 1 的列表也遵循第一个元素的规则
+  R2: 第二个元素的规则只在长度为 2 或 3 时适用
+hints:
+  1: "输入 `[\"Gleam\"]` 和 `[\"Elm\", \"Gleam\", \"C#\", \"Scheme\"]` 时，现在的代码分别返回什么？各自进入哪个分支？"
+  2: "`[first, second, ..]` 匹配所有长度不小于 2 的列表。在这个分支里，`list.length(languages) >= 2` 永远为真，什么也过滤不掉。"
+  3: "与其用布尔表达式检查长度条件，不如把结果为真的形状写成 `[_, \"Gleam\"]` 这样长度固定的模式。"
+  4: |
+    ```gleam
+    case languages {
+      ["Gleam", ..] -> True
+      [_, "Gleam"] | todo -> True
+      _ -> False
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

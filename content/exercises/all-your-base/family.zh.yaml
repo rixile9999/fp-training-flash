@@ -1,0 +1,16 @@
+title: 进制转换与报告错误输入
+rubric:
+  R-04:
+    title: 不用标准库的进制转换函数，自己实现
+    description: 不要交给 int.digits 或 int.undigits，而是用累加和除法亲手表达转换过程。
+    message: 使用了 int.digits 或 int.undigits。
+  R-05:
+    title: 分离计算逻辑
+    description: 把“数字位列表转成整数”和“整数转成数字位”分别拆成有名字的函数，就能各自单独验证。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 用类型来表达可能的失败。
+    message: 使用了 let assert 或 panic。
+  R-07:
+    title: 不吞掉错误
+    description: 不符合规则的值既不丢弃也不换成默认值，而是用错误值说明哪个值错了、为什么错。

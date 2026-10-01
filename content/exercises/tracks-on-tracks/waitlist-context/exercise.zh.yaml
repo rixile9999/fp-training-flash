@@ -1,0 +1,27 @@
+title: 管理餐厅候位名单
+tests:
+  add_vip_goes_first_test: VIP 客人排在名单最前面
+  add_guest_goes_last_test: 普通客人排在名单最后面
+  seat_next_removes_first_test: seat_next 把最前面的客人从名单中移除
+  next_two_returns_first_two_test: next_two 按顺序返回名单最前面的两位
+  seat_next_on_empty_stays_empty_test: 名单为空时，seat_next 返回空名单
+  next_two_with_one_guest_test: 只有一位客人时，next_two 只返回这一位
+  next_two_on_empty_test: 名单为空时，next_two 返回空列表
+requirements:
+  R1: VIP 加到前面，普通客人加到后面
+  R2: 移除最前面的客人，空名单保持不变
+  R3: 从前面最多取两位，不足两位时有几位取几位
+hints:
+  1: "名单上只有一位客人或一个人都没有时，`seat_next` 和 `next_two` 应该返回什么？"
+  2: "加到列表前面是 `[x, ..xs]`，加到后面是 `list.append(xs, [x])`。在 `case` 中，`[_, ..rest]` 给出去掉第一个元素后剩下的部分。"
+  3: "`seat_next` 和 `next_two` 如果按名单的形状（空列表、一位、两位及以上）用 `case` 分情况处理，短名单也能自然地处理好。"
+  4: |
+    ```gleam
+    pub fn next_two(queue: List(String)) -> List(String) {
+      case queue {
+        [first, second, ..] -> [first, second]
+        short -> todo
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

@@ -1,0 +1,71 @@
+title: 没有提前返回
+blocks:
+  intro:
+    markdown: |-
+      Gleam 中没有其他语言里 `if (条件) return ...;` 这样的**提前返回（early return）**。根本就没有 `return` 关键字。
+
+      函数是**一个表达式**，所有路径最终都汇聚成一个值。所以“提前退出”的分支并不会消失，而是变成 `case` 的**一个分支**。可以这样理解：把伪代码中的每个 `return` 都搬进一个 case 分支。
+  translate:
+    markdown: |-
+      例如，下面这段命令式伪代码：
+
+      ```
+      if n < 0: return "negative"
+      if n == 0: return "zero"
+      return "positive"
+      ```
+
+      在 Gleam 中会合并成一个 case：
+
+      ```
+      fn sign_label(n: Int) -> String {
+        case n {
+          _ if n < 0 -> "negative"
+          0 -> "zero"
+          _ -> "positive"
+        }
+      }
+      ```
+
+      每个 `return` 就是一个分支。
+  sign-negative:
+    prompt: "`sign_label(-5)` 的值是什么？"
+    choices:
+      - '"negative"'
+      - '"zero"'
+      - '"positive"'
+      - "-5"
+    feedback:
+      correct: 没错！-5 通过了第一个守卫 `n < 0`，结果是 "negative"——和命令式写法中的第一个 return 一样。
+      choices:
+        "1": "\"zero\" 是 `0` 模式分支的结果。-5 不是 0。"
+        "2": "只有上面两个分支都没匹配时才会得到 \"positive\"。-5 在第一个分支就被匹配了。"
+        "3": case 返回的是匹配分支的结果，而不是被检查的数字。
+  sign-zero:
+    prompt: 在同一个 `sign_label` 中，`sign_label(0)` 的值是什么？
+    choices:
+      - '"negative"'
+      - '"zero"'
+      - '"positive"'
+      - "0"
+    feedback:
+      correct: 完全正确！对 0 来说 `n < 0` 为假，所以跳过第一个分支；它正好匹配 `0` 模式，结果是 "zero"。
+      choices:
+        "0": 0 不是负数——`0 < 0` 为假，所以过不了第一个分支。
+        "2": 0 在走到最后的 `_` 之前，就先被 `0` 模式匹配了。
+        "3": case 返回的不是被检查的值，而是分支的结果 "zero"。
+  redundant-bool:
+    markdown: 去掉提前返回之后，还会发现另一个陷阱：**把本来就是 Bool 的值再用 case 拆开，写成 `True -> True`、`False -> False` 返回**的代码。条件表达式本身就已经是我们想要的 Bool 值，直接返回它就行。
+  redundant-bool-spot:
+    prompt: 下面哪一个是最不地道（多余啰嗦）的代码？
+    choices:
+      - case n > 0 { True -> True False -> False }
+      - n > 0
+      - 0 < n
+      - n >= 1
+    feedback:
+      correct: 没错！`n > 0` 本身就是 Bool。用 case 拆开再以 `True -> True` 返回，只是绕了一大圈得到同一个值的冗余代码。
+      choices:
+        "1": "`n > 0` 是最简洁的正确写法——它已经是 Bool，直接返回即可。"
+        "2": "`0 < n` 只是把 `n > 0` 反过来写而已。它已经是 Bool，而且很简洁。"
+        "3": 对整数输入来说，`n >= 1` 和 `n > 0` 结果相同，也算简洁。

@@ -1,0 +1,35 @@
+title: Give tied students the same rank
+tests:
+  empty_class_test: With no students, return an empty list
+  distinct_scores_test: If all scores differ, assign ranks in sequence starting from 1
+  tie_shares_rank_test: Students with equal scores get the same rank
+  rank_after_tie_skips_test: The rank after a tie skips ahead by the number of tied students
+  three_way_tie_test: In a three-way tie, all three share a rank and the next rank is three places later
+  tied_names_in_order_test: Within the same rank, names are listed alphabetically
+requirements:
+  R1: Sort by score descending and assign ranks
+  R2: Equal scores get equal ranks
+  R3: The rank after a tie is (number of students ahead + 1)
+  R4: Within the same rank, names in ascending order
+hints:
+  1: "To decide a student's rank in the sorted list, what do you need to know? Are the score and rank of the student just before enough?"
+  2: "`list.index_fold` passes the accumulator, the element and a position starting from 0 together. The accumulator can carry \"the previous student's score and rank\"."
+  3: "After sorting, fold from the front. If the score equals the previous student's, reuse the previous rank; otherwise use `position + 1` as the rank. Collect the results by prepending, then reverse at the end."
+  4: |
+    ```gleam
+    let #(_, ranked) =
+      students
+      |> list.sort(by_rank_order)
+      |> list.index_fold(#(None, []), fn(state, student, index) {
+        let #(previous, acc) = state
+        let score = student.score
+        let this_rank = case previous {
+          Some(#(previous_score, previous_rank)) if previous_score == score ->
+            todo
+          _ -> todo
+        }
+        #(Some(#(score, this_rank)), [#(this_rank, student.name), ..acc])
+      })
+    list.reverse(ranked)
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

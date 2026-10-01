@@ -1,0 +1,52 @@
+title: Option 与 Result 的选择标准
+blocks:
+  intro:
+    markdown: |-
+      `Option` 和 `Result` 都用来处理“可能没有值”的情况，但用途不同。一句话标准：
+
+      - **如果“没有是正常状态”，就用 `Option`**——缺失本身就是数据的场合。例如：记录中的可选字段（可能没有昵称）。
+      - **如果是“失败且有原因”，就用 `Result`**——出了问题，并且需要说明*为什么*出问题的时候。
+
+      关键问题：“这个‘没有’是*正常*的，还是*失败*？”
+  optional-field:
+    prompt: '在用户资料中，`nickname`（昵称）是“可能没有设置”的可选字段。没有昵称不是错误，而是常见的正常状态。这个字段最合适的类型是？'
+    choices:
+      - '`Option(String)`——因为缺失是正常的数据'
+      - '`Result(String, Nil)`——因为昵称可能会失败'
+      - '`String`——没有时用空字符串'
+      - '`Result(String, String)`——为了携带原因'
+    feedback:
+      correct: '没错！没有昵称不是*失败*，而是*正常的缺失*——所以 `Option(String)` 正合适。`None` 能自然地表示“未设置昵称”。'
+      choices:
+        "1": '没有昵称不是失败，而是正常情况——没有需要传达的“失败原因”，用 `Result` 就多余了。'
+        "2": '空字符串无法区分“有，但为空”和“根本没有”——`Option` 能清楚地区分这两者。'
+        "3": '没有失败原因要携带，却放一个错误类型，只是画蛇添足——正常的缺失就用 `Option`。'
+  result-default:
+    markdown: |-
+      不过看看 Gleam 标准库就会发现，即使失败原因*只有一种*，很多时候用的也不是 `Option`，而是 **`Result(a, Nil)`**——`int.parse`、`list.first` 就是这样。按照惯例，**`Result` 是默认选择**，`Option` 只留给“缺失本身就是数据”的特殊场合。因为“解析失败”或“空列表的第一个元素”与其说是*正常的缺失*，不如说是*这个运算失败了*。
+  stdlib-idiom:
+    prompt: '`int.parse("abc")` 不用 `Option`，而是以 `Result(Int, Nil)` 返回 `Error(Nil)`，最恰当的理由是？'
+    choices:
+      - '“把 abc 转成整数”不是正常的缺失，而是运算的*失败*——标准库在这种情况下默认用 Result'
+      - '因为 Gleam 没有 Option'
+      - '因为 Result 总是比 Option 快'
+      - '因为这是 `int.parse` 独有的特殊规则，其他函数用 Option'
+    feedback:
+      correct: '没错！无法解析不是“没有是正常的”，而是“这个运算失败了”的信号——所以按惯例使用 `Result`（`list.first` 也一样）。'
+      choices:
+        "1": 'Gleam 确实有 `Option`（`gleam/option`）。只是对于*失败*，惯例是用 `Result`。'
+        "2": '不是因为速度，而是因为*语义*——区分的是缺失（数据）还是失败。'
+        "3": '`list.first` 也出于同样的理由使用 `Result`——并不是 `int.parse` 独有的例外。'
+  spot-awkward:
+    prompt: '下面四个函数签名中，哪一个的类型选择**不太合适**？'
+    choices:
+      - '`fn divide(a: Int, b: Int) -> Option(Int)`'
+      - '`fn find_user(id: Int) -> Result(User, Nil)`'
+      - '`fn middle_name(p: Person) -> Option(String)`'
+      - '`fn parse_age(s: String) -> Result(Int, AgeError)`'
+    feedback:
+      correct: '没错！除以 0 不是*正常的缺失*，而是运算的*失败*——用 `Result(Int, ...)` 比 `Option` 更合适。标准是：“没有是正常的就用 Option，是失败就用 Result”。'
+      choices:
+        "1": '查找用户失败时用 `Result` 很自然——按照标准库惯例，只有一种原因时用 `Result(_, Nil)` 也没问题。'
+        "2": '中间名（middle name）是“没有也很正常”的可选字段，用 `Option` 正合适——并无不妥。'
+        "3": '解析年龄失败时有原因（`AgeError`），所以 `Result(Int, AgeError)` 是标准做法——并无不妥。'

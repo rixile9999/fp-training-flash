@@ -1,0 +1,12 @@
+title: 用最少的硬币找零
+rubric:
+  R-07:
+    title: 把子问题的答案存进表里复用
+    description: 为了不把同一金额的答案计算两次，从小金额开始把答案填进表（如 Dict）里，需要时再取出来用。
+  R-08:
+    title: 用值表示凑不出的金额
+    description: 凑不出的金额不用 0 或很大的数这类特殊值表示，而是表示为表中没有（Error）或 Result。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 用类型表达失败的可能性。
+    message: 使用了 let assert 或 panic。

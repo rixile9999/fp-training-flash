@@ -1,0 +1,29 @@
+title: Reporting every invalid member in a group signup
+tests:
+  all_valid_team_test: "When everyone is valid, returns the list of NewUser in input order"
+  reports_invalid_member_with_number_test: "Returns the number (from 1) and the error list of each person whose form is invalid"
+  empty_team_test: "An empty roster is Ok([])"
+  keeps_member_order_test: "Keeps the roster order even with three or more people"
+  reports_every_invalid_member_test: "When several people have invalid forms, reports all of them in roster order"
+  first_member_is_number_one_test: "The first person's number is 1"
+requirements:
+  R1: "When everyone passes, a list of NewUser in input order"
+  R2: "For each person who fails, the number counted from 1 and the error list from validate_all"
+  R3: "Every person who fails, none left out, in roster order"
+hints:
+  1: "When the second person's form is invalid, do you still need to check the third person? When do you need the information about the people whose forms are valid?"
+  2: "`result.partition(results)` returns `#(list of success values, list of errors)`. As its documentation says, both lists are in the **reverse** of the original order. The index of `list.index_map` starts at 0."
+  3: "Run `validate_all` for each person and attach a number to the errors to build a list of `Result(NewUser, #(Int, List(SignupError)))`. Split that list into successes and failures, and return `Ok` only when there are no failures. Check the order."
+  4: |
+    ```gleam
+    let results =
+      list.index_map(forms, fn(form, index) {
+        validate_all(form)
+        |> result.map_error(fn(errors) { todo })
+      })
+    case result.partition(results) {
+      #(users, []) -> todo
+      #(_, failures) -> todo
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

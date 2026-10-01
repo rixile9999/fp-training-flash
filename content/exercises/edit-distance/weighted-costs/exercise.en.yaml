@@ -1,0 +1,30 @@
+title: Edit distance with a different cost for each kind of edit
+tests:
+  unit_costs_test: When every cost is 1, it equals the ordinary edit distance
+  expensive_substitution_test: When substitution is expensive, uses a deletion and an insertion instead
+  insert_direction_test: An edit that puts a character into from is charged the insertion cost
+  delete_direction_test: An edit that takes a character out of from is charged the deletion cost
+  insert_cost_base_case_test: Building from an empty string costs one insertion per character
+  delete_cost_base_case_test: Turning a string into an empty string costs one deletion per character
+  long_strings_test: Computes the cost between 200-character strings within the time limit
+requirements:
+  R1: The minimum cost with separate insertion, deletion and substitution costs applied
+  R2: Insertion puts a character into from; deletion takes one out of from
+  R3: If one side is empty, the number of characters x the matching cost
+  R4: Time proportional to the product of the two string lengths
+hints:
+  1: "In the recurrence for all costs equal to 1, `+ 1` appears in three places. Which edit does each one correspond to? The values in the first row and first column, where an empty string is involved, come from performing which edit how many times?"
+  2: "If d(i, j) is \"the minimum cost to turn the first i characters of from into the first j characters of to\", then coming from d(i-1, j) means deleting the i-th character of from, coming from d(i, j-1) means inserting the j-th character of to, and coming from d(i-1, j-1) means a substitution (0 if they are equal)."
+  3: "The first row is `[0, insert, 2 * insert, ...]`, and the first cell of each row is `i * delete`. Keep the fold that builds the next row from the row above as it is, and add the matching cost to each of the three candidates. If substitution costs more than deletion + insertion, min picks the deletion + insertion path on its own."
+  4: |
+    ```gleam
+    [diagonal, above, ..rest], [t, ..ts] -> {
+      let replace = case t == char {
+        True -> diagonal
+        False -> diagonal + costs.substitute
+      }
+      let value = int.min(replace, int.min(todo, todo))
+      fill([above, ..rest], ts, char, costs, value, [value, ..acc])
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

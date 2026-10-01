@@ -1,0 +1,31 @@
+title: 按级别收集日志消息
+tests:
+  empty_lines_test: 没有行时返回空字典
+  groups_by_level_test: 把消息收集到各级别的列表中，并去掉开头的空白
+  keeps_order_within_level_test: 同一级别的消息保持在日志中出现的顺序
+  message_with_bracket_test: 即使消息中含有 ]，第一个 ] 之后的全部内容都是消息
+  normalizes_case_test: 级别大小写不同时也收集到同一个大写键下
+  skips_malformed_lines_test: 不符合格式的行不放进任何列表
+  keeps_trailing_spaces_test: 消息末尾的空白不去掉，原样保留
+requirements:
+  R1: 第一个 [ 和第一个 ] 之间的文字转换成大写后就是级别
+  R2: 第一个 ] 之后的文字只去掉开头空白后就是消息
+  R3: 各级别的消息保持原来的顺序
+  R4: 不以 [ 开头或没有 ] 的行被排除
+hints:
+  1: "如果用 `list.fold` 把元素一个个加到列表前面来收集，收集完的列表会是什么顺序？"
+  2: "`string.split_once` 只在第一个分隔符处切分一次。`string.trim_start` 只去掉开头的空白。`dict.map_values` 一次性改变字典中的所有值。"
+  3: "先写一个把单行解析为 `Result(#(级别, 消息), Nil)` 的函数。折叠时用 `[message, ..已有列表]` 加到前面，最后把每个列表反转一次，顺序就对了。"
+  4: |
+    ```gleam
+    lines
+    |> list.fold(dict.new(), fn(groups, line) {
+      case parse_line(line) {
+        Ok(#(level, message)) ->
+          dict.upsert(groups, level, fn(existing) { todo })
+        Error(Nil) -> groups
+      }
+    })
+    |> dict.map_values(fn(_level, messages) { todo })
+    ```
+  5: "现在可以打开完整讲解。看完讲解后，将用一道新题确认掌握程度。"

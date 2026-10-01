@@ -1,0 +1,33 @@
+tests:
+  single_coin_test: 一枚硬币就够时，只返回那一枚硬币
+  multiple_coins_ascending_test: 多枚硬币按升序返回
+  not_greedy_test: 找到比先选最大硬币更少的枚数
+  impossible_target_test: 任何组合都凑不出时返回 ImpossibleTarget
+  unsorted_coins_test: 硬币列表未排序时结果也是升序
+  greedy_dead_end_test: 先选最大硬币会卡住的金额也能凑出
+  zero_target_test: 金额为 0 时不需要硬币
+  negative_target_test: 负数金额是 ImpossibleTarget
+  large_target_test: 金额 999 也能在时间限制内算完
+requirements:
+  R1: 硬币枚数最少的组合
+  R2: 凑不出或为负数时返回 Error(ImpossibleTarget)
+  R3: 结果按升序排列
+  R4: 运行时间与“金额 × 硬币种类数”成正比
+hints:
+  1: "如果凑出 23 的最少组合里最后一枚硬币是 4，那么剩下的硬币应该是凑出多少金额的最少组合？"
+  2: "金额 a 的最少组合，是所有“某一枚硬币 c + 金额 a - c 的最少组合”中最短的那个。同一个小金额的答案会被多次用到，所以从 0 开始依次计算、存进表里，再取出来用，每个金额就只需计算一次。"
+  3: "用 0 → `[]` 初始化一个 `Dict(Int, 组合)`，从 1 到 target 依次填表。对每个金额和每枚硬币 c，如果 `dict.get(table, amount - c)` 存在，就构造一个候选，只把最短的候选放进表里。没有候选时，这个金额就不放进表（凑不出）。"
+  4: |
+    ```gleam
+    // 表中的值：#(硬币枚数, 用到的硬币)
+    fn best_for(coins: List(Int), table: Dict(Int, #(Int, List(Int))), amount: Int) -> Result(#(Int, List(Int)), Nil) {
+      list.fold(coins, Error(Nil), fn(best, coin) {
+        case dict.get(table, amount - coin), best {
+          Error(Nil), _ -> best
+          Ok(#(count, _)), Ok(#(best_count, _)) if count + 1 >= best_count -> best
+          Ok(#(count, used)), _ -> todo
+        }
+      })
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

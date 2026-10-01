@@ -1,0 +1,29 @@
+title: 从配置档回退到默认配置档
+tests:
+  resolve_own_value_test: 原样返回配置档中已有的值
+  resolve_falls_back_to_default_test: 配置档中没有的键到 default 配置档中查找
+  unknown_profile_test: 不存在的配置档是 UnknownProfile
+  unknown_profile_does_not_fall_back_test: 即使 default 中有该键，不存在的配置档仍是 UnknownProfile
+  missing_everywhere_test: 两个配置档中都没有的键是 MissingKey
+  works_without_default_profile_test: 没有 default 配置档时也返回 MissingKey
+  resolve_int_uses_fallback_test: resolve_int 也遵循回退到 default 的规则
+  invalid_value_does_not_fall_back_test: 配置档中的值不是整数时，不回退到 default，而是返回 NotAnInt
+requirements:
+  R1: 配置档不存在时不做其他检查，直接返回 UnknownProfile
+  R2: 按配置档、default 的顺序查找键，两处都没有则返回 MissingKey
+  R3: resolve_int 把 resolve 找到的值转换为整数
+hints:
+  1: "如果 `prod` 配置档的 `port` 是 `\"54x2\"`，而 default 的 `port` 是 `\"5432\"`，返回 5432 是贴心还是危险？"
+  2: "`result.lazy_or(r, fn() { 另一个结果 })` 只在 `r` 是 `Error` 时才执行函数并使用其结果。`r` 是 `Ok` 时保持不变。"
+  3: "`resolve` 先查找配置档（不存在就立即返回错误），再在其中查找键，找不到时到 default 中查找。`resolve_int` 不要重写回退规则，只需在 `resolve` 的结果后面接上整数转换。"
+  4: |
+    ```gleam
+    use settings <- result.try(
+      dict.get(profiles, profile)
+      |> result.replace_error(todo),
+    )
+    dict.get(settings, key)
+    |> result.lazy_or(fn() { todo })
+    |> result.replace_error(MissingKey(key))
+    ```
+  5: "现在可以打开完整讲解。看完讲解后，将用一道新题确认掌握程度。"

@@ -1,0 +1,89 @@
+title: 让错误的值无法构造——opaque + 智能构造器
+blocks:
+  intro:
+    markdown: |-
+      通常 `pub type` 会同时公开类型名和**构造器**。所以任何人都能直接构造值，比如 `Amount(-999)`——连负数金额这样错误的值也行。
+
+      `pub opaque type` **只**公开类型名，把构造器关在模块内部。在模块外部无法直接构造值，只能通过模块提供的函数来构造。
+
+      ```
+      pub opaque type Amount {
+        Amount(cents: Int)
+      }
+
+      pub fn new(cents: Int) -> Result(Amount, String) {
+        case cents >= 0 {
+          True -> Ok(Amount(cents))
+          False -> Error("amount must not be negative")
+        }
+      }
+
+      pub fn cents(amount: Amount) -> Int {
+        amount.cents
+      }
+      ```
+
+      像这样确保“只有通过验证的值才能存在”的 `new`，叫作**智能构造器（smart constructor）**。
+  opaque-outside:
+    prompt: '在另一个模块里直接调用构造器 `bank.Amount(-999)` 会怎样？（`Amount` 如上所示是 `opaque` 的）'
+    choices:
+      - '会构造出一个 `-999` 美分的 `Amount`'
+      - 运行时抛出错误
+      - '编译错误——`opaque` 类型的构造器不能在模块外部使用'
+      - '会自动调用 `new` 并返回 `Error`'
+    feedback:
+      correct: '答对了！这正是 `opaque` 的核心。构造器被封在模块里，负数的 `Amount` *根本无法表示*——这是编译期的封印，而不是运行时的检查。'
+      choices:
+        "0": '如果能这样做，那就不叫 `opaque` 了。构造器不会公开到模块外部。'
+        "1": '根本到不了运行时——编译阶段就被拒绝了。'
+        "3": '没有自动调用 `new` 这种魔法。它只会被编译错误挡下来。'
+  smart-ctor:
+    markdown: |-
+      那在模块外部怎么构造 `Amount` 呢？只能通过模块公开的 `new`。`new` 在验证成功时返回 `Ok(amount)`，失败时返回 `Error(...)`。
+
+      没通过验证的输入，永远不可能成为 `Amount`。
+  new-negative:
+    prompt: 这次调用的结果是？
+    choices:
+      - '`Ok(Amount(-5))`'
+      - '`Error("amount must not be negative")`'
+      - '`-5`'
+      - 编译错误
+    feedback:
+      correct: '完全正确！`-5 >= 0` 为假，所以走 `False` 分支，得到 `Error(...)`。'
+      choices:
+        "0": '负数无法通过验证——是 `Error`，不是 `Ok`。'
+        "2": '`new` 返回的是 `Result`，而不是裸值。'
+        "3": '语法没有问题——能够编译，得到的值是 `Error`。'
+  new-then-cents:
+    prompt: 这段代码执行完后，`total` 的值是？
+    code: |-
+      let total = case new(150) {
+        Ok(a) -> cents(a)
+        Error(_) -> -1
+      }
+      // 验证通过时，new 返回 Ok(Amount(150))
+    choices:
+      - '`150`'
+      - '`-1`'
+      - '`Ok(150)`'
+      - '`Amount(150)`'
+    feedback:
+      correct: '答对了！`150 >= 0`，所以走 `Ok(a)` 分支，访问函数 `cents` 取出里面的 150。'
+      choices:
+        "1": '`-1` 是 `Error` 分支的值。150 能通过验证。'
+        "2": '`cents` 返回的是 `Int` 而不是 `Result`——就是 150。'
+        "3": '`Amount` 是 `opaque` 的，它的内部不会原样暴露。`total` 得到的是用 `cents` 取出的 `Int` 150。'
+  opaque-vs-type:
+    prompt: '关于 `pub type` 和 `pub opaque type` 的区别，下面哪项是正确的？'
+    choices:
+      - '`opaque` 让类型完全私有，其他模块连类型名都不能用'
+      - '`opaque` 公开类型名，但把构造器和字段访问关在模块内部'
+      - '`opaque` 只是为了运行时性能的优化，语义上没有区别'
+      - '`opaque` 会自动帮你验证字段'
+    feedback:
+      correct: 答对了！类型名是公开的，可以写在函数签名里；但构造值和拆解值只有模块自己能做。
+      choices:
+        "0": '类型名依然是公开的——你可以在签名里使用 `bank.Amount`。被隐藏的是构造器和字段。'
+        "2": '与性能无关——关键在于**封装**。'
+        "3": '验证不是 `opaque` 做的，而是你自己写的智能构造器（`new`）做的。'

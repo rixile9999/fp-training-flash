@@ -1,0 +1,31 @@
+title: Applying conditional discount rules and keeping a log
+tests:
+  try_rule_applies_test: "When the condition holds, returns the discounted cart in Ok"
+  try_rule_skips_test: "When the condition does not hold, returns Error"
+  run_rules_test: "Returns the names of the applied rules and the final cart"
+  run_rules_checks_current_total_test: "Conditions are checked against the total after the earlier rules were applied"
+  run_rules_names_in_order_test: "The log lists rules in the order they were applied"
+  run_rules_none_apply_test: "When no rule applies, the cart is unchanged and the log is empty"
+requirements:
+  R1: "try_rule checks the condition and then returns the cart with only the total changed"
+  R2: "run_rules applies the rules in order and checks each condition against the current cart"
+  R3: "The log holds the names of the applied rules in the order they were applied"
+hints:
+  1: "When you check the condition of the second rule, which cart do you use: the original cart, or the cart after the first rule was applied?"
+  2: "The accumulator of `list.fold` can be anything. You can carry the current state and a log together, as in `#(Cart, List(String))`. To change only part of a record, use `Cart(..cart, total: ...)`."
+  3: "Finish `try_rule` first. Then, in `run_rules`, update the accumulator for each rule depending on the result of `try_rule` (`Ok`/`Error`). You can prepend names and reverse the list at the end."
+  4: |
+    ```gleam
+    pub fn run_rules(cart: Cart, rules: List(Rule)) -> #(Cart, List(String)) {
+      let #(final, applied) =
+        list.fold(rules, #(cart, []), fn(acc, rule) {
+          let #(current, names) = acc
+          case try_rule(current, rule) {
+            Ok(next) -> todo
+            Error(Nil) -> todo
+          }
+        })
+      todo
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

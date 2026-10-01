@@ -1,0 +1,26 @@
+title: Fix a loading calculation that loads the same parcel twice
+tests:
+  single_item_once_test: With a single parcel, it is loaded only once
+  example_test: Picks the combination with the largest total value within the weight limit
+  two_items_each_once_test: A light parcel is not loaded more than once
+  no_items_test: With no parcels, the total value is 0
+  too_heavy_test: A parcel heavier than the limit is not loaded
+  greedy_by_value_test: Loading several light parcels together gives more value than one expensive parcel
+requirements:
+  R1: Each parcel at most once
+  R2: The largest total value among combinations whose total weight is within the limit
+hints:
+  1: "Trace `add_item` by hand with a single parcel `Item(value: 10, weight: 3)` and a limit of 9. When computing the cell for limit 6, is the value it reads from the cell for limit 3 the value from before this parcel was added, or after?"
+  2: "In the 0/1 knapsack, cell w of the new table must be computed only from the values in the table \"before this parcel was considered\". Reading back a cell where this parcel is already loaded amounts to loading the same parcel again."
+  3: "`add_item` has both the previous table, `previous`, and the table being built, `table`. Check which table each read and each write should use."
+  4: |
+    ```gleam
+    run: fn(table, capacity) {
+      let take = best(todo, capacity - item.weight) + item.value
+      case take > best(todo, capacity) {
+        True -> dict.insert(todo, capacity, take)
+        False -> table
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

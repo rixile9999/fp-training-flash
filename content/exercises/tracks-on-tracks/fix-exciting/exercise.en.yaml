@@ -1,0 +1,24 @@
+title: Fix a bug in the exciting language list check
+tests:
+  single_gleam_is_exciting_test: A list with only Gleam in it is exciting
+  gleam_second_of_three_is_exciting_test: If the second of a three-item list is Gleam, the list is exciting
+  gleam_second_of_four_is_not_exciting_test: If the second of a four-item list is Gleam, the list is not exciting
+  empty_list_is_not_exciting_test: An empty list is not exciting
+  single_other_language_is_not_exciting_test: A list with only one language that is not Gleam is not exciting
+  gleam_first_of_five_is_exciting_test: If the first one is Gleam, even a five-item list is exciting
+requirements:
+  R1: A list of length 1 also follows the first-element rule
+  R2: The second-element rule applies only for length 2 or 3
+hints:
+  1: "What does the current code return for `[\"Gleam\"]` and for `[\"Elm\", \"Gleam\", \"C#\", \"Scheme\"]`? Which branch does each one go to?"
+  2: "`[first, second, ..]` matches every list of length 2 or more. Inside that branch, `list.length(languages) >= 2` is always true, so it filters nothing out."
+  3: "Rather than checking the length condition with a boolean expression, try writing the shapes that are true as fixed-length patterns such as `[_, \"Gleam\"]`."
+  4: |
+    ```gleam
+    case languages {
+      ["Gleam", ..] -> True
+      [_, "Gleam"] | todo -> True
+      _ -> False
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

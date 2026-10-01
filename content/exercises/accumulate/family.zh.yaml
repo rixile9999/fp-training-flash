@@ -1,0 +1,13 @@
+title: 自己动手实现 map
+rubric:
+  R-04:
+    title: 不用标准库的 map，自己实现
+    description: 这道题的目的是用递归亲手实现 map 的行为。不要使用 `list.map`、`list.index_map`。
+    message: 使用了 list.map 系列函数。请用递归自己实现。
+  R-06:
+    title: 使用累加器时，最后反转一次
+    description: 往累加器前面堆叠会让顺序颠倒。只在最后调用一次 `list.reverse`。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 用类型来表达可能的失败。
+    message: 使用了 let assert 或 panic。

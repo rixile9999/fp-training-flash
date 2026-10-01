@@ -1,0 +1,31 @@
+tests:
+  strip_punctuation_test: Removes periods, commas, exclamation marks and question marks
+  collapse_spaces_test: Reduces runs of spaces to a single space
+  collapse_spaces_edges_test: Leaves no leading or trailing spaces
+  normalize_test: Applies space cleanup, lowercasing and punctuation removal together
+  normalize_punctuation_between_spaces_test: Only one space remains even after removing punctuation between spaces
+  normalize_trims_tabs_newlines_test: Also removes leading and trailing tabs and newlines
+requirements:
+  R1: strip_punctuation removes only the four punctuation marks
+  R2: collapse_spaces joins with single spaces, with no empty pieces
+  R3: normalize composes the step functions in the given order
+hints:
+  1: "What happens to the spaces in `\"Wait , what ?\"` when you remove the punctuation? What result do you get if you clean up the spaces before removing the punctuation?"
+  2: "`string.split` produces empty strings between consecutive separators. If you turn the text into a list of characters with `string.to_graphemes`, you can filter the characters with `list.filter`."
+  3: "Finish each step function on its own first, then have `normalize` just connect them with pipes in this order: trim the ends → lowercase → remove punctuation → clean up spaces."
+  4: |
+    ```gleam
+    pub fn collapse_spaces(text: String) -> String {
+      text
+      |> string.split(" ")
+      |> list.filter(todo)
+      |> string.join(" ")
+    }
+
+    pub fn normalize(text: String) -> String {
+      text
+      |> string.trim
+      |> todo
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

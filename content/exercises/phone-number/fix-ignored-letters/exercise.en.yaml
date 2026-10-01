@@ -1,0 +1,31 @@
+title: Fix number cleanup that silently drops letters
+tests:
+  cleans_punctuation_test: Cleans a dot-separated number into 10 digits
+  strips_country_code_test: A number with the country code 1 has the 1 removed when cleaned
+  too_few_digits_test: Fewer than 10 digits returns TooFewDigits
+  letters_rejected_test: If letters are mixed in, returns InvalidCharacter holding that letter
+  unknown_symbol_rejected_test: Disallowed symbols are also reported as InvalidCharacter
+  separators_still_allowed_test: Spaces, parentheses, hyphens and + are still allowed as separators
+  character_check_before_length_test: If a short number has an invalid character, the character error comes before the length error
+requirements:
+  R1: Remove the allowed separators and apply the length and country code rules
+  R2: Report disallowed characters as InvalidCharacter before the length check
+hints:
+  1: "After `list.filter(is_digit)`, what happens to the `a` in `\"223-45a6-7890\"`? Can the code after it know that there was an `a`?"
+  2: "`list.filter` throws away elements that don't match the condition. To report them instead of throwing them away, return a `Result` for each element and collect them with `list.try_map`."
+  3: "First remove only the allowed separators. Every remaining character must be a digit, so check them with a step that returns `InvalidCharacter` for anything that isn't a digit. Move on to the existing length check only when this step succeeds."
+  4: |
+    ```gleam
+    pub fn clean(input: String) -> Result(String, PhoneError) {
+      use digits <- result.try(extract_digits(input))
+      normalize_length(digits)
+    }
+
+    fn extract_digits(input: String) -> Result(List(String), PhoneError) {
+      input
+      |> string.to_graphemes
+      |> list.filter(fn(char) { !is_separator(char) })
+      |> list.try_map(todo)
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

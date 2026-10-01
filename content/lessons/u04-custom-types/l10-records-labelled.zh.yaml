@@ -1,0 +1,85 @@
+title: 记录（record）与带标签字段
+blocks:
+  intro:
+    markdown: |-
+      变体也可以**携带**数据。在括号里写上 `名字: 类型` 形式的**字段**，就得到把多个值打包成一个的**记录（record）**。
+
+      ```gleam
+      pub type Player {
+        Player(name: String, score: Int, level: Int)
+      }
+      ```
+
+      和类型同名的 `Player` 是用来创建值的构造器。创建时要像 `Player(name: "lucy", score: 10, level: 1)` 这样连同**标签**一起写。创建之后若只想取出一个字段，就像 `p.score` 这样用点来访问。
+  field-access:
+    prompt: 下面代码中 `p.score` 的值是？
+    code: |-
+      pub type Player {
+        Player(name: String, score: Int, level: Int)
+      }
+
+      let p = Player(name: "lucy", score: 10, level: 1)
+      // p.score 的值是？
+    choices:
+      - "`10`"
+      - "`1`"
+      - '`"lucy"`'
+      - "`Player`"
+    feedback:
+      correct: 没错！`p.score` 直接取出 `score` 字段的值 10。
+      choices:
+        "1": "`1` 是 `level` 字段。`.score` 看的是 score 的位置。"
+        "2": '"lucy" 是 `name` 字段。`.score` 指向的是 10。'
+        "3": "`p.score` 取出的不是整个记录，而是一个字段（10）。"
+  labelled-order:
+    markdown: |-
+      字段带有**标签**时，创建时可以调换顺序——因为标签会说明它是哪个字段。`Player(level: 1, name: "lucy", score: 10)` 和按定义顺序写出的值完全相同。标签能消除“第三个参数到底是什么来着？”这种困惑。
+  labelled-reorder:
+    prompt: 这段代码调换了标签的顺序。`p.name` 的值是？
+    code: |-
+      pub type Player {
+        Player(name: String, score: Int, level: Int)
+      }
+
+      let p = Player(level: 1, name: "lucy", score: 10)
+      // p.name 的值是？
+    choices:
+      - '`"lucy"`'
+      - "`1`"
+      - "`10`"
+      - 编译错误
+    feedback:
+      correct: 完全正确！用标签写的话顺序无关紧要——`name` 依然是 "lucy"。
+      choices:
+        "1": '`1` 是 `level` 的值。标签 `name:` 指向的是 "lucy"。'
+        "2": '`10` 是 `score` 的值。`.name` 看的是 "lucy"。'
+        "3": 带上标签后，即使调换顺序也能正常编译——标签会告诉编译器位置。
+  destructure:
+    markdown: |-
+      记录也可以在 `case` 或 `let` 中**解构（destructure）**。在模式的位置写成 `Point(x: x, y: y)` 这样，就能一次性把各个字段绑定到名字上。不需要的字段用 `_` 丢弃即可。
+  destructure-x:
+    prompt: 这是解构记录的代码。输出是？
+    choices:
+      - "`3`"
+      - "`7`"
+      - "`10`"
+      - "`Point(3, 7)`"
+    feedback:
+      correct: "没错！`Point(x: x, y: _)` 把 `x` 字段（3）绑定到名字 `x`，并用 `_` 丢弃 `y`。"
+      choices:
+        "1": "`7` 是 `y` 字段——但它被 `_` 丢弃了，没有使用。绑定的是 `x`（3）。"
+        "2": 不会把两个字段相加——解构只是把每个字段分别绑定到名字上。
+        "3": 解构模式绑定到名字上的不是整个记录，而是取出的字段值（3）。
+  labelled-why:
+    prompt: 给记录使用带标签字段（字段标签），最主要的好处是？
+    choices:
+      - 性能会变快
+      - 创建和解构时，每个值是哪个字段可以通过名字一目了然
+      - 可以创建无限多个字段
+      - 可以省略类型标注
+    feedback:
+      correct: 没错！标签能消除 `Player("lucy", 10, 1)` 里“第三个 1 到底是什么来着？”的困惑——通过名字，含义一目了然。
+      choices:
+        "0": 标签是为了可读性，与性能无关——创建出的值是一样的。
+        "2": 字段数量与标签无关。标签做的是给每个位置起名字。
+        "3": 字段的类型标注仍然必不可少——标签不能代替类型。

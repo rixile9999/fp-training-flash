@@ -1,0 +1,29 @@
+title: Fall back from a profile to the default profile
+tests:
+  resolve_own_value_test: A value in the profile is returned as is
+  resolve_falls_back_to_default_test: A key not in the profile is looked up in the default profile
+  unknown_profile_test: A profile that doesn't exist is UnknownProfile
+  unknown_profile_does_not_fall_back_test: A profile that doesn't exist is UnknownProfile even if default has the key
+  missing_everywhere_test: A key missing from both profiles is MissingKey
+  works_without_default_profile_test: Returns MissingKey even when there is no default profile
+  resolve_int_uses_fallback_test: resolve_int follows the default fallback rule too
+  invalid_value_does_not_fall_back_test: If the profile's value is not an integer, return NotAnInt instead of falling back to default
+requirements:
+  R1: If the profile doesn't exist, return UnknownProfile without any other checks
+  R2: Look the key up in the profile, then in default, and return MissingKey if neither has it
+  R3: resolve_int converts the value found by resolve into an integer
+hints:
+  1: "If the `prod` profile has `port` set to `\"54x2\"` and default has `port` set to `\"5432\"`, is returning 5432 helpful or dangerous?"
+  2: "`result.lazy_or(r, fn() { another result })` runs the function and uses its result only when `r` is an `Error`. If `r` is `Ok`, it is left as is."
+  3: "In `resolve`, find the profile first (return an error right away if it is missing), then look for the key inside it, and if it isn't there, look in default. In `resolve_int`, don't write the fallback rule again; just chain an integer conversion onto the result of `resolve`."
+  4: |
+    ```gleam
+    use settings <- result.try(
+      dict.get(profiles, profile)
+      |> result.replace_error(todo),
+    )
+    dict.get(settings, key)
+    |> result.lazy_or(fn() { todo })
+    |> result.replace_error(MissingKey(key))
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

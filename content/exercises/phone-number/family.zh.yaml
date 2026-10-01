@@ -1,0 +1,15 @@
+title: 整理电话号码与校验错误类型
+rubric:
+  R-11:
+    title: 用类型区分错误原因
+    description: 每种失败原因使用不同的构造器，调用方可以用 case 区分原因。不把错误糊成字符串或 Nil。
+  R-02:
+    title: 检查顺序体现在代码中
+    description: 各检查步骤用 use 或 result.try 依次连接，从上往下读代码就能知道哪个错误会先被报告。
+  R-05:
+    title: 分离检查步骤
+    description: 把字符检查、长度检查、国家代码处理等步骤拆成有名字的小函数，就能分别验证。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 用类型表达失败的可能性。
+    message: 使用了 let assert 或 panic。

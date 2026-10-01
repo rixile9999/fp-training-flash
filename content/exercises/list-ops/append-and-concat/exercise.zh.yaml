@@ -1,0 +1,34 @@
+title: 列表拼接与展平
+tests:
+  append_empty_lists_test: 拼接两个空列表得到空列表
+  append_keeps_order_test: append 把第二个列表按顺序接在第一个列表后面
+  append_to_empty_first_test: 第一个列表为空时原样返回第二个列表
+  concat_lists_test: concat 把多个列表按顺序合成一个
+  concat_empty_test: 没有要合并的列表时返回空列表
+  concat_keeps_inner_lists_test: 即使元素是列表，也只展平一层
+  concat_many_small_lists_test: 10 万个小列表也能在时间限制内合并
+requirements:
+  R1: append(first, second) 把 second 按顺序接在 first 后面
+  R2: concat 按顺序合并所有列表
+  R3: 时间与元素总数成正比
+hints:
+  1: "构造 `append(first, second)` 的结果时，需要复制的是哪个列表？能不能不复制 `second`，直接把它用作尾部？"
+  2: "不可变列表只有在前面添加元素才便宜。`append(a, b)` 的开销与 `a` 的长度成正比，与 `b` 的长度无关。"
+  3: "如果从前往后累积 `concat`，累积结果会越来越长，而每次都要把它作为 `append` 的第一个参数复制一遍。从后往前合并这些列表，每个列表就只复制一次。"
+  4: |
+    ```gleam
+    pub fn append(first first: List(a), second second: List(a)) -> List(a) {
+      case first {
+        [] -> second
+        [x, ..rest] -> todo
+      }
+    }
+
+    pub fn concat(lists: List(List(a))) -> List(a) {
+      case lists {
+        [] -> []
+        [list, ..rest] -> append(first: list, second: todo)
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

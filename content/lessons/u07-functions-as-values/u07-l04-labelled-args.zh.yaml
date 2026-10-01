@@ -1,0 +1,73 @@
+title: 带标签参数
+blocks:
+  intro:
+    markdown: |-
+      函数参数一多，在调用处就容易搞混：“这个值是哪个位置来着？”Gleam 允许给参数加上**标签**，让调用读起来像句子一样。
+
+      定义时，在参数前以 `标签 名字: 类型` 的形式加上标签：
+
+      ```gleam
+      pub fn replace(
+        in string: String,
+        each pattern: String,
+        with replacement: String,
+      ) -> String {
+        string.replace(string, pattern, replacement)
+      }
+
+      replace(in: "a,b,c", each: ",", with: " ")  // "a b c"
+      ```
+
+      `in`、`each`、`with` 是标签，而 `string`、`pattern`、`replacement` 是在函数体中使用的内部名字。
+  labelled-call:
+    prompt: '用标签调用上面的 `replace`，结果是？'
+    choices:
+      - '`"a b c"`'
+      - '`"a,b,c"`'
+      - '`"abc"`'
+      - '`" "`'
+    feedback:
+      correct: '完全正确！把 "a,b,c" 中所有的 `,` 替换成空格，得到 "a b c"。'
+      choices:
+        "1": 'replace 被应用了，所以不会保持原样——`,` 会变成空格。'
+        "2": '`,` 被替换成的是*空格*，不是空字符串——字母之间还留着空格。'
+        "3": '字母 a、b、c 保持不变，只有分隔符被替换——"a b c"。'
+  order-free:
+    markdown: |-
+      标签真正的好处是**不再受顺序约束**。用标签调用时，参数无论按什么顺序写，都会按名字对上——不必记住定义时的顺序。
+
+      ```gleam
+      replace(each: ",", with: " ", in: "a,b,c")
+      // 和上面一样，得到 "a b c"
+      ```
+
+      因为带标签的调用是按*名字*而不是按*位置*匹配的。
+  labelled-reorder:
+    prompt: '这次调换了标签的顺序来调用。结果是？'
+    choices:
+      - '`"a b c"`'
+      - '`",a,b,c "`'
+      - '编译错误'
+      - '`"a,b,c"`'
+    feedback:
+      correct: '没错！标签按名字匹配，所以调换顺序结果也一样——"a b c"。'
+      choices:
+        "1": '标签按名字而不是按位置配对——`in` 仍然是目标字符串，`each` 仍然是要查找的内容。'
+        "2": '带标签的调用即使顺序不同也是合法的——能编译通过，结果是 "a b c"。'
+        "3": 'replace 被正常应用——`,` 被替换成空格，得到 "a b c"。'
+  shorthand:
+    markdown: |-
+      当变量名和标签完全相同时，可以使用**标签简写（label shorthand）**。像 `greet(name: name, greeting: greeting)` 这样名字重复时，可以简写成 `greet(name:, greeting:)`——标签后面留空，表示“传入同名的变量”。
+  shorthand-meaning:
+    prompt: '已有变量 `name` 和 `greeting` 时，`greet(name:, greeting:)` 等同于什么？'
+    choices:
+      - '`greet(name: name, greeting: greeting)`'
+      - '`greet(name, greeting)`'
+      - '`greet()`——空调用'
+      - '编译错误'
+    feedback:
+      correct: '没错！标签后面留空，就是把*同名变量*传给该标签的简写语法。'
+      choices:
+        "1": '简写仍然是*带标签*的调用——标签 `name:`/`greeting:` 依然存在。'
+        "2": '它不是把参数留空，而是自动填入同名变量的简写。'
+        "3": '只要存在同名变量，这就是合法的简写语法，可以正常编译。'

@@ -1,0 +1,28 @@
+title: 凑出金额的硬币组合数
+tests:
+  small_amount_test: 用 1、2、5 的硬币凑出 5 共有 4 种组合
+  order_does_not_matter_test: 只有顺序不同的硬币排列算作一种
+  zero_target_test: 凑出 0 的方法只有一种，就是一枚硬币也不用
+  impossible_target_test: 凑不出的金额结果为 0
+  negative_target_test: 负数金额结果为 0
+  large_target_test: 用 8 种硬币凑出 2000 的组合数也能在时间限制内数完
+requirements:
+  R1: 只有所用硬币的数量构成不同时，才算不同的组合
+  R2: 0 有 1 种方法，负数或凑不出的金额有 0 种
+  R3: 运行时间与“金额 × 硬币种类数”成正比
+hints:
+  1: "用 1 和 2 凑出 4 时，1+1+2、1+2+1、2+1+1 是同一种组合。如果强制“一种一种依次使用”硬币，怎样才能避免这种重复？"
+  2: "把“只用前 k 种硬币凑出金额 a 的方法数”作为子问题。分成第 k 种硬币一枚都不用和至少用一枚两种情况，就能不重不漏地计数。"
+  3: "用 `0 -> 1` 初始化一张记录各金额方法数的表，每加入一种硬币就更新一次表。加入硬币的循环和遍历金额的循环哪个放在外层，决定了你数的是组合还是排列。用 `[1, 2]` 和金额 3，按两种顺序手动推演一遍。"
+  4: |
+    ```gleam
+    let start = dict.from_list([#(0, 1)])
+    let table =
+      list.fold(coins, start, fn(table, coin) {
+        int.range(from: coin, to: target + 1, with: table, run: fn(table, amount) {
+          let with_coin = get(table, amount - coin)
+          todo
+        })
+      })
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

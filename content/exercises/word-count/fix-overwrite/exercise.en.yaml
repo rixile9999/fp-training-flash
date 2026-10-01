@@ -1,0 +1,25 @@
+title: Fix a bug where word counts don't go up
+tests:
+  counts_repeated_word_test: A word that appears three times is counted as 3
+  increment_adds_one_to_existing_test: Adds 1 to the count of a word that is already there
+  increment_new_word_starts_at_one_test: A word seen for the first time starts at 1, and other words are left as they are
+  case_insensitive_counts_add_up_test: Counts of words that differ only in case are added together too
+  each_word_once_test: If every word appears once, every count is 1
+  empty_input_test: An empty string gives an empty dict
+requirements:
+  R1: A word already counted gets 1 added to its existing count
+  R2: A new word is added with 1, and other entries are kept
+hints:
+  1: "When `increment` receives \"go\" with a dict that already holds `#(\"go\", 2)`, what does it return right now?"
+  2: "`dict.insert` overwrites the value if the key exists. To decide the new value by looking at the existing one, you need `dict.upsert` or `dict.get`."
+  3: "In `dict.upsert(counts, word, fn(previous) { ... })`, if `previous` is `Some(n)`, the new value is `n + 1`; if it is `None`, the word is appearing for the first time."
+  4: |
+    ```gleam
+    dict.upsert(counts, word, fn(previous) {
+      case previous {
+        Some(count) -> todo
+        None -> todo
+      }
+    })
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

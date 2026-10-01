@@ -1,0 +1,24 @@
+title: Fix the mana potion bug
+tests:
+  restores_mana_test: A player with mana gains as much mana as the potion gives
+  caps_at_max_test: Mana does not go over 100
+  no_mana_pool_returns_none_test: A player whose mana is None cannot drink the potion, so None is returned
+  empty_mana_can_drink_test: A player whose mana is Some(0) can drink the potion
+  keeps_other_fields_test: Drinking a potion leaves the name, level and health unchanged
+requirements:
+  R1: With mana, restore it up to a maximum of 100
+  R2: Without mana, None
+hints:
+  1: "If you pass in a player whose mana is `None`, what does the current code return? On the line after `option.unwrap`, is the information that it was `None` still there?"
+  2: "`option.map(opt, f)` returns `Some(f(x))` for `Some(x)` and `None` for `None`. It has the shape \"change the value only if there is one, and keep nothing as nothing\"."
+  3: "Don't take the value out with a default; split `player.mana` into `Some` and `None`. Only for `Some`, build a new player and wrap it in `Some`."
+  4: |
+    ```gleam
+    pub fn drink_potion(player: Player, amount: Int) -> Option(Player) {
+      case player.mana {
+        Some(mana) -> todo
+        None -> todo
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

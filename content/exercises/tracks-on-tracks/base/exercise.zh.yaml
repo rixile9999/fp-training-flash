@@ -1,0 +1,28 @@
+tests:
+  add_language_prepends_test: 把新语言添加到列表最前面
+  count_languages_test: 统计列表中的语言数量
+  reverse_list_test: 反转列表的顺序
+  gleam_first_is_exciting_test: 第一个是 Gleam 时，是令人兴奋的列表
+  gleam_second_of_two_is_exciting_test: 两个元素的列表中第二个是 Gleam 时，是令人兴奋的列表
+  gleam_third_is_not_exciting_test: Gleam 在第三个时，不是令人兴奋的列表
+  gleam_second_of_four_is_not_exciting_test: 四个元素的列表中第二个是 Gleam 时，不是令人兴奋的列表
+  gleam_first_of_four_is_exciting_test: 第一个是 Gleam 时，无论列表多长都是令人兴奋的列表
+requirements:
+  R1: 新语言添加到最前面
+  R2: 用标准列表操作计数和反转
+  R3: 根据位置和长度条件判断是否为令人兴奋的列表
+hints:
+  1: "`exciting_list` 为 True 的情况有几种？每种情况下，列表的长度满足什么条件？"
+  2: "在 `case` 中，列表模式 `[x, ..rest]` 匹配所有长度不小于 1 的列表，`[a, b]` 只匹配长度恰好为 2 的列表。"
+  3: "添加用 `[新值, ..原列表]`，计数和反转用 `gleam/list` 的函数解决。判断时，把结果为真的形状逐一写成模式，其余全部归为 False 即可。"
+  4: |
+    ```gleam
+    pub fn exciting_list(languages: List(String)) -> Bool {
+      case languages {
+        ["Gleam", ..] -> True
+        // 第二个是 Gleam 且长度为 2 或 3 的情况
+        _ -> todo
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

@@ -1,0 +1,13 @@
+title: A queue built from two lists
+rubric:
+  R-02:
+    title: The invariant shows in the code
+    description: What front and back each hold (the order items come out, and the reverse of insertion order) is kept consistently in every function.
+  R-06:
+    title: Reverse only once, when needed
+    description: Reverse back only once, when front is empty. Do not copy everything on every push or pop.
+    message: Appending a one-element list to the end with list.append copies everything every time.
+  R-09:
+    title: No let assert or panic
+    description: The possibility of failure is expressed in the types.
+    message: let assert or panic was used.

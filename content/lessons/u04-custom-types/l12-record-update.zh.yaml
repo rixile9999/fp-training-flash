@@ -1,0 +1,80 @@
+title: 记录更新——“修改”的真相
+blocks:
+  intro:
+    markdown: |-
+      只想修改记录中的一个字段时，Gleam 提供了 `Player(..p, level: p.level + 1)` 这种**记录更新**（record update）语法。意思是“`p` 的其余字段保持不变，只把 `level` 设为新值”。
+
+      ```gleam
+      pub type Player {
+        Player(name: String, score: Int, level: Int)
+      }
+
+      pub fn level_up(p: Player) -> Player {
+        Player(..p, level: p.level + 1)
+      }
+      ```
+
+      不过这里 U1 学过的不可变性又出现了：这个语法**不会修改** `p`。它只是创建一个带有新值的**新记录**（其余部分共享结构，所以开销很小）。
+  level-up-both:
+    prompt: 下面代码中 `p1.level` 和 `p2.level` 分别是什么？
+    code: |-
+      pub fn level_up(p: Player) -> Player {
+        Player(..p, level: p.level + 1)
+      }
+
+      let p1 = Player(name: "lucy", score: 10, level: 1)
+      let p2 = level_up(p1)
+      // p1.level 和 p2.level 分别是？
+    choices:
+      - "`1` 和 `2`"
+      - "`2` 和 `2`"
+      - "`1` 和 `1`"
+      - "`2` 和 `1`"
+    feedback:
+      correct: 完全正确！`level_up` 只是创建并返回一个新记录，`p1` 永远是 level 1——只有 `p2` 是 2。
+      choices:
+        "1": 记录更新不会动原值。`p1` 仍然是 level 1——请把它理解为“创建一个改过的副本”，而不是“修改它”。
+        "2": "`p2` 是应用了 `level + 1` 的新记录，所以是 2——不是两个都为 1。"
+        "3": 顺序反了。原来的 `p1` 是 1，新创建的 `p2` 是 2。
+  update-semantics:
+    prompt: "`Player(..p, level: p.level + 1)` 这个表达式实际做了什么？"
+    choices:
+      - "原地把 `p` 的 `level` 字段加 1"
+      - "保持 `p` 不变，创建一个只有 `level` 改变了的新 `Player` 记录"
+      - "删除 `p` 再重新创建"
+      - "把 `level` 重置为 0"
+    feedback:
+      correct: 没错！记录更新就像复制原值一样创建新值——这是 U1 的不可变性扩展到了数据结构上。
+      choices:
+        "0": Gleam 没有原地修改（mutation）——`p` 绝不会改变，而是产生一个新记录。
+        "2": 不是删除后重建，`p` 依然存在，只是在它的基础上得到一个新副本。
+        "3": "`..p` 会把其余字段原样从 `p` 中带过来——是保留，而不是重置。"
+  update-name-untouched:
+    prompt: 记录更新之后，原值的其他字段依然安全。输出是？
+    choices:
+      - '`"lucy"`'
+      - '`""`'
+      - "`Nil`"
+      - 编译错误
+    feedback:
+      correct: 没错！`level_up` 完全不会动 `p1`，所以 `p1.name` 依然是 "lucy"。
+      choices:
+        "1": 字段不会被清空——原来的 `p1` 保持创建时的样子。
+        "2": '`p1.name` 是 `String` 值（"lucy"）——不是 `Nil`。'
+        "3": 能正常编译和运行——访问原值的字段没有任何问题。
+  any-type:
+    markdown: |-
+      记录更新可以用于任何记录，还可以一次修改多个字段，比如 `Config(..base, width: 1920, height: 1080)`。规则同样不变：`base` 保持原样，得到的是只有指定字段带新值的**新记录**。
+  config-update:
+    prompt: 这是一次修改多个字段的代码。输出是？
+    choices:
+      - '`"1920 800"`'
+      - '`"1920 1920"`'
+      - '`"800 1920"`'
+      - '`"800 800"`'
+    feedback:
+      correct: 完全正确！`big.width` 是新值 1920，`base.width` 没被动过，仍是 800——原值是安全的。
+      choices:
+        "1": "`base` 不受记录更新的影响——`base.width` 依然是 800。"
+        "2": 顺序反了。表达式先输出 `big.width`（1920），再输出 `base.width`（800）。
+        "3": "`big` 是改成 `width: 1920` 的新记录——`big.width` 是 1920，而不是 800。"

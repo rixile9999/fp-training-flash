@@ -1,0 +1,28 @@
+tests:
+  line_log_test: Builds the log string for one item line
+  quote_total_test: The quote total is the sum of price times quantity
+  quote_log_test: In the log, the total line comes after the item lines
+  quote_log_order_test: The item log follows the input order
+  quote_empty_test: The total line remains even with no items
+  render_test: Joins the log with newlines into a single string
+  render_single_line_test: A one-line log gets no newline
+requirements:
+  R1: line_log only returns a string; it does not print
+  R2: quote returns the total and the log as values
+  R3: render only builds the string to print; it does not print
+hints:
+  1: "How could a test check what the existing `checkout` printed to the screen? What could it return instead of printing to make checking easy?"
+  2: "Printing is an effect that changes the outside world. If you return the strings to print as a list, the calculation becomes a pure function, and the actual printing happens in just one outer function that receives that list."
+  3: "You don't need to build the total and the log together in a single `fold` like the original code does. Computing them separately makes each calculation shorter and leaves less ordering to worry about. In `render`, remember that newlines go only \"between\" lines."
+  4: |
+    ```gleam
+    pub fn quote(items: List(Item)) -> Quote {
+      let total =
+        items
+        |> list.map(fn(item) { item.price * item.quantity })
+        |> int.sum
+      let lines = list.map(items, line_log)
+      Quote(total: total, log: todo)
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

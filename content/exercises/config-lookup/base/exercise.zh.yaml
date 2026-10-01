@@ -1,0 +1,31 @@
+tests:
+  get_int_reads_number_test: get_int 把键对应的值读成整数
+  get_int_missing_key_test: 键不存在时返回装着该键的 MissingKey
+  get_port_reads_port_test: get_port 把 port 的值作为整数返回
+  get_int_not_a_number_test: 不是整数的值应为 NotAnInt，而不是 MissingKey
+  get_port_keeps_parse_error_test: get_port 原样传递 get_int 的错误
+  get_port_too_large_test: 大于 65535 的端口是 OutOfRange
+  get_port_zero_test: 端口 0 是 OutOfRange
+  get_port_upper_bound_test: 允许端口 65535
+requirements:
+  R1: get_int 用不同的错误区分键不存在和值不是整数
+  R2: get_port 接着 get_int 的结果检查 1..65535 的范围
+hints:
+  1: "读取配置值失败的原因有几种？有没有必要把这两种原因分别告诉调用方？"
+  2: "`dict.get` 和 `int.parse` 失败时都只给出 `Error(Nil)`，不带原因。可以在每一步用 `result.replace_error` 换成合适的错误，再用 `use ... <- result.try(...)` 串起来。"
+  3: "在 `get_int` 中，把查找键和转换整数分别换成各自的错误再串起来。`get_port` 只接收 `get_int(config, \"port\")` 的成功值并检查范围，失败则原样传下去。"
+  4: |
+    ```gleam
+    pub fn get_int(config: Dict(String, String), key: String) -> Result(Int, ConfigError) {
+      use value <- result.try(
+        dict.get(config, key) |> result.replace_error(todo),
+      )
+      int.parse(value) |> result.replace_error(todo)
+    }
+
+    pub fn get_port(config: Dict(String, String)) -> Result(Int, ConfigError) {
+      use port <- result.try(get_int(config, "port"))
+      todo
+    }
+    ```
+  5: "现在可以打开完整讲解。看完讲解后，将用一道新题确认掌握程度。"

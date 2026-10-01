@@ -1,0 +1,29 @@
+title: Remove panic from the review average calculation
+tests:
+  average_of_ratings_test: The average of valid ratings is calculated just as it is now
+  empty_ratings_is_error_test: With no ratings, returns NoRatings instead of panicking
+  rating_above_five_is_error_test: A rating above 5 puts that rating in OutOfRange instead of crashing
+  rating_zero_is_error_test: A rating of 0 is also OutOfRange
+  boundary_ratings_are_valid_test: Ratings of 1 and 5 are valid
+  first_out_of_range_rating_test: If several ratings are out of range, reports the first one
+requirements:
+  R1: The average for valid input stays the same
+  R2: An empty list is NoRatings
+  R3: Returns the first rating outside 1–5 as OutOfRange
+hints:
+  1: "When `let assert True = list.all(...)` fails, can you tell which rating caused the problem? Where should you get the value to put in `OutOfRange`?"
+  2: "`list.all` only tells you a `Bool`. `list.find(list, predicate)` returns the first element that satisfies the predicate as `Ok(element)`, or `Error(Nil)` if there is none."
+  3: "Change the empty-list case, where the `panic` was, to `Error(NoRatings)`. Look for an out-of-range rating with `list.find`: if you find one, return `Error(OutOfRange(that rating))`, and compute the average only when you find none."
+  4: |
+    ```gleam
+    case ratings, list.find(ratings, is_out_of_range) {
+      [], _ -> todo
+      _, Ok(bad) -> todo
+      _, Error(Nil) -> todo
+    }
+
+    fn is_out_of_range(rating: Int) -> Bool {
+      todo
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

@@ -1,0 +1,31 @@
+title: Group log messages by level
+tests:
+  empty_lines_test: Returns an empty dictionary when there are no lines
+  groups_by_level_test: Collects messages into per-level lists and strips leading whitespace
+  keeps_order_within_level_test: Messages of the same level keep the order they appeared in the log
+  message_with_bracket_test: Even if the message contains ], everything after the first ] is the message
+  normalizes_case_test: Levels that differ only in case are collected under a single uppercase key
+  skips_malformed_lines_test: Lines that don't match the format go into no list
+  keeps_trailing_spaces_test: Trailing whitespace in the message is kept as is
+requirements:
+  R1: The level is the text between the first [ and the first ], converted to uppercase
+  R2: The message is the text after the first ] with only leading whitespace removed
+  R3: Messages for each level keep their original order
+  R4: Lines that don't start with [ or have no ] are left out
+hints:
+  1: "If you collect with `list.fold` by adding each element to the front of a list, what order will the finished list be in?"
+  2: "`string.split_once` splits only once, at the first separator. `string.trim_start` removes only leading whitespace. `dict.map_values` changes every value in a dictionary at once."
+  3: "First write a function that interprets one line as `Result(#(level, message), Nil)`. When folding, add to the front with `[message, ..existing]`, then reverse each list once at the end to get the right order."
+  4: |
+    ```gleam
+    lines
+    |> list.fold(dict.new(), fn(groups, line) {
+      case parse_line(line) {
+        Ok(#(level, message)) ->
+          dict.upsert(groups, level, fn(existing) { todo })
+        Error(Nil) -> groups
+      }
+    })
+    |> dict.map_values(fn(_level, messages) { todo })
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

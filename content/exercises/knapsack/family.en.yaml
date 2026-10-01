@@ -1,0 +1,12 @@
+title: Pack a knapsack (the 0/1 knapsack problem)
+rubric:
+  R-07:
+    title: Store subproblem answers in a table and reuse them
+    description: "The answer for \"the first k items with weight limit w\" is stored in a table and read back when the next item is considered."
+  R-10:
+    title: Keep the previous table and the new table apart
+    description: When considering an item, read only from the table as it was before that item was added. With an immutable Dict the previous table stays as it is, which makes this separation easy.
+  R-09:
+    title: No let assert or panic
+    description: The possibility of failure is expressed in the types.
+    message: let assert or panic was used.

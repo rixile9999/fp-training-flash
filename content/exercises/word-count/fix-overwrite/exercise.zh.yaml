@@ -1,0 +1,25 @@
+title: 修复单词次数不增加的 bug
+tests:
+  counts_repeated_word_test: 同一个单词出现三次时计为 3
+  increment_adds_one_to_existing_test: 给已有单词的次数加 1
+  increment_new_word_starts_at_one_test: 第一次出现的单词从 1 开始，其他单词保持不变
+  case_insensitive_counts_add_up_test: 只有大小写不同的单词，次数也会合并
+  each_word_once_test: 每个单词都只出现一次时，全部为 1
+  empty_input_test: 空字符串得到空 dict
+requirements:
+  R1: 已经计过的单词在原有次数上加 1
+  R2: 新单词以 1 加入，其他条目保持不变
+hints:
+  1: "如果 dict 中已经有 `#(\"go\", 2)`，`increment` 收到 \"go\" 时，现在会返回什么？"
+  2: "键已存在时，`dict.insert` 会覆盖值。要根据已有的值决定新值，需要用 `dict.upsert` 或 `dict.get`。"
+  3: "在 `dict.upsert(counts, word, fn(previous) { ... })` 中，`previous` 是 `Some(n)` 时新值是 `n + 1`，是 `None` 时说明这个单词是第一次出现。"
+  4: |
+    ```gleam
+    dict.upsert(counts, word, fn(previous) {
+      case previous {
+        Some(count) -> todo
+        None -> todo
+      }
+    })
+    ```
+  5: "现在可以打开完整讲解。看完讲解后，将用一道新题确认掌握程度。"

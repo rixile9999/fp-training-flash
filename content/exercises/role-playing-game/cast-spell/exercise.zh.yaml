@@ -1,0 +1,27 @@
+title: 角色扮演游戏中的施法
+tests:
+  successful_cast_test: 法力值足够时消耗与花费相等的法力值，造成花费两倍的伤害
+  insufficient_mana_test: 法力值不足时玩家保持不变，伤害为 0
+  no_mana_pool_costs_health_test: 法力值为 None 时生命值减少花费的数值，伤害为 0
+  exact_mana_test: 剩余法力值正好等于花费时施法成功，法力值变为 0
+  health_not_below_zero_test: 没有法力值施法时生命值也不会降到 0 以下
+  zero_mana_is_not_no_pool_test: 法力值为 Some(0) 时视为法力值不足，不扣生命值
+requirements:
+  R1: 法力值足够时扣除法力值并造成伤害
+  R2: 法力值不足时没有变化
+  R3: 没有法力值时扣除生命值（保持在 0 及以上）
+hints:
+  1: "法力值为 `Some(0)` 的玩家和法力值为 `None` 的玩家处境相同吗？规则对两者的处理有什么不同？"
+  2: "在 `case` 中像 `Some(mana) if mana >= cost` 这样同时使用模式和守卫，就能在取出 `Option` 里的值的同时检查条件。`int.max(0, x)` 会把负数提升为 0。"
+  3: "对 `player.mana` 做 `case`，分成三种情况：法力值足够的 `Some`、法力值不足的 `Some`，以及 `None`。每个分支都构造一个 `#(新玩家, 伤害)` 元组。"
+  4: |
+    ```gleam
+    pub fn cast_spell(player: Player, cost: Int) -> #(Player, Int) {
+      case player.mana {
+        Some(mana) if mana >= cost -> todo
+        Some(_) -> #(player, 0)
+        None -> todo
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

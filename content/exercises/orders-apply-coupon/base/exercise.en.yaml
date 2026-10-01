@@ -1,0 +1,24 @@
+tests:
+  empty_list_test: An empty list returns an empty list
+  discounts_pending_test: Discounts the amount of Pending orders
+  keeps_other_orders_test: A list mixing Pending and Shipped orders
+  keeps_order_test: Keeps the original order
+  rounds_down_test: The amount after the discount is rounded down
+requirements:
+  R1: Change the amount of Pending orders only
+  R2: Keep the orders that are not targeted
+  R3: Keep the order of the list
+hints:
+  1: "Should the result list have the same length as the input, or a different one?"
+  2: "`list.map` keeps the length, while `list.filter` shrinks it."
+  3: "Go through every order and split on its status with `case`."
+  4: |
+    ```gleam
+    list.map(orders, fn(o) {
+      case o.status {
+        Pending -> todo
+        _ -> o
+      }
+    })
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

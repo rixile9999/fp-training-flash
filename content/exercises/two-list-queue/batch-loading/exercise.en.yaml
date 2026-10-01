@@ -1,0 +1,31 @@
+title: Take n parcels at a time from the loading queue
+tests:
+  pop_returns_oldest_parcel_test: pop returns the parcel that arrived first and the rest of the queue
+  pop_empty_queue_test: Popping an empty queue returns Error(Nil)
+  takes_batch_in_arrival_order_test: take removes n items from the front, in arrival order
+  takes_everything_when_short_test: If fewer than n parcels are waiting, take all that are left
+  take_zero_keeps_queue_test: If n is 0, nothing is taken
+  take_negative_keeps_queue_test: If n is negative, nothing is taken
+  consecutive_batches_test: Parcels that arrive after a take are loaded at the back of the next batch
+requirements:
+  R1: pop takes out the earliest-added item, and Error(Nil) for an empty queue
+  R2: take removes up to n items from the front, in arrival order
+  R3: Handle n of 0 or less and running out of items
+hints:
+  1: "Can you think of `take(queue, n)` as one `pop` plus `take(rest, n - 1)`? When should it stop?"
+  2: "When you write a loop as recursion and put each item you take at the front of an accumulator list, they pile up in reverse. Just reverse once when you stop. Reversing `back` into `front` when `front` is empty works on the same principle."
+  3: "Finish `pop` first. Then write `take_loop(queue, n, taken)` that repeats while `n > 0` and `pop` succeeds, and returns `#(list.reverse(taken), queue)` as soon as either is not the case."
+  4: |
+    ```gleam
+    fn take_loop(queue: Queue(a), n: Int, taken: List(a)) -> #(List(a), Queue(a)) {
+      case n > 0 {
+        False -> #(list.reverse(taken), queue)
+        True ->
+          case pop(queue) {
+            Ok(#(item, rest)) -> todo
+            Error(Nil) -> todo
+          }
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

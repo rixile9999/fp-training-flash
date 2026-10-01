@@ -1,0 +1,74 @@
+title: 没有惰性——及早求值
+blocks:
+  intro:
+    markdown: |-
+      Haskell 是惰性的（lazy）——值在*需要时*才计算。Gleam 正好相反，是**及早求值**（eager）的：传给函数的参数，会在调用*开始之前*全部计算完。
+
+      所以像无限序列这样的惰性结构，不由语言负责，而是交给库（`gleam_yielder`，不在 stdlib 中）。
+  eager-arg:
+    markdown: |-
+      这为什么重要？因为“条件为假就会跳过昂贵的计算”这种惰性语言式的预期，在 Gleam 里并不成立。
+
+      来看 `bool.guard(when:, return:, otherwise:)`。即使 `when` 是 `False`、`return` 的值将被*丢弃*，直接写在 `return:` 位置的表达式也**在调用之前就已经计算了**。
+  eager-side-effect:
+    prompt: "因为 `when: False`，`return` 的值会被丢弃。那么 `已计算` 会被输出吗？（`expensive()` 会输出 `已计算` 并返回一个值）"
+    code: |-
+      fn expensive() {
+        io.println("已计算")
+        "结果"
+      }
+
+      bool.guard(when: False, return: expensive(), otherwise: fn() { "默认" })
+    choices:
+      - "会输出 `已计算`（eager）"
+      - 什么也不输出（lazy）
+      - "会输出 `默认`"
+      - 编译错误
+    feedback:
+      correct: 没错！Gleam 是及早求值的，`return:` 位置的 `expensive()` 在调用之前就已经执行——即使值被丢弃，副作用（输出 `已计算`）依然会发生。
+      choices:
+        "1": 那是惰性语言的行为。Gleam 会在调用前计算所有参数——`已计算` 会被输出。
+        "2": '`expensive()` 输出的是 `已计算`，而不是 `默认`。`"默认"` 是 `otherwise` 那一侧的值。'
+        "3": "给 `bool.guard` 传的是合法参数，所以能正常编译——问题在于求值的时机。"
+  thunk:
+    markdown: |-
+      那真的需要延迟时怎么办？**用匿名函数包起来再传进去**（U7 里的 `fn() { ... }`）。函数*值*只是被创建出来，在被调用之前不会执行——这就是惰性的手动替代方案。
+
+      `bool.lazy_guard` 把两侧都当作 `fn() -> a` 形式的 thunk（延迟计算的函数）接收，只调用实际被选中的那一侧。
+  thunk-defers:
+    prompt: "这次把 `expensive` 用 `fn() { ... }` 包起来传给 `lazy_guard`。当 `when: False` 时，这个表达式的值和输出分别是什么？"
+    code: |-
+      fn expensive() {
+        io.println("已计算")
+        "结果"
+      }
+
+      bool.lazy_guard(
+        when: False,
+        return: fn() { expensive() },
+        otherwise: fn() { "默认" },
+      )
+    choices:
+      - 值为 `"默认"`，没有输出（expensive 的 thunk 没有被调用）
+      - "`已计算`，然后是 `默认`"
+      - "`已计算`"
+      - 值为 `"结果"`（return 的 thunk 被调用）
+    feedback:
+      correct: "完全正确！包成 thunk 后，`return` 一侧不会被调用；又因为 `when: False`，选中的是 `otherwise`，所以只得到 `默认`。"
+      choices:
+        "1": "`return` 的 thunk 根本没有被调用，所以不会输出 `已计算`——只会得到 `默认`。"
+        "2": "用 `fn()` 包起来后，`expensive` 不会执行——这正是延迟的关键。"
+        "3": '`when: False` 时选中的是 `otherwise` 的 thunk。`return` 一侧没有被调用，所以值是 `"默认"`。'
+  lazy-where:
+    prompt: 在 Gleam 中，像无限序列这样的“惰性结构”在哪里？
+    choices:
+      - 内置在语言中
+      - stdlib 中的 `gleam/lazy` 模块
+      - 独立的库 `gleam_yielder`（不在 stdlib 中）
+      - "像 `Int` 一样是基本类型"
+    feedback:
+      correct: 没错！惰性序列不属于语言本身，而是独立库 `gleam_yielder` 的领域——它甚至不在标准库里。
+      choices:
+        "0": Gleam 语言本身只有及早求值——没有内置惰性。
+        "1": "stdlib 里没有 `gleam/lazy` 这样的模块。惰性来自外部库。"
+        "3": 惰性序列不是基本类型，而是由库提供的数据结构。

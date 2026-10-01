@@ -1,0 +1,12 @@
+title: 用角色扮演游戏学习 Option
+rubric:
+  R-06:
+    title: 区分“没有”和默认值
+    description: 不先把 None 压成 0 或空字符串这类默认值，而是用 case 或 option 函数单独处理没有值的情况。
+  R-02:
+    title: 分支清楚体现规则
+    description: 每个 case 分支对应一条规则，读者可以把规则列表和代码逐行对照。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 用类型表达失败的可能性。
+    message: 使用了 let assert 或 panic。

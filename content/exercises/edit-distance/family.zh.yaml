@@ -1,0 +1,12 @@
+title: 编辑距离（莱文斯坦距离）
+rubric:
+  R-07:
+    title: 把子问题的答案存进表里重复使用
+    description: "把“将前 i 个字符变成前 j 个字符的代价”存进表（保存上一行的列表或 Dict）中，并从中取用。"
+  R-13:
+    title: 按字符（grapheme）处理字符串
+    description: 用 `string.to_graphemes` 拆分，使韩文这类占多个字节的字符也算作一个字符。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 用类型来表达可能的失败。
+    message: 使用了 let assert 或 panic。

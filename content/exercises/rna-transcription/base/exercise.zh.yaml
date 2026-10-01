@@ -1,0 +1,31 @@
+tests:
+  empty_strand_test: 空链以 Ok 返回空 RNA
+  each_nucleotide_complement_test: G、C、T、A 分别变为 C、G、A、U
+  long_strand_test: 长链也按原顺序转换
+  invalid_strand_test: 混有非碱基字符时返回 Error(Nil)
+  invalid_at_end_test: 即使只有最后一个字符错误，也返回 Error(Nil)
+  lowercase_rejected_test: 小写碱基属于错误输入
+requirements:
+  R1: 把每个碱基换成配对碱基
+  R2: 只要有一个错误字符就返回 Error(Nil)
+hints:
+  1: "转换单个字符可能失败吗？只要有一个失败，整体结果应该是什么？"
+  2: "`list.try_map(list, f)` 是 `f` 返回 `Result` 时使用的 `map`。全部为 `Ok` 时返回 `Ok(结果列表)`，只要有一个 `Error` 就返回第一个 `Error`。"
+  3: "先写一个辅助函数，接收一个碱基并返回 `Result(String, Nil)`。然后用 `string.to_graphemes` 拆分字符，用 `try_map` 转换，再用 `result.map` 拼接回去。"
+  4: |
+    ```gleam
+    pub fn to_rna(dna: String) -> Result(String, Nil) {
+      dna
+      |> string.to_graphemes
+      |> list.try_map(complement)
+      |> todo
+    }
+
+    fn complement(nucleotide: String) -> Result(String, Nil) {
+      case nucleotide {
+        "G" -> Ok("C")
+        _ -> todo
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

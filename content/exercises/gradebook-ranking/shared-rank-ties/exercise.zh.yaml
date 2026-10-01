@@ -1,0 +1,35 @@
+title: 给同分者相同的名次
+tests:
+  empty_class_test: 没有学生时返回空列表
+  distinct_scores_test: 分数各不相同时，从 1 开始依次标上名次
+  tie_shares_rank_test: 分数相同的学生获得相同的名次
+  rank_after_tie_skips_test: 同分之后的名次要跳过同分人数
+  three_way_tie_test: 三人同分时三人名次相同，下一个名次往后跳三位
+  tied_names_in_order_test: 同一名次内按姓名字典序排列
+requirements:
+  R1: 按分数降序排序并标上名次
+  R2: 分数相同则名次相同
+  R3: 同分之后的名次是（排在前面的学生数 + 1）
+  R4: 同一名次内姓名升序
+hints:
+  1: "要确定已排序列表中某个学生的名次，需要知道什么？只靠前一个学生的分数和名次就够了吗？"
+  2: "`list.index_fold` 会同时传入累加器、元素和从 0 开始的位置。累加器里可以带着“前一个学生的分数和名次”。"
+  3: "排序后从前往后折叠。分数与前一个学生相同就沿用前一个名次，不同就把 `位置 + 1` 作为名次。结果先逐个加到列表前端收集起来，最后再反转。"
+  4: |
+    ```gleam
+    let #(_, ranked) =
+      students
+      |> list.sort(by_rank_order)
+      |> list.index_fold(#(None, []), fn(state, student, index) {
+        let #(previous, acc) = state
+        let score = student.score
+        let this_rank = case previous {
+          Some(#(previous_score, previous_rank)) if previous_score == score ->
+            todo
+          _ -> todo
+        }
+        #(Some(#(score, this_rank)), [#(this_rank, student.name), ..acc])
+      })
+    list.reverse(ranked)
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

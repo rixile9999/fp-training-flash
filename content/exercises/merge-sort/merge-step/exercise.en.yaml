@@ -1,0 +1,28 @@
+title: Merge two sorted lists
+tests:
+  merge_with_empty_left_test: If the left list is empty, returns the right list as it is
+  merge_interleaves_test: Interleaves the elements of both lists in ascending order
+  merge_with_empty_right_test: If the right list is empty, returns the left list as it is
+  merge_leftover_tail_test: If the right list runs out first, appends all remaining elements of the left
+  merge_keeps_duplicates_test: Keeps every copy when both lists contain the same value
+  merge_negative_numbers_test: Merges in ascending order even with negative numbers mixed in
+requirements:
+  R1: The result is in ascending order
+  R2: When one side runs out, all the rest of the other side is included
+  R3: Equal values are all included, as many times as they appear
+hints:
+  1: "If both lists are in ascending order, how many candidates are there for the first element of the result?"
+  2: "You can pattern match on two values at once, as in `case left, right { ... }`. Separate the cases where one side is empty from the case where both have elements."
+  3: "Put the smaller-or-equal of the two head elements at the front of the result, then merge the rest of that list with the whole other list. If one side is empty, return the other side as it is."
+  4: |
+    ```gleam
+    pub fn merge(left: List(Int), right: List(Int)) -> List(Int) {
+      case left, right {
+        [], _ -> right
+        _, [] -> left
+        [x, ..rest], [y, ..] if x <= y -> todo
+        _, [y, ..rest] -> todo
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

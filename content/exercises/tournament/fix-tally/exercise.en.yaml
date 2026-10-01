@@ -1,0 +1,31 @@
+title: Fix the bugs in a league table program
+tests:
+  empty_input_header_only_test: If the input is empty, returns only the header
+  record_draw_credits_both_test: A draw is recorded for both teams
+  points_test: Points are 3 for a win and 1 for a draw
+  format_row_test: Turns a team name and its record into one row of fixed widths
+  sorted_by_points_desc_test: Teams with more points come first
+  typical_input_test: Builds the full table from several matches
+  ties_broken_alphabetically_test: If points are equal, teams are in ascending order of name
+  more_than_one_winner_test: If the same two teams each win once, their records and points are equal
+requirements:
+  R1: One match is applied to the records of both teams
+  R2: Points are 3 for a win, 1 for a draw and 0 for a loss
+  R3: Rank by points in descending order, and by name in ascending order on ties
+hints:
+  1: "Which function does each failing public test call? Pair each failing test with one function to suspect."
+  2: "`list.sort` puts the first argument first when the comparison function returns `Lt`. `order.reverse(compare_fn)` reverses the entire comparison, tie-breakers included."
+  3: "There are three bugs, one each in `record`, `points` and `compare_rows`. When you fix the sorting, leave the direction of the name comparison as it is."
+  4: |
+    ```gleam
+    Draw ->
+      table
+      |> dict.upsert(match.home, add_result(_, Draw))
+      |> todo
+
+    fn compare_rows(a: #(String, Stats), b: #(String, Stats)) -> order.Order {
+      int.compare(todo, todo)
+      |> order.break_tie(string.compare(a.0, b.0))
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

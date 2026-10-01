@@ -1,0 +1,29 @@
+title: Fixing the bugs in coupon stacking code
+tests:
+  apply_coupon_percent_test: "A percentage coupon cuts the price by its rate"
+  apply_coupon_fixed_floor_test: "The result of a fixed-amount coupon never goes below 0"
+  apply_all_stacks_test: "Stacking several coupons accumulates the discounts"
+  apply_all_order_test: "Coupons are applied in list order"
+  apply_all_empty_test: "With no coupons, the price stays the same"
+  best_single_test: "Finds the lowest price when only one coupon can be used"
+  best_single_no_coupons_test: "With no coupons, the original price is the lowest price"
+requirements:
+  R1: "apply_all applies each coupon, in list order, to the result of the previous coupon"
+  R2: "best_single returns the lowest price when only one coupon is used, or the original price when there are no coupons"
+hints:
+  1: "Inside the fold in `apply_all`, where does the price passed to the coupon come from? Is the accumulator actually used?"
+  2: "In `list.fold(list, initial, fn(accumulator, element) { ... })`, the value returned by the function becomes the accumulator for the next step. The initial value of a fold that finds a minimum must be a value that does not affect the result."
+  3: "There is one bug in `apply_all` and one in `best_single`. The compiler warning (an unused variable) is also a clue. Remember that using no coupon at all is also an option."
+  4: |
+    ```gleam
+    pub fn apply_all(price: Int, coupons: List(Coupon)) -> Int {
+      list.fold(coupons, price, fn(total, coupon) { todo })
+    }
+
+    pub fn best_single(price: Int, coupons: List(Coupon)) -> Int {
+      coupons
+      |> list.map(apply_coupon(price, _))
+      |> list.fold(todo, int.min)
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

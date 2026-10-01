@@ -1,0 +1,29 @@
+title: 把改价的效应作为值返回
+tests:
+  drop_percent_test: 降价率是降价金额除以原价得到的百分比
+  drop_percent_increase_test: 价格上涨时降价率为 0
+  change_price_updates_product_test: 返回已应用新价格的商品
+  change_price_small_drop_logs_only_test: 降价率不足 20% 时只留下记录
+  change_price_notifies_watchers_test: 大幅降价时，在记录之后为每位关注的顾客生成通知
+  change_price_threshold_test: 正好降价 20% 也会生成通知
+  change_price_watcher_order_test: 通知遵循关注顾客列表的顺序
+requirements:
+  R1: drop_percent 只做纯计算
+  R2: change_price 不执行效应，而是返回效应列表
+hints:
+  1: "测试有办法确认现有的 `update_price`“给谁发了什么通知”吗？不发送通知的话，可以返回什么？"
+  2: "不立即执行效应，而是返回表示“要做什么”的值（`Log`、`Notify`）组成的列表，计算就成了纯函数，执行则交给外层函数。"
+  3: "先用 `drop_percent` 求出降价率，再把一条记录与（条件满足时）用 `list.map` 生成的通知列表连接起来。条件不满足时，通知列表为空列表。"
+  4: |
+    ```gleam
+    pub fn change_price(product, new_price, watchers) {
+      let percent = drop_percent(product.price, new_price)
+      let log = Log(todo)
+      let notices = case percent >= 20 {
+        True -> list.map(watchers, fn(customer) { todo })
+        False -> []
+      }
+      #(Product(..product, price: new_price), [log, ..notices])
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

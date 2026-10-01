@@ -1,0 +1,29 @@
+tests:
+  empty_strand_test: For an empty string, all four nucleotides have a count of 0
+  single_nucleotide_test: A one-nucleotide string has a count of 1 for that nucleotide and 0 for the rest
+  mixed_strand_test: Counts each nucleotide in a string with several nucleotides mixed together
+  invalid_strand_test: Returns Error(Nil) when an invalid letter is mixed in
+  repeated_nucleotide_test: A repeated nucleotide is counted as many times as it appears
+  invalid_at_end_test: Returns Error(Nil) even if only the last letter is invalid
+  lowercase_is_invalid_test: A lowercase nucleotide counts as an invalid letter
+requirements:
+  R1: The result always contains the four keys A, C, G and T
+  R2: Count each nucleotide exactly
+  R3: Error(Nil) if there is even one letter other than A, C, G or T
+hints:
+  1: "Should a nucleotide that never appears still be in the result? After hitting an invalid letter, is there any need to keep counting the rest?"
+  2: "`list.try_fold` accumulates values like `list.fold`, but the moment the function returns an `Error` it stops and returns that `Error` as the result."
+  3: "Try starting from a dictionary with all four nucleotides set to 0. If you check for each letter whether its key is in the dictionary, you can validate and count in one go."
+  4: |
+    ```gleam
+    let zeros = dict.from_list([#("A", 0), #("C", 0), #("G", 0), #("T", 0)])
+    dna
+    |> string.to_graphemes
+    |> list.try_fold(zeros, fn(counts, letter) {
+      case dict.get(counts, letter) {
+        Ok(count) -> todo
+        Error(Nil) -> todo
+      }
+    })
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

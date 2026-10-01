@@ -1,0 +1,28 @@
+title: Fix a base conversion that drops invalid digits
+tests:
+  valid_digits_convert_test: Valid digits are converted as before
+  digit_too_large_is_error_test: A digit greater than or equal to the base is reported as InvalidDigit instead of being dropped
+  negative_digit_is_error_test: A negative digit is reported as InvalidDigit instead of being dropped
+  first_invalid_digit_test: If there are several invalid digits, the first one is reported
+  invalid_base_still_first_test: A base error is still reported before a digit error
+  zero_value_still_works_test: A value of 0 still returns [0]
+requirements:
+  R1: Keep the behavior that was already right (conversion, base checks, handling of 0)
+  R2: An out-of-range digit is InvalidDigit
+  R3: Stop at the first invalid digit
+hints:
+  1: "What does the current code return for `rebase(digits: [1, 2, 1], input_base: 2, output_base: 10)`? Can the caller tell that the input was invalid?"
+  2: "`list.filter` throws away values that fail the condition without a trace. If you need to report the dropped value, you need something that can fail on each element, such as `list.try_fold` or `list.try_map`."
+  3: "Merge the two steps, `filter` and `fold`, into a single `list.try_fold`. When you hit an out-of-range digit, return an `Error` right there, and pass the result on to `to_digits` only when it is `Ok`."
+  4: |
+    ```gleam
+    False, False ->
+      list.try_fold(digits, 0, fn(total, digit) {
+        case digit >= 0 && digit < input_base {
+          True -> todo
+          False -> todo
+        }
+      })
+      |> result.map(todo)
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

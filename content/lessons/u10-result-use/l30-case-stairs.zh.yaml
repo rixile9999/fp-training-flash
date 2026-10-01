@@ -1,0 +1,83 @@
+title: case 阶梯之痛
+blocks:
+  intro:
+    markdown: |-
+      还记得 U9 里写的 `parse_age` 吗？可能失败的操作会返回 `Result(成功, 失败)`，调用方必须用 `case` 处理 `Ok` 和 `Error` **两种情况**。
+
+      ```gleam
+      pub fn parse_age(input: String) -> Result(Int, AgeError) {
+        case int.parse(input) {
+          Error(Nil) -> Error(NotANumber)
+          Ok(n) -> case n < 0 {
+            True -> Error(Negative)
+            False -> Ok(n)
+          }
+        }
+      }
+      ```
+
+      那如果要把**两个** Result 接在一起用呢？比如分别解析两个年龄，再把它们相加。
+  stairs:
+    markdown: |-
+      每个 `parse_age` 都返回 Result，要取出里面的值就得用 `case` 拆开。可拆两次之后，case 就会像**阶梯一样层层嵌套**：
+
+      ```gleam
+      pub fn add_ages(a: String, b: String) -> Result(Int, AgeError) {
+        case parse_age(a) {
+          Error(e) -> Error(e)
+          Ok(age_a) -> case parse_age(b) {
+            Error(e) -> Error(e)
+            Ok(age_b) -> Ok(age_a + age_b)
+          }
+        }
+      }
+      ```
+
+      看到了吗？`Error(e) -> Error(e)` 这一行在每一级台阶上都原样重复。这些冗余正是本单元要“铺平”的对象。
+  stairs-both-ok:
+    prompt: 在上面阶梯式的 `add_ages` 中，`add_ages("5", "7")` 的值是？
+    code: |-
+      // 沿用上面的定义
+      add_ages("5", "7")
+    choices:
+      - '`Ok(12)`'
+      - '`12`'
+      - '`Ok(5)`'
+      - '`Error(NotANumber)`'
+    feedback:
+      correct: '答对了！两个都是 `Ok`，外层 case 取出 `age_a`（5），内层取出 `age_b`（7），得到 `Ok(5 + 7)` = `Ok(12)`。'
+      choices:
+        "1": 'Result 里的值不会“光着”出来。函数的返回类型是 `Result`，所以最后也会包装成 `Ok(...)`——是 `Ok(12)`，不是 `12`。'
+        "2": '你只看了外层 case。把内层的 `parse_age("7")` 也拆开、两者相加之后，结果是 `Ok(12)`。'
+        "3": '两个输入都是正常的数字，没有任何分支会落入 Error——结果是 `Ok(12)`。'
+  stairs-second-fail:
+    prompt: '同样是阶梯式的 `add_ages`，`add_ages("3", "x")` 的值是？（`"x"` 不是数字）'
+    code: |-
+      // 沿用上面的定义
+      add_ages("3", "x")
+    choices:
+      - '`Ok(3)`'
+      - '`Error(NotANumber)`'
+      - '`Error(Negative)`'
+      - '`Ok(0)`'
+    feedback:
+      correct: '完全正确！外层的 `parse_age("3")` 是 `Ok(3)`，于是进入内层；但 `parse_age("x")` 是 `Error(NotANumber)`，这个分支就直接成为函数的结果。'
+      choices:
+        "0": '即使第一次解析成功，只要第二次失败，整体就失败。内层 case 的 `Error` 分支成为结果——是 `Error(NotANumber)`，不是 `Ok(3)`。'
+        "2": '`Negative` 是负数时的错误。`"x"` 不是负数，而是根本不是数字，所以是 `NotANumber`。'
+        "3": '失败不会悄悄变成 `Ok(0)` 这样的默认值——错误留在类型里，以 `Error(NotANumber)` 的形式显现出来。'
+  pain:
+    markdown: 这种阶梯之痛显而易见：每多接一个 Result，case 就深一层，而 `Error(e) -> Error(e)` 这种**“失败就原样传下去”**的代码也一遍遍重复。下一课我们用标准库的 `result.map` 和 `result.try` 去掉这种重复。
+  stairs-why-nested:
+    prompt: 把两个 Result 接在一起用时，case 变成嵌套阶梯的根本原因是什么？
+    choices:
+      - 因为 Gleam 的 case 一次只能检查一个值
+      - '因为要取出每个 Result 里面的值（`Ok` 的内容），就得用 `case` 拆开；拆两次时，一次拆解就会套在另一次里面'
+      - '因为 `Result` 类型之间不能直接相加，会产生编译错误'
+      - '因为 `parse_age` 是递归函数'
+    feedback:
+      correct: '答对了！要用 `Ok(n)` 里的 `n`，每次都得用 case 拆开包装；要把两个值都拆出来，一个 case 就得放进另一个 case 里，于是形成阶梯。'
+      choices:
+        "0": 'case 可以用 `case a, b { ... }` 同时检查多个值。阶梯的原因不在这里，而在于依次拆开 Result 的包装。'
+        "2": '不是因为编译错误。取出里面的值后再相加完全没问题，问题在于取值的过程会嵌套。'
+        "3": '`parse_age` 不是递归函数。阶梯来自把 Result 拆了两次，而不是递归。'

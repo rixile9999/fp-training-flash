@@ -1,0 +1,12 @@
+title: 从价格计算中剥离输出与副作用
+rubric:
+  R-05:
+    title: 分离计算逻辑
+    description: 价格计算放在接收值、返回值的函数中，这些函数不调用打印输出或随机数之类的效应。
+  R-07:
+    title: 效应放在边缘
+    description: io.println、int.random 这类效应只在一个很薄的外层函数中使用，该函数只负责执行纯函数算出的结果。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 用类型表达失败的可能性。
+    message: 使用了 let assert 或 panic。

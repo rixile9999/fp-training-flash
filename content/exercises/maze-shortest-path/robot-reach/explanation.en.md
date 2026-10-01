@@ -1,0 +1,7 @@
+Whether a cell is within the limit is decided by the **minimum** number of moves to reach it. Breadth-first search takes cells out in order of distance 0, 1, 2, ..., so the distance attached when a cell is first discovered is exactly its minimum number of moves. So count the cells taken out of the queue one by one, and only put more neighbors in from cells whose distance is less than `max_steps`. The queue is the provided two-list queue, so putting in and taking out are amortized O(1) (`amortized-analysis`).
+
+Cells must be marked as visited **when they are put into the queue**. If you mark them when taking them out, a cell discovered from two neighbors at once, like a corner of a 3x3 room, enters the queue twice and is counted twice. If you mark on insertion, each cell enters the queue only once, so you do not need to filter out duplicates when counting.
+
+If you put new cells at the front of the queue instead of the back, the queue becomes a stack and the search becomes depth-first. Then the distance first attached to a cell may not be its minimum number of moves, and on a wide floor you count too few cells within the limit. In a narrow corridor there is only one route, so this difference does not show.
+
+The remaining common mistakes are about boundaries. If you put in neighbors when `dist <= max_steps`, you count one cell farther than allowed. If you treat `Error(Nil)` from `dict.get` (outside the grid) as an aisle, the robot leaves the grid and the count goes up. It is safest to group both the outside of the grid and shelves as "cannot go".

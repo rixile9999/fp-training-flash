@@ -1,0 +1,29 @@
+title: 在集体注册中报告所有出错的人
+tests:
+  all_valid_team_test: "所有人都正确时，按输入顺序返回 NewUser 列表"
+  reports_invalid_member_with_number_test: "返回出错者的编号（从 1 开始）和错误列表"
+  empty_team_test: "空名单为 Ok([])"
+  keeps_member_order_test: "即使有三人或更多，也保持名单顺序"
+  reports_every_invalid_member_test: "多人出错时，按名单顺序全部报告"
+  first_member_is_number_one_test: "第一个人的编号是 1"
+requirements:
+  R1: "全部通过时，按输入顺序返回 NewUser 列表"
+  R2: "对每个失败的人，给出从 1 开始的编号和 validate_all 的错误列表"
+  R3: "毫无遗漏地按名单顺序列出所有失败的人"
+hints:
+  1: "第二个人出错时，还需要检查第三个人吗？结果中什么时候需要正确的人的信息？"
+  2: "`result.partition(results)` 返回 `#(成功值列表, 错误列表)`。正如文档所说，这两个列表都是原来顺序的**逆序**。`list.index_map` 的索引从 0 开始。"
+  3: "对每个人执行 `validate_all`，并给错误加上编号，得到 `Result(NewUser, #(Int, List(SignupError)))` 的列表。把这个列表分成成功和失败两部分，只有没有失败时才返回 `Ok`。注意检查顺序。"
+  4: |
+    ```gleam
+    let results =
+      list.index_map(forms, fn(form, index) {
+        validate_all(form)
+        |> result.map_error(fn(errors) { todo })
+      })
+    case result.partition(results) {
+      #(users, []) -> todo
+      #(_, failures) -> todo
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

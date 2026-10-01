@@ -1,0 +1,23 @@
+title: Apply a list of rules in turn
+tests:
+  no_rules_changes_player_test: With no rules, returns the game with only the turn passed, as Ok
+  all_rules_pass_test: If every rule passes, passes the turn in the game as changed by the rules and returns it as Ok
+  failing_rule_returns_error_test: If one rule fails, returns its message as Error
+  each_rule_sees_previous_result_test: Each rule receives the game returned by the previous rule
+  rules_apply_in_list_order_test: Rules are applied in list order
+  first_error_wins_test: If several rules fail, returns the error of the rule that comes first in the list
+requirements:
+  R1: If every rule passes, return the game with the turn passed as Ok
+  R2: Return the first error as Error
+  R3: Apply the rules one after another in list order
+hints:
+  1: "When you do not know in advance how many rules there are, what should you carry along as \"the result so far\" while applying the rules one by one?"
+  2: "`list.try_fold(list, initial, fn(acc, x) { ... })` is like `list.fold`, except that the function returns a `Result`. When an `Error` comes out, it stops there and returns that `Error`."
+  3: "Make the accumulator a game, and apply each rule to the accumulated game. If the whole thing ends in `Ok`, pass the turn with `result.map`."
+  4: |
+    ```gleam
+    rules
+    |> list.try_fold(game, fn(current, rule) { todo })
+    |> result.map(todo)
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

@@ -1,0 +1,35 @@
+title: Add area code and exchange code checking steps
+tests:
+  area_code_zero_test: An area code starting with 0 returns InvalidAreaCode("0")
+  area_code_one_test: An area code starting with 1 also returns InvalidAreaCode("1")
+  exchange_code_one_test: An exchange code (4th digit) starting with 1 returns InvalidExchangeCode("1")
+  clean_valid_test: clean returns the 10-digit number that passed cleanup and both checks
+  exchange_code_zero_test: An exchange code starting with 0 also returns InvalidExchangeCode("0")
+  area_after_country_code_test: The country code 1 is removed before the area code check
+  area_error_before_exchange_error_test: If both the area code and the exchange code are invalid, returns the area code error
+  normalize_error_first_test: An error from the cleanup step comes before an area code error
+requirements:
+  R1: Check the first digit of the area code
+  R2: Check the first digit of the exchange code
+  R3: Check in the order cleanup, area code, exchange code
+hints:
+  1: "What shape of input can `check_area_code` and `check_exchange_code` assume they receive? For that assumption to hold, what must `clean` do first?"
+  2: "`string.slice(s, i, 1)` returns the single character at position `i` (counting from 0). `result.try(r, f)` calls `f(x)` only when `r` is `Ok(x)`, so you can pipe together checks that share the shape `fn(String) -> Result(String, PhoneError)`."
+  3: "Each check function takes the digit at a certain position in the number and returns an error if it is `\"0\"` or `\"1\"`, or the number unchanged in `Ok` otherwise. `clean` attaches the two checks, one after the other, to the result of `normalize` with `result.try`."
+  4: |
+    ```gleam
+    pub fn check_area_code(number: String) -> Result(String, PhoneError) {
+      let first = string.slice(number, 0, 1)
+      case first {
+        "0" | "1" -> todo
+        _ -> Ok(number)
+      }
+    }
+
+    pub fn clean(input: String) -> Result(String, PhoneError) {
+      normalize(input)
+      |> result.try(todo)
+      |> result.try(todo)
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

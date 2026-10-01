@@ -1,0 +1,13 @@
+title: Build list operations yourself
+rubric:
+  R-04:
+    title: Implemented by hand, without the standard list module
+    description: The point of this exercise is to build list operations yourself with recursion. Do not import `gleam/list`.
+    message: gleam/list was imported. Implement the list operations yourself with recursion.
+  R-06:
+    title: With an accumulator, reverse once at the end
+    description: Building up at the front of an accumulator reverses the order. Do not append to the end on every step; reverse just once at the end.
+  R-09:
+    title: No let assert or panic
+    description: The possibility of failure is expressed in the types.
+    message: let assert or panic was used.

@@ -1,0 +1,36 @@
+tests:
+  cleans_punctuation_test: 去掉括号、空格和连字符，返回 10 位数字
+  strips_country_code_test: 带 +1 国家代码、用点分隔的号码也去掉 1，返回 10 位数字
+  too_few_digits_test: 数字少于 10 个时返回 TooFewDigits
+  invalid_country_code_test: 11 位但不以 1 开头时返回 InvalidCountryCode
+  too_many_digits_test: 数字多于 11 个时返回 TooManyDigits
+  letters_rejected_test: 混有英文字母时返回装着该字母的 InvalidCharacter
+  first_invalid_character_test: 有多个不允许的字符时，报告最前面的那个
+  character_check_before_length_test: 短号码中有错误字符时，字符错误先于长度错误
+requirements:
+  R1: 去掉允许的分隔符，只保留数字
+  R2: 检查数字个数
+  R3: 11 位时检查并去掉国家代码 1
+  R4: 最先检查不允许的字符，并报告第一个
+hints:
+  1: "一共有三项检查（字符、长度、国家代码）。如果输入同时不满足多项检查，应该返回哪个错误？怎样在代码中保证这个顺序？"
+  2: "使用 `use x <- result.try(步骤(输入))` 时，步骤返回 `Error` 函数就立即返回该错误，只有 `Ok(x)` 时才进入下一行。步骤的书写顺序就是检查顺序。"
+  3: "试着把工作分成两步：(1) 去掉分隔符后确认剩下的字符全是数字，并返回数字列表的函数；(2) 根据数字个数和国家代码返回 10 位字符串的函数。`clean` 用 `use` 把两者连接起来。"
+  4: |
+    ```gleam
+    pub fn clean(input: String) -> Result(String, PhoneError) {
+      use digits <- result.try(extract_digits(input))
+      normalize_length(digits)
+    }
+
+    fn normalize_length(digits: List(String)) -> Result(String, PhoneError) {
+      case list.length(digits), digits {
+        n, _ if n < 10 -> Error(TooFewDigits)
+        n, _ if n > 11 -> todo
+        11, ["1", ..rest] -> todo
+        11, _ -> todo
+        _, _ -> Ok(string.concat(digits))
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看完讲解后，将用一道新题确认掌握程度。"

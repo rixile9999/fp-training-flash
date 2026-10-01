@@ -1,0 +1,31 @@
+title: 修复联赛积分榜程序的 bug
+tests:
+  empty_input_header_only_test: 输入为空时只返回表头
+  record_draw_credits_both_test: 平局同时记给两支球队
+  points_test: 积分为胜 3 分、平 1 分
+  format_row_test: 把球队名称和战绩变成固定宽度的一行
+  sorted_by_points_desc_test: 积分高的球队排在上面
+  typical_input_test: 用多场比赛生成完整的积分榜
+  ties_broken_alphabetically_test: 积分相同时按球队名称升序排列
+  more_than_one_winner_test: 同样的两支球队各赢一次时，战绩和积分相同
+requirements:
+  R1: 一场比赛同时计入两支球队的战绩
+  R2: 积分为胜 3、平 1、负 0
+  R3: 按积分降序排名，积分相同时按名称升序
+hints:
+  1: "失败的公开测试分别调用了哪个函数？给每个失败的测试配上一个可疑的函数。"
+  2: "比较函数返回 `Lt` 时，`list.sort` 把第一个参数放在前面。`order.reverse(比较函数)` 会把包括并列依据在内的整个比较都反过来。"
+  3: "bug 一共有三个，`record`、`points`、`compare_rows` 中各一个。修正排序时，名称比较的方向要保持不变。"
+  4: |
+    ```gleam
+    Draw ->
+      table
+      |> dict.upsert(match.home, add_result(_, Draw))
+      |> todo
+
+    fn compare_rows(a: #(String, Stats), b: #(String, Stats)) -> order.Order {
+      int.compare(todo, todo)
+      |> order.break_tie(string.compare(a.0, b.0))
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

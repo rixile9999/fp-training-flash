@@ -1,0 +1,103 @@
+title: 第一个递归：计算长度与求和
+blocks:
+  intro:
+    markdown: |-
+      Gleam 里**既没有** `for`，**也没有** `while`。那该怎么遍历列表呢？答案是**递归**：处理一个头部，再**对尾部调用自身**。
+
+      所有递归都围绕两个问题来设计：
+      1. 输入最小（空列表）时，答案是什么？——**终止条件（base case）**
+      2. 处理完一个头部后，还剩下什么问题？——**递归步骤**
+  length-example:
+    markdown: |-
+      来看一个计算列表长度的函数：
+
+      ```gleam
+      pub fn length(xs: List(Int)) -> Int {
+        case xs {
+          [] -> 0
+          [_, ..rest] -> 1 + length(rest)
+        }
+      }
+      ```
+
+      空列表的长度是 0（终止条件）。不为空时，用一个头部（`+1`）加上**剩余部分的长度**。头部的值本身用不到，所以用 `_` 接收。
+  length-3:
+    prompt: 在上面的 `length` 函数中，`length([10, 20, 30])` 的值是？
+    code: |-
+      pub fn length(xs: List(Int)) -> Int {
+        case xs {
+          [] -> 0
+          [_, ..rest] -> 1 + length(rest)
+        }
+      }
+
+      // length([10, 20, 30]) 的值是？
+    choices:
+      - "`3`"
+      - "`60`"
+      - "`0`"
+      - "`30`"
+    feedback:
+      correct: 没错！1 + (1 + (1 + 0)) = 3。每取下一个头部就累积一个 +1，最后在空列表处以 0 收尾。
+      choices:
+        "1": 这个函数是**数**元素个数——不是把它们相加（10+20+30），而是数出个数 3。
+        "2": 0 是空列表时的结果——这里有 3 个元素，所以结果是 3。
+        "3": 它返回的不是最后一个元素（30），而是**个数**——3。
+  length-empty:
+    prompt: 在同一个 `length` 函数中，`length([])` 的值是？（终止条件正是答案的种子）
+    code: |-
+      pub fn length(xs: List(Int)) -> Int {
+        case xs {
+          [] -> 0
+          [_, ..rest] -> 1 + length(rest)
+        }
+      }
+
+      // length([]) 的值是？
+    choices:
+      - "`0`"
+      - "`1`"
+      - "`Nil`"
+      - 编译错误
+    feedback:
+      correct: 完全正确！空列表直接匹配第一个分支 `[] -> 0`——终止条件返回 0。
+      choices:
+        "1": 空列表里没有元素——长度是 0，而不是 1。
+        "2": "`[] -> 0` 分支返回的是 `Int` 0——不是 `Nil`。"
+        "3": 能正常编译——`[]` 和 `[_, ..rest]` 覆盖了所有情况。
+  total-example:
+    markdown: |-
+      用同样的骨架也能求**和**。这次需要用到头部的值，所以用名字（`first`）来接收：
+
+      ```gleam
+      pub fn total(xs: List(Int)) -> Int {
+        case xs {
+          [] -> 0
+          [first, ..rest] -> first + total(rest)
+        }
+      }
+      ```
+
+      空列表的和是 0（终止条件）。不为空时，结果是**头部的值** + **剩余部分的和**。它和 `length` 几乎一样，只是把 `1` 换成了 `first`。
+  total-sum:
+    prompt: 在上面的 `total` 函数中，`total([2, 3, 5])` 的值是？
+    code: |-
+      pub fn total(xs: List(Int)) -> Int {
+        case xs {
+          [] -> 0
+          [first, ..rest] -> first + total(rest)
+        }
+      }
+
+      // total([2, 3, 5]) 的值是？
+    choices:
+      - "`10`"
+      - "`3`"
+      - "`0`"
+      - "`5`"
+    feedback:
+      correct: 没错！2 + (3 + (5 + 0)) = 10。依次加上各个头部的值，最后在空列表处以 0 收尾。
+      choices:
+        "1": 这是求和的函数——不是个数（3），而是和 2+3+5 = 10。
+        "2": 0 是空列表时的终止值——元素的和是 10。
+        "3": 不只是最后一个元素（5），而是把**全部**元素相加——10。

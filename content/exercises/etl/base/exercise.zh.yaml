@@ -1,0 +1,23 @@
+tests:
+  single_letter_test: 把单个字母转成小写键迁移过去
+  single_score_with_multiple_letters_test: 为同一分数下的每个字母各建一个条目
+  multiple_scores_test: 把多个分数的字母合并到一个 dict 中
+  empty_table_test: 空计分表变成空 dict
+  score_without_letters_adds_nothing_test: 没有字母的分数不往结果里添加任何东西
+  full_table_test: 完整计分表的 26 个字母全部迁移过去
+requirements:
+  R1: 每个字母对应一个分数条目
+  R2: 字母以小写存储
+hints:
+  1: "输入 dict 的一个条目（一个分数）应该在结果 dict 中产生几个条目？"
+  2: "`dict.fold` 逐个接收 dict 的条目并更新累加器，`list.fold` 逐个接收列表元素并更新累加器。两个 fold 可以嵌套使用。"
+  3: "从空 dict 开始，外层 fold 遍历每个分数，内层 fold 遍历该分数下的每个字母，插入 `小写字母 -> 分数`。"
+  4: |
+    ```gleam
+    dict.fold(legacy, dict.new(), fn(result, score, letters) {
+      list.fold(letters, result, fn(acc, letter) {
+        todo
+      })
+    })
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

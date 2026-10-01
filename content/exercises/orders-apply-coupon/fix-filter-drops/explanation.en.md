@@ -1,0 +1,5 @@
+The original code reads as "**pick out** the Pending orders and discount them", but the requirement is "in the order list, **change** only the Pending orders". `list.filter` throws away the orders that do not match the condition, so orders that are being shipped or were cancelled disappear.
+
+Every order has to stay in the result, so use `list.map`, which preserves the shape of the list (its length and order), and decide inside each element with `case` whether to change it. If it is `Pending`, build a new order with the record update `Order(..o, amount: ...)`; otherwise return it unchanged. The key point is that `map` is a transformation that changes only the values without touching the structure (theory note "Structure-preserving transformations: functors").
+
+There are two common half-fixes. If you just delete the `filter`, every order is discounted. If you split with `list.partition`, discount, and then join again with `list.append`, all the orders remain, but the Pending orders bunch up at the front and the order changes. If you decide element by element from the start instead of splitting and rejoining, neither problem arises.

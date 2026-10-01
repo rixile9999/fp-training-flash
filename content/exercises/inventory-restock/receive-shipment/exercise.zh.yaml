@@ -1,0 +1,31 @@
+title: 登记入库明细
+tests:
+  no_deliveries_test: "没有入库记录时，商品保持不变"
+  single_delivery_test: "对应商品的库存增加入库的数量"
+  keeps_undelivered_items_test: "没有入库的商品也原样保留在结果中"
+  sums_repeated_deliveries_test: "同一商品多次入库时全部相加"
+  ignores_unknown_sku_test: "忽略列表中不存在的商品的入库"
+  keeps_order_and_reserved_test: "商品顺序和预留数量不变"
+requirements:
+  R1: "把入库数量加到对应 sku 的 on_hand 上"
+  R2: "同一 sku 的入库要合计"
+  R3: "按原来的顺序保留所有商品，reserved 保持不变"
+  R4: "忽略列表中不存在的 sku 的入库"
+hints:
+  1: "每处理一个商品，都要从头扫描一遍入库明细吗？同一个 sku 入库两次时应该怎样？"
+  2: "`dict.upsert` 在键不存在时收到 `None`，存在时收到 `Some(已有值)`，然后存入新值。用 `list.fold` 可以把入库明细折叠成按 sku 汇总的字典。"
+  3: "试着分成两步：先把入库明细整理成按 sku 统计总数量的字典，再用 `list.map` 遍历商品列表，加上在字典中查到的数量。"
+  4: |
+    ```gleam
+    let totals =
+      list.fold(deliveries, dict.new(), fn(acc, delivery) {
+        dict.upsert(acc, delivery.sku, fn(existing) { todo })
+      })
+    list.map(items, fn(item) {
+      case dict.get(totals, item.sku) {
+        Ok(quantity) -> todo
+        Error(Nil) -> item
+      }
+    })
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

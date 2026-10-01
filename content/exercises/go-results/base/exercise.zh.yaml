@@ -1,0 +1,28 @@
+tests:
+  change_player_if_all_rules_pass_test: 所有规则都通过时，轮到对手落子
+  first_rule_failure_records_error_test: 第一条规则失败时，只在原来的游戏上记录错误，轮次不变
+  keep_capture_changes_test: 所有规则都通过时，保留提子规则所做的修改
+  last_rule_failure_records_error_test: 最后一条规则失败时，也只在原来的游戏上记录错误，轮次不变
+  discard_capture_changes_on_later_failure_test: 提子规则之后的规则失败时，丢弃提子带来的修改
+  first_error_wins_test: 多条规则失败时，记录最先失败的规则的错误
+requirements:
+  R1: 全部通过时保留修改并交换轮次
+  R2: 失败时只在原来的游戏上记录错误
+  R3: 在第一个错误处停止
+hints:
+  1: "一条规则失败后，后面的规则还需要执行吗？失败时返回的游戏，应该是哪个时间点的游戏？"
+  2: "`result.try(r, f)` 只在 `r` 为 `Ok(x)` 时调用 `f(x)`，遇到 `Error` 则原样放行。要接入不会失败的函数，用 `result.map`。"
+  3: "先用管道把四条规则串起来，得到一个 `Result(Game, String)`。然后用 `case` 拆分这个结果：`Ok` 时交换轮次，`Error` 时把错误记录到最初收到的 `game` 上。"
+  4: |
+    ```gleam
+    let outcome =
+      game
+      |> rule1
+      |> result.map(rule2)
+      |> todo
+    case outcome {
+      Ok(updated) -> todo
+      Error(message) -> Game(..game, error: message)
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

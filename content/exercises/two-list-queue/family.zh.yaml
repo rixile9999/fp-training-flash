@@ -1,0 +1,13 @@
+title: 用两个列表实现的队列
+rubric:
+  R-02:
+    title: 不变式在代码中清楚体现
+    description: front 和 back 各自存放什么（取出顺序、放入顺序的逆序），在每个函数中都得到一致的遵守。
+  R-06:
+    title: 只在需要时反转一次
+    description: 只在 front 为空时反转一次 back。不要每次 push 或 pop 都复制全部元素。
+    message: 用 list.append 把只有一个元素的列表接到末尾，每次都会复制全部元素。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 用类型表达失败的可能性。
+    message: 使用了 let assert 或 panic。

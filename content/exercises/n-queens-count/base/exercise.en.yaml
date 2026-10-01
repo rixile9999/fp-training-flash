@@ -1,0 +1,33 @@
+tests:
+  same_column_is_unsafe_test: The same column as a queen above is not safe
+  diagonal_next_row_is_unsafe_test: The squares on both diagonals of the queen in the row just above are not safe
+  four_queens_test: A 4x4 board has 2 placements
+  nearest_queen_first_test: Treats the queen at the front of the list as the row just above when checking diagonals
+  far_diagonal_is_unsafe_test: Also checks the diagonals of a queen two rows up
+  single_queen_board_test: A 1x1 board has 1 placement
+  boards_without_solution_test: 2x2 and 3x3 boards have no placements
+  eight_queens_test: An 8x8 board has 92 placements
+requirements:
+  R1: is_safe checks the same column and both diagonals against every queen above
+  R2: count_solutions counts the placements on an n x n board
+  R3: The search stops at unsafe squares (pruning)
+hints:
+  1: "If every row must hold exactly one queen, can you turn a placement into the problem of choosing \"one column per row\"? If you fill the board one row at a time from the top, what do you need to check as you go down?"
+  2: "Backtracking grows a partial solution one step at a time and discards that branch the moment it breaks a rule. Two queens whose rows differ by d attack each other diagonally if the absolute difference of their columns is d."
+  3: "Write `is_safe` as a helper recursion that walks `placed` from the front while increasing the row distance 1, 2, 3, .... For `count_solutions`, write `place(n, row, placed)`, which returns 1 if row is n, and otherwise counts the next row for each safe column and adds the counts up."
+  4: |
+    ```gleam
+    fn place(n: Int, row: Int, placed: List(Int)) -> Int {
+      case row == n {
+        True -> 1
+        False ->
+          int.range(from: 0, to: n, with: 0, run: fn(total, col) {
+            case is_safe(placed, col) {
+              True -> todo
+              False -> total
+            }
+          })
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

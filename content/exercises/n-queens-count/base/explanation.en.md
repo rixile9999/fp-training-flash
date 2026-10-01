@@ -1,0 +1,7 @@
+Every row must hold exactly one queen, so a placement means "choosing one column per row". You go down from the top row, choosing a column for each row, and the moment a new queen attacks one already on the board, you discard that branch right away. That is backtracking (`search-space-backtracking`). Filling every row means you have found one placement, so you return 1, and in each row you add up the counts for the rows below for every safe column.
+
+`is_safe` looks at the queens above in order, starting from the row just above, while increasing the row distance 1, 2, 3, .... A queen at row distance d is on a diagonal if the absolute difference of the columns is d. If you check only `c - col == d` without the absolute value, you block just one of the diagonals. Checking only the diagonals of the queen in the row just above is another common mistake: it happens to work on small boards, then gives a wrong answer on 8x8.
+
+If you keep `placed` as a list with the row just above at the front, placing a new queen is just a prepend (O(1)), and the distance can be computed by counting up from 1 from the front. Because the list is immutable, the original `placed` is still intact when you come back from exploring a branch, so you need no code to undo anything.
+
+Building every permutation (n! of them) and counting the ones that satisfy the condition gives the same answer, but it builds even the placements that already attack each other in the first two rows all the way to the end. At n = 9 it does dozens of times more work than a solution that prunes.

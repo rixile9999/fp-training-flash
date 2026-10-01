@@ -1,0 +1,26 @@
+title: 修复队列——后放入的元素先出来的 bug
+tests:
+  first_pop_returns_oldest_test: 第一次 pop 取出最先放入的元素
+  drains_each_item_once_test: 全部取出时，每个元素按放入顺序各出现一次
+  to_list_without_pop_test: 没有 pop 过的队列，其 to_list 是放入顺序
+  to_list_after_pop_test: pop 之后剩余队列的 to_list 也是放入顺序
+  pop_after_emptied_test: 对已全部取空的队列 pop 时返回 Error(Nil)
+  refill_twice_test: 把 back 移过去两次，顺序也正确
+  keeps_order_when_mixed_test: 在取出过程中放入的元素排在原有元素之后
+requirements:
+  R1: 先放入的元素先取出（FIFO）
+  R2: to_list 按取出顺序列出
+  R3: n 次 push 和 n 次 pop 的总开销为 O(n)
+hints:
+  1: "依次 push 1、2、3 后，`back` 里是什么顺序？把这个列表原样当作 `front` 用，先出来的是什么？"
+  2: "`back` 是放入顺序的逆序。`front` 必须是取出顺序，所以把 `back` 移到 `front` 时要调换顺序。"
+  3: "`push` 和 `to_list` 已经遵守了这个约定。只要修改 `pop` 中 `front` 为空时移动 `back` 的那一行。改动 `push` 的话，`to_list` 就会出错。"
+  4: |
+    ```gleam
+    case queue.front, queue.back {
+      [first, ..rest], back -> Ok(#(first, Queue(front: rest, back: back)))
+      [], [] -> Error(Nil)
+      [], back -> pop(Queue(front: todo, back: []))
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

@@ -1,0 +1,124 @@
+title: 用变体（variant）表示状态
+blocks:
+  intro:
+    markdown: |-
+      到目前为止，我们只用过 Gleam 自带的类型（`Int`、`String`、`Bool` …）。现在来创建**你自己的类型**。
+
+      在 `pub type 名字 { ... }` 里逐个列出所有可能的**情况（变体，variant）**。比如红绿灯，只会是三种之一：
+
+      ```gleam
+      pub type TrafficLight {
+        Red
+        Yellow
+        Green
+      }
+      ```
+
+      现在 `TrafficLight` 类型的值只有 `Red`、`Yellow`、`Green` 这三个——用类型从根本上排除“不可能的状态”，正是自定义类型的核心。
+  variant-meaning:
+    prompt: 在上面的 `TrafficLight` 定义中，`Red`、`Yellow`、`Green` 是什么？
+    choices:
+      - 三个不同的类型
+      - "`TrafficLight` 类型可以取的三个值（变体）"
+      - 三个变量
+      - 三个函数
+    feedback:
+      correct: 没错！这三个是**同一个类型** `TrafficLight` 可以取的值（变体）——红绿灯就是这三者之一。
+      choices:
+        "0": 类型只有 `TrafficLight` 一个。`Red`、`Yellow`、`Green` 是这个类型的值。
+        "2": 它们不是用 `let` 绑定的变量，而是类型定义列出的所有可能的值。
+        "3": 它们是不带参数的名字，看起来也许像函数，但不用调用，而是直接当作值本身来用。
+  match-variant:
+    markdown: |-
+      自定义类型和 `case` 是好搭档。只要根据值是哪个变体来分支就行。把变体名直接写在模式的位置上。
+
+      ```gleam
+      pub fn next(light: TrafficLight) -> TrafficLight {
+        case light {
+          Red -> Green
+          Green -> Yellow
+          Yellow -> Red
+        }
+      }
+      ```
+
+      注意，结果也可以返回另一个 `TrafficLight` 值。
+  next-red:
+    prompt: 在上面的 `next` 函数中，`next(Red)` 的值是？
+    code: |-
+      pub type TrafficLight {
+        Red
+        Yellow
+        Green
+      }
+
+      pub fn next(light: TrafficLight) -> TrafficLight {
+        case light {
+          Red -> Green
+          Green -> Yellow
+          Yellow -> Red
+        }
+      }
+
+      // next(Red) 的值是？
+    choices:
+      - "`Red`"
+      - "`Yellow`"
+      - "`Green`"
+      - '`"Green"`'
+    feedback:
+      correct: 没错！它匹配 `Red` 模式，返回 `Green` 变体——红灯之后是绿灯。
+      choices:
+        "0": 不是原样返回输入。得到的是 `Red` 分支的**结果** `Green`。
+        "1": "`Yellow` 是输入为 `Green` 时的结果。这里的输入是 `Red`。"
+        "3": "`Green` 不是字符串，而是 `TrafficLight` 的变体值——没有引号。"
+  label-yellow:
+    prompt: 这是把信号转换成文字的 `label`。`label(Yellow)` 的值是？
+    code: |-
+      pub fn label(light: TrafficLight) -> String {
+        case light {
+          Red -> "停止"
+          Yellow -> "注意"
+          Green -> "通行"
+        }
+      }
+
+      // label(Yellow) 的值是？
+    choices:
+      - '`"停止"`'
+      - '`"注意"`'
+      - '`"通行"`'
+      - "`Yellow`"
+    feedback:
+      correct: 完全正确！它匹配 `Yellow` 分支，得到 "注意"。
+      choices:
+        "0": '"停止" 是 `Red` 分支的结果。输入是 `Yellow`。'
+        "2": '"通行" 是 `Green` 分支的结果——不是 `Yellow`。'
+        "3": "`case` 返回的不是输入的变体，而是匹配到的分支的结果（字符串）。"
+  coin-payout:
+    prompt: 这是抛硬币的奖励。`payout(Heads)` 的值是？
+    code: |-
+      pub type Coin {
+        Heads
+        Tails
+      }
+
+      pub fn payout(c: Coin) -> Int {
+        case c {
+          Heads -> 100
+          Tails -> 0
+        }
+      }
+
+      // payout(Heads) 的值是？
+    choices:
+      - "`100`"
+      - "`0`"
+      - "`Heads`"
+      - "`200`"
+    feedback:
+      correct: 没错！它匹配 `Heads` 分支，得到 100。
+      choices:
+        "1": 0 是 `Tails` 时的结果。输入是 `Heads`。
+        "2": "`case` 返回的不是输入的变体，而是分支的结果（`Int`）。"
+        "3": 不会把两种奖励相加——只会得到匹配到的那一个分支的值。

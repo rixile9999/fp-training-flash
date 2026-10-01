@@ -1,0 +1,29 @@
+title: 收集并报告注册表单中的所有错误
+tests:
+  valid_form_test: "所有检查都通过时返回 NewUser"
+  single_error_is_a_list_test: "即使只有一个错误，也以列表形式返回"
+  collects_two_errors_test: "用户名和年龄都出错时，返回这两个错误"
+  all_four_errors_in_field_order_test: "四个字段都出错时，按字段顺序返回四个错误"
+  email_and_password_errors_test: "按顺序收集邮箱和密码的错误"
+  only_age_error_test: "只有最后一项检查（年龄）出错时，也返回该错误"
+requirements:
+  R1: "全部通过时返回 NewUser"
+  R2: "毫无遗漏地收集所有失败检查的错误"
+  R3: "错误按用户名、邮箱、密码、年龄的顺序排列"
+hints:
+  1: "用 `use` 和 `result.try` 串联时，第一个错误之后的检查还会执行吗？要知道所有错误，这些检查需要互相等待吗？"
+  2: "四项检查彼此独立，所以可以先全部执行。它们成功值的类型各不相同（`String`、`Nil`、`Int`），无法放进同一个列表；但从每个结果中只取出错误得到的 `List(SignupError)` 可以合并成一个列表。"
+  3: "把四个结果存进变量，用一个 `case` 同时匹配这四个值。只有全部为 `Ok` 时才创建 `NewUser`；其余情况下，把每个结果的错误转换成含 0 个或 1 个元素的列表，再按顺序拼接起来。"
+  4: |
+    ```gleam
+    case username, email, password, age {
+      Ok(username), Ok(email), Ok(_), Ok(age) -> todo
+      _, _, _, _ ->
+        Error(list.flatten([errors_of(username), todo]))
+    }
+
+    fn errors_of(result: Result(a, e)) -> List(e) {
+      todo
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

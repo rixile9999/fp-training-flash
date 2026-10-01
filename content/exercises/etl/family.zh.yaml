@@ -1,0 +1,15 @@
+title: 转换计分表的格式
+rubric:
+  R-02:
+    title: 管道清楚表达意图
+    description: 每一步只做一种转换，阅读顺序与处理顺序一致。
+  R-05:
+    title: 分离计算逻辑
+    description: 像字母规范化这样针对单个元素的规则，拆成有名字的小函数，就能单独验证。
+  R-08:
+    title: 结果不依赖 dict 的遍历顺序
+    description: dict 的遍历顺序是不确定的。需要顺序的结果要显式排序。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 用类型来表达可能的失败。
+    message: 使用了 let assert 或 panic。

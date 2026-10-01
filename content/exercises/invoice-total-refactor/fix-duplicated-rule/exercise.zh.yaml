@@ -1,0 +1,22 @@
+title: 修复因复制规则而出错的账单总额
+tests:
+  line_amount_bulk_test: 订购 10 件及以上的明细行打 9 折
+  shipping_fee_threshold_test: 小计正好 5 万韩元时免运费
+  invoice_total_small_test: 无折扣小额订单的总额
+  invoice_total_bulk_test: 批量折扣也体现在总额中
+  invoice_total_threshold_test: 小计正好 5 万韩元时总额中不含运费
+  invoice_total_empty_test: 空账单的总额为 0 韩元
+requirements:
+  R1: invoice_total 调用步骤函数，而不是重写规则
+hints:
+  1: "步骤函数的测试都通过了，只有 `invoice_total` 出错。`invoice_total` 真的调用了这些函数吗？"
+  2: "同一条规则放在两个地方时，往往只改了一处，或者一处写得略有不同，结果就会出现偏差。规则只应放在一个函数里，其余地方调用它。"
+  3: "逐一检查 `invoice_total` 中的计算式，如果有做同样事情的步骤函数，就换成对它的调用。不需要添加新规则。"
+  4: |
+    ```gleam
+    pub fn invoice_total(lines: List(Line)) -> Int {
+      let amount = todo
+      amount + vat(amount) + todo
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

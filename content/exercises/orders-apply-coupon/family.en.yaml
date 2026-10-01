@@ -1,0 +1,12 @@
+title: Apply a coupon to pending orders only
+rubric:
+  R-02:
+    title: The pipeline shows the intent
+    description: Each step does a single transformation, and the reading order matches the processing order.
+  R-05:
+    title: Separate the calculation logic
+    description: If you pull calculations such as the discount into small named functions, you can check them on their own.
+  R-09:
+    title: No let assert or panic
+    description: Express the possibility of failure in the types.
+    message: let assert or panic was used.

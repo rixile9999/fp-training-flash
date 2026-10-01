@@ -1,0 +1,27 @@
+title: 汇总部署日志
+tests:
+  empty_entries_test: 没有日志时所有计数都是 0，第一条严重消息是 None
+  counts_by_level_test: 统计全部、警告和严重日志的数量
+  records_critical_message_test: 记录严重日志的消息
+  keeps_first_critical_test: 有多条严重日志时，记录最先出现的那条消息
+  total_includes_debug_test: 调试日志也计入总数
+  no_critical_is_none_test: 没有严重日志时，第一条严重消息是 None
+requirements:
+  R1: total 是所有日志的数量，warnings 是 Warn 日志的数量，criticals 是 Critical 日志的数量
+  R2: first_critical 是第一条 Critical 日志的消息，没有则为 None
+hints:
+  1: "每看一条日志，汇总中的哪些字段会变化？如果已经记录了严重消息，遇到新的严重日志时该怎么办？"
+  2: "`list.fold` 的累加器也可以是记录。像 `Summary(..summary, warnings: summary.warnings + 1)` 这样用记录更新生成只改了一个字段的新汇总。"
+  3: "从空汇总 `Summary(0, 0, 0, None)` 开始，每条日志都让 `total` 加 1，再用 `case entry.level` 增加对应级别的字段。`first_critical` 只在它仍是 `None` 时才填入。"
+  4: |
+    ```gleam
+    list.fold(entries, Summary(0, 0, 0, None), fn(summary, entry) {
+      let summary = Summary(..summary, total: summary.total + 1)
+      case entry.level {
+        Debug | Info -> summary
+        Warn -> todo
+        Critical -> todo
+      }
+    })
+    ```
+  5: "现在可以打开完整讲解。看完讲解后，将用一道新题确认掌握程度。"

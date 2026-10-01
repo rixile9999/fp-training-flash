@@ -1,0 +1,15 @@
+title: Link dominoes into a full loop
+rubric:
+  R-02:
+    title: The search state is visible
+    description: The chain's first number, the number at the current end, and the remaining stones are explicit recursion arguments, so you can see what changes at each step.
+  R-05:
+    title: Candidate generation is separate
+    description: Choosing the stones (and the flipped orientation) that can attach to the current end is pulled out into a named function.
+  R-06:
+    title: Consume only one copy of a stone
+    description: Using a stone does not remove other stones of the same shape. Remove exactly one by position instead of filtering by value.
+  R-09:
+    title: No let assert or panic
+    description: The possibility of failure is expressed in the types.
+    message: let assert or panic was used.

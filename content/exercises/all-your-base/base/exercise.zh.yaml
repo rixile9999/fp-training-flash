@@ -1,0 +1,38 @@
+tests:
+  binary_to_decimal_test: 把二进制 101010 转成十进制数字位 [4, 2]
+  trinary_to_hexadecimal_test: 把三进制 1120 转成十六进制数字位 [2, 10]
+  input_base_one_is_error_test: 输入进制为 1 时返回 InvalidBase(1)
+  zero_value_test: 值为 0 时（包括空列表），结果是 [0] 而不是空列表
+  digit_too_large_test: 大于或等于进制的数字位报告为 InvalidDigit
+  negative_digit_test: 负数数字位报告为 InvalidDigit
+  output_base_zero_is_error_test: 输出进制为 0 时返回 InvalidBase(0)
+  input_base_checked_first_test: 两个进制都无效时，先报告输入进制的错误
+requirements:
+  R1: 用输出进制的数字位列表表示同一个数
+  R2: 小于 2 的进制是 InvalidBase
+  R3: 超出范围的数字位是 InvalidDigit
+  R4: 按输入进制、输出进制、数字位的顺序检查
+hints:
+  1: "应该从数字位列表直接得到另一种进制的数字位列表，还是中间可以经过某个值？"
+  2: "`list.try_fold` 像 `fold` 一样累加，但只要函数返回 `Error` 就立即停下，并把这个错误作为结果。"
+  3: "先检查两个进制；再一边检查输入的数字位，一边把它们合成一个整数；最后用输出进制反复去除这个整数，收集余数。另外单独确认一下值为 0 时会剩下什么。"
+  4: |
+    ```gleam
+    fn to_value(digits: List(Int), base: Int) -> Result(Int, RebaseError) {
+      list.try_fold(digits, 0, fn(total, digit) {
+        case digit >= 0 && digit < base {
+          True -> todo
+          False -> todo
+        }
+      })
+    }
+
+    fn to_digits(value: Int, base: Int, acc: List(Int)) -> List(Int) {
+      let acc = [value % base, ..acc]
+      case value < base {
+        True -> acc
+        False -> todo
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

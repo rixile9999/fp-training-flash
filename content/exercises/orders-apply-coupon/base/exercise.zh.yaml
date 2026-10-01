@@ -1,0 +1,24 @@
+tests:
+  empty_list_test: 空列表返回空列表
+  discounts_pending_test: 对 Pending 订单的金额打折
+  keeps_other_orders_test: Pending 与 Shipped 混合的列表
+  keeps_order_test: 保持原来的顺序
+  rounds_down_test: 打折后的金额向下取整
+requirements:
+  R1: 只修改 Pending 订单的金额
+  R2: 保留非目标订单
+  R3: 保持顺序
+hints:
+  1: "结果列表的长度应该与输入相同，还是不同？"
+  2: "`list.map` 保持长度不变，`list.filter` 会让长度变短。"
+  3: "遍历所有订单，按状态用 `case` 分情况处理。"
+  4: |
+    ```gleam
+    list.map(orders, fn(o) {
+      case o.status {
+        Pending -> todo
+        _ -> o
+      }
+    })
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

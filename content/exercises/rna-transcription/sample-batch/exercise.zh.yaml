@@ -1,0 +1,27 @@
+title: 一次转录一批样本
+tests:
+  empty_batch_test: 没有样本时返回 Ok([])
+  all_valid_test: 所有样本都合法时，按原顺序返回样本编号与 RNA 的配对
+  invalid_sample_test: 有不合法的样本时，以 Error 返回该样本的编号
+  first_invalid_sample_test: 有多个不合法样本时，返回列表中最靠前的样本编号
+  empty_dna_sample_is_valid_test: DNA 为空的样本视为合法，给出空 RNA
+requirements:
+  R1: 所有样本都合法时，按原顺序返回转换结果
+  R2: 以 Error 返回第一个不合法样本的编号
+hints:
+  1: "`to_rna` 已经有了。某个样本的结果是 `Error(Nil)` 时，需要告诉调用方的信息是什么？"
+  2: "`result.replace_error(r, e)` 把 `Error(_)` 换成 `Error(e)`，`Ok` 保持不变。`list.try_map` 全部成功时返回 `Ok(列表)`，否则返回第一个 `Error`。"
+  3: "写一个把单个样本变成 `Result(#(String, String), String)` 的函数，再交给 `list.try_map`。成功时是 `#(id, rna)`，失败时错误值是 `id`。"
+  4: |
+    ```gleam
+    pub fn transcribe_samples(
+      samples: List(Sample),
+    ) -> Result(List(#(String, String)), String) {
+      list.try_map(samples, fn(sample) {
+        to_rna(sample.dna)
+        |> result.map(todo)
+        |> result.replace_error(todo)
+      })
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

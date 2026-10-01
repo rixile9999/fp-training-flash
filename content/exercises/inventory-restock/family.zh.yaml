@@ -1,0 +1,12 @@
+title: 补充库存
+rubric:
+  R-02:
+    title: 管道体现意图
+    description: 对整个列表做一次转换，并用一个 case 决定每个元素是否需要修改。
+  R-05:
+    title: 分离计算逻辑
+    description: 把补货条件或单个商品的更新拆成有名字的小函数，就可以分别验证。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 用类型来表达可能的失败。
+    message: 使用了 let assert 或 panic。

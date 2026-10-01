@@ -1,0 +1,36 @@
+tests:
+  cleans_punctuation_test: Removes parentheses, spaces and hyphens and returns 10 digits
+  strips_country_code_test: A number with a +1 country code, separated by dots, also drops the 1 and returns 10 digits
+  too_few_digits_test: Fewer than 10 digits returns TooFewDigits
+  invalid_country_code_test: 11 digits not starting with 1 returns InvalidCountryCode
+  too_many_digits_test: More than 11 digits returns TooManyDigits
+  letters_rejected_test: If letters are mixed in, returns InvalidCharacter holding that letter
+  first_invalid_character_test: With several disallowed characters, reports the first one
+  character_check_before_length_test: If a short number has an invalid character, the character error comes before the length error
+requirements:
+  R1: Remove the allowed separators and keep only the digits
+  R2: Check the number of digits
+  R3: With 11 digits, check and remove the country code 1
+  R4: Check for disallowed characters first and report the first one
+hints:
+  1: "There are three checks (characters, length, country code). If an input fails several checks at once, which error should you return? How will you guarantee that order in the code?"
+  2: "With `use x <- result.try(step(input))`, the function returns the error right away when the step is an `Error`, and moves on to the next line only on `Ok(x)`. The order you write the steps in is the order of the checks."
+  3: "Try splitting the work into two steps: (1) a function that removes the separators, checks that every remaining character is a digit and returns the list of digits, and (2) a function that looks at the number of digits and the country code and returns a 10-digit string. `clean` chains the two with `use`."
+  4: |
+    ```gleam
+    pub fn clean(input: String) -> Result(String, PhoneError) {
+      use digits <- result.try(extract_digits(input))
+      normalize_length(digits)
+    }
+
+    fn normalize_length(digits: List(String)) -> Result(String, PhoneError) {
+      case list.length(digits), digits {
+        n, _ if n < 10 -> Error(TooFewDigits)
+        n, _ if n > 11 -> todo
+        11, ["1", ..rest] -> todo
+        11, _ -> todo
+        _, _ -> Ok(string.concat(digits))
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

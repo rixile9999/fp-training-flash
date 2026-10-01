@@ -1,0 +1,31 @@
+tests:
+  foldl_empty_returns_initial_test: Folding an empty list returns the initial value as is
+  foldl_goes_left_to_right_test: foldl accumulates starting from the first element
+  length_counts_items_test: length counts the elements
+  length_of_empty_list_test: The length of an empty list is 0
+  reverse_test: reverse reverses the order of the elements
+  reverse_empty_test: Reversing an empty list gives an empty list
+  reverse_large_list_test: A list of 200,000 elements is reversed within the time limit
+requirements:
+  R1: foldl accumulates from the front with function(accumulator, element)
+  R2: length is the number of elements
+  R3: reverse is a new list in reversed order
+  R4: Time proportional to the length of the list
+hints:
+  1: "If you could walk through the list once from the front while carrying \"the result so far\", how would counting and reversing each change that result?"
+  2: "An accumulator is the \"result so far\" that you pass to the recursive call. Prepending to a list, `[x, ..acc]`, takes one step no matter how many elements there are, but appending to the end copies the entire list in front."
+  3: "Build `foldl` first. Then `length` is a fold that adds 1 to the accumulator, and `reverse` is a fold that starts from an empty list and prepends the elements one by one."
+  4: |
+    ```gleam
+    pub fn foldl(over list: List(a), from initial: b, with function: fn(b, a) -> b) -> b {
+      case list {
+        [] -> initial
+        [first, ..rest] -> foldl(over: rest, from: todo, with: function)
+      }
+    }
+
+    pub fn reverse(list: List(a)) -> List(a) {
+      foldl(over: list, from: [], with: fn(reversed, item) { todo })
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

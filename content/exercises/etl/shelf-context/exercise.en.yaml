@@ -1,0 +1,29 @@
+title: Turn product codes per shelf into a location per code
+tests:
+  single_code_test: Turns the product code into an uppercase key with the shelf name as its value
+  several_shelves_test: Merges all codes from several shelves into one dict
+  trims_spaces_test: Removes leading and trailing spaces from codes
+  skips_blank_codes_test: Skips codes that are empty or only spaces
+  shelf_without_codes_adds_nothing_test: A shelf with no codes adds nothing to the result
+  empty_input_test: With no shelves at all, the result is an empty dict
+  shelf_name_is_kept_as_is_test: The shelf name is used as the value as is, without changing spaces or case
+requirements:
+  R1: One shelf-name entry per code
+  R2: Codes are trimmed and then uppercased; shelf names stay as they are
+  R3: Codes that are empty after cleanup are left out
+hints:
+  1: "Is `\"   \"` an empty code? Do you decide whether a code is empty before or after cleaning it up (removing spaces)?"
+  2: "`string.trim` removes leading and trailing spaces, and `string.uppercase` normalizes case. Running a `list.fold` inside a `dict.fold` lets you insert several codes per shelf."
+  3: "First write a `normalize` function that cleans up a single code. If the cleaned result is an empty string, keep the accumulator as it is; otherwise add the entry with `dict.insert`."
+  4: |
+    ```gleam
+    dict.fold(shelves, dict.new(), fn(index, shelf, codes) {
+      list.fold(codes, index, fn(acc, raw) {
+        case normalize(raw) {
+          "" -> todo
+          code -> todo
+        }
+      })
+    })
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

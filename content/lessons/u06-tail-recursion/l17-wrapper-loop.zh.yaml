@@ -1,0 +1,81 @@
+title: wrapper + 私有 loop 惯用法
+blocks:
+  intro:
+    markdown: |-
+      累加器版本有个小麻烦：调用方每次都得传入初始值 `0`——`sum_loop(numbers, 0)`。忘了传初始值就麻烦了，而且把 acc 这种本属“内部细节”的东西暴露在外面，也很别扭。
+
+      所以 Gleam 的惯用法是**薄薄的公开 wrapper + 私有的 `_loop`**。公开函数填好初始值调用一次，真正的递归交给隐藏起来的私有函数负责。
+
+      ```gleam
+      pub fn sum(numbers: List(Int)) -> Int {
+        sum_loop(numbers, 0)
+      }
+
+      fn sum_loop(numbers: List(Int), acc: Int) -> Int {
+        case numbers {
+          [] -> acc
+          [first, ..rest] -> sum_loop(rest, acc + first)
+        }
+      }
+      ```
+  wrapper-value:
+    prompt: "`sum([2, 3, 5])` 的值是？（wrapper 会替你填好初始 acc 0）"
+    code: |-
+      pub fn sum(numbers: List(Int)) -> Int {
+        sum_loop(numbers, 0)
+      }
+
+      fn sum_loop(numbers: List(Int), acc: Int) -> Int {
+        case numbers {
+          [] -> acc
+          [first, ..rest] -> sum_loop(rest, acc + first)
+        }
+      }
+
+      // sum([2, 3, 5]) 的值是？
+    choices:
+      - "`10`"
+      - "`0`"
+      - "`2`"
+      - "`235`"
+    feedback:
+      correct: 没错！wrapper 调用 `sum_loop([2, 3, 5], 0)`，acc 按 0→2→5→10 变化。
+      choices:
+        "1": 0 是 wrapper 放进去的初始 acc——加上各个元素就是 10。
+        "2": 不只是第一个元素 2，3 和 5 也会被累加——和是 10。
+        "3": 不是把数字拼接起来，而是相加——2+3+5 = 10。
+  why-wrapper:
+    markdown: |-
+      这个惯用法的好处：
+
+      - 调用方只需要知道 `sum(xs)`——初始值 0 由 wrapper 自动填好。
+      - acc 是实现细节，所以不加 `pub`，**在模块外不可见**。
+      - 公开函数的类型干净利落，就是 `List(Int) -> Int`——累加器参数不会泄露出去。
+
+      按照惯例，私有的递归函数会取 `_loop`（或 `do_`、`go`）这样的名字。
+  wrapper-purpose:
+    prompt: wrapper（公开的 `sum`）做的是什么？
+    choices:
+      - 亲自执行实际的递归
+      - 填好初始累加器（0），调用一次私有的 `_loop`
+      - 把结果再反转一次
+      - 对列表排序
+    feedback:
+      correct: 没错！wrapper 只是填好初始值、启动私有 loop 的薄薄一行——递归本身由 `_loop` 完成。
+      choices:
+        "0": 递归由私有的 `_loop` 负责——wrapper 只是填好初始值，调用它一次。
+        "2": 这里没有反转——那是用 prepend 构建列表时才会出现的另一种模式。
+        "3": 与排序无关——wrapper 的职责只是填好初始 acc。
+  why-private:
+    prompt: 不把私有的 `sum_loop` 用 `pub` 暴露出去，最合适的理由是？
+    choices:
+      - 因为私有函数运行得更快
+      - 因为 acc 是内部实现细节，想让对外的 API 保持为干净的 `List(Int) -> Int`
+      - 因为只有私有函数才能递归
+      - "因为加上 `pub` 会出现编译错误"
+    feedback:
+      correct: 没错！调用方不需要累加器。把它藏起来，API 更干净，也不会传错初始值。
+      choices:
+        "0": "是否 `pub` 与运行速度无关——区别在于*是否对外暴露*。"
+        "2": "`pub`/私有与能否递归无关——公开函数也可以递归。"
+        "3": "加上 `pub` 也能编译——只是 acc 会泄露出去，让 API 变得杂乱。"

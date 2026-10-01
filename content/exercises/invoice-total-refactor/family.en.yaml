@@ -1,0 +1,12 @@
+title: Split a long invoice calculation into named steps
+rubric:
+  R-02:
+    title: The pipeline shows the intent
+    description: The total function only calls the step functions in turn, and the reading order matches the calculation order.
+  R-05:
+    title: Calculation logic is separated
+    description: Rules such as discounts, shipping fees and VAT each live in exactly one small named function, and other functions call it.
+  R-09:
+    title: No let assert or panic
+    description: The possibility of failure is expressed in the types.
+    message: let assert or panic was used.

@@ -1,0 +1,24 @@
+title: Fix an initials pipeline with its steps out of order
+tests:
+  first_letter_test: Returns the first letter of the name
+  initial_test: Adds a period after the first letter
+  initials_test: Joins the initials of the first and last name with a space
+  initial_lowercase_test: A lowercase name also gets an uppercase initial
+  initial_trims_whitespace_test: Even with leading and trailing whitespace, the initial is one letter and a period
+requirements:
+  R1: initial uppercases the result of first_letter and adds a period
+  R2: initials reuses initial
+hints:
+  1: "Trace `initial(\"Betty\")` by hand through each step of the pipeline. At which step does the period disappear?"
+  2: "A pipeline runs from top to bottom, one step after another. Each step's result becomes the next step's input, so even with the same functions, changing the order changes the result."
+  3: "Split the three steps into \"steps that shorten the text\" and \"steps that decorate the text\". If you shorten after decorating, the decoration can get cut off."
+  4: |
+    ```gleam
+    pub fn initial(name: String) -> String {
+      name
+      |> first_letter
+      |> todo
+      |> todo
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

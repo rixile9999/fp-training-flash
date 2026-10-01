@@ -1,0 +1,35 @@
+title: 解析一行退款申请
+tests:
+  parses_valid_request_test: 把正确的退款申请转换成 RefundRequest
+  unknown_reason_test: 未知的原因保持原始写法放入 UnknownReason
+  non_numeric_amount_test: 不是数字的金额是 InvalidAmount
+  reason_ignores_case_test: 原因不区分大小写
+  zero_amount_test: 金额为 0 是 InvalidAmount
+  amount_at_limit_test: 金额正好等于上限 1000000 时接受
+  amount_over_limit_test: 超过上限的金额是 InvalidAmount
+  wrong_field_count_test: 字段有 4 个时结果是 WrongFieldCount(4)
+requirements:
+  R1: 把按冒号分隔的三个字段解析为 RefundRequest
+  R2: 金额是大于等于 1 且小于等于 max_amount 的整数
+  R3: 把原因字符串转换成 Reason 构造器，未知原因为 UnknownReason
+hints:
+  1: "把字符串 `\"late\"` 转换成 `Late` 这样的构造器，也会失败吗？在什么情况下失败？"
+  2: "把字符串转换成自定义类型时，用 `case` 逐一匹配已知的字符串，其余（`_`）交给 `Error`。用 `case` 的守卫 `Ok(n) if 条件`，可以一次完成解析和范围检查。"
+  3: "为每个字段写一个返回 `Result` 的函数（`parse_order_id`、`parse_amount`、`parse_reason`），再用 `use` 和 `result.try` 串联。比较原因前先转成小写，但错误中要放入原始字段。"
+  4: |
+    ```gleam
+    fn parse_amount(field: String) -> Result(Int, RefundError) {
+      case int.parse(field) {
+        Ok(amount) if todo -> Ok(amount)
+        _ -> Error(InvalidAmount(field))
+      }
+    }
+
+    fn parse_reason(field: String) -> Result(Reason, RefundError) {
+      case string.lowercase(field) {
+        "damaged" -> Ok(Damaged)
+        todo
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

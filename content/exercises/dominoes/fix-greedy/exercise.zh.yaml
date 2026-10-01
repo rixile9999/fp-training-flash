@@ -1,0 +1,26 @@
+title: 修复多米诺骨牌链：从死胡同回退
+tests:
+  three_elements_test: 三块骨牌调换顺序后能连成一个环
+  needs_backtracking_test: 先选的骨牌走进死胡同时，换另一块骨牌重新尝试
+  cant_be_chained_test: 两端数字对不上时不能构成链
+  empty_input_test: 没有骨牌时算作能构成链
+  doubles_need_backtracking_test: 两侧数字相同的骨牌插错位置时，回退重新选择
+  duplicate_stones_test: 形状相同的骨牌逐块分别使用
+requirements:
+  R1: 判断能否把每块骨牌用一次，连成首尾相接的环形链
+  R2: 走不通时回退，尝试另一块骨牌
+  R3: 形状相同的骨牌各自分别使用一次
+hints:
+  1: "如果 `[1|2]` 后面能接的骨牌有 `[2|3]` 和 `[2|4]` 两块，现在的代码会尝试哪一块？如果这个选择是死胡同，会发生什么？"
+  2: "回溯在一个选项失败时会去尝试下一个选项。`list.any(候选列表, 能否走到底)` 用一行代码表达了这种回退：依次尝试候选，直到某个返回真。"
+  3: "`next_steps` 已经返回了所有候选。在 `extend` 中不要只取第一个候选，而要对每个候选都尝试递归。仅仅换一块起始骨牌重试是不够的。"
+  4: |
+    ```gleam
+    _ ->
+      next_steps(end, remaining)
+      |> list.any(fn(step) {
+        let #(new_end, rest) = step
+        todo
+      })
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

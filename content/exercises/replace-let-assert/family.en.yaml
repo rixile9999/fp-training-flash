@@ -1,0 +1,12 @@
+title: Replace let assert crashes with Result
+rubric:
+  R-09:
+    title: No let assert or panic
+    description: Express the possibility of failure in the types.
+    message: let assert or panic was used.
+  R-07:
+    title: Do not swallow errors
+    description: Do not get rid of a crash by switching to a default value or dropping the input. Return an error value that says what went wrong.
+  R-11:
+    title: Chain with use instead of nested case
+    description: Chaining several Result steps with use and result.try lets the success path read from top to bottom.

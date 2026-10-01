@@ -1,0 +1,31 @@
+tests:
+  make_puts_higher_rank_left_test: make 把 rank 较大的子节点放在左边
+  insert_then_find_min_test: 插入多个值后，最小的值位于堆顶
+  drains_in_ascending_order_test: 反复取出最小值，得到升序
+  make_rank_from_shorter_side_test: 新节点的 rank 是右子节点的 rank + 1
+  delete_min_empty_test: 对空堆调用 delete_min 返回 Error(Nil)
+  keeps_duplicates_test: 同一个值插入多次后，每一个都能取出
+  merge_keeps_all_values_test: 合并两个堆后，两边的值都保留
+  stays_leftist_test: 按升序插入 16 个值后，每个节点仍满足左偏性质
+requirements:
+  R1: 在每个节点上 rank(left) >= rank(right)，且 rank = rank(right) + 1
+  R2: merge 和 insert 不丢失值，并保持最小堆顺序
+  R3: delete_min 返回去掉最小值后的堆，空堆时返回 Error(Nil)
+  R4: merge、insert、delete_min 为 O(log n)
+hints:
+  1: "合并两个堆时，新的根应该是谁的值？确定根之后，怎样把剩下的三块（根的两个子节点和另一个堆）变成两个子节点？"
+  2: "左偏堆让右分支保持很短，这样 merge 只沿右分支往下走。rank 就是右分支的长度，所以 rank(right) 是 O(log n)。每次创建节点时都把 rank 较小的一侧放在右边，这个性质就能得到维持。"
+  3: "`make` 比较两个子节点的 rank，把较大的放在左边，并把 rank 设为（较小一侧的 rank + 1）。`merge` 保留根较小的那个堆的左子节点不变，把它和“右子节点与另一个堆递归 merge 的结果”一起交给 `make`。`insert` 和 `delete_min` 都只是一次 merge。"
+  4: |
+    ```gleam
+    pub fn merge(a: Heap, b: Heap) -> Heap {
+      case a, b {
+        Empty, heap | heap, Empty -> heap
+        Node(value: x, left: left_a, right: right_a, ..), Node(value: y, ..)
+          if x <= y
+        -> todo // make(x, ?, ?)
+        _, Node(value: y, left: left_b, right: right_b, ..) -> todo
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

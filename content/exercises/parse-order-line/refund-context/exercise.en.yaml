@@ -1,0 +1,35 @@
+title: Parse one refund request line
+tests:
+  parses_valid_request_test: Turn a valid refund request into a RefundRequest
+  unknown_reason_test: An unknown reason is stored in UnknownReason exactly as written
+  non_numeric_amount_test: A non-numeric amount is InvalidAmount
+  reason_ignores_case_test: The reason is case-insensitive
+  zero_amount_test: An amount of 0 is InvalidAmount
+  amount_at_limit_test: An amount of exactly the limit, 1000000, is accepted
+  amount_over_limit_test: An amount over the limit is InvalidAmount
+  wrong_field_count_test: With 4 fields, the result is WrongFieldCount(4)
+requirements:
+  R1: Interpret the three colon-separated fields as a RefundRequest
+  R2: The amount is an integer from 1 up to and including max_amount
+  R3: Turn the reason string into a Reason constructor; an unknown reason is UnknownReason
+hints:
+  1: "Can turning the string `\"late\"` into a constructor like `Late` fail too? In what cases does it fail?"
+  2: "To turn a string into a custom type, match the known strings one by one with `case` and send the rest (`_`) to `Error`. With a `case` guard, `Ok(n) if condition`, you can parse and range-check in one go."
+  3: "Write a function per field that returns a `Result` (`parse_order_id`, `parse_amount`, `parse_reason`) and chain them with `use` and `result.try`. Lowercase the reason before comparing, but put the original field in the error."
+  4: |
+    ```gleam
+    fn parse_amount(field: String) -> Result(Int, RefundError) {
+      case int.parse(field) {
+        Ok(amount) if todo -> Ok(amount)
+        _ -> Error(InvalidAmount(field))
+      }
+    }
+
+    fn parse_reason(field: String) -> Result(Reason, RefundError) {
+      case string.lowercase(field) {
+        "damaged" -> Ok(Damaged)
+        todo
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

@@ -1,0 +1,26 @@
+tests:
+  empty_list_test: "空列表返回空列表"
+  restocks_low_item_test: "库存低于再订货点时，加上补货数量"
+  keeps_other_items_test: "不需要补货的商品也原样保留在结果中"
+  restocks_at_reorder_point_test: "库存恰好等于再订货点时也要补货"
+  keeps_other_fields_test: "库存数量以外的字段不变"
+  keeps_order_test: "保持原来的顺序"
+requirements:
+  R1: "只有 on_hand 小于或等于 reorder_point 的商品才增加 reorder_qty"
+  R2: "按原来的顺序保留所有商品"
+  R3: "on_hand 以外的字段保持不变"
+hints:
+  1: "需要修改的值位于 `Item` 里的什么地方？外层记录和内层记录中，哪一个需要重新创建？"
+  2: "记录更新语法 `Stock(..stock, on_hand: 新值)` 会创建一个只修改了一个字段的新记录。修改了内层记录，就还要重新创建包含它的外层记录。"
+  3: "用 `list.map` 遍历所有商品，满足补货条件时先创建新的 `Stock`，再用它创建新的 `Item`。条件是“小于或等于”。"
+  4: |
+    ```gleam
+    list.map(items, fn(item) {
+      let stock = item.stock
+      case stock.on_hand <= stock.reorder_point {
+        True -> Item(..item, stock: todo)
+        False -> item
+      }
+    })
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

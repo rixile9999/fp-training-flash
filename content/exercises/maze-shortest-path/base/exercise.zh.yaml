@@ -1,0 +1,35 @@
+tests:
+  straight_corridor_test: "在笔直的通道里，答案就是两个格子之间的距离"
+  goes_around_walls_test: "求出绕过墙壁的最少移动次数"
+  unreachable_goal_test: "被墙挡住无法到达 G 时返回 Error(Nil)"
+  picks_shortest_of_many_routes_test: "在多条路径中返回最短路径的长度"
+  no_diagonal_moves_test: "不能沿对角线移动"
+  missing_start_or_goal_test: "没有 S 或 G 时返回 Error(Nil)"
+  goal_next_to_start_test: "G 紧挨着 S 时返回 1"
+  open_room_test: "在没有墙的 10x10 房间里，走到对角另一端需要移动 18 次"
+requirements:
+  R1: "求出从 S 到 G 的最少移动次数"
+  R2: "只能上下左右移动，避开墙壁和网格外部"
+  R3: "没有 S 或 G，或者无法到达时返回 Error(Nil)"
+  R4: "对于格子数 V，在 O(V log V) 内完成"
+hints:
+  1: "如果先看完从 S 出发 1 步能到的所有格子，再看 2 步能到的格子，那么第一次遇到 G 时的移动次数是什么值？"
+  2: "先处理先发现的格子的广度优先搜索（BFS）需要先进先出的队列。用不可变列表，可以由 `front`（取出的顺序）和 `back`（放入的逆序）两个列表组成队列。如果把新格子加在 `front` 前面，队列就变成了栈，搜索也就成了深度优先搜索。"
+  3: "写一个递归函数 `search(front, back, seen)`。队列里放 `#(位置, 距离)`。取出的格子是 G 就返回它的距离；否则把不是墙、也还不在 `seen` 中的上下左右邻格加入 `seen`，并以距离 + 1 放进 `back`。`front` 为空时，把 `back` 反转后移过去。"
+  4: |
+    ```gleam
+    fn search(cells, goal, front, back, seen) -> Result(Int, Nil) {
+      case front, back {
+        [], [] -> Error(Nil)
+        [], _ -> search(cells, goal, list.reverse(back), [], seen)
+        [#(pos, dist), ..], _ if pos == goal -> Ok(dist)
+        [#(pos, dist), ..rest], _ -> {
+          let next = todo // 不是墙且不在 seen 中的邻格
+          let seen = list.fold(next, seen, set.insert)
+          let back = todo // 把 next 以 #(p, dist + 1) 的形式加到 back 前面
+          search(cells, goal, rest, back, seen)
+        }
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

@@ -1,0 +1,33 @@
+tests:
+  same_column_is_unsafe_test: 与上方皇后同一列是不安全的
+  diagonal_next_row_is_unsafe_test: 紧邻上一行皇后两侧对角线上的格子是不安全的
+  four_queens_test: 4x4 棋盘有 2 种摆法
+  nearest_queen_first_test: 把列表最前面的皇后视为紧邻上一行来检查对角线
+  far_diagonal_is_unsafe_test: 也检查位于上方两行的皇后的对角线
+  single_queen_board_test: 1x1 棋盘有 1 种摆法
+  boards_without_solution_test: 2x2 和 3x3 棋盘没有摆法
+  eight_queens_test: 8x8 棋盘有 92 种摆法
+requirements:
+  R1: is_safe 对上方所有皇后检查同一列和两个方向的对角线
+  R2: count_solutions 统计 n x n 棋盘的摆法数
+  R3: 在不安全的格子上停止搜索（剪枝）
+hints:
+  1: "如果每一行必须正好有一个皇后，能否把摆法转化为“每行选一列”的问题？如果从上往下一行一行地填，往下走时需要检查什么？"
+  2: "回溯是把部分解一步一步地扩展，一旦违反规则就立刻放弃这条分支。行差为 d 的两个皇后，如果列差的绝对值也是 d，就会沿对角线互相攻击。"
+  3: "把 `is_safe` 写成一个辅助递归：从前往后查看 `placed`，同时把行距依次增加为 1、2、3、……。`count_solutions` 则写一个 `place(n, row, placed)`：row 等于 n 时返回 1，否则对每个安全的列统计下一行的结果并相加。"
+  4: |
+    ```gleam
+    fn place(n: Int, row: Int, placed: List(Int)) -> Int {
+      case row == n {
+        True -> 1
+        False ->
+          int.range(from: 0, to: n, with: 0, run: fn(total, col) {
+            case is_safe(placed, col) {
+              True -> todo
+              False -> total
+            }
+          })
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

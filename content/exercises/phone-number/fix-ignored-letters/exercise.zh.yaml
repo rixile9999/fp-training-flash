@@ -1,0 +1,31 @@
+title: 修复悄悄删掉英文字母的号码整理
+tests:
+  cleans_punctuation_test: 把用点分隔的号码整理成 10 位数字
+  strips_country_code_test: 带国家代码 1 的号码去掉 1 后再整理
+  too_few_digits_test: 数字少于 10 个时返回 TooFewDigits
+  letters_rejected_test: 混有英文字母时返回装着该字母的 InvalidCharacter
+  unknown_symbol_rejected_test: 不允许的符号也用 InvalidCharacter 报告
+  separators_still_allowed_test: 空格、括号、连字符和 + 仍然作为分隔符被允许
+  character_check_before_length_test: 短号码中有错误字符时，字符错误先于长度错误
+requirements:
+  R1: 去掉允许的分隔符，再应用长度和国家代码规则
+  R2: 不允许的字符要在长度检查之前用 InvalidCharacter 报告
+hints:
+  1: "经过 `list.filter(is_digit)` 之后，`\"223-45a6-7890\"` 中的 `a` 会怎样？后面的代码还能知道曾经有过 `a` 吗？"
+  2: "`list.filter` 会丢弃不满足条件的元素。如果不想丢弃而是要报告出来，就让每个元素返回一个 `Result`，再用 `list.try_map` 收集。"
+  3: "先只去掉允许的分隔符。剩下的字符必须全是数字，所以用一个“不是数字就返回 `InvalidCharacter`”的步骤来检查。只有这一步成功时，才进入原有的长度检查。"
+  4: |
+    ```gleam
+    pub fn clean(input: String) -> Result(String, PhoneError) {
+      use digits <- result.try(extract_digits(input))
+      normalize_length(digits)
+    }
+
+    fn extract_digits(input: String) -> Result(List(String), PhoneError) {
+      input
+      |> string.to_graphemes
+      |> list.filter(fn(char) { !is_separator(char) })
+      |> list.try_map(todo)
+    }
+    ```
+  5: "现在可以打开完整讲解。看完讲解后，将用一道新题确认掌握程度。"

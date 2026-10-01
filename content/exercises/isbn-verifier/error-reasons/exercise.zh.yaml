@@ -1,0 +1,34 @@
+title: 说明 ISBN 错在哪里
+tests:
+  valid_returns_values_test: 正确的 ISBN 以 Ok 返回字符值列表，X 为 10
+  wrong_length_test: 去掉连字符后字符数不是 10 时，返回带有该字符数的 WrongLength
+  invalid_character_position_test: 错误字符连同去掉连字符后的位置（从 0 开始）一起报告
+  checksum_mismatch_test: 加权和不能被 11 整除时，返回 ChecksumMismatch
+  x_in_middle_test: 出现在非最后位置的 X 是错误字符
+  length_checked_before_characters_test: 长度和字符都有错时，先返回长度错误
+  lowercase_x_rejected_test: 不接受小写 x 作为校验位
+requirements:
+  R1: 先检查长度
+  R2: 报告错误字符的位置和字符本身
+  R3: 检查加权和
+  R4: 成功时返回字符值列表
+hints:
+  1: "三项检查（长度、字符、加权和）是否都需要前一步的结果才能进行？要计算加权和，必须先准备好什么？"
+  2: "`use x <- result.try(step)` 在 `step` 为 `Error` 时就以该错误结束函数，为 `Ok(x)` 时继续执行下一行。用 `result.replace_error(r, e)` 可以把 `Error(Nil)` 换成更详细的错误。"
+  3: "先去掉连字符。然后用 `use` 依次串起 `check_length`、`parse_values` 和加权和检查。在 `parse_values` 中，用 `list.index_map` 附上去掉连字符后的位置，再用 `list.try_map` 求值。"
+  4: |
+    ```gleam
+    pub fn validate(isbn: String) -> Result(List(Int), IsbnError) {
+      let chars =
+        isbn
+        |> string.to_graphemes
+        |> list.filter(fn(char) { char != "-" })
+      use chars <- result.try(check_length(chars))
+      use values <- result.try(parse_values(chars))
+      case checksum(values) % 11 {
+        0 -> todo
+        _ -> todo
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

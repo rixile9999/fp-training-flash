@@ -1,0 +1,28 @@
+title: "Count nucleotides: fix the size-check bug"
+tests:
+  mixed_strand_test: Counts a string in which all four nucleotides appear
+  empty_strand_test: For an empty string, all four nucleotides have a count of 0
+  invalid_with_few_kinds_test: Returns Error(Nil) when there is an invalid letter, even if there are few kinds of nucleotide
+  missing_kinds_are_zero_test: Nucleotides that do not appear are present with a count of 0
+  invalid_single_letter_test: A string with just one invalid letter returns Error(Nil)
+  invalid_with_all_kinds_test: Returns Error(Nil) when all four nucleotides are present and there is also an invalid letter
+requirements:
+  R1: The result always contains the four keys A, C, G and T
+  R2: Error(Nil) if there is even one letter other than A, C, G or T
+hints:
+  1: "If you pass in `\"AAX\"`, what is the size of the dictionary? Does a size of 4 or less guarantee that \"every letter is valid\"?"
+  2: "`list.try_fold` stops right there and returns the `Error` if one appears during accumulation. The initial value decides which keys end up in the result."
+  3: "Instead of checking indirectly after all the counting is done, check whether each letter is valid as you count it. Starting from a dictionary with all four nucleotides set to 0 fixes both bugs together."
+  4: |
+    ```gleam
+    let zeros = dict.from_list([#("A", 0), #("C", 0), #("G", 0), #("T", 0)])
+    dna
+    |> string.to_graphemes
+    |> list.try_fold(zeros, fn(counts, letter) {
+      case dict.get(counts, letter) {
+        Ok(count) -> todo
+        Error(Nil) -> todo
+      }
+    })
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

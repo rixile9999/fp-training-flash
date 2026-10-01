@@ -1,0 +1,32 @@
+title: A knapsack problem that also finds which parcels to load
+tests:
+  picks_best_pair_test: Returns the ids of the parcels with the largest total value, in input order
+  not_greedy_test: Picks a better combination than loading the parcels with the most value per weight first
+  ids_in_input_order_test: When several parcels are chosen, the ids follow the order of the input list
+  empty_cargo_test: With no parcels, the result is value 0 and an empty list
+  nothing_fits_test: If no parcel fits, the result is value 0 and an empty list
+  uses_each_once_test: The same parcel is not chosen twice
+  many_cargo_test: Even 40 parcels are chosen within the time limit
+requirements:
+  R1: The combination whose total weight is within the limit and whose total value is the largest
+  R2: If there is nothing to choose, Selection(0, [])
+  R3: ids are in input list order
+  R4: Running time proportional to the number of parcels x the weight limit
+hints:
+  1: "In the table that computes only the maximum value, suppose each cell also carried \"which parcels were chosen\" to reach that value. What could you then learn from the last cell?"
+  2: "A cell of the DP table can store not only the value but also the choice that produced it (the list of chosen ids). If you prepend an id to an immutable list, the list from the previous cell is shared, not copied."
+  3: "Make the table `Dict(weight limit, #(total value, chosen ids))`, and fold over the parcels one at a time, building a new table by reading from the previous one. If taking this parcel is better, insert `#(value + parcel value, [parcel id, ..previous ids])`. Since the ids are prepended, reverse once at the end."
+  4: |
+    ```gleam
+    fn add_cargo(previous: Dict(Int, #(Int, List(String))), item: Cargo, max_weight: Int) {
+      int.range(from: item.weight, to: max_weight + 1, with: previous, run: fn(table, capacity) {
+        let #(rest_value, rest_ids) = entry(previous, capacity - item.weight)
+        let #(skip_value, _) = entry(previous, capacity)
+        case rest_value + item.value > skip_value {
+          True -> todo
+          False -> table
+        }
+      })
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

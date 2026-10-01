@@ -1,0 +1,102 @@
+title: 累加器（accumulator）模式
+blocks:
+  intro:
+    markdown: |-
+      把非尾递归改成尾递归的关键是**累加器（accumulator）**。也就是把“到目前为止的答案”作为参数一路带下去。
+
+      不像 `1 + total(rest)` 那样在*返回之后*再加，而是在往下走的过程中用 `acc + first` 提前加好，传给下一次调用。这样递归调用就成了这个分支的**最后一个动作**。
+
+      ```gleam
+      fn sum_loop(numbers: List(Int), acc: Int) -> Int {
+        case numbers {
+          [] -> acc
+          [first, ..rest] -> sum_loop(rest, acc + first)
+        }
+      }
+      ```
+
+      `acc` 从 0 开始，逐个加上元素。
+  sumloop-from-zero:
+    prompt: "`sum_loop([4, 5, 6], 0)` 的值是？"
+    code: |-
+      fn sum_loop(numbers: List(Int), acc: Int) -> Int {
+        case numbers {
+          [] -> acc
+          [first, ..rest] -> sum_loop(rest, acc + first)
+        }
+      }
+
+      // sum_loop([4, 5, 6], 0) 的值是？
+    choices:
+      - "`15`"
+      - "`0`"
+      - "`4`"
+      - "`456`"
+    feedback:
+      correct: 没错！acc 按 0→4→9→15 增长，在空列表处返回 15。
+      choices:
+        "1": 0 是*初始*累加器——把元素都加上就是 15。
+        "2": 不是只加了第一个元素 4——5 和 6 也会被累加。
+        "3": 不是把数字拼接起来，而是*相加*——4+5+6 = 15。
+  empty-returns-acc:
+    markdown: |-
+      这里最容易混淆的地方是：终止分支 `[] -> ???` 里该放什么？
+
+      在非尾递归版本（`total`）中是 `[] -> 0`。那里的 0 是“空列表的和为 0”这颗*种子*。但在累加器版本中，和已经全部收集到 `acc` 里了。**终止时的 `acc` 就是答案**。
+  empty-branch-hole:
+    prompt: 在 `[] -> ???` 处放入了 `acc`。`sum_loop([1, 2, 3], 10)` 的值是？（初始 acc 为 10）
+    code: |-
+      fn sum_loop(numbers: List(Int), acc: Int) -> Int {
+        case numbers {
+          [] -> acc
+          [first, ..rest] -> sum_loop(rest, acc + first)
+        }
+      }
+
+      // sum_loop([1, 2, 3], 10) 的值是？
+    choices:
+      - "`6`"
+      - "`16`"
+      - "`10`"
+      - "`0`"
+    feedback:
+      correct: 完全正确！初始 acc 10 加上 1+2+3，得到 16。终止分支原样返回收集到的 acc。
+      choices:
+        "0": 漏掉了初始值 10——acc 从 10 出发，最后变成 16。
+        "2": 10 是初始累加器——还要加上各个元素才是 16。
+        "3": "因为是 `[] -> acc`，所以返回收集到的值——如果是 `[] -> 0`，就会把收集到的值丢掉，那就是 bug 了。"
+  empty-zero-bug:
+    prompt: 如果把终止分支改成 `[] -> 0`，`sum_loop([1, 2, 3], 0)` 会怎样？
+    choices:
+      - 仍然得到 `6`
+      - "得到 `0`——因为最后把收集到的 acc 丢掉了"
+      - 出现编译错误
+      - 陷入无限递归
+    feedback:
+      correct: 没错！一路走到底，已经把 acc 累积到 6，终止分支却无视它，返回 0——这是把收集到的东西整个丢掉的 bug。
+      choices:
+        "0": 终止分支返回的是 0 而不是 acc，所以得不到 6——收集到的值被丢掉了。
+        "2": 类型是对的，所以能编译——这是*逻辑* bug，会悄无声息地得到 0。
+        "3": 列表每次都会变短，所以会终止——只是返回了错误的 0。
+  count-with-acc:
+    prompt: 计数也用同样的模式。`count_loop([7, 8, 9], 0)` 的值是？
+    code: |-
+      fn count_loop(xs: List(Int), acc: Int) -> Int {
+        case xs {
+          [] -> acc
+          [_, ..rest] -> count_loop(rest, acc + 1)
+        }
+      }
+
+      // count_loop([7, 8, 9], 0) 的值是？
+    choices:
+      - "`3`"
+      - "`24`"
+      - "`0`"
+      - "`9`"
+    feedback:
+      correct: 没错！每个元素给 acc 加 1，0→1→2→3。终止时的 acc（=3）就是长度。
+      choices:
+        "1": 不是把元素的值相加，而是*每次加 1* 来计数——是个数 3，而不是总和 24。
+        "2": 0 是初始累加器——数三个元素就得到 3。
+        "3": 返回的不是最后一个元素的值（9），而是*个数*（3）。

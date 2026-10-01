@@ -1,0 +1,26 @@
+title: 修复永远算不完的商品名比较
+tests:
+  similar_names_test: 只差一个字符的商品名，距离是 1
+  long_names_test: 250 个字符的商品名之间也能在时间限制内比较完
+  identical_names_test: 相同商品名的距离是 0
+  empty_name_test: 与空商品名的距离是另一方的字符数
+  korean_names_test: 韩文商品名也按字符比较
+  different_names_test: 字符顺序被打乱的商品名也能算出最少编辑次数
+requirements:
+  R1: 插入、删除、替换每次代价为 1 时的最少次数
+  R2: 时间与两个名称长度的乘积成正比
+hints:
+  1: "`go` 接收的两个列表总是原来两个名称的“后缀”。不同的 (后缀, 后缀) 组合一共有多少个？现在的代码把同一组合计算了多少次？"
+  2: "把算过一次的子问题答案存起来，再次需要时直接取用，这叫记忆化（memoization）。要存进不可变的 Dict，就得把更新后的 Dict 和结果一起返回，并传给下一次调用。"
+  3: "后缀可以用剩余的两个长度 `#(la, lb)` 来标识。把 `go` 改成接收 `(a, la, b, lb, memo)`、返回 `#(距离, 新 memo)`，并在三次递归调用之间依次传递 memo。"
+  4: |
+    ```gleam
+    [_, ..xs], [_, ..ys] -> {
+      let #(replace, memo) = go(xs, la - 1, ys, lb - 1, memo)
+      let #(delete, memo) = go(xs, la - 1, b, lb, memo)
+      let #(insert, memo) = go(a, la, ys, lb - 1, memo)
+      let value = 1 + int.min(replace, int.min(delete, insert))
+      todo
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

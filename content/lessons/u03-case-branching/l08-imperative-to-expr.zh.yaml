@@ -1,0 +1,57 @@
+title: 从命令式到表达式
+blocks:
+  intro:
+    markdown: |-
+      这一课要再转换一次思维：把**先给变量赋值、再用 if 覆盖**的命令式习惯，转变为**直接使用 case 表达式结果**的表达式思维。
+
+      命令式是“空变量 → 按条件逐个填值”，而在 Gleam 中则是“一个 case，每个分支都产生一个值”。想存进变量的话，像 `let x = case ... { ... }` 这样绑定 case 的结果就行。
+  fee-translate:
+    prompt: 按年龄收费：未满 13 岁为 0，未满 65 岁为 1000，其他为 500。`fee(70)` 的值是什么？
+    choices:
+      - "`0`"
+      - "`1000`"
+      - "`500`"
+      - "`70`"
+    feedback:
+      correct: 没错！对 70 来说 `< 13` 和 `< 65` 都为假，所以得到最后 `_` 分支的 500。
+      choices:
+        "0": 0 是未满 13 岁时的结果。70 不属于这种情况。
+        "1": 1000 是未满 65 岁时的结果。70 大于等于 65，所以落到下一个分支。
+        "3": case 返回的不是被检查的年龄，而是匹配分支的结果（500）。
+  multi-subject:
+    markdown: case 还可以**同时检查多个值**：像 `case a, b { ... }` 这样用逗号把它们放在一起，每个分支也用逗号列出各自的模式。这是把嵌套的 if 阶梯展开成一个扁平 case 的强大工具。
+  fizzbuzz-translate:
+    prompt: "`fizz(15)` 的值是什么？"
+    code: |-
+      fn fizz(n: Int) -> String {
+        case n % 3, n % 5 {
+          0, 0 -> "FizzBuzz"
+          0, _ -> "Fizz"
+          _, 0 -> "Buzz"
+          _, _ -> "其他"
+        }
+      }
+    choices:
+      - '"FizzBuzz"'
+      - '"Fizz"'
+      - '"Buzz"'
+      - '"其他"'
+    feedback:
+      correct: 没错！15 既能被 3 整除，也能被 5 整除，所以得到 `0, 0`，匹配第一个分支 "FizzBuzz"。
+      choices:
+        "1": "\"Fizz\" 是只能被 3 整除时（`0, _`）的结果。15 也能被 5 整除。"
+        "2": "\"Buzz\" 是只能被 5 整除时（`_, 0`）的结果。15 也能被 3 整除。"
+        "3": "\"其他\" 是两者都不能整除时的结果。15 两者都能整除——第一个分支胜出。"
+  let-case-bind:
+    prompt: 想“根据分数把等级字符串存进变量 `label`”，哪一种是地道的 Gleam 写法？
+    choices:
+      - let label = case score { s if s >= 90 -> "A" _ -> "F" }
+      - var label; if score >= 90 { label = "A" }
+      - label = case score { ... }
+      - case score { s if s >= 90 -> let label = "A" }
+    feedback:
+      correct: 没错！case 是表达式，所以可以直接用 `let label =` 绑定它的结果——这就是表达式思维。
+      choices:
+        "1": Gleam 既没有 `var`，也没有“先声明空变量再赋值”。要一次性绑定 case 的结果。
+        "2": 绑定一定要用 `let`——只写 `label = ...` 是不行的。
+        "3": 只在分支里写 `let`，case 就产生不了值。结果的位置上必须放一个值（"A"）。

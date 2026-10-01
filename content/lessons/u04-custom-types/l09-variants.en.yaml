@@ -73,24 +73,24 @@ blocks:
 
       // next(Red) is?
   label-yellow:
-    prompt: Here's `label`, which translates a signal into Korean. What is the value of `label(Yellow)`?
+    prompt: Here's `label`, which turns a signal into a word. What is the value of `label(Yellow)`?
     choices:
-      - '`"멈춤"`'
-      - '`"주의"`'
-      - '`"출발"`'
+      - '`"Stop"`'
+      - '`"Caution"`'
+      - '`"Go"`'
       - "`Yellow`"
     feedback:
-      correct: Exactly! It matches the `Yellow` branch and becomes "주의".
+      correct: Exactly! It matches the `Yellow` branch and becomes "Caution".
       choices:
-        "0": '"멈춤" is the result of the `Red` branch. The input is `Yellow`.'
-        "2": '"출발" is the result of the `Green` branch — not `Yellow`.'
+        "0": '"Stop" is the result of the `Red` branch. The input is `Yellow`.'
+        "2": '"Go" is the result of the `Green` branch — not `Yellow`.'
         "3": "`case` returns the result (a string) of the matched branch, not the input variant."
     code: |-
       pub fn label(light: TrafficLight) -> String {
         case light {
-          Red -> "멈춤"
-          Yellow -> "주의"
-          Green -> "출발"
+          Red -> "Stop"
+          Yellow -> "Caution"
+          Green -> "Go"
         }
       }
 

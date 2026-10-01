@@ -1,0 +1,33 @@
+title: 设有最低订单金额和折扣上限的优惠券
+tests:
+  discounts_pending_test: 对金额不低于最低金额的 Pending 订单打折
+  skips_below_minimum_test: 金额低于最低金额的订单不打折
+  caps_discount_test: 折扣额不超过上限
+  applies_at_exact_minimum_test: 金额正好等于最低金额时打折
+  rounds_discount_down_test: 折扣额向下取整后再扣减
+  keeps_other_orders_test: 非 Pending 订单即使金额很大也保持原样，并保持顺序
+requirements:
+  R1: 只对状态为 Pending 且 amount 不低于 min_amount 的订单打折
+  R2: 折扣额为 amount * percent / 100（向下取整）
+  R3: 折扣额不超过 max_discount
+  R4: 其余订单保持原样，并保持顺序
+hints:
+  1: "对一个订单，能否先问“是否属于打折对象”，再单独问“要减多少”？折扣额和打折后的金额，应该对哪一个向下取整？"
+  2: "`int.min(a, b)` 返回两者中较小的值，可以用来把折扣额截到上限。在 `case` 模式后面加 `if` 守卫，可以同时检查状态和金额条件。"
+  3: "先写一个只计算折扣额的函数 `fn discount(amount: Int, coupon: Coupon) -> Int`。然后在 `list.map` 中把目标订单的金额改为 `amount - discount(...)`。"
+  4: |
+    ```gleam
+    pub fn apply_coupon(orders: List(Order), coupon: Coupon) -> List(Order) {
+      list.map(orders, fn(order) {
+        case order.status {
+          Pending if order.amount >= coupon.min_amount -> todo
+          _ -> order
+        }
+      })
+    }
+
+    fn discount(amount: Int, coupon: Coupon) -> Int {
+      int.min(todo, coupon.max_discount)
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

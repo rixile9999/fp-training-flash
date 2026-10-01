@@ -1,0 +1,13 @@
+title: Transcribe DNA into RNA
+rubric:
+  R-05:
+    title: Separate the calculation logic
+    description: If you pull the rule that finds the partner of a single nucleotide into a small named function, you can check it on its own.
+  R-07:
+    title: Do not swallow errors
+    description: Do not filter out invalid input or replace it with a default value; pass the first error unchanged all the way back to the caller.
+    message: filter_map silently throws away the elements that failed. Check that invalid input is passed on as an error.
+  R-09:
+    title: No let assert or panic
+    description: Express the possibility of failure in the types.
+    message: let assert or panic was used.

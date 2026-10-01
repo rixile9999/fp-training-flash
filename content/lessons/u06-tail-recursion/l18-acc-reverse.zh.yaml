@@ -1,0 +1,101 @@
+title: 累加的代价：结果被反转
+blocks:
+  intro:
+    markdown: |-
+      用累加器构建*列表*时，会带来一个附带效果。新元素是通过 **prepend 到累加器前面**（`[x, ..acc]`）来堆起来的，而 prepend 是 O(1)，所以这样堆是正确的做法。但代价是**结果会被反转**。
+
+      ```gleam
+      fn double_loop(xs: List(Int), acc: List(Int)) -> List(Int) {
+        case xs {
+          [] -> acc
+          [first, ..rest] -> double_loop(rest, [first * 2, ..acc])
+        }
+      }
+      ```
+
+      第一个元素*最先*放进去，被压在*最底下*；最后一个元素则跑到了最前面。
+  double-loop-reversed:
+    prompt: "`double_loop([1, 2, 3], [])` 的值是？"
+    code: |-
+      fn double_loop(xs: List(Int), acc: List(Int)) -> List(Int) {
+        case xs {
+          [] -> acc
+          [first, ..rest] -> double_loop(rest, [first * 2, ..acc])
+        }
+      }
+
+      // double_loop([1, 2, 3], []) 的值是？
+    choices:
+      - "`[2, 4, 6]`"
+      - "`[6, 4, 2]`"
+      - "`[1, 2, 3]`"
+      - "`[6]`"
+    feedback:
+      correct: 没错！2 放到 [] 前面→[2]，4 放到前面→[4, 2]，6 放到前面→[6, 4, 2]。prepend 累加会把顺序反转。
+      choices:
+        "0": 每个值确实都乘以 2 了，但*顺序被反转了*——1 最先放进去，被压在最底下，所以是 [6, 4, 2]。
+        "2": 值会乘以 2——不是 1,2,3 而是 2,4,6，而且顺序还被反转成 [6, 4, 2]。
+        "3": 所有元素都会堆进去——不是只剩最后的 [6]，而是 [6, 4, 2]。
+  accumulate-then-reverse:
+    markdown: |-
+      这种反转**不是 bug，而是一种模式**。想保持顺序的话，在 wrapper 里最后过一遍 `list.reverse` 就行。这叫作 **accumulate-then-reverse**（先累加，最后反转）惯用法。
+
+      ```gleam
+      pub fn double_all(xs: List(Int)) -> List(Int) {
+        list.reverse(double_loop(xs, []))
+      }
+      ```
+
+      先用 prepend 快速（O(1)）地堆好，最后只反转一次，恢复原来的顺序。
+  double-all-restored:
+    prompt: "`double_all([1, 2, 3])` 的值是？（wrapper 在最后应用 `list.reverse`）"
+    code: |-
+      fn double_loop(xs: List(Int), acc: List(Int)) -> List(Int) {
+        case xs {
+          [] -> acc
+          [first, ..rest] -> double_loop(rest, [first * 2, ..acc])
+        }
+      }
+
+      pub fn double_all(xs: List(Int)) -> List(Int) {
+        list.reverse(double_loop(xs, []))
+      }
+
+      // double_all([1, 2, 3]) 的值是？
+    choices:
+      - "`[6, 4, 2]`"
+      - "`[2, 4, 6]`"
+      - "`[1, 2, 3]`"
+      - "`[3, 2, 1]`"
+    feedback:
+      correct: 完全正确！loop 构建出 [6, 4, 2]，`list.reverse` 再把它变回 [2, 4, 6]，恢复了原来的顺序。
+      choices:
+        "0": 那是 reverse *之前*的值——wrapper 会反转一次，得到 [2, 4, 6]。
+        "2": 值会乘以 2——元素不是保持原样，而是变成 2,4,6。
+        "3": 值要乘以 2——不是 1,2,3，而是 2,4,6。
+  why-prepend:
+    prompt: 在列表累加中，为什么用 prepend（`[x, ..acc]`）而不是 append（`acc <> [x]`），并在最后 reverse？
+    choices:
+      - 因为 append 做不到
+      - 因为 prepend 是 O(1)，很快，而反转问题只需在最后 reverse 一次就能解决
+      - 因为 reverse 会改变结果的值
+      - 因为 prepend 能保持顺序
+    feedback:
+      correct: 没错！prepend 始终是 O(1)，每一步都很快。至于反转，只要在最后 reverse 一次（O(n)）就能干净地恢复。
+      choices:
+        "0": append 也能做到——只是每次都要遍历到列表末尾，是 O(n)，所以很慢。
+        "2": reverse 只改变*顺序*——值本身（乘以 2 的结果）保持不变。
+        "3": prepend 会*反转*顺序——正因如此，最后才需要 reverse。
+  reverse-is-pattern:
+    prompt: 看到用累加器构建的列表结果是反的，最合适的判断是？
+    choices:
+      - 是 bug——递归写错了
+      - 是正常的——这是 prepend 累加的自然结果，需要的话在最后用 `list.reverse` 恢复
+      - 终止条件写错了
+      - acc 的初始值应该是 `[0]` 而不是 `[]`
+    feedback:
+      correct: 没错！用 prepend 堆起来，结果反转是正常的——这不是 bug，而是一种模式。如果顺序重要，在 wrapper 里 reverse 一次就行。
+      choices:
+        "0": 这不是 bug——prepend 累加本来就会得到反转的结果。只需用 reverse 收尾。
+        "2": 终止条件 `[] -> acc` 是对的——反转是 prepend 造成的，而不是终止条件。
+        "3": 初始值用空列表 `[]` 才对——如果给 `[0]`，结果里就会混进一个本不存在的 0。

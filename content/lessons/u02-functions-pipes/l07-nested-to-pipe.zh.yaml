@@ -1,0 +1,66 @@
+title: 把嵌套调用改写成管道
+blocks:
+  intro:
+    markdown: |-
+      像 `c(b(a(x)))` 这样的嵌套调用必须**从里往外**读——先 a，再 b，再 c。阅读顺序和执行顺序正好相反。
+
+      改写成管道后就是 `x |> a |> b |> c`，**完全按照数据被转换的顺序**来读。两个表达式产生的值完全相同。
+  nested-value:
+    prompt: 这个嵌套调用的值是什么？
+    choices:
+      - '`"HI"`'
+      - '`"  HI "`'
+      - '`"hi"`'
+      - '`"  hi "`'
+    feedback:
+      correct: 没错！里层的 trim 得到 "hi"，外层的 uppercase 把它变成 "HI"。
+      choices:
+        "1": 里层的 trim 会先去掉空白——不会留下空格。
+        "2": 外层的 uppercase 会转换成大写。
+        "3": 两个函数都会生效，结果是 "HI"。
+  equivalence:
+    markdown: |-
+      上面的 `string.uppercase(string.trim("  hi "))` 用管道可以这样写：
+
+      ```gleam
+      "  hi "
+      |> string.trim
+      |> string.uppercase
+      ```
+
+      得到的值相同（"HI"），但最先发生的事情（trim）出现在最上面。
+  rewrite:
+    prompt: 把 `c(b(a(x)))` 正确改写成管道的是哪一个？
+    choices:
+      - "`x |> a |> b |> c`"
+      - "`x |> c |> b |> a`"
+      - "`c |> b |> a |> x`"
+      - "`a |> b |> c |> x`"
+    feedback:
+      correct: 完全正确！最里层（最先执行）的 a 排在最前面，最外层的 c 排在最后。
+      choices:
+        "1": 顺序反了——最里层的 a 应该排在最前面。
+        "2": x 是起始数据，必须放在最前面。
+        "3": x 不是函数，而是要流经管道的值，所以放在最前面。
+  shout-chain:
+    prompt: 函数 `shout` 定义如下，`shout("  lucy ")` 的值是什么？
+    code: |-
+      pub fn shout(name: String) -> String {
+        name
+        |> string.trim
+        |> string.uppercase
+        |> string.append("!")
+      }
+
+      // shout("  lucy ") 是多少？
+    choices:
+      - '`"LUCY!"`'
+      - '`"!LUCY"`'
+      - '`"  LUCY !"`'
+      - '`"lucy!"`'
+    feedback:
+      correct: 没错！trim→"lucy"，uppercase→"LUCY"，append("!")→"LUCY!"。
+      choices:
+        "1": append 是接在后面——"!" 跟在 "LUCY" 之后，所以是 "LUCY!"。
+        "2": trim 会先去掉空白，所以不会留下空格。
+        "3": uppercase 这一步会转换成大写——不会保持小写。

@@ -1,0 +1,5 @@
+`place` means "the number of ways to fill the board from this row to the end", so for every safe column you can choose in this row, you have to **add up** the counts for the rows below. The original code threw away `int.range`'s accumulated value `total` and returned only the result for the column it had just counted. So only the number of placements starting from the last safe column survives. On a 4x4 board there is no placement starting from column 3 of the first row, so you get 0.
+
+When the answer at a node of a search tree is the combination of its children's answers, leaving out the combining operation (here, addition) means only one branch of the tree is reflected (`search-space-backtracking`). Changing it to `total + place(n, row + 1, [col, ..placed])` combines every branch.
+
+There are two common wrong fixes. Changing the base case to `row == n - 1` also counts placements that never filled the last row, so the answer grows too large. And if you fix the sum but do not add the new queen to `placed`, the rows below check without knowing about the new queen and count placements whose queens attack each other.

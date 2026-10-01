@@ -1,0 +1,12 @@
+title: Build a normalization pipeline from small string functions
+rubric:
+  R-02:
+    title: The pipeline shows the intent
+    description: The normalization function only chains small step functions with pipes, and the reading order matches the processing order.
+  R-05:
+    title: Reuse the step functions
+    description: Each step's rule lives only in that step's function, and the composing functions do not rewrite the same rule.
+  R-09:
+    title: No let assert or panic
+    description: Express the possibility of failure in the types.
+    message: let assert or panic was used.

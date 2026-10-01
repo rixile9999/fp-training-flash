@@ -1,0 +1,25 @@
+title: "Filling shelves: fixing a lost update"
+tests:
+  refills_empty_shelf_test: "A shelf below its minimum is filled up to its capacity"
+  keeps_stocked_shelf_test: "A sufficiently stocked shelf is left as is"
+  mixed_shelves_test: "When shelves to fill and shelves to keep are mixed, all of them stay"
+  fills_to_capacity_not_adds_test: "Sets the quantity to the capacity instead of adding to what is left"
+  at_minimum_not_refilled_test: "A shelf whose quantity equals the minimum is not filled"
+  keeps_order_test: "Keeps the order of the shelves"
+requirements:
+  R1: "If on_hand is less than minimum, the result contains a new shelf with on_hand changed to capacity"
+  R2: "All other shelves go into the result unchanged"
+  R3: "The order is kept"
+hints:
+  1: "Where does the new `Shelf` value built inside `list.each` go? What does the function return at the end?"
+  2: "Gleam values never change. A record update only builds a new value, and `list.each` throws away the function's results and returns `Nil`. To collect the results, use `list.map`."
+  3: "The condition check and the code that builds the new record are already correct. Only change how you iterate so that their result becomes the return value."
+  4: |
+    ```gleam
+    pub fn refill(shelves: List(Shelf)) -> List(Shelf) {
+      list.map(shelves, fn(shelf) {
+        todo
+      })
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

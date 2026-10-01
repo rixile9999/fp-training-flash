@@ -1,0 +1,30 @@
+tests:
+  split_even_test: split 把偶数长度的列表分成长度相同的前后两半
+  split_odd_test: 长度为奇数时，后一半多一个元素
+  merge_test: merge 把两个有序列表按升序合并
+  sort_test: sort 把列表按升序排序
+  sort_single_test: 只有一个元素的列表原样返回
+  sort_duplicates_and_negatives_test: 即使有重复值和负数，也保留全部元素并排序
+  sort_large_list_test: 15 万个元素的列表也能在时间限制内排好序
+requirements:
+  R1: split 分成前 length/2 个元素和其余部分
+  R2: merge 合并两个有序列表
+  R3: sort 按升序排序，保留所有元素
+  R4: O(n log n)
+hints:
+  1: "元素为 0 个或 1 个的列表已经是有序的。如果能把更长的列表一分为二并分别排好序，怎样用这两个有序的半边得到整体的排序结果？"
+  2: "分治把问题拆成形状相同的更小问题（split），分别递归求解，再把结果合并（merge）。要让递归结束，必须把无法再拆的大小（0 个、1 个元素）作为基本情况处理。"
+  3: "`split` 可以用 `list.length` 和 `list.split` 实现。`merge` 比较两个头元素，先取较小或相等的那个。`sort` 遇到 `[]` 和 `[_]` 时原样返回，否则先拆分、分别排序，再合并。"
+  4: |
+    ```gleam
+    pub fn sort(items: List(Int)) -> List(Int) {
+      case items {
+        [] | [_] -> items
+        _ -> {
+          let #(front, back) = split(items)
+          todo
+        }
+      }
+    }
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

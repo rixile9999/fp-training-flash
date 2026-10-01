@@ -1,0 +1,28 @@
+title: 统计碱基数量：修复大小检查的 bug
+tests:
+  mixed_strand_test: 统计四种碱基都出现的字符串
+  empty_strand_test: 空字符串时，四种碱基的数量都是 0
+  invalid_with_few_kinds_test: 即使碱基种类很少，只要有错误字母就返回 Error(Nil)
+  missing_kinds_are_zero_test: 没出现的碱基以 0 个的形式包含在结果中
+  invalid_single_letter_test: 只有一个错误字母的字符串返回 Error(Nil)
+  invalid_with_all_kinds_test: 四种碱基都有且还有错误字母时，返回 Error(Nil)
+requirements:
+  R1: 结果中总是包含 A、C、G、T 四个键
+  R2: 只要有一个 A、C、G、T 以外的字母，就返回 Error(Nil)
+hints:
+  1: "传入 `\"AAX\"` 时，字典的大小是多少？大小不超过 4 这一事实，能保证“所有字母都有效”吗？"
+  2: "`list.try_fold` 在累加过程中一遇到 `Error` 就当场停止并返回这个 `Error`。初始值决定了结果中会有哪些键。"
+  3: "不要在全部数完后再间接检查，而是在逐个计数字母时直接确认它是否有效。从四种碱基都为 0 的字典开始，两个 bug 会一起解决。"
+  4: |
+    ```gleam
+    let zeros = dict.from_list([#("A", 0), #("C", 0), #("G", 0), #("T", 0)])
+    dna
+    |> string.to_graphemes
+    |> list.try_fold(zeros, fn(counts, letter) {
+      case dict.get(counts, letter) {
+        Ok(count) -> todo
+        Error(Nil) -> todo
+      }
+    })
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

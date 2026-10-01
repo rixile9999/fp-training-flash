@@ -1,0 +1,26 @@
+title: "Fix the queue: the item added last comes out first"
+tests:
+  first_pop_returns_oldest_test: The first pop returns the earliest-added item
+  drains_each_item_once_test: Taking everything out yields each item once, in the order it was added
+  to_list_without_pop_test: to_list of a queue that has not been popped is in insertion order
+  to_list_after_pop_test: to_list of the remaining queue after a pop is also in insertion order
+  pop_after_emptied_test: Popping a queue that has been emptied returns Error(Nil)
+  refill_twice_test: The order is right even when back is moved over twice
+  keeps_order_when_mixed_test: Items added in the middle of popping come out after the existing items
+requirements:
+  R1: The item added first comes out first (FIFO)
+  R2: to_list lists items in the order they come out
+  R3: The total cost of n pushes and n pops is O(n)
+hints:
+  1: "If you push 1, 2 and 3 in turn, in what order are they stored in `back`? If you use that list as `front` as is, what comes out first?"
+  2: "`back` is in reverse insertion order. `front` must be in the order items come out, so when you move `back` into `front`, you have to flip the order."
+  3: "`push` and `to_list` already keep this agreement. Fix only the one line in `pop` that moves `back` over when `front` is empty. If you change `push`, `to_list` breaks."
+  4: |
+    ```gleam
+    case queue.front, queue.back {
+      [first, ..rest], back -> Ok(#(first, Queue(front: rest, back: back)))
+      [], [] -> Error(Nil)
+      [], back -> pop(Queue(front: todo, back: []))
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

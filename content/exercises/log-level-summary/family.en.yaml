@@ -1,0 +1,12 @@
+title: Count log lines by level
+rubric:
+  R-02:
+    title: The pipeline shows the intent
+    description: Interpreting a single line and folding many lines together read as separate jobs.
+  R-05:
+    title: Calculation logic is separated
+    description: If the parsing logic that pulls the level out of one line is split into a small named function, it can be checked on its own.
+  R-09:
+    title: No let assert or panic
+    description: Lines that don't match the format are represented with Result and skipped.
+    message: let assert or panic was used.

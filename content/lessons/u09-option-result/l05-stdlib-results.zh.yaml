@@ -1,0 +1,78 @@
+title: 标准库中的 Result
+blocks:
+  intro:
+    markdown: |-
+      现在你会发现，标准库到处都在返回 `Result`。两个有代表性的例子：
+
+      - **`int.parse(String) -> Result(Int, Nil)`**——把字符串转换成整数。不是整数时返回 `Error(Nil)`。
+      - **`list.first(List(a)) -> Result(a, Nil)`**——取列表的第一个元素。列表为空时返回 `Error(Nil)`。
+
+      两者的失败原因都只有一种，所以错误类型是 `Nil`（就是 U9-④ 中讲的惯例）。不过“要取值就得模式匹配”这一点同样适用。
+  parse-int-ok:
+    prompt: '`int.parse` 的结果是？'
+    choices:
+      - '`Ok(42)`'
+      - '`42`'
+      - '`Error(Nil)`'
+      - '`Some(42)`'
+    feedback:
+      correct: '没错！"42" 能正常解析成整数，得到 `Ok(42)`——成功的值也会被包装在 `Ok` 里。'
+      choices:
+        "1": '值是 42，但因为是 `Result`，会被包装成 `Ok(42)`——不会以裸的 `42` 返回。'
+        "2": '"42" 是正常的整数，所以是成功——`Error(Nil)` 是*无法*解析时的结果。'
+        "3": '`int.parse` 返回的是 `Result`——用 `Ok` 包装，不是 `Some`。'
+  parse-float:
+    prompt: '`int.parse` 只能解析*整数*。`int.parse("4.2")` 的值是？'
+    choices:
+      - '`Error(Nil)`'
+      - '`Ok(4)`'
+      - '`Ok(4.2)`'
+      - '`4.2`'
+    feedback:
+      correct: '完全正确！"4.2" 不是*整数*，`int.parse` 解析失败，返回 `Error(Nil)`。带小数点的字符串无法按整数解析。'
+      choices:
+        "1": '它不会截断（舍去成 4）——"4.2" 不是整数格式，整体解析失败。'
+        "2": '`int.parse` 只会产生 `Int`——不会返回 `Float` 的 `4.2`（本来就会失败）。'
+        "3": '值既不会裸露返回，也无法被解析——结果是 `Error(Nil)`。'
+  list-first:
+    markdown: |-
+      `list.first` 也是同样的形态。只要至少有一个元素，就用 `Ok` 返回第一个元素；如果列表为空，就返回 `Error(Nil)`。这是安全处理“可能为空的列表的第一个元素”的方法——遇到空列表也不会崩溃。
+  first-ok:
+    prompt: '`list.first` 的结果是？'
+    choices:
+      - '`Ok(10)`'
+      - '`10`'
+      - '`Ok([10, 20, 30])`'
+      - '`Ok(30)`'
+    feedback:
+      correct: '没错！第一个元素 10 被包装在 `Ok` 里，得到 `Ok(10)`。'
+      choices:
+        "1": '值是 10，但因为是 `Result`，会被包装成 `Ok(10)`——不会裸露返回。'
+        "2": '`first` 返回的不是整个列表，而是*第一个元素*——`Ok(10)`。'
+        "3": '`first` 是最*前面*的元素——是第一个 10，不是最后的 30（取最后一个用 `list.last`）。'
+  first-empty:
+    prompt: '对空列表使用 `list.first` 会怎样？`list.first([])` 的值是？'
+    choices:
+      - '`Error(Nil)`'
+      - '`Ok(Nil)`'
+      - '程序崩溃'
+      - '`[]`'
+    feedback:
+      correct: '完全正确！空列表没有第一个元素，所以是 `Error(Nil)`——失败以值的形式返回，因此不会崩溃。'
+      choices:
+        "1": '空列表不算成功——不是 `Ok`，而是用 `Error(Nil)` 告诉你“没有第一个元素”。'
+        "2": 'Gleam 没有异常，所以不会崩溃——`Result` 会安全地表示失败。'
+        "3": '返回的不是原样的空列表，而是一个 `Result` 值（`Error(Nil)`）。'
+  why-result:
+    prompt: '`int.parse` 和 `list.first` 特意返回 `Result` 而不是裸值，最恰当的理由是？'
+    choices:
+      - '把失败（无法解析、空列表）表示为*值*，让调用者用 case 安全地处理两种情况'
+      - '因为 Result 比 Int 占用更少的内存'
+      - '因为 Gleam 函数只能返回 Result'
+      - '为了让调试输出更好看'
+    feedback:
+      correct: '没错！不把失败作为异常抛出，而是以 `Result` 值返回，编译器就会强制检查“失败的情况也处理了吗？”，防止遗漏处理——这就是本单元的核心。'
+      choices:
+        "1": '和节省内存无关——原因是为了*安全地表示失败*。'
+        "2": '函数可以返回任意类型——`Result` 是在可能失败时的选择。'
+        "3": '不是为了调试显示，而是为了把失败体现在类型中，让调用者去处理。'

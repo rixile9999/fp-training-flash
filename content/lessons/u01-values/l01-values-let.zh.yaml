@@ -1,0 +1,35 @@
+title: 值与 let
+blocks:
+  intro:
+    markdown: |-
+      编程说到底就是在处理**值**。`1`、`3.14`、`"你好"`、`True`——这些都是值。
+
+      在 Gleam 中，用 `let` 给值起一个**名字**。写下 `let pi = 3.14` 之后，名字 `pi` 就指向 `3.14`。
+  bind-syntax:
+    prompt: 在函数体内，把值绑定到名字上的正确语法是什么？
+    choices:
+      - "`x = 5`"
+      - "`let x = 5`"
+      - "`var x = 5`"
+      - "`const x = 5`"
+    feedback:
+      correct: 没错！在 Gleam 的函数里只能用 `let` 来绑定。既没有 `var`，也没有重新赋值。
+      choices:
+        "0": 只写 `=` 是不行的。绑定一定要用 `let`。
+        "2": Gleam 没有 `var`——因为它根本没有“重新赋值”这个概念。
+        "3": "`const` 用于模块顶层的常量。函数内部的绑定用 `let`。"
+  use-name:
+    markdown: 起了名字之后，就可以在后面用这个名字把值取出来。可以把表达式中的名字理解为会被替换成它所指向的值。
+  let-use:
+    prompt: 下面的代码执行完后，`total` 的值是多少？
+    choices:
+      - "`3`"
+      - "`100`"
+      - "`300`"
+      - "`103`"
+    feedback:
+      correct: 完全正确！`price` 是 100，`count` 是 3——所以 `total` 是 100 * 3 = 300。
+      choices:
+        "0": 你只看了 `count`（3）。`total` 是按 `price * count` 计算的。
+        "1": 你只看了 `price`（100）。还要乘上 `count`。
+        "3": "`*` 是乘法——不是加法（100+3），而是 100*3 = 300。"

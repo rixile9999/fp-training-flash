@@ -1,0 +1,12 @@
+title: 统计碱基数量
+rubric:
+  R-02:
+    title: 管道清楚表达意图
+    description: 把字符串转成字母列表、再用一次折叠来计数的流程，按阅读顺序清楚呈现。
+  R-05:
+    title: 分离计算逻辑
+    description: 把处理单个字母的步骤拆成有名字的小函数；四种碱基都为 0 的初始字典在同一处同时决定“结果中有哪些键”和“哪些字母有效”。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 错误的输入以 Error 值返回。
+    message: 使用了 let assert 或 panic。

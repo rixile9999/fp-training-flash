@@ -1,0 +1,28 @@
+title: 修复丢弃错误数字位的进制转换
+tests:
+  valid_digits_convert_test: 正确的数字位照常转换
+  digit_too_large_is_error_test: 大于或等于进制的数字位不再丢弃，而是报告为 InvalidDigit
+  negative_digit_is_error_test: 负数数字位不再丢弃，而是报告为 InvalidDigit
+  first_invalid_digit_test: 有多个错误数字位时，报告最前面的那个
+  invalid_base_still_first_test: 进制错误仍然先于数字位错误报告
+  zero_value_still_works_test: 值为 0 时仍然返回 [0]
+requirements:
+  R1: 保持原本正确的行为（转换、进制检查、0 的处理）
+  R2: 超出范围的数字位是 InvalidDigit
+  R3: 在第一个错误数字位处停止
+hints:
+  1: "调用 `rebase(digits: [1, 2, 1], input_base: 2, output_base: 10)` 时，现在的代码返回什么？调用方能知道输入是错的吗？"
+  2: "`list.filter` 会把不满足条件的值丢掉，不留任何痕迹。如果需要报告被丢掉的值，就需要能在每个元素上失败的 `list.try_fold` 或 `list.try_map`。"
+  3: "把 `filter` 和 `fold` 两步合并成一个 `list.try_fold`。遇到超出范围的数字位时当场返回 `Error`，只有结果为 `Ok` 时才交给 `to_digits`。"
+  4: |
+    ```gleam
+    False, False ->
+      list.try_fold(digits, 0, fn(total, digit) {
+        case digit >= 0 && digit < input_base {
+          True -> todo
+          False -> todo
+        }
+      })
+      |> result.map(todo)
+    ```
+  5: "现在可以打开完整讲解。看过讲解后，将通过一道新题来确认掌握程度。"

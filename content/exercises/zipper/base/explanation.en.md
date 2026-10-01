@@ -1,0 +1,7 @@
+An immutable tree has no "pointer to the parent". So when you go down, you have to keep the information you will need to come back up yourself. If you go down to the left child, you need the parent's value and the right child so that you can later rebuild `Node(value, new_left, right)`. This information is a crumb, and to also record the direction it is split into two constructors, `WentLeft` and `WentRight`.
+
+If you stack crumbs in a list with the nearest parent first, going down is prepending to the list and going up is taking off the front, so both are O(1). `up` rebuilds the parent node by putting the focus in the left or right position according to the direction of the first crumb. `to_tree` needs no new code: just repeat `up` until it returns `Error`.
+
+A common mistake is to mix up the directions. If `up` puts the focus in the right position for a `WentLeft`, or `right` records a `WentLeft` crumb, then coming back up builds a tree with the siblings swapped. This is hard to notice if you only check right below the root, so go down deep and compare the whole tree with `to_tree`. If `to_tree` returns only the focus, you are left with just a subtree.
+
+A zipper only rebuilds what is around the focus and shares the rest of the subtrees as they are (`immutability-structural-sharing`). That is why the zipper from before a move remains usable: it is a persistent data structure (`persistent-data-structures`).

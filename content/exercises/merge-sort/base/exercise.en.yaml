@@ -1,0 +1,30 @@
+tests:
+  split_even_test: split divides an even-length list into front and back halves of equal length
+  split_odd_test: For an odd length, the back half is one element longer
+  merge_test: merge combines two sorted lists in ascending order
+  sort_test: sort sorts a list in ascending order
+  sort_single_test: A list with one element is returned as it is
+  sort_duplicates_and_negatives_test: Keeps every element when sorting, even with duplicates and negative numbers
+  sort_large_list_test: Sorts a list of 150,000 elements within the time limit
+requirements:
+  R1: split divides into the first length/2 elements and the rest
+  R2: merge combines two sorted lists
+  R3: sort sorts in ascending order and keeps every element
+  R4: O(n log n)
+hints:
+  1: "A list with 0 or 1 elements is already sorted. If you could split a longer list in half and sort each half, how could you build the fully sorted result from the two sorted halves?"
+  2: "Divide and conquer splits a problem into smaller problems of the same shape (split), solves each one recursively, and combines the results (merge). For the recursion to end, you must handle the sizes that can't be split any further (0 and 1 elements) as base cases."
+  3: "You can build `split` with `list.length` and `list.split`. `merge` compares the two head elements and takes the smaller-or-equal one first. `sort` returns `[]` and `[_]` as they are; otherwise it splits, sorts each half, and merges."
+  4: |
+    ```gleam
+    pub fn sort(items: List(Int)) -> List(Int) {
+      case items {
+        [] | [_] -> items
+        _ -> {
+          let #(front, back) = split(items)
+          todo
+        }
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

@@ -1,0 +1,27 @@
+title: Manage a restaurant waitlist
+tests:
+  add_vip_goes_first_test: A VIP guest goes to the front of the list
+  add_guest_goes_last_test: A regular guest goes to the back of the list
+  seat_next_removes_first_test: seat_next removes the guest at the front from the list
+  next_two_returns_first_two_test: next_two returns the first two guests on the list, in order
+  seat_next_on_empty_stays_empty_test: On an empty list, seat_next returns an empty list
+  next_two_with_one_guest_test: If there is only one guest, next_two returns just that guest
+  next_two_on_empty_test: On an empty list, next_two returns an empty list
+requirements:
+  R1: Add VIPs to the front and regular guests to the back
+  R2: Remove the guest at the front; an empty list stays as is
+  R3: Up to two guests from the front, or as many as there are if fewer
+hints:
+  1: "When there is only one guest on the list, or nobody at all, what should `seat_next` and `next_two` return?"
+  2: "Adding to the front of a list is `[x, ..xs]`, and adding to the back is `list.append(xs, [x])`. In a `case`, `[_, ..rest]` gives you what is left after taking off the first element."
+  3: "If you split `seat_next` and `next_two` with `case` according to the shape of the list (empty, one guest, two or more guests), short lists are handled naturally."
+  4: |
+    ```gleam
+    pub fn next_two(queue: List(String)) -> List(String) {
+      case queue {
+        [first, second, ..] -> [first, second]
+        short -> todo
+      }
+    }
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."

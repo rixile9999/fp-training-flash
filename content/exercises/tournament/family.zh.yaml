@@ -1,0 +1,12 @@
+title: 制作联赛积分榜
+rubric:
+  R-02:
+    title: 管道清楚表达意图
+    description: 顶层函数只是按顺序连接拆分行、解析、汇总、排序、输出这几个步骤。
+  R-05:
+    title: 按步骤拆分函数
+    description: 解析、更新战绩、排序依据、行输出各自是有名字的小函数，可以分别测试。
+  R-09:
+    title: 不使用 let assert 和 panic
+    description: 格式错误的行用 Result 表达并跳过。
+    message: 使用了 let assert 或 panic。

@@ -1,0 +1,8 @@
+In the report task, the shape of the data changes three times. A `String` line becomes a `Result(Sale, Nil)`, a list of `Sale`s becomes a list of `#(category, total)`, and at the end it becomes a `String` again. If you put one function at each point where the shape changes, you can tell what each function does just from its input and output types, and you can test each step separately. All three functions are pure functions that return the same result for the same input, so the result of `build_report` is exactly the value you get by applying the three functions in turn (theory note "Referential transparency").
+
+`build_report` just chains `parse_line → total_by_category → format_row` with pipes. That order is the processing order, so reading the code from top to bottom shows the flow (theory note "Function composition and pipelines"). Skipping invalid lines is the job of `list.filter_map(parse_line)`. Because `parse_line` returns failure as an `Error`, the caller gets to decide whether to skip it.
+
+There are two common mistakes.
+
+- Turning an amount that could not be read into `0` and returning `Ok`. The category of the invalid line then shows up in the report, as in `toys: 0`. Return a failure as a failure and leave the decision to the caller.
+- Leaving the aggregated result in the order categories first appeared. The order is a requirement too, so sort explicitly with `list.sort` and `string.compare`. The order of `dict.to_list` is not guaranteed. With few keys it sometimes happens to come out in name order, so a small example won't reveal the problem, but with more categories the order gets scrambled. So don't leave out the sort.

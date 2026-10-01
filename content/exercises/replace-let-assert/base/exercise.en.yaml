@@ -1,0 +1,24 @@
+title: Remove let assert from a one-line settings parser
+tests:
+  parses_valid_setting_test: A valid line becomes a Setting just as it does now
+  missing_equals_is_error_test: "Without =, puts the whole line in MissingEquals instead of crashing"
+  not_a_number_is_error_test: If the value is not an integer, puts the value in NotANumber instead of crashing
+  negative_number_is_valid_test: A negative value is also valid
+  empty_value_is_not_a_number_test: An empty value is NotANumber("")
+  splits_at_first_equals_test: Splits only at the first = and treats the rest as the value
+requirements:
+  R1: Results for valid input stay the same
+  R2: Invalid input returns a SettingError value instead of crashing
+hints:
+  1: "What does the current code do when you call `parse_setting(\"retries 3\")`? What does its return type promise to the caller?"
+  2: "`let assert Ok(x) = r` crashes the program if `r` is an `Error`. Writing `use x <- result.try(r)` in the same place returns the `Error` as the function's return value instead. The error type of `r` must be `SettingError`, though."
+  3: "Replace each of the two `let assert` lines with `use ... <- result.try(...)`. Turn the `Error(Nil)` from `string.split_once` and `int.parse` into the appropriate `SettingError` with `result.replace_error` before passing it on."
+  4: |
+    ```gleam
+    use #(key, value) <- result.try(
+      string.split_once(line, "=") |> result.replace_error(todo),
+    )
+    use number <- result.try(todo)
+    Ok(Setting(key, number))
+    ```
+  5: "You can now open the full explanation. After viewing it, mastery is checked with a new exercise."
