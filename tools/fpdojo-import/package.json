@@ -1,0 +1,13 @@
+{
+  "name": "@fp/fpdojo-import",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "fp": {
+    "kind": "tool",
+    "description": "One-off importer: converts the fpdojo lesson dump (JSON) into content/lessons/ (Korean source + English overlays), applying verification fixes."
+  },
+  "dependencies": {
+    "yaml": "^2.9.1"
+  }
+}
