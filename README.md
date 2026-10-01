@@ -7,6 +7,7 @@ engine is available on the web, through an MCP server (Claude and other AI hosts
 - Product requirements: [plan.md](plan.md). Design proposal: [proposal.md](proposal.md).
 - Architecture and module rules: [docs/architecture.md](docs/architecture.md), [CLAUDE.md](CLAUDE.md).
 - Content format and plan: [content/README.md](content/README.md), [docs/content-plan.md](docs/content-plan.md).
+- Open issues and next steps: [docs/backlog.md](docs/backlog.md).
 
 ## Requirements
 
