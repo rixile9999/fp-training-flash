@@ -193,3 +193,115 @@ hints: { 1: q, 2: c, 3: a, 4: p, 5: e }
     "exercises/predict-map/base/explanation.en.md": "Each element is doubled.\n",
   };
 }
+
+export const U1 = "lessons/u01-values/";
+export const U2 = "lessons/u02-failure/";
+
+/**
+ * Lessons for `baseFiles()` (spread after it: replaces skills.yaml to add a basics skill and explicit-failure).
+ * u01-values (gleam-basics, 2 lessons) has a complete English translation (incl. localized code) and a partial
+ * Chinese one; u02-failure (explicit-failure, prerequisite u01-values) is Korean only.
+ */
+export function lessonFiles(): Files {
+  return {
+    "skills.yaml": `skills:
+  - { id: gleam-basics, name: Gleam 기초, track: basics, order: 0, description: 기초, prerequisites: [] }
+  - { id: data-transformation, name: 데이터 변환, track: core, order: 1, description: 변환, prerequisites: [] }
+  - { id: explicit-failure, name: 실패 처리, track: core, order: 2, description: 실패, prerequisites: [] }
+  - { id: recursive-algorithms, name: 재귀, track: algorithm, order: 3, description: 재귀, prerequisites: [data-transformation] }
+`,
+    [`${U1}unit.yaml`]: `title: 값
+order: 1
+level: 1
+skill: gleam-basics
+prerequisites: []
+lessons: [l01-let, l02-math]
+source: { kind: original }
+`,
+    [`${U1}l01-let.yaml`]: `title: 값과 let
+tags: [concept:basics]
+blocks:
+  - prose: intro
+    markdown: let으로 이름을 붙여요.
+  - exercise: bind
+    type: choice
+    prompt: 올바른 바인딩은?
+    choices: ["\`x = 5\`", "\`let x = 5\`", "\`var x = 5\`"]
+    answer: 1
+    feedback:
+      correct: 맞아요 SECRET_CORRECT
+      choices: { 0: let이 필요해요, 2: var는 없어요 }
+  - exercise: total
+    type: predict
+    prompt: total의 값은?
+    code: |-
+      let total = 100 * 3
+      // 결과는?
+    choices: ["\`3\`", "\`300\`", "\`103\`"]
+    answer: 1
+    feedback:
+      correct: 300이에요
+      choices: { 0: 곱셈이에요, 2: 더하기가 아니에요 }
+`,
+    [`${U1}l02-math.yaml`]: `title: 정수
+blocks:
+  - prose: ints
+    markdown: 정수 이야기.
+  - exercise: div
+    type: predict
+    prompt: 결과는?
+    code: 7 / 2
+    choices: ["\`3\`", "\`3.5\`"]
+    answer: 0
+    feedback: { correct: 정수 나눗셈, choices: { 1: Float이 아니에요 } }
+`,
+    [`${U1}unit.en.yaml`]: "title: Values\n",
+    [`${U1}l01-let.en.yaml`]: `title: Values and let
+blocks:
+  intro: { markdown: Name values with let. }
+  bind:
+    prompt: Which binding is correct?
+    choices: ["\`x = 5\`", "\`let x = 5\`", "\`var x = 5\`"]
+    feedback: { correct: Right, choices: { 0: You need let, 2: There is no var } }
+  total:
+    prompt: What is total?
+    code: |-
+      let total = 100 * 3
+      // The result?
+    choices: ["\`3\`", "\`300\`", "\`103\`"]
+    feedback: { correct: It is 300, choices: { 0: Multiplication, 2: Not addition } }
+`,
+    [`${U1}l02-math.en.yaml`]: `title: Integers
+blocks:
+  ints: { markdown: About integers. }
+  div:
+    prompt: Result?
+    choices: ["\`3\`", "\`3.5\`"]
+    feedback: { correct: Integer division, choices: { 1: Not a Float } }
+`,
+    [`${U1}unit.zh.yaml`]: "title: 值\n",
+    [`${U1}l01-let.zh.yaml`]: `title: 值与 let
+blocks:
+  intro: { markdown: 用 let 命名。 }
+  bind: { feedback: { choices: { 2: 没有 var } } }
+`,
+    [`${U2}unit.yaml`]: `title: 실패
+order: 2
+level: 3
+skill: explicit-failure
+prerequisites: [u01-values]
+lessons: [l01-result]
+source: { kind: original }
+`,
+    [`${U2}l01-result.yaml`]: `title: Result
+tags: [concept:results]
+blocks:
+  - exercise: ok
+    type: choice
+    prompt: 성공은?
+    choices: [Ok, Error]
+    answer: 0
+    feedback: { correct: 맞아요, choices: { 1: 실패예요 } }
+`,
+  };
+}

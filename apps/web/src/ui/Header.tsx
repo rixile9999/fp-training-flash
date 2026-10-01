@@ -9,7 +9,7 @@ import { Icon } from "./Icon.tsx";
 import { LanguageSwitcher } from "./LanguageSwitcher.tsx";
 import { formatClock } from "./labels.ts";
 
-export type View = "training" | "progress";
+export type View = "course" | "training" | "progress";
 
 export function Header(props: {
   readonly displayName: string;
@@ -41,6 +41,7 @@ export function Header(props: {
         <nav aria-label={t("header.mainNav")} className="main-nav">
           {(
             [
+              ["course", t("nav.course")],
               ["training", t("nav.training")],
               ["progress", t("nav.progress")],
             ] as const

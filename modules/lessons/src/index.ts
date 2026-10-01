@@ -1,8 +1,11 @@
 /** Composition-root entry. Only apps/* and tools/* may import this file. */
-import type { Clock, Db, EventBus, Logger, Migration } from "@fp/kernel";
+import type { Clock, Db, EventBus, Logger } from "@fp/kernel";
 import type { ContentCatalog } from "@fp/content/contract";
 import type { LearnerModel } from "@fp/learner/contract";
 import type { LessonService } from "./contract/index.ts";
+import { createLessonService } from "./service.ts";
+
+export { migrations } from "./migrations.ts";
 
 export interface LessonsModuleDeps {
   readonly db: Db;
@@ -17,8 +20,7 @@ export interface LessonsModule {
   readonly service: LessonService;
 }
 
-export const migrations: readonly Migration[] = [];
-
-export function createLessonsModule(_deps: LessonsModuleDeps): LessonsModule {
-  throw new Error("not implemented");
+/** Consumes no events. Run `migrations` (schema "lessons") before use. */
+export function createLessonsModule(deps: LessonsModuleDeps): LessonsModule {
+  return { service: createLessonService(deps) };
 }

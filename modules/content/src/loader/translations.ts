@@ -29,7 +29,8 @@ import { parseYaml, validate, type AddIssue } from "./yaml.ts";
 
 type Mutable<T> = { -readonly [K in keyof T]: T[K] };
 
-const HANGUL = /[ᄀ-ᇿ㄰-㆏가-힯]/;
+/** Hangul jamo, compatibility jamo and syllables: Korean text left in a translation. */
+export const HANGUL = /[ᄀ-ᇿ㄰-㆏가-힯]/;
 const VARIANT_OVERLAY_FILE = /^(exercise\.[^./]+\.yaml|prompt\.[^./]+\.md|explanation\.[^./]+\.md)$/;
 const STARTER_DIR = /^starter\.([^./]+)$/;
 
@@ -40,7 +41,7 @@ export function localeOf(name: string, base: string, ext: string): string | null
   return loc !== "" && !/[./]/.test(loc) ? loc : null;
 }
 
-function checkLocale(loc: string, path: string, add: AddIssue): loc is TranslatedLocale {
+export function checkLocale(loc: string, path: string, add: AddIssue): loc is TranslatedLocale {
   if (isTranslatedLocale(loc)) return true;
   add(path, `unsupported locale "${loc}": translations must be ${TRANSLATED_LOCALES.join(" or ")}`);
   return false;
@@ -68,12 +69,12 @@ function setIn<T>(map: Map<string, Mutable<Translations<T>>>, id: string, loc: T
 }
 
 /** Own-property lookup, so ids such as "constructor" never hit Object.prototype. */
-function own<T>(record: Readonly<Record<string, T>> | undefined, key: string): T | undefined {
+export function own<T>(record: Readonly<Record<string, T>> | undefined, key: string): T | undefined {
   return record !== undefined && Object.hasOwn(record, key) ? record[key] : undefined;
 }
 
 /** Copies only the defined fields. */
-function defined<T extends object>(value: T): T {
+export function defined<T extends object>(value: T): T {
   return Object.fromEntries(Object.entries(value).filter(([, v]) => v !== undefined)) as T;
 }
 

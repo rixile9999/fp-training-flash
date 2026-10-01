@@ -1,15 +1,25 @@
 /** Composition-root entry. Only apps/* and tools/* may import this file. */
 import type { AppError, Clock, Db, EventBus, Logger, Result } from "@fp/kernel";
-import { loadDirectory, type ContentBundle } from "./bundle.ts";
+import { loadDirectory, parsedContentOf, type ContentBundle } from "./bundle.ts";
 import type { BundleInfo, ContentCatalog } from "./contract/index.ts";
 import { createCatalog } from "./db/catalog.ts";
 import { importBundle } from "./db/importer.ts";
+import { lessonTranslationGaps as gapsOf, type LessonTranslationGap } from "./loader/lessons.ts";
 import type { ContentIssue } from "./loader/parse.ts";
 
 export { migrations } from "./db/migrations.ts";
 /** Gleam source without comments/blank lines; a localized starter must equal the Korean one under it. */
 export { codeOnly } from "./loader/gleam.ts";
-export type { ContentBundle, ContentIssue };
+export type { ContentBundle, ContentIssue, LessonTranslationGap };
+
+/**
+ * Lesson overlays that are not complete for their locale (why a unit lacks that locale in `LessonUnitSummary.locales`).
+ * Incomplete translations are not issues: they are served field by field with Korean fallback.
+ */
+export function lessonTranslationGaps(bundle: ContentBundle): readonly LessonTranslationGap[] {
+  const parsed = parsedContentOf(bundle);
+  return parsed ? gapsOf(parsed.lessonUnits) : [];
+}
 
 export interface ContentModuleDeps {
   readonly db: Db;

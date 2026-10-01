@@ -2,7 +2,8 @@
 /**
  * Content CI. Usage:
  *   node tools/content-ci/src/main.ts [--content <dir>] [--family <id>]... [--runner docker|local]
- *        [--image <tag>] [--template <dir>] [--jobs N] [--write-baselines] [--json]
+ *        [--image <tag>] [--template <dir>] [--jobs N] [--write-baselines] [--json] [--lessons-only]
+ * The default run (no --family) also checks content/lessons (src/lessons.ts); --lessons-only skips the grader.
  * Exit code 1 when any check fails.
  */
 import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -13,8 +14,9 @@ import { parseArgs } from "node:util";
 import { parseDocument } from "yaml";
 import { InMemoryEventBus, runMigrations, silentLogger, systemClock, createPgliteDb } from "@fp/kernel";
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES, type ExerciseId } from "@fp/kernel";
-import { createContentModule, migrations as contentMigrations } from "@fp/content";
+import { createContentModule, lessonTranslationGaps, migrations as contentMigrations } from "@fp/content";
 import { createDockerGleamRunner, createLocalGleamRunner } from "@fp/grading";
+import { formatLessonSummary, verifyLessons, type LessonCheck } from "./lessons.ts";
 import { verifyExercise, type ExerciseCheck } from "./verify.ts";
 
 const repoRoot = resolve(fileURLToPath(new URL("../../..", import.meta.url)));
@@ -28,12 +30,17 @@ const { values } = parseArgs({
     jobs: { type: "string", default: "4" },
     "write-baselines": { type: "boolean", default: false },
     json: { type: "boolean", default: false },
+    "lessons-only": { type: "boolean", default: false },
   },
 });
 
 const contentDir = resolve(values.content);
 const TRANSLATED = SUPPORTED_LOCALES.filter((l) => l !== DEFAULT_LOCALE);
 const families = new Set(values.family ?? []);
+if (values["lessons-only"] && families.size > 0) {
+  console.error("--lessons-only cannot be combined with --family (a --family run does not include content/lessons)");
+  process.exit(2);
+}
 
 /**
  * With --family, validate an isolated copy holding only the shared files and the selected families, so that
@@ -73,6 +80,25 @@ const imported = await content.admin.importBundle(loaded.value);
 if (!imported.ok) {
   console.error(`import failed: ${imported.error.message}`);
   process.exit(1);
+}
+
+// Lessons: only in the default run (a --family run validates an isolated copy without content/lessons).
+let lessonCheck: LessonCheck | null = null;
+if (families.size === 0) {
+  lessonCheck = await verifyLessons(content.catalog, SUPPORTED_LOCALES);
+  if (!values.json) {
+    console.log(`lessons: ${formatLessonSummary(lessonCheck.counts, TRANSLATED)}`);
+    for (const p of lessonCheck.problems) console.log(`✗ lesson ${p}`);
+    // Incomplete translations are served with Korean fallback: reported, not failed.
+    for (const g of lessonTranslationGaps(loaded.value)) console.log(`  incomplete ${g.locale}: ${g.path}: ${g.missing.join("; ")}`);
+  }
+}
+const lessonsFailed = (lessonCheck?.problems.length ?? 0) > 0;
+if (values["lessons-only"]) {
+  if (values.json) console.log(JSON.stringify({ lessons: lessonCheck, translationGaps: lessonTranslationGaps(loaded.value) }, null, 2));
+  scoped.cleanup();
+  await db.close();
+  process.exit(lessonsFailed ? 1 : 0);
 }
 
 const runner =
@@ -120,8 +146,16 @@ await Promise.all(
 );
 
 const failed = results.filter((r) => r.problems.length);
-if (values.json) console.log(JSON.stringify({ checked: results.length, failed: failed.length, results }, null, 2));
-else console.log(`\n${results.length - failed.length}/${results.length} exercises passed content CI`);
+if (values.json) {
+  const lessons = lessonCheck ? { lessons: lessonCheck, translationGaps: lessonTranslationGaps(loaded.value) } : {};
+  console.log(JSON.stringify({ checked: results.length, failed: failed.length, results, ...lessons }, null, 2));
+} else {
+  console.log(`\n${results.length - failed.length}/${results.length} exercises passed content CI`);
+  if (lessonCheck) {
+    const verdict = lessonsFailed ? `${lessonCheck.problems.length} lesson problem(s)` : "lessons passed content CI";
+    console.log(`${formatLessonSummary(lessonCheck.counts, TRANSLATED)}: ${verdict}`);
+  }
+}
 scoped.cleanup();
 await db.close();
-process.exit(failed.length ? 1 : 0);
+process.exit(failed.length || lessonsFailed ? 1 : 0);

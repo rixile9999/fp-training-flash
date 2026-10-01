@@ -75,6 +75,7 @@ async function writeContent(tx: Db, parsed: ParsedContent, bundleId: string, imp
   await retireMissing(tx, "skills", parsed.skills.map((s) => s.id));
   await replaceNotes(tx, "concept_notes", parsed.conceptNotes, parsed.translations.conceptNotes);
   await replaceNotes(tx, "theory_topics", parsed.theoryTopics, parsed.translations.theoryTopics);
+  await replaceLessons(tx, parsed);
 
   const existing = await tx.query<VariantRow>(
     "select family_id, variant_key, latest_version, content_hash, retired from content.variants",
@@ -160,6 +161,39 @@ async function replaceNotes(
   await retireMissing(tx, table, notes.map((n) => n.id));
 }
 
-async function retireMissing(tx: Db, table: "skills" | "concept_notes" | "theory_topics", keep: readonly string[]): Promise<void> {
+/** Upserts every unit and lesson; retires units and lessons that are no longer in the bundle. */
+async function replaceLessons(tx: Db, parsed: ParsedContent): Promise<void> {
+  const lessonKeys: string[] = [];
+  for (const u of parsed.lessonUnits) {
+    await tx.query(
+      `insert into content.lesson_units (id, sort_order, data, translations, retired) values ($1, $2, $3::jsonb, $4::jsonb, false)
+       on conflict (id) do update
+         set sort_order = excluded.sort_order, data = excluded.data, translations = excluded.translations, retired = false`,
+      [u.unit.id, u.unit.order, JSON.stringify(u.unit), JSON.stringify(u.translations)],
+    );
+    for (const [position, l] of u.lessons.entries()) {
+      lessonKeys.push(`${u.unit.id}/${l.lesson.id}`);
+      await tx.query(
+        `insert into content.lessons (unit_id, lesson_id, position, data, answers, translations, retired)
+         values ($1, $2, $3, $4::jsonb, $5::jsonb, $6::jsonb, false)
+         on conflict (unit_id, lesson_id) do update
+           set position = excluded.position, data = excluded.data, answers = excluded.answers,
+               translations = excluded.translations, retired = false`,
+        [u.unit.id, l.lesson.id, position, JSON.stringify(l.lesson), JSON.stringify(l.answers), JSON.stringify(l.translations)],
+      );
+    }
+  }
+  await retireMissing(tx, "lesson_units", parsed.lessonUnits.map((u) => u.unit.id));
+  await tx.query(
+    "update content.lessons set retired = true where not retired and not ((unit_id || '/' || lesson_id) = any($1::text[]))",
+    [lessonKeys],
+  );
+}
+
+async function retireMissing(
+  tx: Db,
+  table: "skills" | "concept_notes" | "theory_topics" | "lesson_units",
+  keep: readonly string[],
+): Promise<void> {
   await tx.query(`update content.${table} set retired = true where not retired and not (id = any($1::text[]))`, [keep]);
 }

@@ -11,3 +11,12 @@ export function StatusBadge({ ok, okLabel, failLabel }: { readonly ok: boolean; 
     </span>
   );
 }
+
+/** Inline error text announced to screen readers; renders nothing without a message. */
+export function Alert({ message }: { readonly message: string | null }) {
+  return message ? (
+    <p className="inline-error" role="alert">
+      {message}
+    </p>
+  ) : null;
+}

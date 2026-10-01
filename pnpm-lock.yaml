@@ -199,6 +199,9 @@ importers:
       '@fp/learner':
         specifier: workspace:*
         version: link:../../modules/learner
+      '@fp/lessons':
+        specifier: workspace:*
+        version: link:../../modules/lessons
       '@fp/sessions':
         specifier: workspace:*
         version: link:../../modules/sessions

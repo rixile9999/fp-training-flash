@@ -7,10 +7,11 @@ import type { Translator } from "../i18n/translator.ts";
 import type { Evaluation, RequirementResult, TestResult } from "../api/types.ts";
 import { CodeBlock } from "../ui/CodeBlock.tsx";
 import { Icon } from "../ui/Icon.tsx";
+import { RatingLine } from "../ui/Rating.tsx";
 import type { IconName } from "../ui/Icon.tsx";
 import { Markdown } from "../ui/Markdown.tsx";
 import { StatusBadge } from "../ui/Status.tsx";
-import { errorTagLabel, outcomeLabel, skillName } from "../ui/labels.ts";
+import { errorTagLabel, outcomeLabel } from "../ui/labels.ts";
 
 /** Splits a runner message like "expected: X\n     got: Y" into its parts. */
 export function parseExpectedActual(message: string | undefined): { expected: string; actual: string; rest: string } | null {
@@ -275,19 +276,7 @@ function RatingPanel({ result, skills }: { readonly result: SubmissionView; read
         {t("rating.title")}
       </h2>
       {rc ? (
-        <>
-          <p className="rating-skill">{skillName(skills, rc.skillId)}</p>
-          <p className="rating-change">
-            <span className="mono rating-before">{rc.before}</span>
-            <Icon name="arrowRight" label={t("rating.arrow")} />
-            <span className="mono rating-after">{rc.after}</span>
-            <span className={`rating-delta mono ${rc.after >= rc.before ? "is-up" : "is-down"}`}>
-              ({rc.after >= rc.before ? "+" : ""}
-              {rc.after - rc.before})
-            </span>
-            {rc.provisional && <span className="badge-provisional">{t("common.provisional")}</span>}
-          </p>
-        </>
+        <RatingLine change={rc} skills={skills} />
       ) : (
         <p className="rating-none">
           {t("rating.notRated", { reasons: reasons.length ? t("rating.reasons", { list: tr.list(reasons) }) : "" })}

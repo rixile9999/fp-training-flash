@@ -97,3 +97,39 @@ export const recommendQuerySchema = z.object({
   language: languageSchema,
   skill: skillIdSchema.optional(),
 });
+
+// ---------- lessons (course, checkpoints, placement) ----------
+
+export const MAX_PATH_ID_CHARS = 128;
+export const MAX_CHOICE_INDEX = 31;
+export const MAX_QUIZ_ANSWERS = 100;
+
+/** Unit, lesson, lesson-exercise and quiz ids: one path segment (letters, digits, ".", "_", "-"). */
+const PATH_SEGMENT = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+export const pathIdSchema = z
+  .string()
+  .refine((v) => v.length <= MAX_PATH_ID_CHARS && PATH_SEGMENT.test(v), messageParams("invalidPathId"));
+
+export const unitParamsSchema = z.object({ unitId: pathIdSchema });
+export const lessonParamsSchema = z.object({ unitId: pathIdSchema, lessonId: pathIdSchema });
+export const quizParamsSchema = z.object({ quizId: pathIdSchema });
+
+const choiceIndex = z.number().int().min(0).max(MAX_CHOICE_INDEX);
+
+export const lessonAnswerSchema = z.object({
+  exerciseId: pathIdSchema,
+  choice: choiceIndex.nullable(),
+  giveUp: z.boolean().optional(),
+});
+
+/** Quiz item ids may embed exercise ids ("/", "@"), so keys only get a length bound. zod drops "__proto__" keys. */
+const quizItemKey = z.string().min(1).max(300);
+
+export const quizSubmitSchema = z.object({
+  answers: z
+    .record(quizItemKey, choiceIndex.nullable())
+    .refine(
+      (a) => Object.keys(a).length <= MAX_QUIZ_ANSWERS,
+      messageParams("tooManyAnswers", { max: String(MAX_QUIZ_ANSWERS) }),
+    ),
+});

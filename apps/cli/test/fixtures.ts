@@ -1,4 +1,16 @@
-import type { ExerciseView, Locale, Session, SubmissionView, TrialRun } from "@fp/api-contract";
+import type {
+  AnswerResult,
+  CheckpointResult,
+  CourseView,
+  ExerciseView,
+  LessonView,
+  Locale,
+  PlacementResult,
+  Quiz,
+  Session,
+  SubmissionView,
+  TrialRun,
+} from "@fp/api-contract";
 import type { CliApi } from "../src/cli.ts";
 
 /** Branded ids are plain strings at runtime. */
@@ -137,6 +149,127 @@ export function submissionView(sessionId?: string): SubmissionView {
   };
 }
 
+// ---------- Gleam basics course (content arrives in the account locale) ----------
+
+export const UNIT = "u01-values";
+export const UNIT2 = "u02-functions-pipes";
+export const LESSON = "l01-values-let";
+export const LESSON2 = "l02-immutability";
+
+const LESSON_TITLE: Record<Locale, string> = { ko: "값과 let", en: "Values and let", zh: "值与 let" };
+const PROSE: Record<Locale, string> = {
+  ko: "프로그램은 **값**을 다룹니다. `let`으로 값에 *이름*을 붙여요.\n\n```gleam\nlet pi = 3.14\n```\n\n자세히: [Gleam 투어](https://tour.gleam.run)",
+  en: "Programs work with **values**. You name a value with `let`.\n\n```gleam\nlet pi = 3.14\n```",
+  zh: "程序处理的是**值**。用 `let` 给值起名字。\n\n```gleam\nlet pi = 3.14\n```",
+};
+const PROMPT: Record<Locale, string> = {
+  ko: "함수 본문 안에서 값을 이름에 묶는 문법은?",
+  en: "Which syntax binds a value to a name inside a function body?",
+  zh: "在函数体内把值绑定到名字上的语法是什么？",
+};
+const FEEDBACK: Record<Locale, { correct: string; wrong: string }> = {
+  ko: { correct: "맞아요! `let`으로 바인딩합니다.", wrong: "Gleam에는 `var`가 없습니다." },
+  en: { correct: "Right! You bind with `let`.", wrong: "Gleam has no `var`." },
+  zh: { correct: "没错！用 `let` 绑定。", wrong: "Gleam 没有 `var`。" },
+};
+
+export function courseView(locale: Locale = "ko", next: CourseView["next"] = { kind: "lesson", unitId: UNIT, lessonId: LESSON2 }): CourseView {
+  const unit = (id: string, order: number, title: string, lessons: readonly string[], completed: readonly string[], unlocked: boolean) => ({
+    id,
+    title,
+    order,
+    level: 1,
+    skill: brand<CourseView["units"][number]["skill"]>("gleam-basics"),
+    prerequisites: order === 1 ? [] : [UNIT],
+    lessonIds: lessons,
+    lessonTitles: lessons.map((l) => (l === LESSON ? LESSON_TITLE[locale] : `${l}-title`)),
+    locales: ["ko", "en", "zh"] as Locale[],
+    progress: { unitId: id, lessonsCompleted: completed, checkpointPassed: false, unlocked, passedByPlacement: false },
+  });
+  return {
+    units: [
+      unit(UNIT2, 2, locale === "ko" ? "함수와 파이프" : locale === "en" ? "Functions and pipes" : "函数与管道", ["l01-functions"], [], false),
+      unit(UNIT, 1, locale === "ko" ? "값, 불변성, 표현식" : locale === "en" ? "Values, immutability, expressions" : "值、不可变性与表达式", [LESSON, LESSON2], [LESSON], true),
+    ],
+    placement: null,
+    next,
+  };
+}
+
+export function lessonView(locale: Locale = "ko", solved: readonly string[] = []): LessonView {
+  return {
+    lesson: {
+      id: LESSON,
+      unitId: UNIT,
+      title: LESSON_TITLE[locale],
+      tags: ["concept:basics"],
+      blocks: [
+        { kind: "prose", id: "intro", markdown: PROSE[locale] },
+        { kind: "exercise", id: "bind-syntax", type: "choice", prompt: PROMPT[locale], choices: ["`x = 5`", "`let x = 5`", "`var x = 5`"] },
+        { kind: "exercise", id: "let-use", type: "predict", prompt: "`total`?", code: "let total = 100 * 3", choices: ["`3`", "`300`"] },
+      ],
+    },
+    solved,
+    completed: false,
+  };
+}
+
+/** Correct answers of the fake lesson: bind-syntax -> 1, let-use -> 1. */
+export function answerResult(locale: Locale, choice: number | null, giveUp: boolean): AnswerResult {
+  const correct = !giveUp && choice === 1;
+  return {
+    correct,
+    ...(correct || giveUp ? { correctIndex: 1 } : {}),
+    feedback: correct || giveUp ? FEEDBACK[locale].correct : FEEDBACK[locale].wrong,
+  };
+}
+
+export function quiz(kind: "checkpoint" | "placement" = "checkpoint"): Quiz {
+  return {
+    quizId: kind === "checkpoint" ? "quiz-cp-1" : "quiz-pl-1",
+    kind,
+    ...(kind === "checkpoint" ? { unitId: UNIT, passThreshold: 0.8 } : {}),
+    items: [
+      { itemId: "item-a", unitId: UNIT, type: "choice", prompt: "**바인딩** 문법은?", choices: ["`let x = 1`", "`x := 1`", "`var x = 1`"] },
+      { itemId: "item-b", unitId: UNIT, type: "predict", prompt: "결과는?", code: "1 + 2", choices: ["`3`", "`12`"] },
+    ],
+  };
+}
+
+const review = (answers: Readonly<Record<string, number | null>>) => [
+  { itemId: "item-a", chosen: answers["item-a"] ?? null, correct: answers["item-a"] === 0, correctIndex: 0, feedback: "`let`을 씁니다.", backlink: `${UNIT}/${LESSON}#bind-syntax` },
+  { itemId: "item-b", chosen: answers["item-b"] ?? null, correct: answers["item-b"] === 0, correctIndex: 0, feedback: "정수 덧셈입니다.", backlink: `${UNIT}/${LESSON2}#plus` },
+];
+
+export function checkpointResult(quizId: string, answers: Readonly<Record<string, number | null>>): CheckpointResult {
+  const r = review(answers);
+  const score = r.filter((x) => x.correct).length;
+  return {
+    quizId,
+    unitId: UNIT,
+    score,
+    total: r.length,
+    passed: score === r.length,
+    review: r,
+    ratingChanges: score === r.length ? [{ skillId: brand("gleam-basics"), before: 1000, after: 1040.4, provisional: true }] : [],
+  };
+}
+
+export function placementResult(quizId: string, answers: Readonly<Record<string, number | null>>): PlacementResult {
+  const r = review(answers);
+  const score = r.filter((x) => x.correct).length;
+  return {
+    quizId,
+    score,
+    total: r.length,
+    band: score === r.length ? "advanced" : "beginner",
+    unitsPassed: score === r.length ? [UNIT, UNIT2] : [],
+    recommendation: score === r.length ? "training" : "course",
+    review: r,
+    completedAt: "2026-10-01T00:00:00.000Z",
+  };
+}
+
 export interface Call {
   readonly method: string;
   readonly args: readonly unknown[];
@@ -191,6 +324,20 @@ export function fakeApi(overrides: Partial<CliApi> = {}, accountLocale: Locale =
       },
       skills: [{ id: brand("data-transform"), name: "데이터 변환", description: "", track: "core", prerequisites: [], order: 1 }],
     }),
+    course: async () => courseView(locale),
+    lesson: async () => lessonView(locale),
+    lessonAnswer: async (_u, _l, req) => answerResult(locale, req.choice, req.giveUp ?? false),
+    lessonComplete: async (unitId, lessonId) => ({
+      unitId,
+      lessonsCompleted: [LESSON, lessonId],
+      checkpointPassed: false,
+      unlocked: true,
+      passedByPlacement: false,
+    }),
+    startCheckpoint: async () => quiz("checkpoint"),
+    submitCheckpoint: async (quizId, req) => checkpointResult(quizId, req.answers),
+    startPlacement: async () => quiz("placement"),
+    submitPlacement: async (quizId, req) => placementResult(quizId, req.answers),
   };
   const merged = { ...base, ...overrides } as Record<string, (...a: unknown[]) => Promise<unknown>>;
   const api = Object.fromEntries(

@@ -2,9 +2,22 @@ import { randomUUID } from "node:crypto";
 import { relative, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { ApiError, createApiClient } from "@fp/api-contract";
-import type { ApiClient, Language, Session } from "@fp/api-contract";
+import type { ApiClient, Language, Quiz, Session } from "@fp/api-contract";
 import { DEFAULT_API_URL, configPath, loadConfig, saveConfig } from "./config.ts";
 import type { CliConfig, ConfigEnv } from "./config.ts";
+import {
+  exerciseBlocks,
+  formatAnswer,
+  formatCheckpointResult,
+  formatCourse,
+  formatLesson,
+  formatLessonDone,
+  formatPlacementResult,
+  formatQuiz,
+  formatQuizHeader,
+  formatQuizItem,
+  nextStepLine,
+} from "./course.ts";
 import {
   formatExplanation,
   formatFeedback,
@@ -28,6 +41,7 @@ import {
 import type { Locale, LocaleSource, MessageId, MessageParams, SystemLocaleEnv } from "./messages.ts";
 import { META_FILE, learnerFile, readLearnerCode, readMeta, writeProject } from "./project.ts";
 import type { ProjectMeta } from "./project.ts";
+import type { Prompter } from "./prompt.ts";
 
 /** API methods the CLI uses; tests pass a hand-written fake. */
 export type CliApi = Pick<
@@ -46,6 +60,14 @@ export type CliApi = Pick<
   | "activeSession"
   | "skipItem"
   | "progress"
+  | "course"
+  | "lesson"
+  | "lessonAnswer"
+  | "lessonComplete"
+  | "startCheckpoint"
+  | "submitCheckpoint"
+  | "startPlacement"
+  | "submitPlacement"
 >;
 
 export interface CliEnv extends ConfigEnv, SystemLocaleEnv {
@@ -62,6 +84,10 @@ export interface CliDeps {
   readonly stderr: (text: string) => void;
   readonly createClient?: (opts: { readonly baseUrl: string; readonly token?: string }) => CliApi;
   readonly newKey?: () => string;
+  /** True when stdin is a terminal: checkpoint/placement then ask one item at a time (unless --json). */
+  readonly stdinIsTTY?: boolean;
+  /** Creates the line prompter for interactive quizzes (main.ts: node:readline on stdin/stdout). */
+  readonly prompter?: () => Prompter;
 }
 
 const LANGUAGE: Language = "gleam";
@@ -78,7 +104,57 @@ export const USAGE = usage();
 class CliError extends LocalizedError {}
 
 /** Commands that render with the account locale; they fetch /v1/me unless --lang/FP_LANG decide. */
-const ACCOUNT_LOCALE_COMMANDS = new Set(["start", "next", "current", "skip", "run", "submit", "feedback", "hint", "explain", "progress", "token"]);
+const ACCOUNT_LOCALE_COMMANDS = new Set([
+  "start",
+  "next",
+  "current",
+  "skip",
+  "run",
+  "submit",
+  "feedback",
+  "hint",
+  "explain",
+  "progress",
+  "token",
+  "course",
+  "lesson",
+  "answer",
+  "lesson-done",
+  "checkpoint",
+  "placement",
+]);
+
+type QuizKind = "checkpoint" | "placement";
+type QuizAnswers = Record<string, number | null>;
+
+/** "<unit>/<lesson>" -> ids; anything else is a usage error with `usageId`. */
+function parseLessonRef(value: string | undefined, usageId: MessageId): { unitId: string; lessonId: string } {
+  const slash = value?.indexOf("/") ?? -1;
+  const unitId = value?.slice(0, slash) ?? "";
+  const lessonId = value?.slice(slash + 1) ?? "";
+  if (slash <= 0 || !lessonId || lessonId.includes("/")) throw new CliError(usageId, {}, 2);
+  return { unitId, lessonId };
+}
+
+/** "--answers a=0,b=2,c=" -> { a: 0, b: 2, c: null }. Indexes are 0-based like the API; empty or "-" skips. */
+export function parseAnswers(value: string): QuizAnswers {
+  const answers: QuizAnswers = {};
+  const parts = value
+    .split(",")
+    .map((p) => p.trim())
+    .filter((p) => p !== "");
+  if (parts.length === 0) throw new CliError("answersInvalid", { value }, 2);
+  for (const part of parts) {
+    const eq = part.lastIndexOf("=");
+    const id = part.slice(0, eq).trim();
+    const raw = part.slice(eq + 1).trim();
+    if (eq <= 0 || !id) throw new CliError("answersInvalid", { value: part }, 2);
+    if (raw === "" || raw === "-") answers[id] = null;
+    else if (/^\d+$/.test(raw)) answers[id] = Number(raw);
+    else throw new CliError("answersInvalid", { value: part }, 2);
+  }
+  return answers;
+}
 
 function describeError(e: unknown, locale: Locale): string {
   const m = (id: MessageId, params?: MessageParams) => msg(locale, id, params);
@@ -145,6 +221,8 @@ export async function runCli(argv: readonly string[], deps: CliDeps): Promise<nu
         focus: { type: "string" },
         dir: { type: "string" },
         lang: { type: "string" },
+        answers: { type: "string" },
+        quiz: { type: "string" },
       },
     });
   } catch (e) {
@@ -248,6 +326,83 @@ export async function runCli(argv: readonly string[], deps: CliDeps): Promise<nu
     const s = await api.activeSession(LANGUAGE);
     if (!s) throw new CliError("noActiveSession");
     return s;
+  };
+
+  // ---------- checkpoint and placement ----------
+
+  const forgetQuiz = async (quizId: string) => {
+    if (config.lastQuiz?.id !== quizId) return;
+    const { lastQuiz: _done, ...rest } = config;
+    config = rest;
+    await saveConfig(env, config);
+  };
+
+  const submitQuiz = async (api: CliApi, kind: QuizKind, quizId: string, answers: QuizAnswers, quiz?: Quiz): Promise<number> => {
+    if (kind === "checkpoint") {
+      const res = await api.submitCheckpoint(quizId, { answers });
+      await forgetQuiz(quizId);
+      emit(res, formatCheckpointResult(res, quiz, locale));
+      return res.passed ? 0 : 1;
+    }
+    const res = await api.submitPlacement(quizId, { answers });
+    await forgetQuiz(quizId);
+    emit(res, formatPlacementResult(res, quiz, locale));
+    return 0;
+  };
+
+  /** One item at a time; the answers are only checked (and revealed) after the whole quiz is submitted. */
+  const askQuiz = async (prompter: Prompter, quiz: Quiz): Promise<QuizAnswers> => {
+    const answers: QuizAnswers = {};
+    out(formatQuizHeader(quiz, locale));
+    for (const [i, item] of quiz.items.entries()) {
+      out(`\n${formatQuizItem(item, i + 1, quiz.items.length, locale)}\n`);
+      const max = item.choices.length;
+      for (;;) {
+        const line = await prompter.ask(t("quizAsk", { max }));
+        if (line === null) throw new CliError("quizAborted");
+        const v = line.trim();
+        if (v === "") {
+          answers[item.itemId] = null;
+          break;
+        }
+        const n = Number(v);
+        if (/^\d+$/.test(v) && n >= 1 && n <= max) {
+          answers[item.itemId] = n - 1;
+          break;
+        }
+        out(t("quizInvalidChoice", { max }));
+      }
+    }
+    return answers;
+  };
+
+  const takeQuiz = async (kind: QuizKind, unitId?: string): Promise<number> => {
+    const api = authed();
+    const command = kind === "placement" ? "fp placement" : `fp checkpoint ${unitId ?? ""}`;
+    if (opts.answers !== undefined) {
+      const answers = parseAnswers(opts.answers);
+      const last = config.lastQuiz;
+      const remembered = last && last.kind === kind && (kind === "placement" || last.unitId === unitId) ? last.id : undefined;
+      const quizId = opts.quiz ?? remembered;
+      if (!quizId) throw new CliError("quizIdMissing", { command }, 2);
+      return await submitQuiz(api, kind, quizId, answers);
+    }
+    if (opts.quiz !== undefined) throw new CliError(kind === "placement" ? "placementUsage" : "checkpointUsage", {}, 2);
+    const quiz = kind === "placement" ? await api.startPlacement() : await api.startCheckpoint(unitId ?? "");
+    const prompter = !json && deps.stdinIsTTY && deps.prompter ? deps.prompter() : null;
+    if (!prompter) {
+      await update({ lastQuiz: { id: quiz.quizId, kind, ...(unitId ? { unitId } : {}) } });
+      emit(quiz, formatQuiz(quiz, locale));
+      return 0;
+    }
+    let answers: QuizAnswers;
+    try {
+      answers = await askQuiz(prompter, quiz);
+    } finally {
+      prompter.close();
+    }
+    out(t("quizSubmitting"));
+    return await submitQuiz(api, kind, quiz.quizId, answers, quiz);
   };
 
   const showLocale = (source: LocaleSource) =>
@@ -384,6 +539,84 @@ export async function runCli(argv: readonly string[], deps: CliDeps): Promise<nu
         const p = await authed().progress(LANGUAGE);
         emit(p, formatProgress(p, locale));
         return 0;
+      }
+      case "course": {
+        const course = await authed().course();
+        emit(course, formatCourse(course, locale));
+        return 0;
+      }
+      case "lesson": {
+        const [target = "next", ...extra] = args;
+        if (extra.length > 0) throw new CliError("lessonUsage", {}, 2);
+        const api = authed();
+        let ref: { unitId: string; lessonId: string };
+        if (target === "next") {
+          const { next } = await api.course();
+          if (next.kind !== "lesson") {
+            emit({ next }, nextStepLine(next, locale));
+            return 0;
+          }
+          ref = { unitId: next.unitId, lessonId: next.lessonId };
+        } else if (!target.includes("/")) {
+          // A bare unit id opens its first lesson that is not completed yet.
+          const unit = (await api.course()).units.find((u) => u.id === target);
+          const done = new Set(unit?.progress.lessonsCompleted ?? []);
+          const lessonId = unit?.lessonIds.find((id) => !done.has(id)) ?? unit?.lessonIds[0];
+          if (!lessonId) throw new CliError("unitNotFound", { unit: target });
+          ref = { unitId: target, lessonId };
+        } else {
+          ref = parseLessonRef(target, "lessonUsage");
+        }
+        const view = await api.lesson(ref.unitId, ref.lessonId);
+        emit(view, formatLesson(view, locale));
+        return 0;
+      }
+      case "answer": {
+        const [refArg, exerciseArg, choiceArg, ...extra] = args;
+        if (!exerciseArg || !choiceArg || extra.length > 0) throw new CliError("answerUsage", {}, 2);
+        const ref = parseLessonRef(refArg, "answerUsage");
+        const giveUp = choiceArg.trim().toLowerCase() === "show";
+        let choice: number | null = null;
+        if (!giveUp) {
+          if (!/^\d+$/.test(choiceArg.trim()) || Number(choiceArg) < 1) throw new CliError("answerChoiceInvalid", { value: choiceArg }, 2);
+          choice = Number(choiceArg) - 1;
+        }
+        const api = authed();
+        let exerciseId = exerciseArg;
+        if (/^\d+$/.test(exerciseArg)) {
+          // Exercise number as printed by `fp lesson`.
+          const exercises = exerciseBlocks((await api.lesson(ref.unitId, ref.lessonId)).lesson);
+          const ex = exercises[Number(exerciseArg) - 1];
+          if (!ex) throw new CliError("exerciseNumberInvalid", { n: exerciseArg, total: exercises.length }, 2);
+          if (choice !== null && choice >= ex.choices.length) throw new CliError("answerChoiceInvalid", { value: choiceArg }, 2);
+          exerciseId = ex.id;
+        }
+        const res = await api.lessonAnswer(ref.unitId, ref.lessonId, { exerciseId, choice, ...(giveUp ? { giveUp: true } : {}) });
+        emit(res, formatAnswer(res, giveUp, locale));
+        return res.correct || giveUp ? 0 : 1;
+      }
+      case "lesson-done": {
+        const [refArg, ...extra] = args;
+        if (extra.length > 0) throw new CliError("lessonDoneUsage", {}, 2);
+        const ref = parseLessonRef(refArg, "lessonDoneUsage");
+        const api = authed();
+        const progress = await api.lessonComplete(ref.unitId, ref.lessonId);
+        // The next step is a convenience; completing the lesson already succeeded.
+        const next = await api.course().then(
+          (c) => c.next,
+          () => null,
+        );
+        emit({ progress, next }, formatLessonDone(`${ref.unitId}/${ref.lessonId}`, progress, next, locale));
+        return 0;
+      }
+      case "checkpoint": {
+        const [unitId, ...extra] = args;
+        if (!unitId || extra.length > 0) throw new CliError("checkpointUsage", {}, 2);
+        return await takeQuiz("checkpoint", unitId);
+      }
+      case "placement": {
+        if (args.length > 0) throw new CliError("placementUsage", {}, 2);
+        return await takeQuiz("placement");
       }
       case "token": {
         const [sub, ...rest] = args;

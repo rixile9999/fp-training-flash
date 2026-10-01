@@ -169,3 +169,68 @@ export const noteOverlayFrontMatterSchema = z.strictObject({ id: kebabId, title:
 export function formatZodIssues(error: z.ZodError): string[] {
   return error.issues.map((i) => (i.path.length > 0 ? `${i.path.join(".")}: ${i.message}` : i.message));
 }
+
+// Lessons (content/lessons, docs/design/lessons.md).
+
+export const unitSchema = z.strictObject({
+  title: text,
+  order: z.number().int(),
+  level: z.number().int().min(1).max(4),
+  skill: kebabId,
+  prerequisites: z.array(kebabId).default([]),
+  lessons: z.array(kebabId).min(1, "a unit needs at least one lesson"),
+  source: sourceSchema,
+});
+export type UnitYaml = z.infer<typeof unitSchema>;
+
+/** Keys of `feedback.choices` are choice indices ("0", "1", ...); YAML integer keys arrive as the same strings. */
+const indexRecord = z.record(z.string().regex(/^(0|[1-9][0-9]*)$/, "must be a choice index (0, 1, ...)"), text);
+
+const proseBlockSchema = z.strictObject({ prose: kebabId, markdown: text });
+const exerciseBlockSchema = z.strictObject({
+  exercise: kebabId,
+  type: z.enum(["choice", "predict"]),
+  prompt: text,
+  code: text.optional(),
+  choices: z.array(text).min(2, "an exercise needs at least two choices"),
+  answer: z.number().int().nonnegative(),
+  feedback: z.strictObject({ correct: text, choices: indexRecord.default({}) }),
+});
+export type ProseBlockYaml = z.infer<typeof proseBlockSchema>;
+export type ExerciseBlockYaml = z.infer<typeof exerciseBlockSchema>;
+
+/** A block is a prose block when it has a `prose` key, otherwise an exercise block (better error messages than a union). */
+export const lessonBlockSchema = z.unknown().transform((raw, ctx): ProseBlockYaml | ExerciseBlockYaml => {
+  const isProse = typeof raw === "object" && raw !== null && "prose" in raw;
+  const r = (isProse ? proseBlockSchema : exerciseBlockSchema).safeParse(raw);
+  if (r.success) return r.data;
+  // Re-raise as-is (keeps "unrecognized_keys", so validate() can drop unknown keys and continue).
+  for (const issue of r.error.issues) ctx.addIssue(issue as Parameters<typeof ctx.addIssue>[0]);
+  return z.NEVER;
+});
+
+export const lessonSchema = z.strictObject({
+  title: text,
+  tags: z.array(text).default([]),
+  blocks: z.array(lessonBlockSchema).min(1, "a lesson needs at least one block"),
+});
+export type LessonYaml = z.infer<typeof lessonSchema>;
+
+export const unitOverlaySchema = z.strictObject({ title: text.optional() });
+
+export const lessonBlockOverlaySchema = z.strictObject({
+  markdown: text.optional(),
+  prompt: text.optional(),
+  code: text.optional(),
+  choices: z.array(text).optional(),
+  feedback: z.strictObject({ correct: text.optional(), choices: indexRecord.optional() }).optional(),
+  /** Never allowed; declared so the loader can report it with a clear message instead of "unknown key". */
+  answer: z.unknown().optional(),
+});
+export type LessonBlockOverlayYaml = z.infer<typeof lessonBlockOverlaySchema>;
+
+export const lessonOverlaySchema = z.strictObject({
+  title: text.optional(),
+  blocks: z.record(z.string(), lessonBlockOverlaySchema).default({}),
+});
+export type LessonOverlayYaml = z.infer<typeof lessonOverlaySchema>;

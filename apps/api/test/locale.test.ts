@@ -7,7 +7,21 @@ import { createApp } from "../src/app.ts";
 import type { AppOptions } from "../src/app.ts";
 import { API_MESSAGES, apiMessage, localeFromAcceptLanguage } from "../src/messages.ts";
 import type { ApiMessageId } from "../src/messages.ts";
-import { callsTo, EN_TOKEN, EXERCISE_ID, makeFakes, SKILL_NAME, TOKEN, USER, ZH_TOKEN } from "./fakes.ts";
+import {
+  callsTo,
+  CHECKPOINT_QUIZ_ID,
+  EN_TOKEN,
+  EXERCISE_ID,
+  LESSON_EXERCISE_ID,
+  LESSON_ID,
+  makeFakes,
+  PLACEMENT_QUIZ_ID,
+  SKILL_NAME,
+  TOKEN,
+  UNIT_ID,
+  USER,
+  ZH_TOKEN,
+} from "./fakes.ts";
 import type { Fakes } from "./fakes.ts";
 
 const enc = encodeURIComponent;
@@ -53,6 +67,13 @@ async function hitEveryLocaleRoute(token: string, fakes: Fakes) {
   await api.explanation(EXERCISE_ID);
   await api.startSession({ language: "gleam", targetMinutes: 15 });
   await api.recommend("gleam");
+  await api.course();
+  await api.lesson(UNIT_ID, LESSON_ID);
+  await api.lessonAnswer(UNIT_ID, LESSON_ID, { exerciseId: LESSON_EXERCISE_ID, choice: 1 });
+  await api.startCheckpoint(UNIT_ID);
+  await api.submitCheckpoint(CHECKPOINT_QUIZ_ID, { answers: { i1: 1 } });
+  await api.startPlacement();
+  await api.submitPlacement(PLACEMENT_QUIZ_ID, { answers: { i1: 1 } });
   return api.progress("gleam");
 }
 
@@ -72,6 +93,13 @@ const LOCALE_ARGS: readonly [string, (args: readonly unknown[]) => unknown][] = 
   ["coaching.revealExplanation", (a) => a[2]],
   ["sessions.start", (a) => (a[0] as { locale?: Locale }).locale],
   ["sessions.recommend", (a) => a[3]],
+  ["lessons.course", (a) => a[1]],
+  ["lessons.lesson", (a) => a[3]],
+  ["lessons.answer", (a) => (a[5] as { locale?: Locale }).locale],
+  ["lessons.startCheckpoint", (a) => a[2]],
+  ["lessons.submitCheckpoint", (a) => a[3]],
+  ["lessons.startPlacement", (a) => a[1]],
+  ["lessons.submitPlacement", (a) => a[3]],
 ];
 
 describe("locale threading", () => {

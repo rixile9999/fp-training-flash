@@ -57,6 +57,16 @@ export const API_MESSAGES = {
     en: "This display language is not supported. Available: {supported}",
     zh: "不支持该显示语言。可选：{supported}",
   },
+  invalidPathId: {
+    ko: "경로의 식별자 형식이 올바르지 않습니다.",
+    en: "The id in the path is not in a valid format.",
+    zh: "路径中的标识符格式无效。",
+  },
+  tooManyAnswers: {
+    ko: "답이 너무 많습니다. 최대 {max}개까지 보낼 수 있습니다.",
+    en: "Too many answers. You can send at most {max}.",
+    zh: "答案过多，最多可提交 {max} 个。",
+  },
   exerciseNotFound: {
     ko: "문제를 찾을 수 없습니다.",
     en: "We couldn't find that exercise.",

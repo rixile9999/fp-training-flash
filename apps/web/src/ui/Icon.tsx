@@ -15,6 +15,8 @@ const PATHS = {
   clock: "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 6v6l4 2",
   skip: "M5 4l10 8-10 8zM19 5v14",
   arrowRight: "M5 12h14M12 5l7 7-7 7",
+  arrowLeft: "M19 12H5M12 19l-7-7 7-7",
+  lock: "M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4",
   refresh: "M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6",
   logout: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9",
   chart: "M3 3v18h18M7 15l4-4 3 3 5-6",

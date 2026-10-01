@@ -20,7 +20,9 @@ import type {
 import { splitFrontMatter } from "./frontmatter.ts";
 import { declaresPubFn, extractPubFnBody } from "./gleam.ts";
 import type { NoteText, SkillText, Translations, VariantText } from "../i18n.ts";
-import { hashFiles, hashVariant } from "./hash.ts";
+import { findCycle } from "./graph.ts";
+import { hashBundle, hashVariant } from "./hash.ts";
+import { parseLessons, type ParsedLessonUnit } from "./lessons.ts";
 import {
   conceptFrontMatterSchema,
   exerciseSchema,
@@ -79,6 +81,8 @@ export interface ParsedContent {
   readonly theoryTopics: readonly TheoryTopic[];
   readonly variants: readonly ParsedVariant[];
   readonly translations: ParsedTranslations;
+  /** content/lessons, sorted by unit order (empty when the directory is absent). */
+  readonly lessonUnits: readonly ParsedLessonUnit[];
 }
 
 export interface MaterializedExercise {
@@ -159,15 +163,17 @@ export function parseContent(tree: ContentTree): Result<ParsedContent, readonly 
   const families = subdirs(tree, "exercises/");
   if (families.length === 0) add("exercises", "no exercise families found");
   for (const familyId of families) variants.push(...parseFamily(tree, familyId, refs, add));
+  const lessonUnits = parseLessons(tree, skills, add);
 
   if (issues.length > 0) return err(issues);
   return ok({
-    contentHash: hashFiles([...tree.files.values()]),
+    contentHash: hashBundle([...tree.files.values()]),
     skills: skills ?? [],
     conceptNotes,
     theoryTopics,
     variants,
     translations,
+    lessonUnits,
   });
 }
 
@@ -235,31 +241,6 @@ function parseSkills(tree: ContentTree, add: AddIssue): Skill[] | null {
     prerequisites: s.prerequisites.map((p) => asId(p)),
     order: s.order,
   }));
-}
-
-function findCycle(graph: ReadonlyMap<string, readonly string[]>): string[] | null {
-  const state = new Map<string, "visiting" | "done">();
-  const stack: string[] = [];
-  const visit = (node: string): string[] | null => {
-    const st = state.get(node);
-    if (st === "done") return null;
-    if (st === "visiting") return [...stack.slice(stack.indexOf(node)), node];
-    state.set(node, "visiting");
-    stack.push(node);
-    for (const next of graph.get(node) ?? []) {
-      if (next === node || !graph.has(next)) continue; // reported separately
-      const c = visit(next);
-      if (c) return c;
-    }
-    stack.pop();
-    state.set(node, "done");
-    return null;
-  };
-  for (const node of graph.keys()) {
-    const c = visit(node);
-    if (c) return c;
-  }
-  return null;
 }
 
 /** Parses `<dir>/<id>.md` notes. Ids (from file names) are recorded even when a note is invalid. */

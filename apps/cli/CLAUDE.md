@@ -24,13 +24,28 @@ Command-line client for learners who solve exercises in their own editor. Thin a
   `gleam test` runs the module `<package>_test`.
 - `submit` links the active session only when the exercise is still the session's current item.
 - `explain` requires `--yes` (it makes the exercise unrated); `hint` 3+ prints the same warning.
+- Gleam basics course (docs/design/lessons.md): `course`, `lesson [<unit>/<lesson>|<unit>|next]` (default next;
+  a bare unit opens its first unfinished lesson), `answer <unit>/<lesson> <exercise id|number> <choice|show>`,
+  `lesson-done <unit>/<lesson>`, `checkpoint <unit>`, `placement`. Human output uses 1-based choice numbers;
+  the API (and `--answers`) uses 0-based indexes. Lesson prose/prompts/feedback are printed as plain text
+  (`plainText` strips Markdown, fenced code is indented). `answer` exits 1 on a wrong choice; `show` = giveUp.
+- Checkpoint/placement: answers are never shown or judged before the whole quiz is submitted. Interactive only
+  when `deps.stdinIsTTY` and `deps.prompter` exist and `--json` is off: one item at a time, invalid input is
+  re-asked, Enter skips (null), EOF/Ctrl-C aborts without submitting (exit 1). Otherwise the quiz is printed
+  (text or `--json`) and remembered as `lastQuiz` in config; `--answers id=index,...` (empty or `-` = skip)
+  submits `--quiz <id>` or the remembered quiz of the same kind/unit. A failed checkpoint exits 1.
 
 ## Layout
 
-- `src/main.ts` process entry (bin `fp`); wires real stdout/stderr/env into `runCli`.
+- `src/main.ts` process entry (bin `fp`); wires real stdout/stderr/env, `stdin.isTTY` and the readline
+  prompter into `runCli`.
 - `src/cli.ts` argument parsing (node:util parseArgs), command dispatch, error translation. `runCli(argv, deps)`
-  takes injected env, cwd, output sinks, `createClient` and `newKey` so tests need no HTTP.
+  takes injected env, cwd, output sinks, `createClient`, `newKey`, `stdinIsTTY` and `prompter` so tests need no
+  HTTP or terminal.
 - `src/config.ts` config file load/save.
+- `src/course.ts` text rendering (locale param) of the course, lessons, lesson answers, quizzes and their results;
+  Markdown -> plain text helpers.
+- `src/prompt.ts` `Prompter` and `readlinePrompter` (node:readline; queued lines for piped input, null on EOF).
 - `src/project.ts` local Gleam project generation (gleam.toml, starter, public test module, PROMPT.md, .fp.json)
   and reading the learner's code back.
 - `src/format.ts` text rendering (locale param) of trial runs, submissions, feedback, hints, sessions, progress.
@@ -42,7 +57,9 @@ Command-line client for learners who solve exercises in their own editor. Thin a
 `pnpm check:module @fp/cli`. Tests use a temp config dir + temp cwd and the recording fake in
 `test/fixtures.ts` (implements `CliApi`); `test/project.test.ts` checks the generated layout,
 `test/cli.test.ts` drives commands end to end through `runCli`; `test/locale.test.ts` covers the catalog
-(every key has en/zh with the same placeholders), locale resolution, `fp lang` and per-locale output.
+(every key has en/zh with the same placeholders), locale resolution, `fp lang` and per-locale output;
+`test/course.test.ts` covers the course commands (scripted prompter for the interactive quiz, ko/en/zh
+fakes whose content follows the account locale) and `readlinePrompter` over a PassThrough stream.
 
 ## Gotchas
 

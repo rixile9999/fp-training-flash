@@ -28,6 +28,12 @@ blocks:
         "1": "`apply` applies the function it was given — it doesn't leave 5 untouched, it doubles it."
         "2": "`n * 2` is multiplication, so 5 * 2 = 10 — not 5 + 2."
         "3": "`n * 2` is 5 * 2 = 10, not 5 * 5 = 25."
+    code: |-
+      fn apply(f: fn(Int) -> Int, x: Int) -> Int {
+        f(x)
+      }
+
+      // apply(fn(n) { n * 2 }, 5) = ?
   list-map:
     markdown: |-
       The real power of higher-order functions shows up with lists. `list.map(list, fn)` **applies a function to each element** of the list to build a new list — it's a tool that abstracts the manual recursion from U5.

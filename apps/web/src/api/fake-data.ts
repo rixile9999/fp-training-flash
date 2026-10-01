@@ -36,6 +36,9 @@ export interface FakeExercise {
 }
 
 export const SKILLS: readonly Skill[] = [
+  { id: sk("gleam-basics"), name: "Gleam 기초", description: "값, 함수와 파이프, case", track: "basics", prerequisites: [], order: -2 },
+  { id: sk("gleam-types"), name: "Gleam 타입", description: "커스텀 타입, 제네릭, opaque 타입", track: "basics", prerequisites: [sk("gleam-basics")], order: -1 },
+  { id: sk("gleam-lists-recursion"), name: "리스트와 재귀", description: "리스트, 재귀, list 모듈", track: "basics", prerequisites: [sk("gleam-basics")], order: 0 },
   { id: sk("data-transform"), name: "리스트 변환", description: "map · filter · fold로 데이터를 변환합니다.", track: "core", prerequisites: [], order: 1 },
   { id: sk("pattern-matching"), name: "패턴 매칭", description: "case 식으로 데이터 모양에 따라 분기합니다.", track: "core", prerequisites: [], order: 2 },
   { id: sk("option-result"), name: "Option과 Result", description: "값의 부재와 실패를 타입으로 다룹니다.", track: "core", prerequisites: [sk("pattern-matching")], order: 3 },
@@ -44,6 +47,9 @@ export const SKILLS: readonly Skill[] = [
 
 /** Skill names per locale, so the fake shows server-rendered text switching language (other content stays Korean). */
 const SKILL_NAMES: Readonly<Record<string, Partial<Record<Locale, string>>>> = {
+  "gleam-basics": { en: "Gleam basics", zh: "Gleam 基础" },
+  "gleam-types": { en: "Gleam types", zh: "Gleam 类型" },
+  "gleam-lists-recursion": { en: "Lists and recursion", zh: "列表与递归" },
   "data-transform": { en: "List transformation", zh: "列表转换" },
   "pattern-matching": { en: "Pattern matching", zh: "模式匹配" },
   "option-result": { en: "Option and Result", zh: "Option 与 Result" },

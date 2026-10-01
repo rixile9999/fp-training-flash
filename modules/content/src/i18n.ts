@@ -6,9 +6,14 @@
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES, type Locale } from "@fp/kernel";
 import type {
   ConceptNote,
+  ContentSource,
   ExerciseDetail,
   ExerciseSummary,
   GradingSpec,
+  Lesson,
+  LessonAnswerKey,
+  LessonBlock,
+  LessonUnitSummary,
   ReferenceMaterial,
   RubricItem,
   Skill,
@@ -145,4 +150,91 @@ export function localizeGrading(spec: GradingSpec, t: VariantText | undefined): 
 export function localizeReference(reference: ReferenceMaterial, t: VariantText | undefined): ReferenceMaterial {
   if (t?.explanationMarkdown === undefined) return reference;
   return { ...reference, explanationMarkdown: t.explanationMarkdown };
+}
+
+// ---------- Lessons (content/lessons) ----------
+
+/** A unit as stored (Korean). `lessonTitles` is derived from the lesson rows by the catalog. */
+export interface StoredLessonUnit extends Omit<LessonUnitSummary, "lessonTitles"> {
+  readonly source: ContentSource;
+}
+
+/** Answer and Korean feedback of one lesson exercise (column `answers`, keyed by exercise id). */
+export interface StoredLessonAnswer {
+  readonly answer: number;
+  readonly correctFeedback: string;
+  /** Wrong choice index ("0", "1", ...) -> explanation. */
+  readonly choiceFeedback: Readonly<Record<string, string>>;
+}
+
+export interface UnitText {
+  readonly title?: string;
+}
+
+/** Translated texts of one block (<lesson>.<l>.yaml `blocks.<id>`). `code` may differ from the Korean code. */
+export interface LessonBlockText {
+  readonly markdown?: string;
+  readonly prompt?: string;
+  readonly code?: string;
+  /** Same length and order as the Korean choices (checked by the loader). */
+  readonly choices?: readonly string[];
+  readonly correctFeedback?: string;
+  readonly choiceFeedback?: Readonly<Record<string, string>>;
+}
+
+export interface LessonText {
+  readonly title?: string;
+  /** Block id -> texts. */
+  readonly blocks?: Readonly<Record<string, LessonBlockText>>;
+}
+
+export function localizeUnit(unit: StoredLessonUnit, t: UnitText | undefined, lessonTitles: readonly string[]): LessonUnitSummary {
+  return {
+    id: unit.id,
+    title: t?.title ?? unit.title,
+    order: unit.order,
+    level: unit.level,
+    skill: unit.skill,
+    prerequisites: unit.prerequisites,
+    lessonIds: unit.lessonIds,
+    lessonTitles,
+    locales: unit.locales,
+  };
+}
+
+/** Learner view: rebuilt field by field, so nothing but the contract fields (no answers, no feedback) leaves. */
+export function localizeLesson(lesson: Lesson, t: LessonText | undefined): Lesson {
+  const block = (b: LessonBlock): LessonBlock => {
+    const bt = own(t?.blocks, b.id);
+    if (b.kind === "prose") return { kind: "prose", id: b.id, markdown: bt?.markdown ?? b.markdown };
+    const code = bt?.code ?? b.code;
+    const choices = bt?.choices?.length === b.choices.length ? bt.choices : b.choices;
+    return {
+      kind: "exercise",
+      id: b.id,
+      type: b.type,
+      prompt: bt?.prompt ?? b.prompt,
+      ...(code === undefined ? {} : { code }),
+      choices,
+    };
+  };
+  return { id: lesson.id, unitId: lesson.unitId, title: t?.title ?? lesson.title, tags: lesson.tags, blocks: lesson.blocks.map(block) };
+}
+
+export function localizeLessonAnswer(
+  ids: { readonly unitId: string; readonly lessonId: string; readonly exerciseId: string },
+  stored: StoredLessonAnswer,
+  t: LessonText | undefined,
+): LessonAnswerKey {
+  const bt = own(t?.blocks, ids.exerciseId);
+  const choiceFeedback: Record<number, string> = {};
+  for (const [index, text] of Object.entries(stored.choiceFeedback)) choiceFeedback[Number(index)] = own(bt?.choiceFeedback, index) ?? text;
+  return {
+    unitId: ids.unitId,
+    lessonId: ids.lessonId,
+    exerciseId: ids.exerciseId,
+    answer: stored.answer,
+    correctFeedback: bt?.correctFeedback ?? stored.correctFeedback,
+    choiceFeedback,
+  };
 }

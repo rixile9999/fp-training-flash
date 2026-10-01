@@ -6,6 +6,9 @@ import { I18nProvider } from "./i18n/I18n.tsx";
 import { DEFAULT_LOCALE, HTML_LANG, LOCALE_KEY, isLocale } from "./i18n/locale.ts";
 import type { Locale } from "./i18n/locale.ts";
 import { translator } from "./i18n/translator.ts";
+import { MAP } from "./course.ts";
+import type { CourseRoute } from "./course.ts";
+import { Course } from "./screens/Course.tsx";
 import { Login } from "./screens/Login.tsx";
 import { Progress } from "./screens/Progress.tsx";
 import type { RecentSession } from "./screens/Progress.tsx";
@@ -82,6 +85,12 @@ function AppShell({
   const [auth, setAuth] = useState<StoredAuth | null>(() => readAuth(store));
   const api = useMemo(() => apiFactory(auth?.token), [apiFactory, auth?.token]);
   const [view, setView] = useState<View>(initialView);
+  // Position inside the course tab; kept while visiting other tabs. Re-selecting the tab goes back to the map.
+  const [courseRoute, setCourseRoute] = useState<CourseRoute>(MAP);
+  const nav = (v: View) => {
+    if (v === "course" && view === "course") setCourseRoute(MAP);
+    setView(v);
+  };
   const [skills, setSkills] = useState<readonly Skill[]>([]);
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -233,7 +242,7 @@ function AppShell({
       <Header
         displayName={auth.displayName}
         view={view}
-        onNav={setView}
+        onNav={nav}
         onLogout={logout}
         session={session}
         activeIndex={activeIndex}
@@ -244,7 +253,12 @@ function AppShell({
         onLocale={changeLocale}
       />
       <main id="main" className="app-main">
-        {view === "training" ? (
+        {view === "course" ? (
+          <Course api={api} skills={skills} route={courseRoute} onRoute={setCourseRoute} onTraining={() => {
+              setCourseRoute(MAP);
+              setView("training");
+            }} contentKey={contentKey} />
+        ) : view === "training" ? (
           <Training
             api={api}
             skills={skills}

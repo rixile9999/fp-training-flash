@@ -19,7 +19,16 @@ import {
   renderTrialRun,
   uris,
 } from "./format.ts";
-import { SERVER_INSTRUCTIONS, coachNote } from "./instructions.ts";
+import { SERVER_INSTRUCTIONS, coachNote, lessonNote, quizNote } from "./instructions.ts";
+import {
+  renderAnswer,
+  renderCheckpointResult,
+  renderCourse,
+  renderLesson,
+  renderLessonDone,
+  renderPlacementResult,
+  renderQuiz,
+} from "./lessons.ts";
 import { DEFAULT_LOCALE, isLocale, translator } from "./messages.ts";
 import type { Locale, MessageId, Translate } from "./messages.ts";
 
@@ -320,6 +329,145 @@ export function createFpMcpServer(deps: FpMcpServerDeps): McpServer {
       if (!session) return ctx.text(ctx.t("noSession"), { session: null });
       const next = await api().skipItem(session.id);
       return presentCurrent(ctx, next, "itemSkipped");
+    }),
+  );
+
+  // ---------- Gleam basics course ----------
+
+  const unitId = z.string().min(1).describe("Unit id, e.g. u01-values");
+  const lessonId = z.string().min(1).describe("Lesson id within the unit, e.g. l01-values-let");
+  const quizId = z.string().min(1).describe("quiz_id returned by the start tool");
+  const answers = z
+    .record(z.string(), z.number().int().min(0).nullable())
+    .describe("itemId -> chosen 0-based choice index, or null when the learner skipped the item");
+
+  server.registerTool(
+    "get_course",
+    {
+      title: "Gleam basics course",
+      description:
+        "The Gleam basics course: units in order with the learner's progress (lessons done, checkpoint status), placement result and the next step.",
+      inputSchema: {},
+      annotations: { readOnlyHint: true },
+    },
+    safe(async (_args, ctx) => {
+      const course = await api().course();
+      return ctx.text(renderCourse(course, ctx.locale), { course });
+    }),
+  );
+
+  server.registerTool(
+    "get_lesson",
+    {
+      title: "Get a lesson",
+      description:
+        "Return one lesson: short prose parts and multiple-choice exercises (choices labelled with their 0-based index). Contains no answers. Present it step by step.",
+      inputSchema: { unit_id: unitId, lesson_id: lessonId },
+      annotations: { readOnlyHint: true },
+    },
+    safe(async ({ unit_id, lesson_id }, ctx) => {
+      const view = await api().lesson(unit_id, lesson_id);
+      return ctx.text([renderLesson(view, ctx.locale), lessonNote(ctx.locale)].join("\n\n"), { lesson: view });
+    }),
+  );
+
+  server.registerTool(
+    "answer_lesson_exercise",
+    {
+      title: "Answer a lesson exercise",
+      description:
+        `Check the learner's choice for one lesson exercise and return feedback. Unrated; retries are free and a wrong answer does not reveal the correct one. choice "show" reveals the answer: only when the learner asks for it.`,
+      inputSchema: {
+        unit_id: unitId,
+        lesson_id: lessonId,
+        exercise_id: z.string().min(1).describe("Exercise id from get_lesson, e.g. bind-syntax"),
+        choice: z
+          .union([z.number().int().min(0), z.literal("show")])
+          .describe(`The learner's choice as a 0-based index, or "show" to reveal the answer (only when the learner asks)`),
+      },
+    },
+    safe(async ({ unit_id, lesson_id, exercise_id, choice }, ctx) => {
+      const giveUp = choice === "show";
+      const res = await api().lessonAnswer(unit_id, lesson_id, {
+        exerciseId: exercise_id,
+        choice: giveUp ? null : choice,
+        ...(giveUp ? { giveUp: true } : {}),
+      });
+      return ctx.text(renderAnswer(res, giveUp, ctx.locale), { answer: res, gaveUp: giveUp });
+    }),
+  );
+
+  server.registerTool(
+    "complete_lesson",
+    {
+      title: "Complete a lesson",
+      description: "Mark a lesson as done once the learner has worked through it; returns the unit progress and the next step.",
+      inputSchema: { unit_id: unitId, lesson_id: lessonId },
+    },
+    safe(async ({ unit_id, lesson_id }, ctx) => {
+      const progress = await api().lessonComplete(unit_id, lesson_id);
+      // The next step is a convenience; completing the lesson already succeeded.
+      const next = await api()
+        .course()
+        .then(
+          (c) => c.next,
+          () => null,
+        );
+      return ctx.text(renderLessonDone(unit_id, lesson_id, progress, next, ctx.locale), { progress, next });
+    }),
+  );
+
+  server.registerTool(
+    "start_checkpoint",
+    {
+      title: "Start a unit checkpoint",
+      description:
+        "Start a rated checkpoint for a unit (6-10 multiple-choice items, pass mark 80%). Returns every item without answers; present them one at a time, then call submit_checkpoint once.",
+      inputSchema: { unit_id: unitId },
+    },
+    safe(async ({ unit_id }, ctx) => {
+      const quiz = await api().startCheckpoint(unit_id);
+      return ctx.text([renderQuiz(quiz, ctx.locale), quizNote(ctx.locale)].join("\n\n"), { quiz });
+    }),
+  );
+
+  server.registerTool(
+    "submit_checkpoint",
+    {
+      title: "Submit a unit checkpoint",
+      description: "Submit all answers of a checkpoint at once. Returns the score, pass/fail, a per-item review with lesson links and rating changes.",
+      inputSchema: { quiz_id: quizId, answers },
+    },
+    safe(async ({ quiz_id, answers }, ctx) => {
+      const res = await api().submitCheckpoint(quiz_id, { answers });
+      return ctx.text(renderCheckpointResult(res, ctx.locale), { result: res });
+    }),
+  );
+
+  server.registerTool(
+    "start_placement",
+    {
+      title: "Start the placement test",
+      description:
+        "Start the optional placement test (12-15 items, about 5 minutes) for learners who may already know Gleam. Returns every item without answers; present them one at a time, then call submit_placement once.",
+      inputSchema: {},
+    },
+    safe(async (_args, ctx) => {
+      const quiz = await api().startPlacement();
+      return ctx.text([renderQuiz(quiz, ctx.locale), quizNote(ctx.locale)].join("\n\n"), { quiz });
+    }),
+  );
+
+  server.registerTool(
+    "submit_placement",
+    {
+      title: "Submit the placement test",
+      description: "Submit all placement answers at once. Returns the band, the units marked as passed, a recommendation and a per-item review.",
+      inputSchema: { quiz_id: quizId, answers },
+    },
+    safe(async ({ quiz_id, answers }, ctx) => {
+      const res = await api().submitPlacement(quiz_id, { answers });
+      return ctx.text(renderPlacementResult(res, ctx.locale), { result: res });
     }),
   );
 

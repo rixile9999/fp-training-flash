@@ -16,7 +16,9 @@ an immutable, versioned bundle into schema `content`, and serves it through `Con
 - Import is one transaction (serialised by a table lock on `content.bundles`); `content.bundle_imported` is
   published only after commit. Re-importing the *current* bundle hash is a no-op (no event, same BundleInfo).
   Re-importing an older bundle after a newer one is a real import (changed variants get new versions).
-- Skills and notes are not versioned: upserted on import, retired when removed (not listed, still readable).
+- Skills, notes and lessons are not versioned: upserted on import, retired when removed (not listed, still readable).
+- `Lesson` (getLesson) never contains answers or feedback: they live in `content.lessons.answers` and are served
+  only by `getLessonAnswer` (server side, lessons module). `localizeLesson` rebuilds blocks field by field.
 - Localization (content/README.md "Localization"): Korean is stored as the contract objects; en/zh overlays
   (`src/i18n.ts` types) are stored in a `translations` jsonb column next to them and applied by the catalog
   field by field (missing -> Korean). No locale / "ko" returns exactly the Korean objects.
@@ -31,15 +33,20 @@ src/bundle.ts           loadDirectory -> opaque ContentBundle (parsed data kept 
                         created by this module in this process can be imported)
 src/loader/tree.ts      reads a directory into a sorted in-memory tree (skips dot files)
 src/loader/schemas.ts   zod schemas (strict: unknown keys are issues)
-src/i18n.ts             overlay types (SkillText, NoteText, VariantText) and localize* functions for the catalog
+src/i18n.ts             overlay types (SkillText, NoteText, VariantText, UnitText, LessonText), stored lesson
+                        types (StoredLessonUnit, StoredLessonAnswer) and localize* functions for the catalog
 src/loader/parse.ts     validation, family->variant merge, cross references, ParsedVariant building
 src/loader/translations.ts  *.<locale>.* overlays: parsing, key checks against Korean, locales (rule 4)
+src/loader/lessons.ts   content/lessons: unit.yaml, <lesson>.yaml, overlays, gaps/locales (see "Lessons")
+src/loader/graph.ts     findCycle (skill and unit prerequisites)
 src/loader/yaml.ts      parseYaml + validate (unknown keys reported, then checks continue)
 src/loader/gleam.ts     `pub fn` detection, body extraction, codeOnly (skips strings and // comments)
 src/loader/hash.ts      variant hash (family.yaml, family.<l>.yaml + variant files incl. translations) and bundle hash
+                        (every file of the tree, lessons included, + BUNDLE_FORMAT_VERSION)
 src/loader/frontmatter.ts  YAML front matter splitter for notes
 src/db/migrations.ts    schema content: skills, concept_notes, theory_topics, exercise_versions, variants, bundles
-                        (0002: `translations` jsonb on skills, notes, topics, exercise_versions)
+                        (0002: `translations` jsonb on skills, notes, topics, exercise_versions;
+                        0003: lesson_units, lessons {data = Korean Lesson, answers, translations, position})
 src/db/importer.ts      importBundle
 src/db/catalog.ts       ContentCatalog over the tables (JSONB columns hold the contract objects verbatim)
 ```
@@ -74,6 +81,29 @@ src/db/catalog.ts       ContentCatalog over the tables (JSONB columns hold the c
 - Translation files of a variant (and family.<l>.yaml) are part of its hash: changes bump the version. Skill and
   note translations are not versioned. Rows stored before 0002 have no `locales`; the catalog fills ["ko"].
 
+## Lessons (loader/lessons.ts, docs/design/lessons.md)
+
+- Tree: `lessons/<unit>/unit.yaml`, `<lesson>.yaml`, `unit.<l>.yaml` ({title}), `<lesson>.<l>.yaml`
+  ({title?, blocks: {<id>: {markdown? | prompt?, code?, choices?, feedback?: {correct?, choices?: {<i>: text}}}}}).
+  No `lessons/` directory = no units. Unit and lesson ids kebab-case.
+- unit.yaml: title, order (unique), level 1-4, skill (exists; track `basics` or `explicit-failure`), prerequisites
+  (unit ids, not itself, no cycle), lessons (no duplicates, 1:1 with `<lesson>.yaml` files), source. Stray files,
+  subdirectories and overlays of unknown lessons are issues.
+- Blocks: `{prose, markdown}` | `{exercise, type choice|predict, prompt, code?, choices >= 2 (distinct), answer,
+  feedback {correct, choices}}`; block ids unique per lesson; answer in range; `feedback.choices` has exactly one
+  entry per wrong choice (not the answer, not out of range); `tags` default [].
+- Overlay issues: unknown block id, `answer` present, prose fields on exercises (or vice versa), `code` where the
+  Korean block has none, choice count differs, a Hangul-free Korean choice found at another index (reordered =
+  changed answer), unknown `feedback.choices` index, locale not en/zh. Localized `code` may differ from Korean.
+- Completeness ("gaps", not issues): lesson title; every block; prose markdown; exercise prompt, choices,
+  feedback.correct, every feedback choice; localized code when the Korean code contains Hangul; no Hangul left in a
+  block or title. `LessonUnitSummary.locales` = ko + locales with the unit title and every lesson complete.
+  `lessonTranslationGaps(bundle)` (module root) lists the gaps for content CI. Same rules as
+  tools/fpdojo-import/src/check-overlay.ts, plus the Hangul-code rule (that script does not check it).
+- Catalog: `listLessonUnits` (by order, not retired; `lessonTitles` from the lesson rows in unit lesson order),
+  `getLesson`, `getLessonAnswer` (null for unknown ids or a prose block). en/zh applied field by field
+  (choices as a whole, feedback per choice index), Korean fallback.
+
 ## File mapping
 
 starter -> `src/<module>.gleam`; support/*.gleam -> `src/*` (in both starterFiles and supportFiles);
@@ -88,11 +118,16 @@ test/** -> `test/**` (GradingSpec.testFiles, all files); solution and wrong/<key
   real `/content` in every locale (`translationFiles()` in fixtures adds en (complete) + zh (partial)).
 - `module.test.ts`: in-memory PGlite, recording event bus, fixed clock; versioning, retirement, idempotency,
   rollback, filters and hidden-data checks.
+- `lessons.test.ts`: `lessonFiles()` fixtures (spread after `baseFiles()`; replaces skills.yaml) with two units,
+  en complete / zh partial; loader issues, gaps, hash; catalog in every locale, retirement; real /content
+  (15 units, 64 lessons, 150 prose, 228 exercises) served and answered in ko/en/zh.
 
 ## Gotchas
 
 - Bump `CONTENT_FORMAT_VERSION` in `hash.ts` when the loader's interpretation of files changes; otherwise
   existing variants keep old stored JSON under an unchanged hash.
+- Bump `BUNDLE_FORMAT_VERSION` (bundle hash only; no exercise version changes) when the importer starts storing
+  data it ignored before: an unchanged tree would otherwise be skipped as "already current".
 - `listExercises({ skill })` filters on the primary skill only.
 - Changing `family.yaml` changes the hash (and version) of every variant of that family; editing a concept
   note or theory topic does not bump any exercise version.

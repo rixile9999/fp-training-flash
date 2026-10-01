@@ -112,3 +112,9 @@ export function parseQuery<S extends z.ZodType>(c: Context, schema: S): Result<z
   const parsed = schema.safeParse(c.req.query(), { error: zodErrorMap(requestLocale(c)) });
   return parsed.success ? ok(parsed.data) : err(validationError(c, parsed.error.issues));
 }
+
+/** Validates decoded path parameters (`c.req.param()`), so ids never come from the raw path. */
+export function parseParams<S extends z.ZodType>(c: Context, schema: S): Result<z.output<S>, AppError> {
+  const parsed = schema.safeParse(c.req.param(), { error: zodErrorMap(requestLocale(c)) });
+  return parsed.success ? ok(parsed.data) : err(validationError(c, parsed.error.issues));
+}

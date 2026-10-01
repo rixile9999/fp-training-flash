@@ -124,6 +124,7 @@ describe("MODULE_MIGRATIONS", () => {
       "content",
       "grading",
       "learner",
+      "lessons",
       "sessions",
       "coaching",
     ]);

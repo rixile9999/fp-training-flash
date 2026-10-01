@@ -39,6 +39,14 @@ describe("fp MCP server", () => {
         "skip_item",
         "start_session",
         "submit_solution",
+        "get_course",
+        "get_lesson",
+        "answer_lesson_exercise",
+        "complete_lesson",
+        "start_checkpoint",
+        "submit_checkpoint",
+        "start_placement",
+        "submit_placement",
       ].sort(),
     );
     const instructions = client.getInstructions() ?? "";

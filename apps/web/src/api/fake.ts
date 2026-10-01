@@ -24,6 +24,7 @@ import type {
 } from "@fp/api-contract";
 import { isLocale } from "../i18n/locale.ts";
 import { CONCEPT_NOTES, FAKE_EXERCISES, THEORY_TOPICS, localizedSkills } from "./fake-data.ts";
+import { createFakeCourse } from "./fake-lessons.ts";
 import type { FakeExercise } from "./fake-data.ts";
 import type {
   ErrorTagStat,
@@ -338,7 +339,19 @@ export function createFakeApi(opts: FakeApiOptions = {}): ApiClient {
     return summary;
   };
 
+  /** Rated observations from checkpoints / placement: one Elo step per item against the level's difficulty. */
+  function rateObservations(skillId: string, outcomes: readonly boolean[], difficulty: number): RatingChange {
+    const prev = estimates.get(skillId) ?? { skillId: skill(skillId), language: LANG, rating: 1000, deviation: 250, ratedObservations: 0, provisional: true, updatedAt: iso() };
+    let rating = prev.rating;
+    for (const ok of outcomes) rating += 24 * ((ok ? 1 : 0) - 1 / (1 + 10 ** ((difficulty - rating) / 400)));
+    const after = Math.round(rating);
+    const obs = prev.ratedObservations + outcomes.length;
+    estimates.set(skillId, { ...prev, rating: after, deviation: Math.max(60, Math.round(prev.deviation * 0.8)), ratedObservations: obs, provisional: obs < 5, updatedAt: iso() });
+    return { skillId: skill(skillId), before: prev.rating, after, provisional: obs < 5 };
+  }
+
   const api: ApiClient = {
+    ...createFakeCourse({ wait: (v) => wait(v), locale, iso: () => iso(), nextId, rate: rateObservations }),
     health: () => wait(() => ({ status: "ok" as const, contentBundle: "fake-bundle", runner: "fake", llm: "none" as const })),
     devLogin: (req) =>
       wait(() => {

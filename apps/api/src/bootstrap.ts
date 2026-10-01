@@ -17,6 +17,7 @@ import {
 } from "@fp/grading";
 import type { CodeRunner } from "@fp/grading/contract";
 import { createLearnerModule, migrations as learnerMigrations } from "@fp/learner";
+import { createLessonsModule, migrations as lessonsMigrations } from "@fp/lessons";
 import { createSessionsModule, migrations as sessionsMigrations } from "@fp/sessions";
 import { createCoachingModule, migrations as coachingMigrations } from "@fp/coaching";
 import type { BundleInfo } from "@fp/content/contract";
@@ -31,6 +32,7 @@ export const MODULE_MIGRATIONS: readonly (readonly [string, readonly Migration[]
   ["content", contentMigrations],
   ["grading", gradingMigrations],
   ["learner", learnerMigrations],
+  ["lessons", lessonsMigrations],
   ["sessions", sessionsMigrations],
   ["coaching", coachingMigrations],
 ];
@@ -133,6 +135,14 @@ export async function bootstrap(config: ApiConfig, opts: BootstrapOptions = {}):
       catalog: content.catalog,
       learner: learner.model,
     });
+    const lessons = createLessonsModule({
+      db,
+      clock,
+      events,
+      logger: scoped("lessons"),
+      catalog: content.catalog,
+      learner: learner.model,
+    });
     const coaching = createCoachingModule({
       db,
       clock,
@@ -152,6 +162,7 @@ export async function bootstrap(config: ApiConfig, opts: BootstrapOptions = {}):
       catalog: content.catalog,
       grading: grading.service,
       learner: learner.model,
+      lessons: lessons.service,
       sessions: sessions.service,
       coaching: coaching.service,
     };

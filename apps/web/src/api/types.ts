@@ -2,7 +2,7 @@
  * Types derived from the API contract. The web app may depend only on @fp/api-contract, so nested
  * module types (Evaluation, SessionItem, ...) are reached through the DTOs instead of module contracts.
  */
-import type { LearnerProfile, Session, Submission } from "@fp/api-contract";
+import type { CheckpointResult, CourseView, LearnerProfile, LessonView, PlacementResult, Quiz, Session, Submission } from "@fp/api-contract";
 
 export type Evaluation = NonNullable<Submission["evaluation"]>;
 export type EvaluationOutcome = Evaluation["outcome"];
@@ -18,3 +18,11 @@ export type SessionItemKind = SessionItem["kind"];
 export type SkillEstimate = LearnerProfile["estimates"][number];
 export type ReviewItem = LearnerProfile["reviews"][number];
 export type ErrorTagStat = LearnerProfile["errorTags"][number];
+
+export type CourseUnit = CourseView["units"][number];
+export type NextStep = CourseView["next"];
+export type LessonBlock = LessonView["lesson"]["blocks"][number];
+export type LessonExercise = Extract<LessonBlock, { kind: "exercise" }>;
+export type QuizItem = Quiz["items"][number];
+export type QuizItemReview = CheckpointResult["review"][number];
+export type PlacementBand = PlacementResult["band"];

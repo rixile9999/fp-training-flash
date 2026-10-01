@@ -21,6 +21,7 @@
     "@fp/content": "workspace:*",
     "@fp/grading": "workspace:*",
     "@fp/learner": "workspace:*",
+    "@fp/lessons": "workspace:*",
     "@fp/sessions": "workspace:*",
     "@fp/coaching": "workspace:*",
     "hono": "^4.13.11",

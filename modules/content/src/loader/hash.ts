@@ -38,3 +38,16 @@ export function hashVariant(
   for (const f of variantFiles) entries.push({ path: `variant/${f.path.slice(variantPrefix.length)}`, bytes: f.bytes });
   return hashFiles(entries);
 }
+
+/**
+ * Mixed into the bundle hash only (variant hashes are unaffected, so no exercise gets a new version). Bump it when
+ * the importer starts storing data it skipped before, e.g. "lessons-v1" when content/lessons began to be imported:
+ * otherwise a database whose current bundle has the same files would treat the next import as a no-op.
+ */
+export const BUNDLE_FORMAT_VERSION = "fp-bundle-lessons-v1";
+
+/** Hash of the whole content tree (BundleInfo.contentHash). */
+export function hashBundle(files: readonly { readonly path: string; readonly bytes: Uint8Array }[]): string {
+  // "\0" never occurs in a file path, so this entry cannot collide with a real file.
+  return hashFiles([{ path: "\0bundle-format", bytes: new TextEncoder().encode(BUNDLE_FORMAT_VERSION) }, ...files]);
+}

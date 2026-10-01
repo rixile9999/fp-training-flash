@@ -47,6 +47,19 @@ export const MESSAGES = {
   skip                      현재 문제 건너뛰기 후 다음 문제 생성
   token issue <라벨>        MCP 등에 쓸 토큰 발급
 
+Gleam 기초 코스:
+  course                    단원별 진행 상황과 다음 단계
+  lesson [<단원>/<레슨>|next]
+                            레슨 보기 (설명과 번호 붙은 연습)
+  answer <단원>/<레슨> <연습 ID|번호> <선택 번호|show>
+                            연습에 답하기 (show: 정답 보기, 벌점 없음)
+  lesson-done <단원>/<레슨> 레슨 완료 표시
+  checkpoint <단원>         단원 체크포인트 (터미널에서는 한 문항씩 대화형)
+  placement                 배치 테스트 (아는 단원 건너뛰기)
+    --json                  문항을 JSON으로 출력 (대화형 대신)
+    --answers <itemId>=<index>,... [--quiz <quizId>]
+                            답 제출 (index는 0부터, 비우면 건너뜀)
+
 공통 옵션: --json (기계용 JSON 출력), --lang ko|en|zh (이번 실행의 표시 언어), --help
 환경 변수: FP_API_URL, FP_TOKEN, FP_LANG, FP_CONFIG_DIR (기본 ~/.config/fp)`,
     en: `Usage: fp <command> [options]
@@ -67,6 +80,20 @@ export const MESSAGES = {
   skip                      skip the current exercise and write the next one
   token issue <label>       issue a token for MCP and other clients
 
+Gleam basics course:
+  course                    units with your progress and the next step
+  lesson [<unit>/<lesson>|next]
+                            show a lesson (text and numbered exercises)
+  answer <unit>/<lesson> <exercise id|number> <choice number|show>
+                            answer an exercise (show: see the answer, no penalty)
+  lesson-done <unit>/<lesson>
+                            mark a lesson as done
+  checkpoint <unit>         unit checkpoint (one item at a time in a terminal)
+  placement                 placement test (skip the units you know)
+    --json                  print the items as JSON (instead of asking)
+    --answers <itemId>=<index>,... [--quiz <quizId>]
+                            submit answers (indexes start at 0, empty = skip)
+
 Common options: --json (machine-readable JSON), --lang ko|en|zh (display language for this run), --help
 Environment: FP_API_URL, FP_TOKEN, FP_LANG, FP_CONFIG_DIR (default ~/.config/fp)`,
     zh: `用法：fp <命令> [选项]
@@ -85,6 +112,18 @@ Environment: FP_API_URL, FP_TOKEN, FP_LANG, FP_CONFIG_DIR (default ~/.config/fp)
   progress                  各能力的评分与复习计划
   skip                      跳过当前题目并写入下一道题
   token issue <标签>        签发供 MCP 等使用的令牌
+
+Gleam 基础课程：
+  course                    各单元的进度与下一步
+  lesson [<单元>/<课>|next] 查看一课（讲解与带序号的练习）
+  answer <单元>/<课> <练习 ID|序号> <选项序号|show>
+                            回答练习（show：查看答案，不扣分）
+  lesson-done <单元>/<课>   标记这一课已完成
+  checkpoint <单元>         单元测验（在终端中逐题作答）
+  placement                 分级测试（跳过已掌握的单元）
+    --json                  以 JSON 输出题目（不逐题提问）
+    --answers <itemId>=<index>,... [--quiz <quizId>]
+                            提交答案（index 从 0 开始，留空表示跳过）
 
 通用选项：--json（机器可读的 JSON 输出）、--lang ko|en|zh（本次运行的显示语言）、--help
 环境变量：FP_API_URL、FP_TOKEN、FP_LANG、FP_CONFIG_DIR（默认 ~/.config/fp）`,
@@ -353,6 +392,200 @@ Environment: FP_API_URL, FP_TOKEN, FP_LANG, FP_CONFIG_DIR (default ~/.config/fp)
     ko: "## 사용법\n\n- `{file}`을(를) 수정하세요.\n- `gleam test`: 로컬에서 공개 테스트 실행 (Gleam 설치 필요)\n- `fp run`: 서버에서 공개 테스트 실행 (기록되지 않음)\n- `fp submit`: 제출 (숨김 테스트 포함 채점, 레이팅 반영)\n- `fp hint`: 다음 힌트 (총 {hints}단계, 3단계부터는 레이팅 미반영)",
     en: "## How to work\n\n- Edit `{file}`.\n- `gleam test`: run the public tests locally (needs Gleam installed)\n- `fp run`: run the public tests on the server (not recorded)\n- `fp submit`: submit (graded with hidden tests, counts toward your rating)\n- `fp hint`: next hint ({hints} levels in total; level 3 and up makes the attempt unrated)",
     zh: "## 使用方法\n\n- 修改 `{file}`。\n- `gleam test`：在本地运行公开测试（需要安装 Gleam）\n- `fp run`：在服务器上运行公开测试（不记录）\n- `fp submit`：提交（包含隐藏测试的评测，计入评分）\n- `fp hint`：下一级提示（共 {hints} 级，第 3 级起不计入评分）",
+  },
+
+  // ---------- course: commands ----------
+  lessonUsage: {
+    ko: "사용법: fp lesson [<단원>/<레슨>|<단원>|next]",
+    en: "Usage: fp lesson [<unit>/<lesson>|<unit>|next]",
+    zh: "用法：fp lesson [<单元>/<课>|<单元>|next]",
+  },
+  answerUsage: {
+    ko: "사용법: fp answer <단원>/<레슨> <연습 ID|번호> <선택 번호|show>",
+    en: "Usage: fp answer <unit>/<lesson> <exercise id|number> <choice number|show>",
+    zh: "用法：fp answer <单元>/<课> <练习 ID|序号> <选项序号|show>",
+  },
+  lessonDoneUsage: { ko: "사용법: fp lesson-done <단원>/<레슨>", en: "Usage: fp lesson-done <unit>/<lesson>", zh: "用法：fp lesson-done <单元>/<课>" },
+  checkpointUsage: {
+    ko: "사용법: fp checkpoint <단원> [--json] [--answers <itemId>=<index>,...] [--quiz <quizId>]",
+    en: "Usage: fp checkpoint <unit> [--json] [--answers <itemId>=<index>,...] [--quiz <quizId>]",
+    zh: "用法：fp checkpoint <单元> [--json] [--answers <itemId>=<index>,...] [--quiz <quizId>]",
+  },
+  placementUsage: {
+    ko: "사용법: fp placement [--json] [--answers <itemId>=<index>,...] [--quiz <quizId>]",
+    en: "Usage: fp placement [--json] [--answers <itemId>=<index>,...] [--quiz <quizId>]",
+    zh: "用法：fp placement [--json] [--answers <itemId>=<index>,...] [--quiz <quizId>]",
+  },
+  answerChoiceInvalid: {
+    ko: "선택 번호는 1 이상의 정수이거나 show여야 합니다: {value}",
+    en: "The choice must be a number from 1, or show: {value}",
+    zh: "选项必须是从 1 开始的整数，或 show：{value}",
+  },
+  exerciseNumberInvalid: {
+    ko: "이 레슨에는 연습 {n}이(가) 없습니다 (연습 {total}개).",
+    en: "This lesson has no exercise {n} (it has {total}).",
+    zh: "这一课没有练习 {n}（共 {total} 个练习）。",
+  },
+  unitNotFound: {
+    ko: "단원을 찾을 수 없습니다: {unit}. `fp course`로 단원 ID를 확인하세요.",
+    en: "Unit not found: {unit}. See the unit ids with `fp course`.",
+    zh: "找不到单元：{unit}。请用 `fp course` 查看单元 ID。",
+  },
+  answersInvalid: {
+    ko: "--answers 형식이 올바르지 않습니다: {value} (예: item-1=0,item-2=2; 번호는 0부터, 비우면 건너뜀)",
+    en: "Invalid --answers: {value} (e.g. item-1=0,item-2=2; indexes start at 0, leave empty to skip)",
+    zh: "--answers 格式无效：{value}（例如 item-1=0,item-2=2；序号从 0 开始，留空表示跳过）",
+  },
+  quizIdMissing: {
+    ko: "제출할 퀴즈를 모릅니다. `{command}`로 먼저 문항을 받거나 --quiz <quizId>를 지정하세요.",
+    en: "No quiz to submit. Get the items first with `{command}`, or pass --quiz <quizId>.",
+    zh: "不知道要提交哪个测验。请先用 `{command}` 获取题目，或指定 --quiz <quizId>。",
+  },
+  quizAsk: {
+    ko: "답 (1-{max}, 건너뛰려면 Enter): ",
+    en: "Your answer (1-{max}, Enter to skip): ",
+    zh: "你的答案（1-{max}，按回车跳过）：",
+  },
+  quizInvalidChoice: {
+    ko: "1부터 {max} 사이의 번호를 입력하세요 (건너뛰려면 Enter).",
+    en: "Enter a number from 1 to {max} (or Enter to skip).",
+    zh: "请输入 1 到 {max} 之间的序号（按回车跳过）。",
+  },
+  quizAborted: {
+    ko: "답을 제출하지 않고 중단했습니다. 다시 시작하면 새 문항을 받습니다.",
+    en: "Stopped without submitting. Starting again gives you a new set of items.",
+    zh: "已中止，未提交答案。重新开始时会拿到一组新的题目。",
+  },
+  quizSubmitting: { ko: "답을 제출합니다...", en: "Submitting your answers...", zh: "正在提交答案……" },
+
+  // ---------- course: rendering ----------
+  courseHeading: { ko: "Gleam 기초 코스", en: "Gleam basics course", zh: "Gleam 基础课程" },
+  unitLessons: { ko: "레슨 {done}/{total}", en: "lessons {done}/{total}", zh: "课 {done}/{total}" },
+  unitLocked: { ko: "선행 단원 미완료", en: "prerequisites not passed yet", zh: "先修单元未完成" },
+  checkpointPassed: { ko: "체크포인트 통과", en: "checkpoint passed", zh: "单元测验已通过" },
+  checkpointPassedByPlacement: {
+    ko: "체크포인트 통과 (배치 테스트)",
+    en: "checkpoint passed (placement test)",
+    zh: "单元测验已通过（分级测试）",
+  },
+  checkpointBest: { ko: "체크포인트 최고 {score}", en: "checkpoint best {score}", zh: "单元测验最好成绩 {score}" },
+  checkpointNotTaken: { ko: "체크포인트 미응시", en: "checkpoint not taken", zh: "单元测验未参加" },
+  placementSummary: {
+    ko: "배치 테스트: {score}/{total} · {band}",
+    en: "Placement test: {score}/{total} · {band}",
+    zh: "分级测试：{score}/{total} · {band}",
+  },
+  placementSuggest: {
+    ko: "Gleam을 이미 안다면 `fp placement`(약 5분)로 아는 단원을 건너뛸 수 있어요.",
+    en: "If you already know Gleam, take `fp placement` (about 5 minutes) to skip the units you know.",
+    zh: "如果你已经会 Gleam，可以用 `fp placement`（约 5 分钟）跳过已掌握的单元。",
+  },
+  bandBeginner: { ko: "입문", en: "beginner", zh: "入门" },
+  bandIntermediate: { ko: "중급", en: "intermediate", zh: "中级" },
+  bandAdvanced: { ko: "고급", en: "advanced", zh: "高级" },
+  nextLesson: { ko: "다음: `fp lesson {ref}`", en: "Next: `fp lesson {ref}`", zh: "下一步：`fp lesson {ref}`" },
+  nextCheckpoint: {
+    ko: "다음: 단원 체크포인트 `fp checkpoint {unit}`",
+    en: "Next: the unit checkpoint `fp checkpoint {unit}`",
+    zh: "下一步：单元测验 `fp checkpoint {unit}`",
+  },
+  courseDone: {
+    ko: "기초 코스를 모두 마쳤어요! `fp start`로 훈련을 시작하세요.",
+    en: "You finished the basics course! Start training with `fp start`.",
+    zh: "基础课程已全部完成！用 `fp start` 开始训练吧。",
+  },
+  lessonCompleted: { ko: "완료", en: "completed", zh: "已完成" },
+  exerciseLabel: { ko: "[연습 {n}]", en: "[Exercise {n}]", zh: "[练习 {n}]" },
+  exerciseSolved: { ko: "풀었음", en: "solved", zh: "已答对" },
+  lessonTypeChoice: { ko: "객관식", en: "multiple choice", zh: "选择题" },
+  lessonTypePredict: { ko: "결과 예측", en: "predict the result", zh: "预测结果" },
+  lessonSolvedCount: { ko: "연습 {solved}/{total} 풀었음", en: "{solved}/{total} exercises solved", zh: "已答对 {solved}/{total} 个练习" },
+  lessonAnswerHow: {
+    ko: "답하기: `fp answer {ref} <연습 ID|번호> <선택 번호>` (모르겠으면 선택 번호 대신 show)",
+    en: "To answer: `fp answer {ref} <exercise id|number> <choice number>` (stuck? use show instead of a number)",
+    zh: "作答：`fp answer {ref} <练习 ID|序号> <选项序号>`（不会的话用 show 代替序号）",
+  },
+  lessonDoneHow: {
+    ko: "다 읽었으면: `fp lesson-done {ref}`",
+    en: "When you are done: `fp lesson-done {ref}`",
+    zh: "学完后：`fp lesson-done {ref}`",
+  },
+  lessonNextHow: { ko: "다음 레슨: `fp lesson next`", en: "Next lesson: `fp lesson next`", zh: "下一课：`fp lesson next`" },
+  answerCorrect: { ko: "정답이에요!", en: "Correct!", zh: "答对了！" },
+  answerWrong: { ko: "아직 아니에요.", en: "Not quite.", zh: "还不对。" },
+  answerRevealed: { ko: "정답을 공개합니다.", en: "Here is the answer.", zh: "公布答案。" },
+  answerCorrectChoice: { ko: "정답: {n}번", en: "Answer: choice {n}", zh: "答案：选项 {n}" },
+  answerRetry: {
+    ko: "벌점은 없어요. 다른 번호로 다시 답해 보세요 (모르겠으면 show).",
+    en: "There is no penalty. Try another choice (or show to see the answer).",
+    zh: "答错不扣分。换一个选项再试试（不会的话用 show）。",
+  },
+  lessonMarkedDone: {
+    ko: "레슨 {ref}을(를) 완료했어요. 이 단원에서 완료한 레슨: {count}개",
+    en: "Marked {ref} as done. Lessons completed in this unit: {count}",
+    zh: "已完成 {ref}。本单元已完成的课：{count} 个",
+  },
+  checkpointHeader: {
+    ko: "단원 체크포인트: {unit} · {count}문항 · 통과 기준 {threshold} (레이팅에 반영)",
+    en: "Unit checkpoint: {unit} · {count} items · pass mark {threshold} (counts toward your rating)",
+    zh: "单元测验：{unit} · {count} 题 · 及格线 {threshold}（计入评分）",
+  },
+  placementHeader: {
+    ko: "배치 테스트: {count}문항 · 약 5분 (결과로 아는 단원을 건너뜁니다)",
+    en: "Placement test: {count} items · about 5 minutes (the result skips units you already know)",
+    zh: "分级测试：{count} 题 · 约 5 分钟（根据结果跳过已掌握的单元）",
+  },
+  quizIdLine: { ko: "퀴즈 ID: {id}", en: "Quiz id: {id}", zh: "测验 ID：{id}" },
+  quizItemHeading: { ko: "문항 {position}/{total}", en: "Item {position}/{total}", zh: "第 {position}/{total} 题" },
+  quizItemShort: { ko: "문항 {position}", en: "Item {position}", zh: "第 {position} 题" },
+  quizAnswersHow: {
+    ko: "답 제출: `{command} --quiz {id} --answers {example}` (index는 0부터: 1번 선택지 = 0, 비우면 건너뜀)",
+    en: "Submit: `{command} --quiz {id} --answers {example}` (indexes start at 0: choice 1 = 0; leave empty to skip)",
+    zh: "提交：`{command} --quiz {id} --answers {example}`（index 从 0 开始：选项 1 = 0；留空表示跳过）",
+  },
+  quizSkipped: { ko: "건너뜀", en: "skipped", zh: "跳过" },
+  quizChosen: { ko: "선택 {chosen} · 정답 {correct}", en: "chosen {chosen} · answer {correct}", zh: "所选 {chosen} · 答案 {correct}" },
+  quizRevisit: { ko: "다시 보기: `fp lesson {ref}` ({exercise})", en: "Review: `fp lesson {ref}` ({exercise})", zh: "复习：`fp lesson {ref}`（{exercise}）" },
+  checkpointResult: {
+    ko: "체크포인트 결과 ({unit}): {score}/{total}",
+    en: "Checkpoint result ({unit}): {score}/{total}",
+    zh: "单元测验结果（{unit}）：{score}/{total}",
+  },
+  checkpointPassedMessage: {
+    ko: "통과했어요! `fp course`로 다음 단계를 확인하세요.",
+    en: "Passed! See what comes next with `fp course`.",
+    zh: "通过了！用 `fp course` 查看下一步。",
+  },
+  checkpointFailedMessage: {
+    ko: "아직 통과하지 못했어요. 틀린 문항의 레슨을 복습한 뒤 `fp checkpoint {unit}`로 다시 도전하세요.",
+    en: "Not passed yet. Review the lessons of the items you missed, then try again with `fp checkpoint {unit}`.",
+    zh: "还没有通过。复习答错题目对应的课后，再用 `fp checkpoint {unit}` 重新挑战。",
+  },
+  ratingChangesHeading: { ko: "레이팅 변화:", en: "Rating changes:", zh: "评分变化：" },
+  placementResult: {
+    ko: "배치 테스트 결과: {score}/{total} · {band}",
+    en: "Placement test result: {score}/{total} · {band}",
+    zh: "分级测试结果：{score}/{total} · {band}",
+  },
+  placementUnitsPassed: {
+    ko: "통과로 처리된 단원: {units}",
+    en: "Units marked as passed: {units}",
+    zh: "视为已通过的单元：{units}",
+  },
+  placementNoUnitsPassed: {
+    ko: "건너뛸 단원은 없어요. 처음부터 차근차근 시작해요.",
+    en: "No units were skipped. Let's start from the beginning.",
+    zh: "没有可跳过的单元。我们从头开始吧。",
+  },
+  placementGoTraining: {
+    ko: "기초는 충분해요. `fp start`로 핵심 트랙 훈련을 시작하세요.",
+    en: "Your basics are solid. Start core-track training with `fp start`.",
+    zh: "你的基础已经很扎实。用 `fp start` 开始核心路线的训练吧。",
+  },
+  placementGoCourse: {
+    ko: "`fp course`로 이어서 학습하세요.",
+    en: "Continue with `fp course`.",
+    zh: "用 `fp course` 继续学习。",
   },
 
   // ---------- locale names ----------

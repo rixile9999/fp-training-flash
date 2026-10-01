@@ -20,6 +20,14 @@ export type FpApi = Pick<
   | "skipItem"
   | "recommend"
   | "progress"
+  | "course"
+  | "lesson"
+  | "lessonAnswer"
+  | "lessonComplete"
+  | "startCheckpoint"
+  | "submitCheckpoint"
+  | "startPlacement"
+  | "submitPlacement"
 >;
 
 export const DEFAULT_API_URL = "http://localhost:8787";

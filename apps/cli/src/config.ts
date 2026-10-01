@@ -20,6 +20,8 @@ export interface CliConfig {
    * (sent with the next `fp login`).
    */
   readonly locale?: Locale;
+  /** Last checkpoint/placement quiz printed without being answered, so `--answers` can omit `--quiz`. */
+  readonly lastQuiz?: { readonly id: string; readonly kind: "checkpoint" | "placement"; readonly unitId?: string };
 }
 
 export interface ConfigEnv {

@@ -25,6 +25,10 @@ blocks:
         "1": It doesn't return the input unchanged — `x * 2` is applied, so 21 * 2 = 42.
         "2": "`2` is just the multiplier; the return value is `x * 2` = 42."
         "3": Binding an anonymous function with `let` and calling it is perfectly legal — functions are values, so they fit in variables.
+    code: |-
+      let double = fn(x) { x * 2 }
+
+      // double(21) = ?
   anon-vs-named:
     markdown: |-
       A named function and an anonymous function are essentially the same thing. `pub fn double(x: Int) -> Int { x * 2 }` is fundamentally the same as binding `fn(x) { x * 2 }` to the name `double`.

@@ -2,9 +2,10 @@
 import { appError, asId, err, ok, pickLocale } from "@fp/kernel";
 import type { Clock, ExerciseId, Locale, SessionId, SubmissionId, UserId } from "@fp/kernel";
 import type { AccountsService, User } from "@fp/accounts/contract";
-import type { ContentCatalog, ExerciseDetail } from "@fp/content/contract";
+import type { ContentCatalog, ExerciseDetail, Lesson } from "@fp/content/contract";
 import type { GradingService, HelpUsed, Submission } from "@fp/grading/contract";
 import type { LearnerModel, LearnerProfile } from "@fp/learner/contract";
+import type { LessonService, Quiz, UnitProgress } from "@fp/lessons/contract";
 import type { Session, SessionService } from "@fp/sessions/contract";
 import type { CoachingService } from "@fp/coaching/contract";
 import type { AppServices } from "../src/app.ts";
@@ -93,6 +94,52 @@ export function makeSession(id: string): Session {
   };
 }
 
+// ---------- lessons ----------
+
+export const UNIT_ID = "u01-values";
+export const LESSON_ID = "l01-values-let";
+export const LESSON_EXERCISE_ID = "bind-syntax";
+export const CHECKPOINT_QUIZ_ID = "quiz-cp-1";
+export const PLACEMENT_QUIZ_ID = "quiz-pl-1";
+
+/** Lesson title per locale, so tests can see which locale the fake lesson service was asked for. */
+export const LESSON_TITLE = { ko: "값과 let", en: "Values and let", zh: "值与 let" } as const;
+
+export function makeLesson(locale?: Locale): Lesson {
+  return {
+    id: LESSON_ID,
+    unitId: UNIT_ID,
+    title: pickLocale(LESSON_TITLE, locale),
+    tags: ["concept:basics"],
+    blocks: [
+      { kind: "prose", id: "intro", markdown: "..." },
+      {
+        kind: "exercise",
+        id: LESSON_EXERCISE_ID,
+        type: "choice",
+        prompt: "?",
+        choices: ["`x = 5`", "`let x = 5`", "`var x = 5`"],
+      },
+    ],
+  };
+}
+
+export function makeUnitProgress(lessonsCompleted: readonly string[] = []): UnitProgress {
+  return { unitId: UNIT_ID, lessonsCompleted, checkpointPassed: false, unlocked: true, passedByPlacement: false };
+}
+
+export function makeQuiz(kind: Quiz["kind"]): Quiz {
+  return {
+    quizId: kind === "checkpoint" ? CHECKPOINT_QUIZ_ID : PLACEMENT_QUIZ_ID,
+    kind,
+    ...(kind === "checkpoint" ? { unitId: UNIT_ID, passThreshold: 0.8 } : {}),
+    items: [{ itemId: "i1", unitId: UNIT_ID, type: "choice", prompt: "?", choices: ["a", "b"] }],
+  };
+}
+
+const lessonNotFound = () => err(appError("not_found", "레슨을 찾을 수 없습니다."));
+const quizNotFound = () => err(appError("not_found", "퀴즈를 찾을 수 없습니다."));
+
 export interface MutableClock extends Clock {
   advance(ms: number): void;
 }
@@ -118,6 +165,7 @@ type Overrides = {
   learner?: Partial<LearnerModel>;
   sessions?: Partial<SessionService>;
   coaching?: Partial<CoachingService>;
+  lessons?: Partial<LessonService>;
 };
 
 /** Wraps every method so calls are recorded as "<service>.<method>". */
@@ -282,11 +330,75 @@ export function makeFakes(overrides: Overrides = {}): Fakes {
     ...overrides.coaching,
   };
 
+  const isLesson = (unitId: string, lessonId: string) => unitId === UNIT_ID && lessonId === LESSON_ID;
+  const lessons: LessonService = {
+    course: async () => ({
+      units: [
+        {
+          id: UNIT_ID,
+          title: "값",
+          order: 1,
+          level: 1,
+          skill: asId("gleam-basics"),
+          prerequisites: [],
+          lessonIds: [LESSON_ID],
+          lessonTitles: [LESSON_TITLE.ko],
+          locales: ["ko", "en", "zh"],
+          progress: makeUnitProgress(),
+        },
+      ],
+      placement: null,
+      next: { kind: "lesson", unitId: UNIT_ID, lessonId: LESSON_ID },
+    }),
+    lesson: async (_u, unitId, lessonId, locale) =>
+      isLesson(unitId, lessonId) ? ok({ lesson: makeLesson(locale), solved: [], completed: false }) : lessonNotFound(),
+    answer: async (_u, unitId, lessonId, exerciseId, choice, opts) => {
+      if (!isLesson(unitId, lessonId) || exerciseId !== LESSON_EXERCISE_ID) return lessonNotFound();
+      const correct = choice === 1;
+      return ok({
+        correct,
+        ...(correct || opts?.giveUp === true ? { correctIndex: 1 } : {}),
+        feedback: correct ? "맞아요!" : "다시 생각해 보세요.",
+      });
+    },
+    completeLesson: async (_u, unitId, lessonId) =>
+      isLesson(unitId, lessonId) ? ok(makeUnitProgress([LESSON_ID])) : lessonNotFound(),
+    startCheckpoint: async (_u, unitId) => (unitId === UNIT_ID ? ok(makeQuiz("checkpoint")) : lessonNotFound()),
+    submitCheckpoint: async (_u, quizId, answers) =>
+      quizId === CHECKPOINT_QUIZ_ID
+        ? ok({
+            quizId,
+            unitId: UNIT_ID,
+            score: answers["i1"] === 1 ? 1 : 0,
+            total: 1,
+            passed: answers["i1"] === 1,
+            review: [],
+            ratingChanges: [],
+          })
+        : quizNotFound(),
+    startPlacement: async () => ok(makeQuiz("placement")),
+    submitPlacement: async (_u, quizId) =>
+      quizId === PLACEMENT_QUIZ_ID
+        ? ok({
+            quizId,
+            score: 1,
+            total: 1,
+            band: "beginner",
+            unitsPassed: [],
+            recommendation: "course",
+            review: [],
+            completedAt: CREATED,
+          })
+        : quizNotFound(),
+    ...overrides.lessons,
+  };
+
   const services: AppServices = {
     accounts: recorded("accounts", accounts, calls),
     catalog: recorded("catalog", catalog, calls),
     grading: recorded("grading", grading, calls),
     learner: recorded("learner", learner, calls),
+    lessons: recorded("lessons", lessons, calls),
     sessions: recorded("sessions", sessions, calls),
     coaching: recorded("coaching", coaching, calls),
   };

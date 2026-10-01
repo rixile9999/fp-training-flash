@@ -6,6 +6,8 @@ import type {
   ExerciseDetail,
   ExerciseSummary,
   GradingSpec,
+  Lesson,
+  LessonUnitSummary,
   ReferenceMaterial,
   Skill,
   TheoryTopic,
@@ -14,14 +16,21 @@ import {
   localizeConceptNote,
   localizeDetail,
   localizeGrading,
+  localizeLesson,
+  localizeLessonAnswer,
   localizeReference,
   localizeSkill,
   localizeSummary,
   localizeTheoryTopic,
+  localizeUnit,
   overlayFor,
+  type LessonText,
   type NoteText,
   type SkillText,
+  type StoredLessonAnswer,
+  type StoredLessonUnit,
   type Translations,
+  type UnitText,
   type VariantText,
 } from "../i18n.ts";
 
@@ -88,6 +97,29 @@ async function notesById<T>(
   return out;
 }
 
+/** Units in order (retired ones hidden); lessonTitles follow each unit's lesson order, localized field by field. */
+async function listLessonUnits(db: Db, locale: Locale | undefined): Promise<LessonUnitSummary[]> {
+  const units = await db.query<{ value: unknown; translations: unknown }>(
+    "select data as value, translations from content.lesson_units where not retired order by sort_order, id",
+  );
+  const lessons = await db.query<{ unit_id: string; lesson_id: string; title: string; translations: unknown }>(
+    `select l.unit_id, l.lesson_id, l.data ->> 'title' as title, jsonb_build_object($1::text, l.translations -> $1::text) as translations
+     from content.lessons l join content.lesson_units u on u.id = l.unit_id
+     where not l.retired and not u.retired`,
+    [locale ?? "ko"],
+  );
+  const titles = new Map<string, string>();
+  for (const row of lessons.rows) {
+    const t = overlayFor(json<Translations<LessonText> | null>(row.translations), locale);
+    titles.set(`${row.unit_id}/${row.lesson_id}`, t?.title ?? row.title);
+  }
+  return units.rows.map((row) => {
+    const unit = json<StoredLessonUnit>(row.value);
+    const lessonTitles = unit.lessonIds.map((id) => titles.get(`${unit.id}/${id}`) ?? id);
+    return localizeUnit(unit, overlayFor(json<Translations<UnitText> | null>(row.translations), locale), lessonTitles);
+  });
+}
+
 export function createCatalog(db: Db): ContentCatalog {
   return {
     async listSkills(locale) {
@@ -143,15 +175,27 @@ export function createCatalog(db: Db): ContentCatalog {
       return r.rows.map((row) => localized<TheoryTopic, NoteText>(row, locale, localizeTheoryTopic));
     },
 
-    // Lessons (docs/design/lessons.md): placeholders until the lesson loader lands.
-    async listLessonUnits() {
-      return [];
+    listLessonUnits: (locale) => listLessonUnits(db, locale),
+
+    async getLesson(unitId, lessonId, locale) {
+      const r = await db.query<{ value: unknown; translations: unknown }>(
+        "select data as value, translations from content.lessons where unit_id = $1 and lesson_id = $2",
+        [unitId, lessonId],
+      );
+      const row = r.rows[0];
+      return row ? localized<Lesson, LessonText>(row, locale, localizeLesson) : null;
     },
-    async getLesson() {
-      return null;
-    },
-    async getLessonAnswer() {
-      return null;
+
+    async getLessonAnswer(unitId, lessonId, exerciseId, locale) {
+      const r = await db.query<{ answer: unknown; translations: unknown }>(
+        "select answers -> $3::text as answer, translations from content.lessons where unit_id = $1 and lesson_id = $2",
+        [unitId, lessonId, exerciseId],
+      );
+      const row = r.rows[0];
+      const stored = row ? json<StoredLessonAnswer | null>(row.answer) : null;
+      if (!row || !stored) return null;
+      const t = overlayFor(json<Translations<LessonText> | null>(row.translations), locale);
+      return localizeLessonAnswer({ unitId, lessonId, exerciseId }, stored, t);
     },
 
     currentBundle: () => currentBundle(db),

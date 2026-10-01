@@ -20,9 +20,10 @@ import type { AccountsService, User } from "@fp/accounts/contract";
 import type { ContentCatalog, ExerciseDetail } from "@fp/content/contract";
 import type { GradingService } from "@fp/grading/contract";
 import type { LearnerModel } from "@fp/learner/contract";
+import type { LessonService } from "@fp/lessons/contract";
 import type { SessionService } from "@fp/sessions/contract";
 import type { CoachingService } from "@fp/coaching/contract";
-import { apiError, fail, json, parseBody, parseQuery, requestLocale, respond } from "./http.ts";
+import { apiError, fail, json, parseBody, parseParams, parseQuery, requestLocale, respond } from "./http.ts";
 import { createRateLimiter } from "./rate-limit.ts";
 import type { RateLimitRule } from "./rate-limit.ts";
 import * as s from "./schemas.ts";
@@ -32,6 +33,7 @@ export interface AppServices {
   readonly catalog: ContentCatalog;
   readonly grading: GradingService;
   readonly learner: LearnerModel;
+  readonly lessons: LessonService;
   readonly sessions: SessionService;
   readonly coaching: CoachingService;
 }
@@ -69,7 +71,7 @@ export function redactExercise(ex: ExerciseDetail, maxHintLevel: number): Exerci
 }
 
 export function createApp(services: AppServices, options: AppOptions = {}): ApiApp {
-  const { accounts, catalog, grading, learner, sessions, coaching } = services;
+  const { accounts, catalog, grading, learner, lessons, sessions, coaching } = services;
   const clock = options.clock ?? systemClock;
   const logger = options.logger ?? silentLogger;
   const rule = options.rateLimit ?? DEFAULT_RATE_LIMIT;
@@ -360,6 +362,64 @@ export function createApp(services: AppServices, options: AppOptions = {}): ApiA
     ]);
     const body: ProgressView = { profile, skills };
     return json(c, body);
+  });
+
+  // ---------- lessons (Gleam basics course) ----------
+  // Unit, lesson and quiz ids are single path segments, validated after decoding (parseParams).
+
+  app.get(ROUTES.course.path, async (c) => json(c, await lessons.course(c.get("user").id, loc(c))));
+
+  app.get(ROUTES.lesson.path, async (c) => {
+    const p = parseParams(c, s.lessonParamsSchema);
+    if (!p.ok) return fail(c, p.error);
+    return respond(c, await lessons.lesson(c.get("user").id, p.value.unitId, p.value.lessonId, loc(c)));
+  });
+
+  app.post(ROUTES.lessonAnswer.path, async (c) => {
+    const p = parseParams(c, s.lessonParamsSchema);
+    if (!p.ok) return fail(c, p.error);
+    const req = await parseBody(c, s.lessonAnswerSchema);
+    if (!req.ok) return fail(c, req.error);
+    const { exerciseId, choice, giveUp } = req.value;
+    return respond(
+      c,
+      await lessons.answer(c.get("user").id, p.value.unitId, p.value.lessonId, exerciseId, choice, {
+        ...(giveUp === undefined ? {} : { giveUp }),
+        locale: loc(c),
+      }),
+    );
+  });
+
+  app.post(ROUTES.lessonComplete.path, async (c) => {
+    const p = parseParams(c, s.lessonParamsSchema);
+    if (!p.ok) return fail(c, p.error);
+    return respond(c, await lessons.completeLesson(c.get("user").id, p.value.unitId, p.value.lessonId));
+  });
+
+  app.post(ROUTES.startCheckpoint.path, async (c) => {
+    const p = parseParams(c, s.unitParamsSchema);
+    if (!p.ok) return fail(c, p.error);
+    return respond(c, await lessons.startCheckpoint(c.get("user").id, p.value.unitId, loc(c)), 201);
+  });
+
+  app.post(ROUTES.submitCheckpoint.path, async (c) => {
+    const p = parseParams(c, s.quizParamsSchema);
+    if (!p.ok) return fail(c, p.error);
+    const req = await parseBody(c, s.quizSubmitSchema);
+    if (!req.ok) return fail(c, req.error);
+    return respond(c, await lessons.submitCheckpoint(c.get("user").id, p.value.quizId, req.value.answers, loc(c)));
+  });
+
+  app.post(ROUTES.startPlacement.path, async (c) =>
+    respond(c, await lessons.startPlacement(c.get("user").id, loc(c)), 201),
+  );
+
+  app.post(ROUTES.submitPlacement.path, async (c) => {
+    const p = parseParams(c, s.quizParamsSchema);
+    if (!p.ok) return fail(c, p.error);
+    const req = await parseBody(c, s.quizSubmitSchema);
+    if (!req.ok) return fail(c, req.error);
+    return respond(c, await lessons.submitPlacement(c.get("user").id, p.value.quizId, req.value.answers, loc(c)));
   });
 
   return app;
