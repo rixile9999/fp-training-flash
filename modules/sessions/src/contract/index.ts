@@ -2,7 +2,7 @@
  * Sessions contract: builds short training sessions (review -> focus -> variation) and picks
  * the next exercise via the recommender.
  */
-import type { AppError, ExerciseId, Language, Result, SessionId, SkillId, SubmissionId, UserId } from "@fp/kernel";
+import type { AppError, ExerciseId, Language, Locale, Result, SessionId, SkillId, SubmissionId, UserId } from "@fp/kernel";
 
 export type SessionItemKind = "review" | "focus" | "variation" | "challenge";
 export type SessionItemStatus = "pending" | "in_progress" | "passed" | "failed" | "skipped";
@@ -50,6 +50,8 @@ export interface StartSessionRequest {
   /** Optional: restrict focus items to one skill. */
   readonly focusSkill?: SkillId;
   readonly includeChallenge?: boolean;
+  /** Language of item reasons. Default "ko". */
+  readonly locale?: Locale;
 }
 
 export interface Recommendation {
@@ -69,7 +71,7 @@ export interface SessionService {
   skip(sessionId: SessionId, userId: UserId): Promise<Result<Session, AppError>>;
   complete(sessionId: SessionId, userId: UserId): Promise<Result<SessionSummary, AppError>>;
   /** Single recommendation outside a session (e.g. MCP "give me one exercise"). */
-  recommend(userId: UserId, language: Language, skill?: SkillId): Promise<Result<Recommendation, AppError>>;
+  recommend(userId: UserId, language: Language, skill?: SkillId, locale?: Locale): Promise<Result<Recommendation, AppError>>;
 }
 
 export const SESSION_EVENTS = {

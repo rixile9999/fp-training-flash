@@ -8,6 +8,7 @@ import type {
   ExerciseId,
   FamilyId,
   Language,
+  Locale,
   SkillId,
   TheoryTopicId,
 } from "@fp/kernel";
@@ -63,6 +64,8 @@ export interface ExerciseSummary {
   /** Business/context tags used to avoid repeating the same context, e.g. ["orders"]. */
   readonly contextTags: readonly string[];
   readonly source: ContentSource;
+  /** Locales with a complete translation of this exercise (always includes "ko"). */
+  readonly locales: readonly Locale[];
 }
 
 export type HintKind = "question" | "concept" | "approach" | "partial_code" | "explanation";
@@ -232,18 +235,24 @@ export interface BundleInfo {
   readonly exerciseCount: number;
 }
 
-/** Read API used by other modules. Returns only the latest version of each exercise unless an id pins one. */
+/**
+ * Read API used by other modules. Returns only the latest version of each exercise unless an id pins one.
+ * Every learner-facing text is returned in `locale` (default "ko"); a missing translation falls back to Korean
+ * field by field. Code (starter, tests, solutions) is the same in every locale, except that a variant may provide
+ * a localized starter whose comments are translated.
+ */
 export interface ContentCatalog {
-  listSkills(): Promise<readonly Skill[]>;
-  getSkill(id: SkillId): Promise<Skill | null>;
-  listExercises(filter?: ExerciseFilter): Promise<readonly ExerciseSummary[]>;
+  listSkills(locale?: Locale): Promise<readonly Skill[]>;
+  getSkill(id: SkillId, locale?: Locale): Promise<Skill | null>;
+  listExercises(filter?: ExerciseFilter, locale?: Locale): Promise<readonly ExerciseSummary[]>;
   /** Accepts any version id, including superseded ones (old submissions stay reproducible). */
-  getExercise(id: ExerciseId): Promise<ExerciseDetail | null>;
-  getGradingSpec(id: ExerciseId): Promise<GradingSpec | null>;
-  getReferenceMaterial(id: ExerciseId): Promise<ReferenceMaterial | null>;
-  getConceptNotes(ids: readonly ConceptNoteId[]): Promise<readonly ConceptNote[]>;
-  getTheoryTopics(ids: readonly TheoryTopicId[]): Promise<readonly TheoryTopic[]>;
-  listTheoryTopics(): Promise<readonly TheoryTopic[]>;
+  getExercise(id: ExerciseId, locale?: Locale): Promise<ExerciseDetail | null>;
+  /** Test names, requirement descriptions and rubric texts in `locale`; test code is locale-independent. */
+  getGradingSpec(id: ExerciseId, locale?: Locale): Promise<GradingSpec | null>;
+  getReferenceMaterial(id: ExerciseId, locale?: Locale): Promise<ReferenceMaterial | null>;
+  getConceptNotes(ids: readonly ConceptNoteId[], locale?: Locale): Promise<readonly ConceptNote[]>;
+  getTheoryTopics(ids: readonly TheoryTopicId[], locale?: Locale): Promise<readonly TheoryTopic[]>;
+  listTheoryTopics(locale?: Locale): Promise<readonly TheoryTopic[]>;
   currentBundle(): Promise<BundleInfo | null>;
 }
 

@@ -4,7 +4,7 @@
  * Evidence from execution always wins over LLM opinion; LLM output never changes grading results
  * or ratings.
  */
-import type { AppError, ExerciseId, Result, SubmissionId, UserId } from "@fp/kernel";
+import type { AppError, ExerciseId, Locale, Result, SubmissionId, UserId } from "@fp/kernel";
 import type { Hint } from "@fp/content/contract";
 import type { HelpUsed } from "@fp/grading/contract";
 
@@ -48,6 +48,8 @@ export interface ChatRequest {
   readonly code?: string;
   readonly submissionId?: SubmissionId;
   readonly messages: readonly ChatMessage[];
+  /** Reply language. Default "ko". */
+  readonly locale?: Locale;
 }
 
 export interface ChatReply {
@@ -67,12 +69,13 @@ export type HelpKind = "hint" | "concept_note" | "theory_note" | "explanation" |
 
 export interface CoachingService {
   /** Cached per (submission, prompt version, model). Falls back to rule-based feedback. */
-  feedback(submissionId: SubmissionId, userId: UserId): Promise<Result<CoachingFeedback, AppError>>;
+  /** Written in `locale` (default "ko"); the cache key includes the locale. */
+  feedback(submissionId: SubmissionId, userId: UserId, locale?: Locale): Promise<Result<CoachingFeedback, AppError>>;
   chat(req: ChatRequest): Promise<Result<ChatReply, AppError>>;
   /** Reveals hints up to `level` (authored content, no LLM) and records it in the help ledger. */
-  revealHint(userId: UserId, exerciseId: ExerciseId, level: number): Promise<Result<readonly Hint[], AppError>>;
+  revealHint(userId: UserId, exerciseId: ExerciseId, level: number, locale?: Locale): Promise<Result<readonly Hint[], AppError>>;
   /** Reveals the reference explanation and records it; later mastery must be shown on a new exercise. */
-  revealExplanation(userId: UserId, exerciseId: ExerciseId): Promise<Result<Explanation, AppError>>;
+  revealExplanation(userId: UserId, exerciseId: ExerciseId, locale?: Locale): Promise<Result<Explanation, AppError>>;
   recordHelp(userId: UserId, exerciseId: ExerciseId, kind: HelpKind, ref?: string): Promise<void>;
   /** Server-side summary passed to grading on submit. */
   helpUsed(userId: UserId, exerciseId: ExerciseId): Promise<HelpUsed>;

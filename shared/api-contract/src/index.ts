@@ -4,7 +4,7 @@
  * passed through encodeURIComponent in paths. Errors: HTTP status + `{ "error": ApiErrorBody }`.
  * Only type imports from module contracts are allowed here so browsers can bundle this file.
  */
-import type { AppErrorCode, Language } from "@fp/kernel";
+import type { AppErrorCode, Language, Locale } from "@fp/kernel";
 import type { IssuedToken, TokenInfo, User } from "@fp/accounts/contract";
 import type {
   ConceptNote,
@@ -42,6 +42,7 @@ export type {
   CoachingFeedback,
   Explanation,
   Language,
+  Locale,
 };
 
 export interface ApiErrorBody {
@@ -54,6 +55,13 @@ export interface ApiErrorBody {
 
 export interface DevLoginRequest {
   readonly displayName: string;
+  /** Sets the user's language (new users) or updates it (existing users). */
+  readonly locale?: Locale;
+}
+
+/** The server renders every learner-facing text (content, grading messages, coach replies) in user.locale. */
+export interface UpdateMeRequest {
+  readonly locale: Locale;
 }
 export interface DevLoginResponse {
   readonly user: User;
@@ -132,6 +140,7 @@ export const ROUTES = {
   health: { method: "GET", path: "/v1/health" },
   devLogin: { method: "POST", path: "/v1/auth/dev-login" },
   me: { method: "GET", path: "/v1/me" },
+  updateMe: { method: "PATCH", path: "/v1/me" },
   issueToken: { method: "POST", path: "/v1/me/tokens" },
   listTokens: { method: "GET", path: "/v1/me/tokens" },
   revokeToken: { method: "DELETE", path: "/v1/me/tokens/:tokenId" },
@@ -223,6 +232,7 @@ export function createApiClient(opts: ApiClientOptions) {
     health: () => call<HealthResponse>(ROUTES.health),
     devLogin: (req: DevLoginRequest) => call<DevLoginResponse>(ROUTES.devLogin, {}, req),
     me: () => call<User>(ROUTES.me),
+    updateMe: (req: UpdateMeRequest) => call<User>(ROUTES.updateMe, {}, req),
     issueToken: (req: IssueTokenRequest) => call<IssuedToken>(ROUTES.issueToken, {}, req),
     listTokens: () => call<TokenInfo[]>(ROUTES.listTokens),
     revokeToken: (tokenId: string) => call<null>(ROUTES.revokeToken, { tokenId }),

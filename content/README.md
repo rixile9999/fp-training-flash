@@ -124,3 +124,35 @@ text, because one topic is shared by many exercises.
 Exercism content (MIT, Copyright (c) 2021 Exercism) may be adapted. Keep `source.kind: exercism`, the upstream
 slug and commit in `source.upstream`, and the license text in `LICENSES/exercism-gleam-MIT.txt`. Do not copy
 from LeetCode, Advent of Code, Project Euler or textbooks.
+
+## Localization (en, zh)
+
+Korean files are the source of truth. Supported locales: `ko` (source), `en` (English), `zh` (Simplified Chinese).
+Each translatable file may have a sibling per locale; anything missing falls back to Korean field by field.
+
+```text
+content/skills.<locale>.yaml                         skills: { <skill-id>: { name, description } }
+content/concepts/<id>.<locale>.md                    front matter: id, title only; translated body
+content/theory/<id>.<locale>.md                      front matter: id, title only; translated body
+exercises/<family>/family.<locale>.yaml              { title?, rubric?: { <R-id>: { title?, description?, message? } } }
+exercises/<family>/<variant>/exercise.<locale>.yaml  { title?, tests?: { <fn>: name }, requirements?: { <id>: description },
+                                                       hints?: { 1: text, ... 5: text }, rubric?: { <R-id>: {...} } }
+exercises/<family>/<variant>/prompt.<locale>.md
+exercises/<family>/<variant>/explanation.<locale>.md
+exercises/<family>/<variant>/starter.<locale>/<module>.gleam   only when the Korean starter contains Korean comments
+```
+
+`rubric.<id>.message` translates `automatedCheck.message`. Non-text fields (kind, difficulty, tests' visibility, error tags,
+patterns, predict answers, performance) are never overlaid: they come from the Korean files only.
+
+Rules:
+
+1. Never change ids, code, identifiers, test function names, file names or numbers. Translate prose only, including
+   comments inside ```gleam code blocks; the code itself must stay byte-identical apart from comments.
+2. A localized starter is the Korean starter with only the comments translated. Content CI compiles it and requires it
+   to fail like the Korean starter.
+3. Every overlay key must exist in the Korean source (unknown test fn, requirement id, rubric id or hint level is an error).
+4. A variant is fully translated into a locale (listed in `ExerciseSummary.locales`) when it has the prompt, the
+   explanation, an exercise overlay with every test name and all five hints, the family title (in family.<locale>.yaml),
+   and a localized starter whenever the Korean starter contains Hangul.
+5. Use docs/i18n-glossary.md for terminology and tone. Chinese is Simplified Chinese (zh-Hans).

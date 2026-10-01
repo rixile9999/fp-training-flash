@@ -2,11 +2,13 @@
  * Accounts contract: users and bearer API tokens shared by web, MCP and CLI.
  * MVP login is a development login by display name; real identity providers come later.
  */
-import type { AppError, Result, UserId } from "@fp/kernel";
+import type { AppError, Locale, Result, UserId } from "@fp/kernel";
 
 export interface User {
   readonly id: UserId;
   readonly displayName: string;
+  /** Preferred UI/content language; defaults to "ko". */
+  readonly locale: Locale;
   readonly createdAt: string;
 }
 
@@ -27,7 +29,9 @@ export interface TokenInfo {
 
 export interface AccountsService {
   /** Creates the user if the display name is new, otherwise returns the existing user. */
-  devLogin(displayName: string): Promise<Result<{ readonly user: User; readonly token: IssuedToken }, AppError>>;
+  /** `locale` sets the preference for a new user and updates it for an existing one when given. */
+  devLogin(displayName: string, locale?: Locale): Promise<Result<{ readonly user: User; readonly token: IssuedToken }, AppError>>;
+  setLocale(userId: UserId, locale: Locale): Promise<Result<User, AppError>>;
   getUser(id: UserId): Promise<User | null>;
   issueToken(userId: UserId, label: string): Promise<Result<IssuedToken, AppError>>;
   listTokens(userId: UserId): Promise<readonly TokenInfo[]>;

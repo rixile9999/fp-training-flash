@@ -30,6 +30,7 @@ export function exercise(id: ExerciseId, primarySkill: SkillId, difficulty: numb
     estimatedMinutes: 5,
     contextTags: [],
     source: { kind: "original" },
+    locales: ["ko"],
     promptMarkdown: "",
     moduleName: "m",
     starterFiles: [],

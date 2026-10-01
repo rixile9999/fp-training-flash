@@ -2,7 +2,7 @@
  * Grading module contract: submissions, evaluations, and the language runner (adapter) port.
  * Grading knows nothing about ratings or LLMs; it publishes `grading.submission_evaluated`.
  */
-import type { ExerciseId, Language, Result, AppError, SessionId, SubmissionId, UserId } from "@fp/kernel";
+import type { ExerciseId, Language, Locale, Result, AppError, SessionId, SubmissionId, UserId } from "@fp/kernel";
 import type { FileContent } from "@fp/content/contract";
 
 // ---------- Runner (language adapter) port ----------
@@ -172,11 +172,14 @@ export interface SubmitRequest {
   readonly idempotencyKey: string;
   readonly sessionId?: SessionId;
   readonly helpUsed: HelpUsed;
+  /** Language of learner-facing texts in the stored evaluation (test names, messages, reasons). Default "ko". */
+  readonly locale?: Locale;
 }
 
 export interface TrialRunRequest {
   readonly exerciseId: ExerciseId;
   readonly code: string;
+  readonly locale?: Locale;
 }
 
 /** Result of "run" (public tests only). Not stored, no events. */
