@@ -1,0 +1,76 @@
+title: 중첩 호출을 파이프로
+tags:
+  - concept:pipe-operator
+  - concept:strings
+blocks:
+  - prose: intro
+    markdown: |-
+      `c(b(a(x)))` 같은 중첩 호출은 **안쪽부터** 읽어야 합니다 — a 먼저, 그다음 b, 그다음 c. 읽는 순서와 실행 순서가 거꾸로죠.
+
+      파이프로 바꾸면 `x |> a |> b |> c` 가 되어 **데이터가 변환되는 순서 그대로** 읽힙니다. 두 표현식은 완전히 같은 값을 냅니다.
+  - exercise: nested-value
+    type: predict
+    prompt: 이 중첩 호출의 값은?
+    code: string.uppercase(string.trim("  hi "))
+    choices:
+      - '`"HI"`'
+      - '`"  HI "`'
+      - '`"hi"`'
+      - '`"  hi "`'
+    answer: 0
+    feedback:
+      correct: 맞아요! 안쪽 trim이 "hi"를 만들고, 바깥 uppercase가 "HI"로 바꿉니다.
+      choices:
+        "1": 안쪽 trim이 먼저 공백을 제거해요 — 공백이 남지 않습니다.
+        "2": 바깥 uppercase가 대문자로 바꿔요.
+        "3": 두 함수가 모두 적용돼 "HI"가 됩니다.
+  - prose: equivalence
+    markdown: |-
+      위의 `string.uppercase(string.trim("  hi "))` 는 파이프로 이렇게 씁니다:
+
+      ```gleam
+      "  hi "
+      |> string.trim
+      |> string.uppercase
+      ```
+
+      같은 값("HI")을 내지만, 가장 먼저 일어나는 일(trim)이 가장 위에 옵니다.
+  - exercise: rewrite
+    type: choice
+    prompt: "`c(b(a(x)))` 를 파이프로 올바르게 옮긴 것은?"
+    choices:
+      - "`x |> a |> b |> c`"
+      - "`x |> c |> b |> a`"
+      - "`c |> b |> a |> x`"
+      - "`a |> b |> c |> x`"
+    answer: 0
+    feedback:
+      correct: 정확해요! 안쪽(가장 먼저 실행되는) a가 가장 앞에 오고, 바깥 c가 마지막입니다.
+      choices:
+        "1": 순서가 뒤집혔어요 — 가장 안쪽 a가 가장 먼저 와야 합니다.
+        "2": x는 시작 데이터라 맨 앞에 와야 해요.
+        "3": x는 함수가 아니라 흘려보낼 값이라 맨 앞에 둡니다.
+  - exercise: shout-chain
+    type: predict
+    prompt: 함수 `shout`이 아래처럼 정의됐을 때 `shout("  lucy ")`의 값은?
+    code: |-
+      pub fn shout(name: String) -> String {
+        name
+        |> string.trim
+        |> string.uppercase
+        |> string.append("!")
+      }
+
+      // shout("  lucy ") 은?
+    choices:
+      - '`"LUCY!"`'
+      - '`"!LUCY"`'
+      - '`"  LUCY !"`'
+      - '`"lucy!"`'
+    answer: 0
+    feedback:
+      correct: 맞아요! trim→"lucy", uppercase→"LUCY", append("!")→"LUCY!".
+      choices:
+        "1": append는 뒤에 붙여요 — "LUCY" 다음에 "!"라서 "LUCY!"입니다.
+        "2": trim이 공백을 먼저 없애므로 공백이 남지 않아요.
+        "3": uppercase 단계가 대문자로 바꿉니다 — 소문자로 남지 않아요.

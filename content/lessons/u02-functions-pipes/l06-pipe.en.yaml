@@ -1,0 +1,55 @@
+title: The Pipe |>
+blocks:
+  intro:
+    markdown: |-
+      The `|>` (pipe) operator feeds the value on the left into the **first argument** of the function on the right.
+
+      `x |> f`  is the same as  `f(x)`,
+      and `x |> f(y)`  is the same as  `f(x, y)`. (The left-hand value goes into the very first slot!)
+
+      The key idea is that data flows left to right, in the order it's transformed.
+  trim-upper:
+    prompt: What is the value of this pipe chain?
+    choices:
+      - '`"LUCY"`'
+      - '`"  LUCY "`'
+      - '`"lucy"`'
+      - '`"  lucy "`'
+    feedback:
+      correct: Correct! First trim removes the whitespace to give "lucy", then uppercase makes it "LUCY".
+      choices:
+        "1": trim strips the whitespace at both ends first. None is left over.
+        "2": uppercase converts to capitals — it doesn't stay lowercase.
+        "3": Both transformations apply — it goes through trim and uppercase.
+  first-arg:
+    markdown: |-
+      The most confusing part is that the pipe places the value into the **first argument**.
+
+      `string.append(first, second)` appends `second` after `first`.
+      So `"LUCY" |> string.append("!")` becomes `string.append("LUCY", "!")`, producing `"LUCY!"` — `"LUCY"` is the first argument and `"!"` is the second.
+  append-pipe:
+    prompt: What is the value of this expression?
+    choices:
+      - '`"LUCY!"`'
+      - '`"!LUCY"`'
+      - '`"LUCY"`'
+      - Compile error
+    feedback:
+      correct: 'Exactly! The pipe puts "LUCY" into the first argument: string.append("LUCY", "!") → "LUCY!".'
+      choices:
+        "1": The pipe puts the left value into the **first** argument. It's `append("LUCY", "!")`, so `!` is appended at the end.
+        "2": "`\"!\"` is added as an argument, so it doesn't stay unchanged — it becomes \"LUCY!\"."
+        "3": It's a valid pipe call, so it compiles.
+  pipe-meaning:
+    prompt: What is `x |> f(y)` the same as?
+    choices:
+      - "`f(y, x)`"
+      - "`f(x, y)`"
+      - "`f(x)(y)`"
+      - "`x(f, y)`"
+    feedback:
+      correct: Correct! The pipe puts the left value x into the first argument, giving `f(x, y)`.
+      choices:
+        "0": x goes into the **first** argument — it's `f(x, y)`, not `f(y, x)`.
+        "2": Gleam has no currying — there's no `f(x)(y)` form.
+        "3": f is the function and x is its first argument — x doesn't call f.

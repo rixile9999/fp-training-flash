@@ -1,0 +1,124 @@
+title: Modeling state with variants
+blocks:
+  intro:
+    markdown: |-
+      So far we've only used the types Gleam gave us (`Int`, `String`, `Bool` …). Now we'll make **our own type**.
+
+      Inside `pub type Name { ... }` you list the possible **cases (variants)** one by one. A traffic light, for example, is one of three:
+
+      ```gleam
+      pub type TrafficLight {
+        Red
+        Yellow
+        Green
+      }
+      ```
+
+      Now a value of type `TrafficLight` can only ever be `Red`, `Yellow`, or `Green` — using a type to flat-out rule out "impossible states" is the heart of custom types.
+  variant-meaning:
+    prompt: In the `TrafficLight` definition above, what are `Red`, `Yellow`, and `Green`?
+    choices:
+      - Three distinct types
+      - Three possible values (variants) the `TrafficLight` type can hold
+      - Three variables
+      - Three functions
+    feedback:
+      correct: Right! The three are the values (variants) that the **single type** `TrafficLight` can hold — a traffic light is one of these three.
+      choices:
+        "0": There's only one type, `TrafficLight`. `Red`, `Yellow`, and `Green` are values of that type.
+        "2": They're not variables bound with `let`; they're the possible values listed by the type definition.
+        "3": Since they're names used without arguments they look like functions, but you don't call them — you use them as values themselves.
+  match-variant:
+    markdown: |-
+      Custom types are best friends with `case`. You just branch on which variant a value is. Write the variant name right in the pattern position.
+
+      ```gleam
+      pub fn next(light: TrafficLight) -> TrafficLight {
+        case light {
+          Red -> Green
+          Green -> Yellow
+          Yellow -> Red
+        }
+      }
+      ```
+
+      Notice that you can also return another `TrafficLight` value as the result.
+  next-red:
+    prompt: In the `next` function above, what is the value of `next(Red)`?
+    choices:
+      - "`Red`"
+      - "`Yellow`"
+      - "`Green`"
+      - '`"Green"`'
+    feedback:
+      correct: Right! It matches the `Red` pattern and returns the `Green` variant — after red comes green.
+      choices:
+        "0": It's not the input as-is. The **result** of the `Red` branch, `Green`, comes out.
+        "1": "`Yellow` is the result when the input is `Green`. The input here is `Red`."
+        "3": "`Green` isn't a string but a variant value of `TrafficLight` — no quotes."
+    code: |-
+      pub type TrafficLight {
+        Red
+        Yellow
+        Green
+      }
+
+      pub fn next(light: TrafficLight) -> TrafficLight {
+        case light {
+          Red -> Green
+          Green -> Yellow
+          Yellow -> Red
+        }
+      }
+
+      // next(Red) is?
+  label-yellow:
+    prompt: Here's `label`, which translates a signal into Korean. What is the value of `label(Yellow)`?
+    choices:
+      - '`"멈춤"`'
+      - '`"주의"`'
+      - '`"출발"`'
+      - "`Yellow`"
+    feedback:
+      correct: Exactly! It matches the `Yellow` branch and becomes "주의".
+      choices:
+        "0": '"멈춤" is the result of the `Red` branch. The input is `Yellow`.'
+        "2": '"출발" is the result of the `Green` branch — not `Yellow`.'
+        "3": "`case` returns the result (a string) of the matched branch, not the input variant."
+    code: |-
+      pub fn label(light: TrafficLight) -> String {
+        case light {
+          Red -> "멈춤"
+          Yellow -> "주의"
+          Green -> "출발"
+        }
+      }
+
+      // label(Yellow) is?
+  coin-payout:
+    prompt: Here's a coin-toss payout. What is the value of `payout(Heads)`?
+    choices:
+      - "`100`"
+      - "`0`"
+      - "`Heads`"
+      - "`200`"
+    feedback:
+      correct: Right! It matches the `Heads` branch and gives 100.
+      choices:
+        "1": 0 is the result when it's `Tails`. The input is `Heads`.
+        "2": "`case` returns the result of the branch (an `Int`), not the input variant."
+        "3": You don't add the two payouts — only the value of the single matched branch comes out.
+    code: |-
+      pub type Coin {
+        Heads
+        Tails
+      }
+
+      pub fn payout(c: Coin) -> Int {
+        case c {
+          Heads -> 100
+          Tails -> 0
+        }
+      }
+
+      // payout(Heads) is?

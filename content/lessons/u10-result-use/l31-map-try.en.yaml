@@ -1,0 +1,84 @@
+title: result.map and result.try
+blocks:
+  intro:
+    markdown: |-
+      Before flattening the staircase, let's learn two tools. Both do the same thing — **"if it's Error, pass it through; if it's Ok, apply a function to the inner value"** — but they differ in the return type of the function being applied.
+
+      - `result.map(result, fn(x) { ... })` — the callback returns a **plain value**. map re-wraps that value back into `Ok(...)` for you.
+      - `result.try(result, fn(x) { ... })` — the callback returns **another Result**. try uses it as-is for the result (no double wrapping).
+  map-ok:
+    prompt: "`result.map` applies the function to the inner value when it's Ok and re-wraps in Ok. What is this value?"
+    choices:
+      - "`Ok(10)`"
+      - "`10`"
+      - "`Ok(5)`"
+      - "`Ok(Ok(10))`"
+    feedback:
+      correct: Exactly! It applies `* 2` to the 5 inside `Ok(5)` to get 10, then re-wraps that in `Ok` to give `Ok(10)`.
+      choices:
+        "1": map re-wraps the result in `Ok` — it's `Ok(10)`, not a bare `10`.
+        "2": The function `x * 2` is applied, so the inner value changes — `Ok(10)`, not `Ok(5)`.
+        "3": The callback returns a plain value (`10`), so there's only one layer of wrapping — `Ok(10)`, not `Ok(Ok(10))`.
+  map-error:
+    prompt: When an `Error` comes into `result.map`, the callback isn't called and the Error passes straight through. What is this value?
+    choices:
+      - '`Error("nope")`'
+      - '`Ok("nope")`'
+      - "`Error(0)`"
+      - '`"nope"`'
+    feedback:
+      correct: Correct! On Error, the callback `x * 2` doesn't run at all, and `Error("nope")` comes out untouched.
+      choices:
+        "1": The error doesn't turn into `Ok` — when map encounters an Error, it leaves it untouched and passes it straight through.
+        "2": The value inside the error doesn't change either. `x * 2` is applied only to the inside of an Ok — an Error just passes through.
+        "3": In a Result, the value never comes out bare. The packaging isn't stripped — it stays `Error("nope")`.
+  try-chains:
+    markdown: |-
+      Now for the key one: `result.try`. You use it when **the callback returns a Result** — which lets you chain Result-producing operations one after another. "Continue with the callback if Ok, short-circuit immediately if Error" is exactly what replaces the staircase's `Error(e) -> Error(e)`.
+
+      ```gleam
+      result.try(int.parse("4"), fn(n) {
+        result.try(int.parse("6"), fn(m) {
+          Ok(n + m)
+        })
+      })
+      ```
+  try-chain-ok:
+    prompt: What is the value of the nested `result.try` call above? (`int.parse` is `Result(Int, Nil)`)
+    choices:
+      - "`Ok(10)`"
+      - "`10`"
+      - "`Ok(Ok(10))`"
+      - "`Error(Nil)`"
+    feedback:
+      correct: Exactly! `int.parse("4")` = `Ok(4)`, so we proceed with `n` = 4; `int.parse("6")` = `Ok(6)`, so `m` = 6; the final `Ok(4 + 6)` = `Ok(10)`.
+      choices:
+        "1": The last line is `Ok(n + m)`, so the result is wrapped in `Ok` — `Ok(10)`, not `10`.
+        "2": "`try` uses the Result the callback returns as-is (no double wrapping). The last one is `Ok(10)`, so the whole thing is `Ok(10)` too."
+        "3": Both parses succeed, so there's no short-circuit — it's `Ok(10)`, not `Error(Nil)`.
+  try-chain-shortcircuit:
+    prompt: In the same shape, what if the first parse fails? `int.parse("x")` is `Error(Nil)`. What is this value?
+    choices:
+      - "`Ok(6)`"
+      - "`Error(Nil)`"
+      - "`Ok(Error(Nil))`"
+      - "`Ok(0)`"
+    feedback:
+      correct: Correct! The first `int.parse("x")` is `Error(Nil)`, so `try` short-circuits immediately — the callback doesn't run and `Error(Nil)` is the result as-is.
+      choices:
+        "0": When the first step fails, the inner callback never runs at all. It doesn't even reach `int.parse("6")` — it's `Error(Nil)`.
+        "2": A short-circuited Error doesn't get wrapped in `Ok`. try passes the Error straight through, giving `Error(Nil)`.
+        "3": A failure isn't smoothed over with a default — the error stays in the type and comes out as `Error(Nil)`.
+  map-vs-try:
+    prompt: 'What happens if you use `result.map` when the callback **itself returns another Result**? Example: `result.map(int.parse("4"), fn(n) { Ok(n + 1) })`'
+    choices:
+      - "`Ok(5)` — map automatically flattens it into a single layer"
+      - "`Ok(Ok(5))` — map always wraps the callback's result in one more Ok, producing double wrapping"
+      - Compile error — map can't take a callback that returns a Result
+      - "`Error(Nil)` — a mixed-in Result is treated as a failure"
+    feedback:
+      correct: Correct! map wraps whatever the callback returns in one more `Ok`. If the callback already returns `Ok(5)`, you get the double wrapping `Ok(Ok(5))` — this is when you should use `try` instead.
+      choices:
+        "0": Flattening is `try`'s job. map always adds one more layer, so here you get `Ok(Ok(5))`.
+        "2": It does compile — but contrary to your intent, you end up with a double-wrapped type like `Ok(Ok(5))`.
+        "3": A mixed-in Result isn't treated as a failure. You get the double-wrapped success value `Ok(Ok(5))`.

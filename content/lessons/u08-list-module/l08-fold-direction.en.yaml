@@ -1,0 +1,90 @@
+title: Fold Direction and the Accumulator
+blocks:
+  intro:
+    markdown: |-
+      `list.fold` folds **from the left**. And its callback is `fn(acc, item)` — **accumulator first**. When these two facts combine, you get the spot where beginners slip up most often.
+
+      What happens if you fold by **prepending** each element to the accumulator?
+
+      ```gleam
+      import gleam/list
+
+      list.fold([1, 2, 3], [], fn(acc, x) { [x, ..acc] })
+      // 1 in front of [] -> [1], 2 in front -> [2, 1], 3 in front -> [3, 2, 1]
+      ```
+  fold-prepend:
+    prompt: This fold prepends each element to the accumulator. What's the result?
+    choices:
+      - "`[3, 2, 1]`"
+      - "`[1, 2, 3]`"
+      - "`[3]`"
+      - "`6`"
+    feedback:
+      correct: "Right! From the left: 1 is laid down first, then 2 and 3 pile up in front of it, flipping it to `[3, 2, 1]` — the same phenomenon as the accumulate pattern from U6."
+      choices:
+        "1": fold goes from the left, so 1 ends up buried deepest. To preserve order you'd need `list.fold_right` or `list.reverse` after the fold.
+        "2": Not just one element remains — all three pile up in the accumulator.
+        "3": This callback doesn't add; it prepends to a list — the result is the list `[3, 2, 1]`, not the sum 6.
+  fold-right:
+    markdown: |-
+      If you want to preserve order, use `list.fold_right`, which folds **from the right**. The callback shape is the same, `fn(acc, item)`, but it merges elements into the accumulator **starting from the back**.
+
+      ```gleam
+      import gleam/list
+
+      list.fold_right([1, 2, 3], [], fn(acc, x) { [x, ..acc] })
+      // 3 in front of [] -> [3], 2 in front -> [2, 3], 1 in front -> [1, 2, 3]
+      ```
+
+      In other words, you stack with prepend but process from the back, so the original order is restored exactly.
+  fold-right-prepend:
+    prompt: "What happens if you use the same prepend callback with `list.fold_right`? "
+    choices:
+      - "`[1, 2, 3]`"
+      - "`[3, 2, 1]`"
+      - "`[3]`"
+      - "`6`"
+    feedback:
+      correct: Exactly! Folding from the right, 3 is laid down first and 2, 1 are added in front of it, restoring the original order `[1, 2, 3]`.
+      choices:
+        "1": That's the result of `list.fold`, which folds from the left. `fold_right` preserves order.
+        "2": Not just one element remains — all three pile up.
+        "3": This callback doesn't add; it prepends — the result is the list `[1, 2, 3]`.
+  arg-order-trap:
+    markdown: |-
+      A subtler trap: writing the callback's argument order **backwards**. Gleam's fold callback is `fn(acc, item)`, but if you're used to other languages (e.g. Haskell's `foldr`) you might absent-mindedly write `fn(item, acc)`.
+
+      Let's look at a fold that concatenates strings onto the accumulator — `acc <> x` means "the current element after what we've collected so far." Folding from the left preserves the order exactly.
+
+      ```gleam
+      import gleam/list
+
+      list.fold(["1", "2", "3"], "", fn(acc, x) { acc <> x })
+      // == "123"
+      ```
+  fold-string-concat:
+    prompt: This fold concatenates strings. The callback is `acc <> x` (the element after the accumulator). What's the result?
+    choices:
+      - '`"123"`'
+      - '`"321"`'
+      - '`""`'
+      - "`6`"
+    feedback:
+      correct: Right! From the left it concatenates in the order `"" <> "1" <> "2" <> "3"`, giving `"123"` — with `acc` first and the element after, order is preserved.
+      choices:
+        "1": "`\"321\"` is what you'd get if you wrote the callback backwards as `x <> acc`. Here it's `acc <> x`, so order is preserved."
+        "2": '`""` is just the initial value; the elements get concatenated on in turn.'
+        "3": This callback doesn't add; it concatenates strings with `<>` — the result is `"123"`, not a number.
+  fold-arg-order-mcq:
+    prompt: To make `"321"` with `list.fold(["1", "2", "3"], "", f)`, how should you write the callback `f`?
+    choices:
+      - "`fn(acc, x) { x <> acc }` — prepend the element in front of the accumulator"
+      - "`fn(acc, x) { acc <> x }` — the element after the accumulator"
+      - '`fn(acc, x) { acc <> "-" <> x }` — insert a - between them'
+      - Using `list.fold_right` reverses it automatically
+    feedback:
+      correct: Right! Keep the callback argument order as `fn(acc, x)` and, in the body, put the element in front with `x <> acc`, and a left fold produces `"321"`.
+      choices:
+        "1": '`acc <> x` preserves order and produces `"123"` — to reverse it you have to change the body to `x <> acc`.'
+        "2": This puts a - between elements, producing `"-1-2-3"` — not `"321"`.
+        "3": Using `acc <> x` with `fold_right` does give `"321"`, but not "automatically" — it's because the direction changed, and you can also make it with the same `list.fold` by just changing the body.

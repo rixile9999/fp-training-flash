@@ -1,0 +1,16 @@
+title: Option과 Result
+order: 9
+level: 3
+skill: explicit-failure
+prerequisites:
+  - u04-custom-types
+lessons:
+  - l01-option
+  - l02-result
+  - l03-custom-error
+  - l04-option-vs-result
+  - l05-stdlib-results
+source:
+  kind: original
+  upstream: fpdojo (~/workspace/fp-training, same author), gleam 1.17 JS;
+    re-verified on gleam 1.18.1 Erlang

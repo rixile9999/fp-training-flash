@@ -1,0 +1,17 @@
+title: 캡스톤
+order: 15
+level: 4
+skill: gleam-basics
+prerequisites:
+  - u12-opaque-types
+  - u13-intentional-crash
+  - u14-gleam-omits
+lessons:
+  - l15-csv-parser
+  - l15-state-machine
+  - l15-otp-actor
+  - l15-next-steps
+source:
+  kind: original
+  upstream: fpdojo (~/workspace/fp-training, same author), gleam 1.17 JS;
+    re-verified on gleam 1.18.1 Erlang

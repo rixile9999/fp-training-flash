@@ -1,0 +1,108 @@
+title: Your Own Error Types
+blocks:
+  intro:
+    markdown: |-
+      The `Nil` in `Result(Int, Nil)` only says "it failed" — it can't carry *why* it failed. If there are several reasons for failure, you turn those reasons into **your own custom type** and put it in the `Error` slot (the same variants from U4).
+
+      ```gleam
+      pub type AgeError {
+        NotANumber
+        Negative
+      }
+      ```
+
+      Now `Result(Int, AgeError)` tells you, just from the type, "on success an `Int`, on failure *one of these two reasons*".
+  parse-age:
+    markdown: |-
+      `int.parse(input)` tries to convert a string to an integer and returns `Result(Int, Nil)` (if it isn't a number, `Error(Nil)`). Let's take that and map it into our own error type, building a `parse_age` that also filters out negatives:
+
+      ```gleam
+      import gleam/int
+
+      pub fn parse_age(input: String) -> Result(Int, AgeError) {
+        case int.parse(input) {
+          Error(Nil) -> Error(NotANumber)
+          Ok(n) ->
+            case n < 0 {
+              True -> Error(Negative)
+              False -> Ok(n)
+            }
+        }
+      }
+      ```
+
+      The outer `case` handles parse success/failure, and the inner `case` checks whether it's negative.
+  parse-neg:
+    prompt: For the `parse_age` above, what is the value of `parse_age("-3")`?
+    choices:
+      - "`Error(Negative)`"
+      - "`-3`"
+      - "`Error(NotANumber)`"
+      - "`Ok(-3)`"
+    feedback:
+      correct: Right! "-3" parses as a number, giving `Ok(-3)`, but in the inner `case` `-3 < 0` is true, so it's filtered out as `Error(Negative)`.
+      choices:
+        "1": In a `Result`, a value never comes out bare — failure is wrapped in `Error(...)`. And besides, it's negative, so it isn't a success either.
+        "2": "`NotANumber` is for when *parsing itself* fails. \"-3\" parses fine as a number, but it's blocked for being negative."
+        "3": "\"-3\" does parse, but it's negative so it isn't `Ok` — it's filtered out as `Error(Negative)`."
+    code: |-
+      // parse_age("-3") is?
+      // (int.parse("-3") == Ok(-3), and -3 < 0)
+  parse-abc:
+    prompt: For the same function, what is the value of `parse_age("abc")`?
+    choices:
+      - "`Error(NotANumber)`"
+      - "`Error(Negative)`"
+      - "`Error(Nil)`"
+      - "`Ok(0)`"
+    feedback:
+      correct: Exactly! "abc" doesn't parse as an integer, so `int.parse` gives `Error(Nil)`, and the outer `case` maps that to `Error(NotANumber)`.
+      choices:
+        "1": "`Negative` is for when it *parsed but is negative*. \"abc\" doesn't parse as a number to begin with."
+        "2": Our function turns `int.parse`'s raw `Error(Nil)` into a meaningful `Error(NotANumber)` and returns that.
+        "3": A parse failure isn't the success value 0 — it's `Error(NotANumber)`, not `Ok`.
+    code: |-
+      // parse_age("abc") is?
+      // (int.parse("abc") == Error(Nil))
+  parse-8:
+    prompt: For the same function, what is the value of `parse_age("8")`?
+    choices:
+      - "`Ok(8)`"
+      - "`8`"
+      - "`Error(NotANumber)`"
+      - "`Some(8)`"
+    feedback:
+      correct: Right! "8" parses as a number and isn't negative, so it's `Ok(8)` — success values come out wrapped in `Ok` too.
+      choices:
+        "1": The value is indeed 8, but it's a `Result` so it's wrapped as `Ok(8)` — you need pattern matching to take it out.
+        "2": '"8" is a perfectly good number, so parsing succeeds — `Ok(8)`, not `NotANumber`.'
+        "3": "`Some` is a constructor of `Option`. A `Result`'s success is wrapped in `Ok`."
+    code: |-
+      // parse_age("8") is?
+      // (int.parse("8") == Ok(8), and 8 >= 0)
+  use-error-type:
+    markdown: |-
+      The real benefit of a custom error type shows up **on the caller's side**. When you unpack with `case`, you can give a different message for each reason for failure, and if you leave a reason out, the compiler catches it.
+
+      ```gleam
+      pub fn age_message(input: String) -> String {
+        case parse_age(input) {
+          Ok(n) -> "Age: " <> int.to_string(n)
+          Error(NotANumber) -> "That's not a number"
+          Error(Negative) -> "Negatives aren't allowed"
+        }
+      }
+      ```
+  message-negative:
+    prompt: With the `age_message` code above, what string comes out if you call `age_message("-3")`?
+    choices:
+      - "`\"Negatives aren't allowed\"`"
+      - "`\"That's not a number\"`"
+      - '`"Age: -3"`'
+      - '`"Age: 0"`'
+    feedback:
+      correct: Right! `parse_age("-3")` is `Error(Negative)`, so the `Error(Negative)` branch's "Negatives aren't allowed" is chosen — being able to give a different message per reason is the power of custom errors.
+      choices:
+        "1": "\"That's not a number\" is the `Error(NotANumber)` branch. \"-3\" does parse as a number but is negative, so it goes to `Negative`."
+        "2": "A negative doesn't go to the `Ok` branch — \"Age: -3\" doesn't appear; an error message does."
+        "3": The value isn't corrected to 0 — a negative is rejected as-is with `Error(Negative)`.

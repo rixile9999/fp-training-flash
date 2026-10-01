@@ -1,0 +1,73 @@
+title: 함수 정의와 타입 표기
+tags:
+  - concept:basics
+blocks:
+  - prose: intro
+    markdown: |-
+      함수는 `pub fn 이름(인자: 타입) -> 반환타입 { 본문 }` 모양으로 정의합니다.
+
+      예: `pub fn double(x: Int) -> Int { x * 2 }`
+
+      인자마다 타입을 적고, `->` 뒤에 반환 타입을 적습니다. 타입 표기는 컴파일러가 추론해줄 때도 많지만, 함수의 '계약서' 역할을 하므로 top-level 함수에는 늘 붙이는 것이 관용입니다.
+  - exercise: return-type
+    type: choice
+    prompt: "`pub fn double(x: Int) -> ??? { x * 2 }` 에서 `???`에 올 반환 타입은?"
+    choices:
+      - "`Int`"
+      - "`Float`"
+      - "`String`"
+      - "`Bool`"
+    answer: 0
+    feedback:
+      correct: 맞아요! `*`는 Int 연산자이고, Int * Int의 결과는 Int입니다.
+      choices:
+        "1": "`*`는 Int 연산자예요. Float였다면 `*.`와 `2.0`이 필요합니다."
+        "2": 숫자 곱셈의 결과가 문자열이 될 수는 없어요.
+        "3": 곱셈 결과는 참/거짓이 아니라 수입니다.
+  - prose: no-return
+    markdown: |-
+      Gleam에는 `return` 키워드가 **없습니다**. 함수 본문의 **마지막 표현식**이 곧 반환값입니다.
+
+      ```gleam
+      pub fn double(x: Int) -> Int {
+        x * 2
+      }
+      ```
+
+      `x * 2`가 마지막 표현식이므로 그대로 반환됩니다. 중간에 빠져나가는 early return도 없습니다 — 이는 뒤 유닛의 case 분기 사고로 이어지는 복선입니다.
+  - exercise: last-expr
+    type: predict
+    prompt: "`double(21)`의 값은? (`fn double(x: Int) -> Int { x * 2 }`)"
+    code: |-
+      pub fn double(x: Int) -> Int {
+        x * 2
+      }
+
+      // double(21) 은?
+    choices:
+      - "`42`"
+      - "`21`"
+      - "`23`"
+      - "`2`"
+    answer: 0
+    feedback:
+      correct: 정확해요! 마지막 표현식 `x * 2` = 21 * 2 = 42가 그대로 반환됩니다.
+      choices:
+        "1": 입력 그대로가 아니라 `x * 2`가 반환돼요 — 21 * 2 = 42.
+        "2": "`x * 2`는 곱셈이지 덧셈이 아니에요. 21 * 2 = 42."
+        "3": "`2`는 곱하는 수일 뿐, 반환값은 `x * 2` = 42입니다."
+  - exercise: return-keyword
+    type: choice
+    prompt: Gleam 함수에서 값을 돌려주는 방식으로 옳은 것은?
+    choices:
+      - "`return x` 처럼 return 키워드를 쓴다"
+      - 본문의 마지막 표현식이 자동으로 반환값이 된다
+      - "`yield x` 로 반환한다"
+      - 함수 이름에 값을 대입한다
+    answer: 1
+    feedback:
+      correct: 맞아요! Gleam엔 return이 없고, 마지막 표현식이 곧 반환값입니다.
+      choices:
+        "0": Gleam에는 `return` 키워드 자체가 없습니다.
+        "2": "`yield`는 Gleam 문법이 아니에요."
+        "3": 함수 이름에 대입하는 방식은 Gleam에 없습니다 — 마지막 표현식이 반환값.

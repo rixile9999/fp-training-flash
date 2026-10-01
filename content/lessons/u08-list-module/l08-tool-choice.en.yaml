@@ -1,0 +1,77 @@
+title: Choosing the Tool — map, filter, or fold
+blocks:
+  intro:
+    markdown: |-
+      Now let's put all three side by side and sort out **when to use which**. There's just one deciding factor: **the shape of the result**.
+
+      - Each element is **transformed 1:1** and the length stays the same -> `list.map`
+      - You **pick by a condition** and the length can shrink -> `list.filter`
+      - The list is **folded into a single value (or another shape)** -> `list.fold`
+
+      Chaining all three with pipes makes a little data pipeline.
+
+      ```gleam
+      import gleam/list
+
+      pub fn process(xs: List(Int)) -> Int {
+        xs
+        |> list.filter(fn(x) { x % 2 == 0 })
+        |> list.map(fn(x) { x * x })
+        |> list.fold(0, fn(acc, x) { acc + x })
+      }
+      // process([1, 2, 3, 4]) == 20
+      ```
+  pipeline-process:
+    prompt: In the `process` pipeline above, what's the value of `process([1, 2, 3, 4])`? (evens only -> square -> sum)
+    choices:
+      - "`20`"
+      - "`30`"
+      - "`[4, 16]`"
+      - "`6`"
+    feedback:
+      correct: Right! Evens [2, 4] -> squares [4, 16] -> sum 20. filter, map, and fold change the shape one after another.
+      choices:
+        "1": 30 is the sum of squaring all of 1~4 (1+4+9+16). You have to filter for **evens only** first.
+        "2": The final fold folds the list down to a single value — `[4, 16]` is the state just before the fold.
+        "3": 6 is the sum of the evens (2+4) from the original [1,2,3,4]. There's a **squaring** step in between.
+  by-return-type:
+    markdown: When you're stuck, think of the **result type** first. If the result is a `List`, it's map or filter; if the result is a single value (`Int`, `String`, `Bool`), it should end with a fold. "Count them," "find the maximum," "compute the sum" are all about folding a list into **a single value** — fold (or a specialized form of it).
+  choose-count-evens:
+    prompt: Which approach best fits "count the **number** of even values in a list"?
+    choices:
+      - Keep only the evens with `filter`, then count with `length` (or accumulate with fold)
+      - It can be done with `map` alone
+      - "`filter` alone gives the count"
+      - Concatenate with `<>`, no tools needed
+    feedback:
+      correct: Right! Since the result is a single `Int`, you must fold at the end — filter for evens then count with length, or count directly with fold.
+      choices:
+        "1": map preserves length and returns a **list**. To get a single count value, you need a folding step.
+        "2": filter gives a filtered **list** — to get the count (`Int`), you need one more step with length or fold.
+        "3": "`<>` is string concatenation — it has nothing to do with counting."
+  choose-uppercase:
+    prompt: This is the result made with the right tool for "uppercase each word." What's the value?
+    choices:
+      - '`["HI", "BYE"]`'
+      - '`"HIBYE"`'
+      - '`["hi", "bye"]`'
+      - "`2`"
+    feedback:
+      correct: Right! It transforms each element 1:1 and preserves the length, so map is the answer — the result is `["HI", "BYE"]`.
+      choices:
+        "1": map doesn't combine the elements — it returns a **list** with each transformed. To combine them you'd need fold.
+        "2": The transformation is applied — they become uppercase, not left lowercase.
+        "3": A count (a single value) is the result of fold/length. "Uppercasing" is a 1:1 transformation, so map gives a **list**.
+  choose-max:
+    prompt: Here's "find the **maximum** of a list" implemented with fold. What's the result?
+    choices:
+      - "`9`"
+      - "`[3, 7, 2, 9, 4]`"
+      - "`25`"
+      - "`3`"
+    feedback:
+      correct: Right! Finding the maximum is folding a list into a single value, so fold fits — it keeps leaving the larger value in the accumulator, giving `9`.
+      choices:
+        "1": fold folds the list into a single value — the maximum `9`, not a list.
+        "2": 25 is the sum of all the elements (3+7+2+9+4). But the callback is `int.max`, so it doesn't add — it keeps only the larger side, giving the maximum `9`.
+        "3": 3 is the first element. fold scans all the elements and leaves the largest, 9.

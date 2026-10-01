@@ -1,0 +1,108 @@
+title: Capstone 2 — A State Machine
+blocks:
+  intro:
+    markdown: |-
+      The second capstone exercise is a **state machine**. You define states and events each as variants, and write a `(state, event) -> next state` transition function with `case`.
+
+      Example: a turnstile that only opens when you insert a coin.
+
+      ```gleam
+      pub type State {
+        Locked
+        Unlocked
+      }
+
+      pub type Event {
+        Coin
+        Push
+      }
+
+      fn next(state: State, event: Event) -> State {
+        case state, event {
+          Locked, Coin -> Unlocked
+          Locked, Push -> Locked
+          Unlocked, Coin -> Unlocked
+          Unlocked, Push -> Locked
+        }
+      }
+      ```
+
+      `case state, event` matches **two values at once**. 2 states × 2 events = 4 branches — the compiler checks that no combination is missing (exhaustiveness, U4).
+  next-coin:
+    prompt: You insert a coin into a locked turnstile. What is the value of `next(Locked, Coin)`?
+    choices:
+      - "`Unlocked`"
+      - "`Locked`"
+      - "`Coin`"
+      - "`Ok(Unlocked)`"
+    feedback:
+      correct: Right! It matches the `Locked, Coin -> Unlocked` branch — the coin releases the latch.
+      choices:
+        "1": Inserting a coin changes the state — it doesn't stay `Locked`.
+        "2": "`next` returns the **next state** — not the event (`Coin`)."
+        "3": This transition function just returns a `State` — it doesn't wrap it in `Result`.
+  next-push-locked:
+    prompt: You just push a locked turnstile. What is the value of `next(Locked, Push)`?
+    choices:
+      - "`Locked`"
+      - "`Unlocked`"
+      - "`Push`"
+      - "`Error(Locked)`"
+    feedback:
+      correct: Exactly! `Locked, Push -> Locked` — pushing without a coin leaves it locked as is.
+      choices:
+        "1": Pushing alone doesn't open it — you have to insert a coin to become `Unlocked`.
+        "2": The result is the next **state** — not the event.
+        "3": Being blocked is just a normal transition, not an error — it simply stays `Locked`.
+  run-fold:
+    markdown: |-
+      What if there are **multiple** events? Use `list.fold` (U8): start from an initial state and feed it the events one by one — the accumulator is the state itself.
+
+      ```gleam
+      import gleam/list
+
+      fn run(state: State, events: List(Event)) -> State {
+        list.fold(events, state, fn(s, e) { next(s, e) })
+      }
+      ```
+
+      The fact that fold's accumulator type can differ from the element type (U8) shines here — the accumulator is `State`, the elements are `Event`.
+  run-sequence:
+    prompt: Starting from locked, process 4 events in order. What is the value of `run(Locked, [Coin, Push, Push, Coin])`?
+    choices:
+      - "`Unlocked`"
+      - "`Locked`"
+      - "`[Unlocked, Locked, Locked, Unlocked]`"
+      - "`Coin`"
+    feedback:
+      correct: Right! Locked →(Coin) Unlocked →(Push) Locked →(Push) Locked →(Coin) Unlocked. The final state is `Unlocked`.
+      choices:
+        "1": The last event is `Coin`, so the lock is released — the end state is `Unlocked`.
+        "2": fold returns **only the final accumulator** — not a list of intermediate states.
+        "3": "`run` returns the final **state** — not the event."
+  run-push-first:
+    prompt: This time, push and then coin. What is the value of `run(Locked, [Push, Coin])`?
+    choices:
+      - "`Unlocked`"
+      - "`Locked`"
+      - "`Error(Push)`"
+      - "`[Locked, Unlocked]`"
+    feedback:
+      correct: Exactly! Locked →(Push) Locked →(Coin) Unlocked. The push first had no effect and stayed locked, then the coin releases it.
+      choices:
+        "1": The coin was inserted last, so it gets released — it doesn't end at `Locked`.
+        "2": An out-of-order event is simply absorbed as "stay in state" — it's not an error.
+        "3": fold doesn't collect the intermediate steps — it gives only the **final state**.
+  exhaustiveness:
+    prompt: What happens if you **delete** the `Unlocked, Push -> Locked` branch from the transition function?
+    choices:
+      - Compile error — the compiler blocks it because there's an unmatched combination (Unlocked, Push)
+      - It compiles fine, and that combination is ignored at runtime when it arrives
+      - It compiles fine, and that combination automatically becomes `Unlocked` when it arrives
+      - Only a warning appears and compilation passes
+    feedback:
+      correct: Right! A `case` must handle every combination exhaustively (exhaustiveness). Leave one out and the compile itself is rejected — it catches holes in your state machine at compile time.
+      choices:
+        "1": Gleam has no "ignore at runtime" thing — a missing case blocks compilation.
+        "2": It doesn't auto-fill a missing branch with any value — you have to write them all out yourself.
+        "3": A missing case is an **error**, not a warning — compilation does not pass.

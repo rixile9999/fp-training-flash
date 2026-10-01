@@ -1,0 +1,58 @@
+title: Type Variables — Any One Thing
+blocks:
+  intro:
+    markdown: |-
+      So far, types have always started with an **uppercase** letter, like `Int` or `String`. But when you see **lowercase** names like `a` or `b` in a function signature, those are **type variables**.
+
+      A type variable is a promise that says "this can be any type at all, but the same letter must always be the same type." Which concrete type actually fills in is decided by the compiler through inference **at the moment of the call**.
+  pair-map:
+    markdown: |-
+      Look at `pair_map` below. It takes a tuple whose two elements share the same type (`a`), applies `f` to each element, and builds a new tuple.
+
+      ```gleam
+      pub fn pair_map(pair: #(a, a), f: fn(a) -> b) -> #(b, b) {
+        let #(x, y) = pair
+        #(f(x), f(y))
+      }
+      ```
+
+      `a` is the type of the input elements, and `b` is the type `f` returns. They're allowed to differ — only *matching letters* have to match.
+  pair-map-to-string:
+    prompt: "`int.to_string` takes an `Int` and returns a `String`. What is the value of this call?"
+    choices:
+      - '`#("1", "2")`'
+      - "`#(1, 2)`"
+      - '`#("1, 2")`'
+      - compile error
+    feedback:
+      correct: Exactly! Here `a = Int` and `b = String`. `int.to_string` is applied to each element, giving `#("1", "2")`.
+      choices:
+        "1": "`f` transforms each element — you don't get the original back (`#(1, 2)`)."
+        "2": The result is a **tuple**, not a single string — each element is transformed and stays in its own slot.
+        "3": Since both are `Int`, the `#(a, a)` promise is kept, so it compiles fine.
+  pair-map-double:
+    prompt: This time an anonymous function doubles each element. What is the value of this call?
+    choices:
+      - "`#(6, 8)`"
+      - "`#(3, 4)`"
+      - "`#(7)`"
+      - "`#(3, 4, 6, 8)`"
+    feedback:
+      correct: Right! Here `a = Int` and `b = Int`. 3*2=6 and 4*2=8, so the result is `#(6, 8)`.
+      choices:
+        "1": "`f` is applied to each element, so the values change — the original doesn't stay as-is."
+        "2": It doesn't add the two elements together — each is transformed separately, keeping **two tuple slots**.
+        "3": The number of elements doesn't grow — the output has the same shape `#(b, b)`, i.e. two slots.
+  same-letter-rule:
+    prompt: "What does the type annotation `pair: #(a, a)` actually **promise**?"
+    choices:
+      - The tuple's two elements must be the same type
+      - The tuple's two elements must both be `Int`
+      - The tuple's two elements are allowed to differ
+      - The tuple must have exactly `a` elements
+    feedback:
+      correct: Right! The same letter `a` is used twice, so both elements are tied to the *same* type. Mixing them like `#(1, "x")` is a compile error.
+      choices:
+        "1": "`a` can be *any* type — it isn't fixed to `Int`. The two just have to match each other."
+        "2": To allow different types you'd write different letters, like `#(a, b)`. `#(a, a)` forces sameness.
+        "3": "`a` is a name for a *type*, not a count — it has nothing to do with the number of tuple slots."

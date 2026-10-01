@@ -1,0 +1,105 @@
+title: stdlib의 Result들
+tags:
+  - concept:results
+blocks:
+  - prose: intro
+    markdown: |-
+      이제 표준 라이브러리가 곳곳에서 `Result`를 돌려주는 게 보일 거예요. 대표 두 가지:
+
+      - **`int.parse(String) -> Result(Int, Nil)`** — 문자열을 정수로. 정수가 아니면 `Error(Nil)`.
+      - **`list.first(List(a)) -> Result(a, Nil)`** — 리스트의 첫 원소. 빈 리스트면 `Error(Nil)`.
+
+      둘 다 실패 이유가 하나뿐이라 에러 타입이 `Nil`입니다(U9-④의 관용 그대로). 그래도 "꺼내려면 패턴 매칭"은 똑같이 적용돼요.
+  - exercise: parse-int-ok
+    type: predict
+    prompt: "`int.parse`의 결과는?"
+    code: |-
+      import gleam/int
+
+      int.parse("42")
+    choices:
+      - "`Ok(42)`"
+      - "`42`"
+      - "`Error(Nil)`"
+      - "`Some(42)`"
+    answer: 0
+    feedback:
+      correct: 맞아요! "42"는 정수로 잘 파싱돼 `Ok(42)` — 성공값도 `Ok`로 포장됩니다.
+      choices:
+        "1": 값은 42지만 `Result`라 `Ok(42)`로 포장돼요 — 맨몸 `42`로는 안 나옵니다.
+        "2": '"42"는 멀쩡한 정수라 성공이에요 — `Error(Nil)`은 파싱이 *안 될* 때입니다.'
+        "3": "`int.parse`는 `Result`를 돌려줘요 — `Some`이 아니라 `Ok`로 감쌉니다."
+  - exercise: parse-float
+    type: predict
+    prompt: '`int.parse`는 *정수* 전용입니다. `int.parse("4.2")`의 값은?'
+    code: |-
+      import gleam/int
+
+      int.parse("4.2")
+    choices:
+      - "`Error(Nil)`"
+      - "`Ok(4)`"
+      - "`Ok(4.2)`"
+      - "`4.2`"
+    answer: 0
+    feedback:
+      correct: 정확해요! "4.2"는 *정수*가 아니라 `int.parse`가 실패해 `Error(Nil)`을 줍니다. 소수점이 있으면 정수 파싱은 안 돼요.
+      choices:
+        "1": 버림(4로 절삭)을 하지 않아요 — "4.2"는 정수 형식이 아니라 통째로 파싱 실패입니다.
+        "2": "`int.parse`는 `Int`만 만들어요 — `Float` `4.2`를 돌려주지 않습니다(애초에 실패예요)."
+        "3": 값이 맨몸으로 나오지도, 파싱되지도 않아요 — `Error(Nil)`입니다.
+  - prose: list-first
+    markdown: '`list.first`도 같은 모양입니다. 원소가 하나라도 있으면 첫 원소를 `Ok`로, 비어 있으면 `Error(Nil)`로 돌려줘요. "비었을 수도 있는 리스트의 첫 원소"를 안전하게 다루는 방법입니다 — 빈 리스트에서 크래시하지 않아요.'
+  - exercise: first-ok
+    type: predict
+    prompt: "`list.first`의 결과는?"
+    code: |-
+      import gleam/list
+
+      list.first([10, 20, 30])
+    choices:
+      - "`Ok(10)`"
+      - "`10`"
+      - "`Ok([10, 20, 30])`"
+      - "`Ok(30)`"
+    answer: 0
+    feedback:
+      correct: 맞아요! 첫 원소 10이 `Ok`로 포장되어 `Ok(10)`입니다.
+      choices:
+        "1": 값은 10이지만 `Result`라 `Ok(10)`으로 포장돼요 — 맨몸으로는 안 나옵니다.
+        "2": "`first`는 리스트 전체가 아니라 *첫 원소 하나*를 줘요 — `Ok(10)`."
+        "3": "`first`는 맨 *앞* 원소예요 — 마지막 30이 아니라 첫 10입니다(`list.last`가 마지막)."
+  - exercise: first-empty
+    type: predict
+    prompt: 빈 리스트에 `list.first`를 쓰면? `list.first([])`의 값은?
+    code: |-
+      import gleam/list
+
+      list.first([])
+    choices:
+      - "`Error(Nil)`"
+      - "`Ok(Nil)`"
+      - 프로그램이 크래시한다
+      - "`[]`"
+    answer: 0
+    feedback:
+      correct: 정확해요! 빈 리스트엔 첫 원소가 없어 `Error(Nil)` — 실패가 값으로 돌아오니 크래시하지 않아요.
+      choices:
+        "1": 빈 리스트는 성공이 아니에요 — `Ok`가 아니라 `Error(Nil)`로 "첫 원소 없음"을 알립니다.
+        "2": 예외가 없으니 크래시하지 않아요 — `Result`가 실패를 안전하게 표현합니다.
+        "3": 빈 리스트 그대로가 아니라 `Result` 값(`Error(Nil)`)이 나옵니다.
+  - exercise: why-result
+    type: choice
+    prompt: "`int.parse`와 `list.first`가 굳이 맨 값 대신 `Result`를 돌려주는 이유로 가장 적절한 것은?"
+    choices:
+      - 실패(파싱 불가·빈 리스트)를 *값*으로 표현해, 호출자가 case로 두 경우를 안전하게 다루게 하려고
+      - Result가 Int보다 메모리를 적게 써서
+      - Gleam 함수는 항상 Result만 반환할 수 있어서
+      - 디버깅 출력을 예쁘게 하려고
+    answer: 0
+    feedback:
+      correct: 맞아요! 실패를 예외로 던지는 대신 `Result` 값으로 돌려주면, 컴파일러가 "실패도 다뤘니?"를 강제해 빠진 처리를 막아줍니다 — 이 유닛의 핵심이에요.
+      choices:
+        "1": 메모리 절약과는 무관해요 — 이유는 *실패를 안전하게 표현*하기 위함입니다.
+        "2": 함수는 어떤 타입이든 반환할 수 있어요 — `Result`는 실패 가능성이 있을 때의 선택입니다.
+        "3": 디버깅 표시 때문이 아니라, 실패를 타입으로 드러내 호출자가 처리하도록 만들기 위함이에요.

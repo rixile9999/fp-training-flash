@@ -1,0 +1,96 @@
+title: early return은 없다
+tags:
+  - concept:case-expressions
+  - tricky:no-early-return
+blocks:
+  - prose: intro
+    markdown: |-
+      다른 언어의 `if (조건) return ...;` 같은 **조기 반환**은 Gleam에 없습니다. `return` 키워드 자체가 없어요.
+
+      함수는 **하나의 표현식**이고, 모든 경로가 값 하나로 수렴합니다. 그래서 "일찍 빠져나가는" 분기는 사라지는 게 아니라, `case`의 **가지 하나**가 됩니다. 의사코드의 각 `return`을 case 가지로 옮긴다고 생각하세요.
+  - prose: translate
+    markdown: |-
+      예를 들어 이런 명령형 의사코드를:
+
+      ```
+      if n < 0: return "negative"
+      if n == 0: return "zero"
+      return "positive"
+      ```
+
+      Gleam에서는 case 하나로 모읍니다:
+
+      ```
+      fn sign_label(n: Int) -> String {
+        case n {
+          _ if n < 0 -> "negative"
+          0 -> "zero"
+          _ -> "positive"
+        }
+      }
+      ```
+
+      각 `return`이 곧 하나의 가지입니다.
+  - exercise: sign-negative
+    type: predict
+    prompt: "`sign_label(-5)`의 값은?"
+    code: |-
+      fn sign_label(n: Int) -> String {
+        case n {
+          _ if n < 0 -> "negative"
+          0 -> "zero"
+          _ -> "positive"
+        }
+      }
+    choices:
+      - '"negative"'
+      - '"zero"'
+      - '"positive"'
+      - "-5"
+    answer: 0
+    feedback:
+      correct: 맞아요! -5는 첫 guard `n < 0`을 통과해 "negative"가 됩니다 — 명령형의 첫 return과 같습니다.
+      choices:
+        "1": '"zero"는 `0` 패턴 가지예요. -5는 0이 아닙니다.'
+        "2": '"positive"는 위 두 가지를 다 비껴야 나와요. -5는 첫 가지에서 잡힙니다.'
+        "3": case는 검사한 숫자가 아니라 맞은 가지의 결과를 돌려줍니다.
+  - exercise: sign-zero
+    type: predict
+    prompt: 같은 `sign_label`에서 `sign_label(0)`의 값은?
+    code: |-
+      fn sign_label(n: Int) -> String {
+        case n {
+          _ if n < 0 -> "negative"
+          0 -> "zero"
+          _ -> "positive"
+        }
+      }
+    choices:
+      - '"negative"'
+      - '"zero"'
+      - '"positive"'
+      - "0"
+    answer: 1
+    feedback:
+      correct: 정확해요! 0은 `n < 0`이 거짓이라 첫 가지를 비껴가고, `0` 패턴에 정확히 맞아 "zero"가 됩니다.
+      choices:
+        "0": 0은 음수가 아니에요 — `0 < 0`은 거짓이라 첫 가지를 통과 못 합니다.
+        "2": 0은 마지막 `_`까지 가기 전에 `0` 패턴에서 먼저 잡힙니다.
+        "3": case는 검사한 값이 아니라 가지의 결과 "zero"를 돌려줍니다.
+  - prose: redundant-bool
+    markdown: "조기 반환을 없애다 보면 또 다른 함정이 보입니다: **이미 Bool인 값을 다시 case로 풀어 `True -> True`, `False -> False`로 돌려주는** 코드입니다. 조건식 자체가 이미 우리가 원하는 Bool 값이므로, 그대로 돌려주면 됩니다."
+  - exercise: redundant-bool-spot
+    type: choice
+    prompt: 다음 중 가장 비관용적(불필요하게 장황한) 코드는?
+    choices:
+      - case n > 0 { True -> True False -> False }
+      - n > 0
+      - 0 < n
+      - n >= 1
+    answer: 0
+    feedback:
+      correct: 맞아요! `n > 0`은 이미 Bool입니다. case로 풀어 `True -> True`로 되돌려주는 건 같은 값을 빙 둘러 만드는 군더더기예요.
+      choices:
+        "1": "`n > 0`은 가장 간결한 정답 형태예요 — 이미 Bool이라 그대로 돌려주면 됩니다."
+        "2": "`0 < n`은 `n > 0`을 뒤집어 쓴 것일 뿐이에요. 이미 Bool이고 간결합니다."
+        "3": 정수 입력에선 `n >= 1`도 `n > 0`과 같은 결과라 간결한 편이에요.

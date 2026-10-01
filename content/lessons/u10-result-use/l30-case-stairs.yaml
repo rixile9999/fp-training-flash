@@ -1,0 +1,91 @@
+title: case 계단의 고통
+tags:
+  - concept:results
+blocks:
+  - prose: intro
+    markdown: |-
+      U9에서 만든 `parse_age`를 기억하나요? 실패할 수 있는 연산은 `Result(성공, 실패)`를 돌려주고, 호출자는 `case`로 `Ok`와 `Error` **두 경우 모두**를 다뤄야 했습니다.
+
+      ```gleam
+      pub fn parse_age(input: String) -> Result(Int, AgeError) {
+        case int.parse(input) {
+          Error(Nil) -> Error(NotANumber)
+          Ok(n) -> case n < 0 {
+            True -> Error(Negative)
+            False -> Ok(n)
+          }
+        }
+      }
+      ```
+
+      그런데 **두 개**의 Result를 이어 써야 한다면 어떻게 될까요? 예를 들어 두 나이를 각각 파싱해서 더하려면요.
+  - prose: stairs
+    markdown: |-
+      각 `parse_age`가 Result라서, 안쪽 값을 꺼내려면 `case`로 풀어야 합니다. 그런데 두 번 풀다 보면 case가 **계단처럼 중첩**됩니다:
+
+      ```gleam
+      pub fn add_ages(a: String, b: String) -> Result(Int, AgeError) {
+        case parse_age(a) {
+          Error(e) -> Error(e)
+          Ok(age_a) -> case parse_age(b) {
+            Error(e) -> Error(e)
+            Ok(age_b) -> Ok(age_a + age_b)
+          }
+        }
+      }
+      ```
+
+      `Error(e) -> Error(e)` 줄이 계단마다 똑같이 반복되는 게 보이나요? 이 군더더기가 바로 이번 유닛에서 펴낼 대상입니다.
+  - exercise: stairs-both-ok
+    type: predict
+    prompt: 위 계단형 `add_ages`에서 `add_ages("5", "7")`의 값은?
+    code: |-
+      // 위 정의에서
+      add_ages("5", "7")
+    choices:
+      - "`Ok(12)`"
+      - "`12`"
+      - "`Ok(5)`"
+      - "`Error(NotANumber)`"
+    answer: 0
+    feedback:
+      correct: 맞아요! 둘 다 `Ok`라 바깥 case가 `age_a`(5), 안쪽이 `age_b`(7)를 꺼내 `Ok(5 + 7)` = `Ok(12)`를 냅니다.
+      choices:
+        "1": Result에서 값은 맨몸으로 나오지 않아요. 함수 반환 타입이 `Result`라 마지막도 `Ok(...)`로 포장됩니다 — `12`가 아니라 `Ok(12)`.
+        "2": 바깥 case만 본 거예요. 안쪽 `parse_age("7")`까지 풀어 둘을 더한 `Ok(12)`가 결과입니다.
+        "3": 두 입력 모두 정상 숫자라 어느 가지도 Error로 빠지지 않아요 — `Ok(12)`입니다.
+  - exercise: stairs-second-fail
+    type: predict
+    prompt: 같은 계단형 `add_ages`에서 `add_ages("3", "x")`의 값은? (`"x"`는 숫자가 아님)
+    code: |-
+      // 위 정의에서
+      add_ages("3", "x")
+    choices:
+      - "`Ok(3)`"
+      - "`Error(NotANumber)`"
+      - "`Error(Negative)`"
+      - "`Ok(0)`"
+    answer: 1
+    feedback:
+      correct: 정확해요! 바깥 `parse_age("3")`은 `Ok(3)`라 안쪽으로 들어가지만, `parse_age("x")`가 `Error(NotANumber)`라 그 가지가 그대로 함수의 결과가 됩니다.
+      choices:
+        "0": 첫 파싱이 성공해도 두 번째가 실패하면 전체가 실패예요. 안쪽 case의 `Error` 가지가 결과가 됩니다 — `Ok(3)`이 아니라 `Error(NotANumber)`.
+        "2": '`Negative`는 음수일 때의 에러예요. `"x"`는 음수가 아니라 아예 숫자가 아니므로 `NotANumber`입니다.'
+        "3": 실패는 `Ok(0)` 같은 기본값으로 슬쩍 넘어가지 않아요 — 에러가 타입에 남아 `Error(NotANumber)`로 드러납니다.
+  - prose: pain
+    markdown: 이 계단의 고통은 분명합니다. Result를 이을 때마다 case가 한 단씩 깊어지고, `Error(e) -> Error(e)`라는 **"실패면 그대로 흘려보낸다"** 코드가 똑같이 반복됩니다. 다음 레슨에서 stdlib의 `result.map`과 `result.try`로 이 반복을 걷어냅니다.
+  - exercise: stairs-why-nested
+    type: choice
+    prompt: 두 Result를 이어 쓸 때 case가 중첩 계단이 되는 근본 이유는?
+    choices:
+      - Gleam의 case는 한 번에 한 값만 검사할 수 있어서
+      - 각 Result의 안쪽 값(`Ok`의 내용물)을 꺼내려면 `case`로 풀어야 하고, 두 번 풀면 한 풀이가 다른 풀이 안에 들어가기 때문
+      - "`Result` 타입끼리는 직접 더할 수 없어서 컴파일 에러가 나기 때문"
+      - "`parse_age`가 재귀 함수라서"
+    answer: 1
+    feedback:
+      correct: 맞아요! `Ok(n)`의 `n`을 쓰려면 매번 case로 포장을 풀어야 하고, 두 값을 모두 풀려면 한 case가 다른 case 안에 들어가 계단이 됩니다.
+      choices:
+        "0": case는 `case a, b { ... }`로 여러 값을 동시에 검사할 수 있어요. 계단의 원인은 그게 아니라 Result 포장을 차례로 푸는 데 있습니다.
+        "2": 컴파일 에러 때문이 아니에요. 안쪽 값을 꺼낸 뒤 더하는 건 정상이고, 문제는 꺼내는 과정이 중첩된다는 점입니다.
+        "3": "`parse_age`는 재귀가 아니에요. 계단은 재귀가 아니라 Result를 두 번 푸는 데서 생깁니다."

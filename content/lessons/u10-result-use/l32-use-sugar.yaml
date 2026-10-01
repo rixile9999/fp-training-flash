@@ -1,0 +1,109 @@
+title: use — 계단을 펴는 설탕
+tags:
+  - concept:use-expressions
+  - concept:results
+blocks:
+  - prose: intro
+    markdown: |-
+      `result.try`로 단락은 해결했지만, 콜백이 또 다른 `try`를 품으면서 여전히 오른쪽으로 들여쓰기가 깊어집니다. Gleam의 `use` 표현식은 이 연쇄를 **위에서 아래로 평평하게** 펴 줍니다.
+
+      ```gleam
+      import gleam/result
+
+      pub fn add_ages(a: String, b: String) -> Result(Int, AgeError) {
+        use age_a <- result.try(parse_age(a))
+        use age_b <- result.try(parse_age(b))
+        Ok(age_a + age_b)
+      }
+      ```
+
+      계단이 사라지고, `Error(e) -> Error(e)` 반복도 없습니다. `use age_a <- ...`는 "이 Result가 Ok면 그 값을 `age_a`로 받아 아래를 계속하고, Error면 그대로 단락"이라고 읽습니다.
+  - exercise: addages-ok
+    type: predict
+    prompt: 위 `use` 버전 `add_ages`에서 `add_ages("8", "9")`의 값은?
+    code: |-
+      pub fn add_ages(a: String, b: String) -> Result(Int, AgeError) {
+        use age_a <- result.try(parse_age(a))
+        use age_b <- result.try(parse_age(b))
+        Ok(age_a + age_b)
+      }
+
+      add_ages("8", "9")
+    choices:
+      - "`Ok(17)`"
+      - "`17`"
+      - "`Ok(8)`"
+      - "`Error(NotANumber)`"
+    answer: 0
+    feedback:
+      correct: 정확해요! 두 파싱 모두 Ok라 `age_a`=8, `age_b`=9로 내려가고, 마지막 `Ok(8 + 9)` = `Ok(17)`.
+      choices:
+        "1": 함수 반환 타입이 `Result`라 마지막 줄도 `Ok(...)`예요 — 맨몸 `17`이 아니라 `Ok(17)`.
+        "2": 두 `use` 줄을 모두 통과한 뒤 둘을 더합니다 — `age_a`만 본 `Ok(8)`이 아니라 `Ok(17)`.
+        "3": 두 입력 모두 정상 숫자라 단락되지 않아요 — `Error`가 아니라 `Ok(17)`입니다.
+  - prose: shortcircuit
+    markdown: |-
+      이번 유닛의 핵심 직관입니다. `use` 줄에서 `result.try`가 `Error`를 받으면, **그 아래 줄들은 아예 실행되지 않고** Error가 그대로 함수의 반환값이 됩니다.
+
+      U3에서 "Gleam엔 early return이 없다"고 배웠죠. `use` + `result.try`의 단락이 바로 그 early return의 역할을, **타입 안전하게**(Result 타입으로) 수행하는 셈입니다.
+  - exercise: addages-shortcircuit
+    type: predict
+    prompt: '`add_ages("3", "x")`의 값은? (`use` 버전, `"x"`는 숫자가 아님)'
+    code: |-
+      pub fn add_ages(a: String, b: String) -> Result(Int, AgeError) {
+        use age_a <- result.try(parse_age(a))
+        use age_b <- result.try(parse_age(b))
+        Ok(age_a + age_b)
+      }
+
+      add_ages("3", "x")
+    choices:
+      - "`Ok(3)`"
+      - "`Error(NotANumber)`"
+      - "`Ok(0)`"
+      - "`Error(Negative)`"
+    answer: 1
+    feedback:
+      correct: 맞아요! 첫 줄은 `Ok(3)`라 `age_a`=3로 내려가지만, 둘째 `use` 줄의 `parse_age("x")`가 `Error(NotANumber)`라 거기서 단락 — 아래 `Ok(...)`는 실행되지 않고 그 Error가 반환됩니다.
+      choices:
+        "0": use 줄에서 Error가 나오면 그 아래는 실행되지 않고 Error가 그대로 함수의 반환값이 됩니다. early return이 없다더니, Result 체이닝이 그 역할을 타입 안전하게 수행하는 셈입니다 — `Ok(3)`이 아니라 `Error(NotANumber)`.
+        "2": 단락은 `Ok(0)` 같은 기본값을 만들지 않아요. 실패한 Error를 그대로 반환합니다 — `Error(NotANumber)`.
+        "3": '`"x"`는 음수가 아니라 숫자 자체가 아니므로 `NotANumber`예요 — `Negative`가 아닙니다.'
+  - exercise: addages-negative
+    type: predict
+    prompt: '`add_ages("-3", "4")`의 값은? (`parse_age`는 음수면 `Error(Negative)`)'
+    code: |-
+      pub fn add_ages(a: String, b: String) -> Result(Int, AgeError) {
+        use age_a <- result.try(parse_age(a))
+        use age_b <- result.try(parse_age(b))
+        Ok(age_a + age_b)
+      }
+
+      add_ages("-3", "4")
+    choices:
+      - "`Error(Negative)`"
+      - "`Error(NotANumber)`"
+      - "`Ok(1)`"
+      - "`Ok(-3)`"
+    answer: 0
+    feedback:
+      correct: 정확해요! 첫 `parse_age("-3")`이 숫자 파싱엔 성공하지만 음수라 `Error(Negative)`를 냅니다 — 첫 `use` 줄에서 바로 단락됩니다.
+      choices:
+        "1": '`"-3"`은 정수 파싱 자체는 성공해요(부호 포함). 다만 음수라서 `Negative`로 걸립니다 — `NotANumber`가 아니에요.'
+        "2": 첫 줄에서 이미 단락되므로 덧셈에 도달하지 못해요 — `Ok(1)`이 아니라 `Error(Negative)`.
+        "3": 단락된 결과는 `Error`예요. 게다가 음수 입력은 `parse_age`가 거부하므로 `Ok(-3)`이 될 수 없습니다.
+  - exercise: forgot-ok
+    type: choice
+    prompt: "`use`로 다 펴고 마지막 줄을 `Ok(age_a + age_b)`가 아니라 그냥 `age_a + age_b`로 쓰면 어떻게 될까요?"
+    choices:
+      - 잘 동작한다 — Gleam이 알아서 Ok로 감싼다
+      - 타입 불일치(Type mismatch) 컴파일 에러 — 함수 반환 타입은 `Result`인데 마지막 식이 `Int`라서
+      - 런타임에 에러가 난다
+      - 항상 `Error`를 반환한다
+    answer: 1
+    feedback:
+      correct: 맞아요! use를 다 펴도 함수의 반환 타입은 여전히 `Result`입니다. 마지막 성공값을 `Ok`로 포장하는 것을 잊는 실수는 `use-expr` 테마의 1번 단골이라, 컴파일러가 Type mismatch로 잡아줍니다.
+      choices:
+        "0": Gleam은 자동으로 `Ok`를 씌워주지 않아요. 반환 타입이 `Result(Int, _)`인데 마지막이 `Int`면 타입이 어긋나 컴파일 에러입니다.
+        "2": 런타임이 아니라 컴파일 타임에 막혀요 — 타입이 맞지 않으면 실행조차 되지 않습니다.
+        "3": "`Error`를 반환하는 게 아니라 아예 컴파일되지 않아요 — 타입 불일치입니다."

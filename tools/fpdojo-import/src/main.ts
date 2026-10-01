@@ -122,11 +122,15 @@ export function convert(dump: { ko: Unit[]; en: Unit[] }, fixes: Fix[]) {
       if (en && !enLesson) warnings.push(`no English lesson ${lesson.id}`);
       const blocks: unknown[] = [];
       const overlay: Record<string, unknown> = {};
+      // Block ids key the overlays, so they must be unique per lesson. A few fpdojo lessons reuse an exercise id
+      // for a prose segment; such prose blocks get a "-prose" suffix (applied identically to both locales).
+      const exerciseIds = new Set(lesson.blocks.flatMap((b) => (b.kind === "exercise" ? [b.step.id] : [])));
+      const proseId = (id: string) => (exerciseIds.has(id) ? `${id}-prose` : id);
       for (const b of lesson.blocks) {
-        const enBlock = enLesson?.blocks.find((x) => (x.kind === "prose" ? x.id : x.step.id) === (b.kind === "prose" ? b.id : b.step.id));
+        const enBlock = enLesson?.blocks.find((x) => x.kind === b.kind && (x.kind === "prose" ? x.id : x.step.id) === (b.kind === "prose" ? b.id : b.step.id));
         if (b.kind === "prose") {
-          blocks.push({ prose: b.id, markdown: b.markdown });
-          if (enBlock?.kind === "prose") overlay[b.id] = { markdown: enBlock.markdown };
+          blocks.push({ prose: proseId(b.id), markdown: b.markdown });
+          if (enBlock?.kind === "prose") overlay[proseId(b.id)] = { markdown: enBlock.markdown };
           continue;
         }
         const s = b.step;

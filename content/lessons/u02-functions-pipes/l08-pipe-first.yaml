@@ -1,0 +1,61 @@
+title: 파이프 우선 스타일과 한계
+tags:
+  - concept:pipe-operator
+  - concept:strings
+blocks:
+  - prose: intro
+    markdown: |-
+      Gleam stdlib는 '파이프하기 좋게' 설계되어, 변환할 **데이터를 첫 번째 인자**로 받는 경우가 많습니다. 그래서 `string.trim`, `string.uppercase`, `string.replace`, `string.append` 모두 자연스럽게 파이프됩니다.
+
+      `string.replace(문자열, 찾을것, 바꿀것)` 도 문자열이 첫 인자라 파이프에 잘 맞습니다.
+  - exercise: replace-pipe
+    type: predict
+    prompt: 이 표현식의 값은? (`string.replace`는 첫 인자 문자열에서 둘째를 셋째로 바꿉니다)
+    code: '"a-b-c" |> string.replace("-", " ")'
+    choices:
+      - '`"a b c"`'
+      - '`"a-b-c"`'
+      - '`"abc"`'
+      - '`"- -"`'
+    answer: 0
+    feedback:
+      correct: 맞아요! "a-b-c"에서 모든 "-"를 " "로 바꿔 "a b c".
+      choices:
+        "1": replace가 적용되므로 그대로 남지 않아요 — "-"가 공백이 됩니다.
+        "2": '"-"를 빈 문자열이 아니라 공백 " "으로 바꿔요.'
+        "3": 글자 a,b,c는 그대로 남고 구분자만 바뀝니다.
+  - prose: limits
+    markdown: |-
+      파이프 우선 스타일에도 한계가 있습니다. 파이프는 왼쪽 값을 **첫 번째** 인자에만 넣을 수 있어요. 만약 흘려보내는 값이 둘째·셋째 인자 자리에 들어가야 한다면 파이프만으로는 안 됩니다.
+
+      그럴 땐 함수 캡처(`f(고정값, _)`)나 익명 함수를 쓰는데, 이는 뒤 유닛에서 배웁니다. 지금은 '파이프는 첫 인자 전용'이라는 한계만 기억하세요.
+  - exercise: pipe-limit
+    type: choice
+    prompt: 파이프 `|>`의 한계로 옳은 설명은?
+    choices:
+      - 왼쪽 값을 항상 첫 번째 인자에만 넣을 수 있다
+      - 한 번에 두 개까지만 연결할 수 있다
+      - Int에는 쓸 수 없다
+      - 함수가 인자를 하나만 받아야 쓸 수 있다
+    answer: 0
+    feedback:
+      correct: 맞아요! 파이프는 왼쪽 값을 첫 인자에만 넣습니다. 다른 자리면 캡처가 필요해요.
+      choices:
+        "1": 연결 개수에 제한은 없어요 — 얼마든지 이어 쓸 수 있습니다.
+        "2": 타입과 무관해요 — 어떤 값이든 파이프할 수 있습니다.
+        "3": 인자가 여러 개여도 됩니다 — 나머지를 호출에 적어주면 됩니다(`f(_)` 형태 등).
+  - exercise: non-first-arg
+    type: choice
+    prompt: 흘려보낼 값이 함수의 **두 번째** 인자 자리에 들어가야 한다면 어떻게 할까요?
+    choices:
+      - 파이프만으로 충분하다
+      - 함수 캡처 `f(고정값, _)`나 익명 함수가 필요하다
+      - 불가능하므로 그 함수는 쓸 수 없다
+      - 인자 순서를 자동으로 바꿔준다
+    answer: 1
+    feedback:
+      correct: 정확해요! 파이프는 첫 인자 전용이라, 다른 자리는 캡처나 익명 함수로 처리합니다.
+      choices:
+        "0": 파이프는 첫 인자에만 넣어요 — 둘째 자리엔 부족합니다.
+        "2": 쓸 수 있어요 — 캡처/익명 함수로 자리를 맞추면 됩니다.
+        "3": Gleam은 인자 순서를 자동으로 바꾸지 않습니다.

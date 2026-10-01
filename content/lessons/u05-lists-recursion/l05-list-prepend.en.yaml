@@ -1,0 +1,59 @@
+title: List(a) and prepend
+blocks:
+  intro:
+    markdown: |-
+      A list is a data structure that holds values of the same type **in order**. `[1, 2, 3]` is a `List(Int)`, and `["a", "b"]` is a `List(String)`. Every element in a single list must be **of the same type**.
+
+      The empty list is `[]`. Keep an eye on this tiny empty list — it later becomes the **starting point** of recursion.
+  list-homogeneous:
+    prompt: Which of the following is a valid list in Gleam?
+    choices:
+      - '`[1, "a", True]`'
+      - "`[1, 2, 3]`"
+      - "`{1, 2, 3}`"
+      - "`(1, 2, 3)`"
+    feedback:
+      correct: Correct! Every element of a list must be the same type — `[1, 2, 3]` is all `Int`, so it's a `List(Int)`.
+      choices:
+        "0": The types are mixed — you can't put `Int`, `String`, and `Bool` in one list. They must all be the same type.
+        "2": "`{...}` isn't list syntax — lists use square brackets `[...]`."
+        "3": "`(...)` is tuple syntax. Lists use `[...]`."
+  prepend:
+    markdown: |-
+      Adding a single element to the **front** of a list is called prepend. With the `[head, ..tail]` syntax, you place a new element (head) on top of an existing list (tail) to make a **new list**.
+
+      When `let xs = [1, 2, 3]`, then `[0, ..xs]` is `[0, 1, 2, 3]`. The important point: `xs` doesn't change — exactly the immutability you learned in the previous unit, a new list is simply created. Prepend reuses the existing list as-is, so it's very fast (O(1)).
+  prepend-front:
+    prompt: When `xs` is `[1, 2, 3]`, what is the value of `[0, ..xs]`?
+    choices:
+      - "`[0, 1, 2, 3]`"
+      - "`[1, 2, 3, 0]`"
+      - "`[0, [1, 2, 3]]`"
+      - "`[1, 2, 3]`"
+    feedback:
+      correct: Exactly! `..` adds the new element to the **front (head)** — `[0, 1, 2, 3]`.
+      choices:
+        "1": prepend adds to the **front** — 0 comes at the very front, not the back.
+        "2": It doesn't nest — `..` spreads the tail out to make a flat `[0, 1, 2, 3]`.
+        "3": "`ys` is a new list — with 0 prepended it becomes `[0, 1, 2, 3]` (though `xs` itself stays the same)."
+    code: |-
+      let xs = [1, 2, 3]
+      let ys = [0, ..xs]
+      // what is ys?
+  prepend-two:
+    prompt: When `xs` is `[3]`, what is the value of `[1, 2, ..xs]`?
+    choices:
+      - "`[1, 2, 3]`"
+      - "`[3, 1, 2]`"
+      - "`[1, 2, [3]]`"
+      - "`[1, 2]`"
+    feedback:
+      correct: Correct! 1 and 2 are placed on the front in order, making `[1, 2, 3]` — the tail after `..` follows on unchanged.
+      choices:
+        "1": The `1, 2` written in front come first, and the tail `[3]` follows, giving `[1, 2, 3]`.
+        "2": The tail doesn't become a single element — it spreads out into a flat `[1, 2, 3]`.
+        "3": The element of the tail `[3]` is included too — it's `[1, 2, 3]`, not `[1, 2]`.
+    code: |-
+      let xs = [3]
+      let ys = [1, 2, ..xs]
+      // what is ys?

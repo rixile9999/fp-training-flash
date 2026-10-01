@@ -1,0 +1,48 @@
+title: assert and testing — when crashing is the right call
+blocks:
+  intro:
+    markdown: |-
+      `assert` (v1.11+) asserts a **Bool expression**. If it's true, it passes silently; if it's false, it crashes with a rich message *that even includes the values on both sides*.
+
+      Let me let you in on a secret: the hidden grader for every `write` exercise you solve on this platform is built from exactly this `assert`.
+  assert-passes:
+    prompt: Both `assert`s are true, so they pass. If execution reaches the last line, what gets printed?
+    choices:
+      - "`6`"
+      - "`0`"
+      - nothing is printed (crash)
+      - "`True`"
+    feedback:
+      correct: Right! Both assertions are true so they pass without obstruction, and the last line prints `total([1, 2, 3])` = 6.
+      choices:
+        "1": The last line prints `total([1, 2, 3])`, not `total([])` — that's 6.
+        "2": Both assertions are true, so it doesn't crash — it runs to the end.
+        "3": It prints the value of `total(...)`, not a comparison result — that's 6.
+  assert-fails:
+    markdown: What if `total([])` weren't 0 in `assert total([]) == 0`? `assert` would discover it's **false** and crash with a message saying "the left side is this value, the right side is that value." That's why it's perfect for tests — it shows you exactly what went wrong.
+  assert-on-false:
+    prompt: What happens when an `assert` expression evaluates to **false**?
+    choices:
+      - Returns `False`
+      - Crashes with a message containing the values from both sides
+      - Just moves on to the next line
+      - Produces a compile error
+    feedback:
+      correct: Right! When it's false, it crashes immediately with a rich message containing the left- and right-side values.
+      choices:
+        "0": "`assert` doesn't return a value — it's a tool that crashes when the expression is false."
+        "2": It only moves on when true — when false, it stops.
+        "3": It compiles fine — the false verdict happens at runtime.
+  tool-choice:
+    prompt: When the value a function receives is "external input that can fail," which is the right tool?
+    choices:
+      - Force it open with `let assert`
+      - Block it with `panic`
+      - Treat the failure as data with `Result`
+      - Leave it as `todo`
+    feedback:
+      correct: Right! Failure of a value from outside is a normal-case **data** — handle it with `Result`. This distinction is what this whole unit is about.
+      choices:
+        "0": Using `let assert` on a handleable failure kills the program even on a normal failure.
+        "1": '`panic` is for "impossible" things — failure of external input is entirely possible.'
+        "3": "`todo` is just a marker for unfinished work, not a tool for handling failure."

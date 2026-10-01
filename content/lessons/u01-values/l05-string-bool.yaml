@@ -1,0 +1,71 @@
+title: String과 Bool, 그리고 echo/io.println
+tags:
+  - concept:basics
+blocks:
+  - prose: intro
+    markdown: 남은 기본 타입 두 가지입니다. **`String`**은 큰따옴표로 감싼 글자들(`"안녕"`)이고, 이어붙일 때는 `<>` 연산자를 씁니다. **`Bool`**은 `True` 또는 `False`이며, `&&`(그리고), `||`(또는), `!`(부정)로 조합합니다.
+  - exercise: string-concat
+    type: predict
+    prompt: 문자열 이어붙이기 `<>`의 결과는?
+    code: '"ab" <> "cd"'
+    choices:
+      - '`"abcd"`'
+      - '`"ab cd"`'
+      - '`"cdab"`'
+      - '`"ab+cd"`'
+    answer: 0
+    feedback:
+      correct: 맞아요! `<>`는 왼쪽 문자열 뒤에 오른쪽을 그대로 붙입니다 — "abcd".
+      choices:
+        "1": '`<>`는 사이에 공백을 넣지 않아요 — 그대로 붙여 "abcd".'
+        "2": 순서가 뒤집히지 않습니다 — 왼쪽이 앞, 오른쪽이 뒤예요.
+        "3": "`<>`는 연산 기호를 글자로 끼워넣지 않습니다 — 순수하게 이어붙여요."
+  - exercise: bool-and
+    type: predict
+    prompt: Bool 연산 `True && False`의 값은?
+    code: True && False
+    choices:
+      - "`True`"
+      - "`False`"
+      - "`Nil`"
+      - 컴파일 에러
+    answer: 1
+    feedback:
+      correct: 정확해요! `&&`(AND)는 양쪽이 모두 `True`일 때만 `True`입니다 — 하나라도 `False`면 `False`.
+      choices:
+        "0": "`&&`는 둘 다 참일 때만 참이에요. 하나가 `False`라 결과는 `False`."
+        "2": "`&&`의 결과는 항상 `Bool`입니다 — `Nil`이 아니라 `False`."
+        "3": "`&&`는 두 `Bool`에 쓰는 올바른 연산자라 정상 컴파일됩니다."
+  - exercise: bool-or
+    type: predict
+    prompt: Bool 연산 `False || True`의 값은?
+    code: False || True
+    choices:
+      - "`True`"
+      - "`False`"
+      - "`Nil`"
+      - 컴파일 에러
+    answer: 0
+    feedback:
+      correct: 맞아요! `||`(OR)는 한쪽이라도 `True`면 `True`입니다.
+      choices:
+        "1": "`||`는 하나라도 참이면 참이에요 — 오른쪽이 `True`라 결과는 `True`."
+        "2": "`||`의 결과는 항상 `Bool`입니다 — `Nil`이 아니라 `True`."
+        "3": "`||`는 두 `Bool`에 쓰는 올바른 연산자라 정상 컴파일됩니다."
+  - prose: echo-vs-println
+    markdown: 값을 화면에 찍는 두 가지 방법이 있습니다. **`io.println`**은 `String`만 받아 그 글자를 그대로 출력합니다(`import gleam/io` 필요). **`echo`**는 디버그용 키워드로, **어떤 타입의 값이든** 받아 사람이 읽기 좋은 모양으로 찍어줍니다(import 불필요) — 그래서 `Int`나 `Bool`을 빠르게 들여다볼 때 편합니다.
+  - exercise: echo-or-println
+    type: choice
+    prompt: 정수 `total` 하나를 별다른 import 없이, 가장 빠르게 화면에 찍어 확인하려면?
+    choices:
+      - "`io.println(total)`"
+      - "`echo total`"
+      - '`io.println("total")`'
+      - "`print(total)`"
+    answer: 1
+    feedback:
+      correct: 맞아요! `echo`는 어떤 타입이든 받고 import도 필요 없어 디버그에 안성맞춤입니다 — `Int`도 알아서 보기 좋게 찍어줘요.
+      choices:
+        "0": "`io.println`은 `String`만 받습니다. `Int`인 `total`을 넘기면 타입 에러예요 — `int.to_string`이 필요합니다."
+        "2": 그러면 변수 값이 아니라 글자 `total`이 그대로 찍힙니다 — 우리가 원한 건 숫자 값이에요.
+        "3": Gleam에는 `print`라는 함수가 없습니다 — `io.println` 또는 `echo`를 씁니다.

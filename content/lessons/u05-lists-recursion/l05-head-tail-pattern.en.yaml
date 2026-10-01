@@ -1,0 +1,86 @@
+title: "[first, ..rest] — the pattern that takes a list apart"
+blocks:
+  intro:
+    markdown: |-
+      The `[head, ..tail]` syntax that **builds** a list is used, in the **pattern position** of a `case`, to **take a list apart**. The same shape works in the opposite direction.
+
+      A list can only have two shapes:
+      - `[]` — it's empty
+      - `[first, ..rest]` — it splits into one head `first` and the remainder `rest` (a list)
+
+      These two patterns cover every possible case of a list, with none missed.
+  head-bind:
+    prompt: In the `[first, ..rest]` pattern, `first` is bound to the head element. What is the value of `first_or_zero([10, 20, 30])`?
+    choices:
+      - "`10`"
+      - "`30`"
+      - "`0`"
+      - "`[20, 30]`"
+    feedback:
+      correct: Correct! `first` is bound to the **head** of the list (the very first element), which is 10.
+      choices:
+        "1": "`first` is the **frontmost** element — 10, not the last one, 30."
+        "2": 0 is the result for an empty list (`[]`) — the input isn't empty.
+        "3": "`[20, 30]` is the `rest` (tail) — this function returns `first`."
+    code: |-
+      fn first_or_zero(xs: List(Int)) -> Int {
+        case xs {
+          [] -> 0
+          [first, ..rest] -> first
+        }
+      }
+
+      // what is first_or_zero([10, 20, 30])?
+  rest-bind:
+    prompt: In the same pattern, `rest` is bound to the remaining list with the head removed. What is the value of `drop_first([10, 20, 30])`?
+    choices:
+      - "`[20, 30]`"
+      - "`[10, 20, 30]`"
+      - "`10`"
+      - "`[10]`"
+    feedback:
+      correct: Exactly! `rest` is the remainder with the head 10 removed — `[20, 30]`.
+      choices:
+        "1": "`rest` is the part with the head **removed** — 10 is gone, giving `[20, 30]`."
+        "2": "`10` is `first` (the head) — this function returns `rest` (the tail list)."
+        "3": "`rest` contains both 20 and 30 — it's `[20, 30]`, not `[10]`."
+    code: |-
+      fn drop_first(xs: List(Int)) -> List(Int) {
+        case xs {
+          [] -> []
+          [first, ..rest] -> rest
+        }
+      }
+
+      // what is drop_first([10, 20, 30])?
+  two-cases:
+    markdown: |-
+      The two patterns `[]` and `[first, ..rest]` cover **every case** of a list. So when you handle a list with `case`, having just these two passes the exhaustiveness check.
+
+      The key is that `[first, ..rest]` **peels off one layer** of the list — it removes one head and leaves a shorter `rest`. This "shrinks by one layer each time" property is what makes the recursion in the next lesson possible.
+  list-shapes:
+    prompt: If you were to list all the shapes (patterns) a list can have in Gleam, which is correct?
+    choices:
+      - "Two of them: `[]` and `[first, ..rest]`"
+      - "Just one: `[]`"
+      - "Just one: `[first, ..rest]`"
+      - A separate one for each element count — `[a]`, `[a, b]`, `[a, b, c]` ...
+    feedback:
+      correct: Correct! A list has only two shapes — "empty (`[]`)" or "one head + the rest (`[first, ..rest]`)" — so these two cover every case.
+      choices:
+        "1": There are also non-empty lists (`[1, 2]`, etc.) — you also need the `[first, ..rest]` pattern.
+        "2": The empty list `[]` is possible too — if you omit that case, you won't pass the exhaustiveness check.
+        "3": There's no need to split by length — a single `[first, ..rest]` covers **all** lengths of 1 or more.
+  rebuild:
+    prompt: Reattaching the head and tail you took apart gives you back the original. What is the value of `[1, ..[2, 3]]`?
+    choices:
+      - "`[1, 2, 3]`"
+      - "`[[1], 2, 3]`"
+      - "`[1, [2, 3]]`"
+      - "`[2, 3, 1]`"
+    feedback:
+      correct: Correct! Combining the head 1 with the tail `[2, 3]` gives `[1, 2, 3]` — the reverse direction of taking it apart.
+      choices:
+        "1": The head doesn't nest — 1 just goes in as the frontmost element, giving `[1, 2, 3]`.
+        "2": The tail `[2, 3]` doesn't become a single element — it spreads out into `[1, 2, 3]`.
+        "3": "`..` adds to the **front** — 1 is at the very front, so it's `[1, 2, 3]`."

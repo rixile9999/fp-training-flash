@@ -1,0 +1,58 @@
+title: String and Bool, plus echo/io.println
+blocks:
+  intro:
+    markdown: Here are the last two basic types. A **`String`** is characters wrapped in double quotes (`"hello"`), and you join them with the `<>` operator. A **`Bool`** is `True` or `False`, and you combine them with `&&` (and), `||` (or), and `!` (not).
+  string-concat:
+    prompt: What is the result of the string concatenation `<>`?
+    choices:
+      - '`"abcd"`'
+      - '`"ab cd"`'
+      - '`"cdab"`'
+      - '`"ab+cd"`'
+    feedback:
+      correct: Correct! `<>` sticks the right string directly onto the end of the left one — "abcd".
+      choices:
+        "1": "`<>` doesn't insert a space in between — it joins them directly to get \"abcd\"."
+        "2": The order isn't reversed — the left side comes first, the right side after.
+        "3": "`<>` doesn't slip the operator symbol in as a character — it concatenates purely."
+  bool-and:
+    prompt: What is the value of the Bool operation `True && False`?
+    choices:
+      - "`True`"
+      - "`False`"
+      - "`Nil`"
+      - Compile error
+    feedback:
+      correct: Exactly! `&&` (AND) is `True` only when both sides are `True` — if even one is `False`, it's `False`.
+      choices:
+        "0": "`&&` is true only when both are true. One side is `False`, so the result is `False`."
+        "2": The result of `&&` is always a `Bool` — `False`, not `Nil`.
+        "3": "`&&` is the correct operator for two `Bool`s, so it compiles fine."
+  bool-or:
+    prompt: What is the value of the Bool operation `False || True`?
+    choices:
+      - "`True`"
+      - "`False`"
+      - "`Nil`"
+      - Compile error
+    feedback:
+      correct: Correct! `||` (OR) is `True` if even one side is `True`.
+      choices:
+        "1": "`||` is true if even one side is true — the right side is `True`, so the result is `True`."
+        "2": The result of `||` is always a `Bool` — `True`, not `Nil`.
+        "3": "`||` is the correct operator for two `Bool`s, so it compiles fine."
+  echo-vs-println:
+    markdown: There are two ways to print a value to the screen. **`io.println`** takes only a `String` and prints those characters as-is (requires `import gleam/io`). **`echo`** is a debug keyword that takes **a value of any type** and prints it in a human-readable form (no import needed) — so it's handy for quickly peeking at an `Int` or a `Bool`.
+  echo-or-println:
+    prompt: What's the fastest way to print a single integer `total` to the screen to check it, with no extra imports?
+    choices:
+      - "`io.println(total)`"
+      - "`echo total`"
+      - '`io.println("total")`'
+      - "`print(total)`"
+    feedback:
+      correct: Correct! `echo` takes any type and needs no import, so it's perfect for debugging — it'll print an `Int` nicely on its own.
+      choices:
+        "0": "`io.println` takes only a `String`. Passing the `Int` `total` is a type error — you'd need `int.to_string`."
+        "2": That prints the literal text `total`, not the variable's value — what we wanted was the number.
+        "3": Gleam has no `print` function — use `io.println` or `echo`.

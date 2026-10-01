@@ -1,0 +1,17 @@
+title: list 모듈 — 재귀의 추상화
+order: 8
+level: 3
+skill: gleam-lists-recursion
+prerequisites:
+  - u06-tail-recursion
+  - u07-functions-as-values
+lessons:
+  - l08-list-map
+  - l08-list-filter
+  - l08-fold
+  - l08-fold-direction
+  - l08-tool-choice
+source:
+  kind: original
+  upstream: fpdojo (~/workspace/fp-training, same author), gleam 1.17 JS;
+    re-verified on gleam 1.18.1 Erlang

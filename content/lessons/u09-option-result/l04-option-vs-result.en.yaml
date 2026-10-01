@@ -1,0 +1,51 @@
+title: How to Choose Between Option and Result
+blocks:
+  intro:
+    markdown: |-
+      `Option` and `Result` both deal with "a value might not be there", but they're used differently. A one-line rule:
+
+      - **If "absence is a normal state", use `Option`** — where the absence itself is data. Example: an optional field on a record (someone might not have a nickname).
+      - **If it's a "failure with a reason", use `Result`** — when something went wrong and you have something to say about *why*.
+
+      The key question: "Is this absence *normal*, or is it a *failure*?"
+  optional-field:
+    prompt: On a user profile, `nickname` is an optional field that "someone may not have set". Having no nickname isn't an error — it's a common, normal state. What is the most fitting type for this field?
+    choices:
+      - "`Option(String)` — because absence is normal data"
+      - "`Result(String, Nil)` — because a nickname can fail"
+      - "`String` — empty string when absent"
+      - "`Result(String, String)` — to carry a reason"
+    feedback:
+      correct: Right! Having no nickname is *normal absence*, not a *failure* — so `Option(String)` fits perfectly. `None` naturally expresses "nickname not set".
+      choices:
+        "1": Having no nickname isn't a failure, it's normal — there's no "failure reason" to convey, so `Result` is overkill.
+        "2": An empty string can't distinguish "present but empty" from "not there at all" — `Option` clearly separates those two.
+        "3": Putting an error type there when there's no failure reason to carry is just clutter — for normal absence, use `Option`.
+  result-default:
+    markdown: But if you look at Gleam's stdlib, even when there's *only one* reason for failure it often uses **`Result(a, Nil)`** rather than `Option` — `int.parse` and `list.first` do exactly this. Idiomatically, **`Result` is the default**, and `Option` is saved for the special spots where "absence is the data". A "parse failure" or "the first element of an empty list" is less *normal absence* than *a failure of that operation*.
+  stdlib-idiom:
+    prompt: What is the best reason that `int.parse("abc")` returns `Error(Nil)` as `Result(Int, Nil)` rather than as an `Option`?
+    choices:
+      - "\"abc as an integer\" isn't normal absence but a *failure* of the operation — and for these cases stdlib defaults to Result"
+      - Because Gleam doesn't have Option
+      - Because Result is always faster than Option
+      - Because it's a special rule just for `int.parse`; other functions use Option
+    feedback:
+      correct: Right! Failing to parse signals not "absence is normal" but "this operation failed" — so idiomatically it uses `Result` (`list.first` is the same).
+      choices:
+        "1": Gleam clearly does have `Option` (`gleam/option`). It's just that for *failure*, `Result` is idiomatic.
+        "2": It's not about speed but about *meaning* — the distinction between absence (data) and failure.
+        "3": "`list.first` uses `Result` for the same reason — it isn't an exception unique to `int.parse`."
+  spot-awkward:
+    prompt: Among the following four function signatures, which one has an **awkward** type choice?
+    choices:
+      - "`fn divide(a: Int, b: Int) -> Option(Int)`"
+      - "`fn find_user(id: Int) -> Result(User, Nil)`"
+      - "`fn middle_name(p: Person) -> Option(String)`"
+      - "`fn parse_age(s: String) -> Result(Int, AgeError)`"
+    feedback:
+      correct: "Right! Dividing by zero isn't *normal absence* but a *failure* of the operation — `Result(Int, ...)` is more appropriate than `Option`. The rule: \"if absence is normal, Option; if it's a failure, Result.\""
+      choices:
+        "1": "`Result` is natural for a failed user lookup — per stdlib idiom, if there's one reason, `Result(_, Nil)` is fine too."
+        "2": A middle name is an optional field where "absence is normal", so `Option` fits perfectly — not awkward.
+        "3": Age parsing has a reason on failure (`AgeError`), so `Result(Int, AgeError)` is the textbook choice — not awkward.

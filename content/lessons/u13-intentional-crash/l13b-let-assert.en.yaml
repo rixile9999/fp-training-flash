@@ -1,0 +1,64 @@
+title: let assert — "this is guaranteed to match"
+blocks:
+  intro:
+    markdown: |-
+      A `let` pattern **must cover the whole value**. That's why `let [first, ..] = xs` is a compile error — it doesn't handle the possibility of an empty list.
+
+      `let assert` breaks that rule and allows a **partial pattern**. In exchange, you make a promise: "if it isn't this shape at this point, that's a bug in my code." If the shape matches, it extracts the value; if it doesn't, it **crashes immediately**.
+  let-assert-head:
+    prompt: The list isn't empty, so the pattern matches. What is the value of `first_or_crash([10, 20, 30])`?
+    choices:
+      - "`10`"
+      - "`30`"
+      - "`[10, 20, 30]`"
+      - runtime crash
+    feedback:
+      correct: Right! In `[first, ..]`, `first` is bound to the head (the first element), which is 10.
+      choices:
+        "1": "`first` is the **first** element, not the last — it's 10."
+        "2": "`first` is a single first element, not the whole list."
+        "3": The list isn't empty, so the pattern matches — it doesn't crash.
+  let-assert-ok:
+    prompt: "`let assert Ok(n)` asserts that it's `Ok`. What is the value of `double_ok(Ok(21))`?"
+    choices:
+      - "`21`"
+      - "`42`"
+      - "`Ok(42)`"
+      - runtime crash
+    feedback:
+      correct: Exactly! In `Ok(21)`, `n` unwraps to 21, and it returns 21 * 2 = 42.
+      choices:
+        "0": After extracting `n` it computes `n * 2` — that's 42, not 21.
+        "2": "`let assert Ok(n)` peels off the wrapper and extracts just `n`. The result is the `Int` 42."
+        "3": The value is `Ok`, so the assertion holds — it doesn't crash.
+  fails-crash:
+    markdown: |-
+      So what if the shape doesn't match? If an empty list comes in, like `first_or_crash([])`, it doesn't match `[first, ..]`, so it **crashes immediately**. The platform shows you the captured exception message ("Pattern match failed...") as-is.
+
+      That's the `let assert` bargain: in exchange for conveniently extracting the value, it stops the program when the promise is broken.
+  empty-list-crash:
+    prompt: What happens when you run `first_or_crash([])`?
+    choices:
+      - Returns `0`
+      - Returns `Error(Nil)`
+      - Crashes at runtime due to a pattern mismatch
+      - Produces a compile error
+    feedback:
+      correct: Right! An empty list doesn't match `[first, ..]`, so the assertion breaks and it crashes immediately.
+      choices:
+        "0": "`let assert` doesn't produce a default value — it extracts when it matches and stops when it doesn't."
+        "1": "`let assert` doesn't return a `Result`. Failure here is a crash, not data."
+        "3": It compiles fine — the failure happens at runtime.
+  when-justified:
+    prompt: Which of the following is a **justified** use of `let assert`? (External-input failures are data; violations of your own invariants are bugs.)
+    choices:
+      - Parsing a user-entered string into a number
+      - Taking the head of a 3-element list you just built in your own code
+      - Reading in a config file
+      - Interpreting a network response
+    feedback:
+      correct: Right! A 3-element list you just built yourself is never empty — if it were, that's a bug in your code, not data.
+      choices:
+        "0": User input is **data** that can be wrong at any time — handle it with `Result`.
+        "2": A config file can be missing or corrupted — it's external, a failure you can handle.
+        "3": A network response comes from outside, so failure is a normal possibility — handle it with `Result`.

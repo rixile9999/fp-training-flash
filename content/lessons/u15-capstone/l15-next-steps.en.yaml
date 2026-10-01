@@ -1,0 +1,55 @@
+title: Completion and Next Paths
+blocks:
+  congrats:
+    markdown: |-
+      You've made it here. From values and immutability through functions, case, custom types, lists, higher-order functions, `Result`, `use`, opaque types, and intentional crashes — you've learned **how to think** in Gleam.
+
+      This final lesson has no code. It wraps up where to take what you've learned, and what your next paths are.
+  paths:
+    markdown: |-
+      Three recommended paths:
+
+      - **The Exercism Gleam track** — solve small practice problems with mentor feedback. A place to write more by hand.
+      - **CodeCrafters** — build your practical instincts with large projects like "build your own Redis/Git."
+      - **This platform's training mode** — rated puzzles, SRS review, and timed (Code Storm) run continuously. Themes you got wrong in lessons enter your personal retraining queue, so you'll meet them again.
+
+      Whatever you choose, the key is to build small things often.
+  next-handson:
+    prompt: If you want to "solve more small practice problems while getting mentor feedback," which fits best?
+    choices:
+      - The Exercism Gleam track
+      - CodeCrafters
+      - There's nowhere left to practice
+      - Just reading the official Erlang docs
+    feedback:
+      correct: Right! Exercism's model is small practice problems + mentor review, so it fits "writing more by hand" best.
+      choices:
+        "1": CodeCrafters leans toward building **large projects** yourself rather than small exercises.
+        "2": There are actually plenty of places to go — this lesson is that list.
+        "3": Reading docs is good too, but for the "mentor feedback + practice problems" condition, Exercism fits better.
+  next-bigproject:
+    prompt: If you want to "build something like Redis or Git from scratch yourself to grow practical instincts," then?
+    choices:
+      - CodeCrafters
+      - The Exercism Gleam track
+      - Just repeating this platform's timed mode
+      - No path is recommended
+    feedback:
+      correct: Right! CodeCrafters specializes in large project-style learning where you implement famous software step by step yourself.
+      choices:
+        "1": Exercism centers on small practice problems, so it has a different feel from "building large projects yourself."
+        "2": Timed mode is for fast reflex training — its purpose differs from implementing large projects.
+        "3": This very lesson is where the next paths are recommended — there are places to go.
+  next-training:
+    prompt: If you want to steadily review themes you often got wrong in lessons (e.g., fold direction), what on this platform helps?
+    choices:
+      - Training mode — themes you got wrong are served again via your personal retraining queue and SRS review
+      - The only way is to listen to every lesson again from the start
+      - Once you get a problem wrong, you can't see it again
+      - Training mode is only for new users
+    feedback:
+      correct: Right! Wrong micro-exercises pile up in a failure log along with theme tags and come back through a personalized retraining queue (including SRS) — you'll meet your weak spots again, focused.
+      choices:
+        "1": You don't need to listen to everything again — it's designed to let you pick out and review only weak themes.
+        "2": On the contrary, the core feature is putting wrong problems in a queue so you **meet them again**.
+        "3": Training mode runs continuously even after completion — anyone can keep using it.

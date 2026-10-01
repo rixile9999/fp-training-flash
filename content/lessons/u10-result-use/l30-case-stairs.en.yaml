@@ -1,0 +1,83 @@
+title: The Pain of the case Staircase
+blocks:
+  intro:
+    markdown: |-
+      Remember the `parse_age` we built in U9? An operation that can fail returns a `Result(success, failure)`, and the caller had to handle **both** the `Ok` and `Error` cases with a `case`.
+
+      ```gleam
+      pub fn parse_age(input: String) -> Result(Int, AgeError) {
+        case int.parse(input) {
+          Error(Nil) -> Error(NotANumber)
+          Ok(n) -> case n < 0 {
+            True -> Error(Negative)
+            False -> Ok(n)
+          }
+        }
+      }
+      ```
+
+      But what happens when you need to chain **two** Results together? For example, parsing two ages separately and adding them.
+  stairs:
+    markdown: |-
+      Since each `parse_age` is a Result, you have to unwrap it with a `case` to get at the inner value. And when you unwrap twice, the cases end up **nested like a staircase**:
+
+      ```gleam
+      pub fn add_ages(a: String, b: String) -> Result(Int, AgeError) {
+        case parse_age(a) {
+          Error(e) -> Error(e)
+          Ok(age_a) -> case parse_age(b) {
+            Error(e) -> Error(e)
+            Ok(age_b) -> Ok(age_a + age_b)
+          }
+        }
+      }
+      ```
+
+      See how the `Error(e) -> Error(e)` line repeats identically on every step of the staircase? That redundancy is exactly what we'll flatten out in this unit.
+  stairs-both-ok:
+    prompt: In the staircase-style `add_ages` above, what is the value of `add_ages("5", "7")`?
+    choices:
+      - "`Ok(12)`"
+      - "`12`"
+      - "`Ok(5)`"
+      - "`Error(NotANumber)`"
+    feedback:
+      correct: Correct! Both are `Ok`, so the outer case extracts `age_a` (5) and the inner one extracts `age_b` (7), producing `Ok(5 + 7)` = `Ok(12)`.
+      choices:
+        "1": In a Result, the value never comes out bare. Since the function's return type is `Result`, the final result is wrapped in `Ok(...)` too — `Ok(12)`, not `12`.
+        "2": You only looked at the outer case. After unwrapping the inner `parse_age("7")` as well and adding the two, the result is `Ok(12)`.
+        "3": Both inputs are valid numbers, so neither branch falls into Error — it's `Ok(12)`.
+    code: |-
+      // From the definition above
+      add_ages("5", "7")
+  stairs-second-fail:
+    prompt: In the same staircase-style `add_ages`, what is the value of `add_ages("3", "x")`? (`"x"` is not a number)
+    choices:
+      - "`Ok(3)`"
+      - "`Error(NotANumber)`"
+      - "`Error(Negative)`"
+      - "`Ok(0)`"
+    feedback:
+      correct: Exactly! The outer `parse_age("3")` is `Ok(3)`, so we step inside, but `parse_age("x")` is `Error(NotANumber)`, and that branch becomes the function's result directly.
+      choices:
+        "0": Even if the first parse succeeds, the whole thing fails when the second one fails. The `Error` branch of the inner case becomes the result — `Error(NotANumber)`, not `Ok(3)`.
+        "2": "`Negative` is the error for a negative number. `\"x\"` isn't negative — it isn't a number at all, so it's `NotANumber`."
+        "3": A failure doesn't quietly fall back to a default like `Ok(0)` — the error stays in the type and surfaces as `Error(NotANumber)`.
+    code: |-
+      // From the definition above
+      add_ages("3", "x")
+  pain:
+    markdown: The pain of this staircase is clear. Every time you chain another Result, the case nests one level deeper, and the **"if it failed, just pass it through"** code — `Error(e) -> Error(e)` — repeats identically. In the next lesson we'll strip away this repetition with stdlib's `result.map` and `result.try`.
+  stairs-why-nested:
+    prompt: What is the fundamental reason the cases turn into a nested staircase when chaining two Results?
+    choices:
+      - Because Gleam's case can only inspect one value at a time
+      - Because extracting the inner value of each Result (the contents of `Ok`) requires unwrapping it with a `case`, and unwrapping twice puts one unwrap inside the other
+      - Because `Result` types can't be added directly, which causes a compile error
+      - Because `parse_age` is a recursive function
+    feedback:
+      correct: Correct! To use the `n` inside `Ok(n)`, you have to unwrap the packaging with a case every time, and to unwrap both values, one case goes inside the other, forming a staircase.
+      choices:
+        "0": case can inspect multiple values at once with `case a, b { ... }`. The cause of the staircase isn't that — it's unwrapping the Result packaging one after another.
+        "2": It's not because of a compile error. Adding the values after extracting them is fine; the problem is that the extraction process gets nested.
+        "3": "`parse_age` isn't recursive. The staircase comes from unwrapping the Result twice, not from recursion."

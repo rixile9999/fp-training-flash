@@ -1,0 +1,16 @@
+title: 리스트와 재귀
+order: 5
+level: 2
+skill: gleam-lists-recursion
+prerequisites:
+  - u04-custom-types
+lessons:
+  - l05-list-prepend
+  - l05-head-tail-pattern
+  - l05-first-recursion
+  - l05-termination
+  - l05-no-loops
+source:
+  kind: original
+  upstream: fpdojo (~/workspace/fp-training, same author), gleam 1.17 JS;
+    re-verified on gleam 1.18.1 Erlang

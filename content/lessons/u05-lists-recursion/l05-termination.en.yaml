@@ -1,0 +1,94 @@
+title: The base case — recursion's lifeline
+blocks:
+  intro:
+    markdown: |-
+      For recursion to terminate, **the problem must shrink with every call** until it eventually reaches the base case. The three main causes of infinite recursion are:
+      1. **Missing empty-list case** — there's no `[]` branch
+      2. **Recalling with the same argument** — `f(xs)` calls `f(xs)` again (it doesn't shrink)
+      3. **An argument that doesn't decrease** — passing `n` instead of `n` (it should be `n - 1`)
+
+      Fortunately, the compiler blocks (1) for you — if there's no `[]` pattern, you get an Inexhaustive error, which **forces** you to think about the base case.
+  countdown-example:
+    markdown: |-
+      You can also recurse over numbers, not just lists. `countdown` builds a list holding n down to 1:
+
+      ```gleam
+      pub fn countdown(n: Int) -> List(Int) {
+        case n {
+          0 -> []
+          _ -> [n, ..countdown(n - 1)]
+        }
+      }
+      ```
+
+      The base case is `0 -> []`. The recursive step prepends `n` and calls itself with **`n - 1`** (the smaller value). With every call n decreases by 1, eventually reaching 0 and stopping.
+  countdown-3:
+    prompt: With the `countdown` function above, what is the value of `countdown(3)`?
+    choices:
+      - "`[3, 2, 1]`"
+      - "`[1, 2, 3]`"
+      - "`[3, 2, 1, 0]`"
+      - "`[]`"
+    feedback:
+      correct: Correct! It prepends 3 then `countdown(2)`, prepends 2 onto that... and stops at `0 -> []`, giving `[3, 2, 1]`.
+      choices:
+        "1": Because it's prepend, larger numbers attach at the **front** — the order is `[3, 2, 1]`.
+        "2": The base case `0 -> []` returns an empty list **without holding** 0 — 0 isn't included.
+        "3": "`[]` is for `countdown(0)` — `countdown(3)` holds 3 elements."
+    code: |-
+      pub fn countdown(n: Int) -> List(Int) {
+        case n {
+          0 -> []
+          _ -> [n, ..countdown(n - 1)]
+        }
+      }
+
+      // what is countdown(3)?
+  same-arg-infinite:
+    prompt: In a list-sum function, suppose the recursive branch is written `first + total(xs)` instead of `first + total(rest)`. What happens?
+    choices:
+      - "`total(xs)` keeps calling itself with the **same** list, so it never finishes (infinite recursion)"
+      - It works fine and returns the same sum
+      - It causes a compile error
+      - The sum is computed twice as large
+    feedback:
+      correct: Correct! `xs` never shrinks, so it can never reach the base case (`[]`). Running it never finishes and hits the time limit. Pass `rest` to make the problem smaller.
+      choices:
+        "1": It doesn't work fine — `xs` never shrinks, so it never reaches `[]` and repeats forever.
+        "2": The syntax is valid, so it **does compile** — the problem is that it never finishes at runtime (a runtime infinite loop).
+        "3": It never stops to produce a value — it's not doubled; no result comes out at all.
+  missing-base-case:
+    prompt: If you omit the `[] -> ...` base-case branch from a recursive function, how does Gleam react?
+    choices:
+      - Compile error (Inexhaustive patterns) — it tells you the `[]` case is missing
+      - It compiles silently and falls into infinite recursion at runtime
+      - It automatically returns 0 when it meets an empty list
+      - It only emits a warning and compiles fine
+    feedback:
+      correct: Exactly! Since a `case` must cover every case, if the `[]` branch is missing the compiler blocks it with an Inexhaustive patterns error — forcing you to think about the base case.
+      choices:
+        "1": It doesn't let it slide silently — if `[]` is missing, it's caught right at the **compile step**.
+        "2": Gleam doesn't slot in a default value — a missing pattern is a compile error.
+        "3": It's an **error**, not a mere warning — if there's a missing pattern, compilation itself fails.
+  sum-to-good:
+    prompt: Here's a correct recursion where the argument shrinks with every call. What is the value of `sum_to(4)`?
+    choices:
+      - "`10`"
+      - "`4`"
+      - "`0`"
+      - never finishes (infinite recursion)
+    feedback:
+      correct: Correct! 4 + 3 + 2 + 1 + 0 = 10. With every call it shrinks by `n - 1`, reaches 0, and stops safely.
+      choices:
+        "1": It's not the input itself (4) but the sum from 4 down to 1 — that's 10.
+        "2": 0 is just the base-case value; the result is the sum accumulated on the way down — that's 10.
+        "3": It shrinks by `n - 1` each time, so it terminates — infinite recursion is when you don't shrink, like `sum_to(n)`.
+    code: |-
+      pub fn sum_to(n: Int) -> Int {
+        case n {
+          0 -> 0
+          _ -> n + sum_to(n - 1)
+        }
+      }
+
+      // what is sum_to(4)?

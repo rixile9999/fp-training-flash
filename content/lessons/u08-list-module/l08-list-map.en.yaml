@@ -1,0 +1,81 @@
+title: The Recursion You Wrote Has a Name — map
+blocks:
+  intro:
+    markdown: |-
+      Think back to the recursion you wrote by hand in U5~U6. That pattern — process the head of the list, then call yourself again on the tail — actually **already has a name**.
+
+      Recursion that **transforms each element 1:1** to build a new list of the same length is exactly `list.map`.
+
+      ```gleam
+      import gleam/list
+
+      list.map([1, 2, 3], fn(x) { x * 2 })
+      // == [2, 4, 6]
+      ```
+
+      `list.map(list, transform_fn)` — the transform function takes one element and returns one new element. The number of elements stays the same.
+  map-double:
+    prompt: What does this `list.map` produce?
+    choices:
+      - "`[2, 4, 6]`"
+      - "`[1, 2, 3]`"
+      - "`12`"
+      - "`[1, 4, 9]`"
+    feedback:
+      correct: Right! The transform function `x * 2` is applied 1:1 to each element, giving `[2, 4, 6]`.
+      choices:
+        "1": The transform function is applied to every element — they're doubled, not left as-is.
+        "2": map doesn't combine the list. It returns a **list** of the same length — not a single value.
+        "3": "`x * 2` doubles, it doesn't square. `[1, 4, 9]` is the result of `x * x`."
+  shape-changes:
+    markdown: |-
+      map can also **change the element type**. The return type of the transform function becomes the element type of the new list. Mapping `int.to_string` over a `List(Int)` gives a `List(String)` — same length, just a different shape.
+
+      ```gleam
+      import gleam/int
+      import gleam/list
+
+      list.map([1, 2, 3], int.to_string)
+      // == ["1", "2", "3"]
+      ```
+
+      Notice that you can pass the function values you learned about in U7 directly — `int.to_string` doesn't need to be wrapped in an anonymous function.
+  map-to-string:
+    prompt: What does this `list.map` produce?
+    choices:
+      - '`["1", "2", "3"]`'
+      - "`[1, 2, 3]`"
+      - '`"123"`'
+      - '`["123"]`'
+    feedback:
+      correct: Exactly! Each `Int` is converted by `int.to_string`, giving the `List(String)` `["1", "2", "3"]`.
+      choices:
+        "1": The type changes — they become `String`, not `Int`. Look at whether the choices have quotes.
+        "2": map doesn't concatenate the elements — it returns a **list** with each element transformed separately.
+        "3": The elements aren't merged into one — three elements are each transformed, leaving three.
+  map-uppercase:
+    prompt: This `list.map` passes a function value directly. What's the result?
+    choices:
+      - '`["A", "B", "C"]`'
+      - '`["a", "b", "c"]`'
+      - '`"ABC"`'
+      - '`["abc"]`'
+    feedback:
+      correct: Right! `string.uppercase` is applied to each string, giving `["A", "B", "C"]` — and we passed the function value directly, with no need to wrap it in an anonymous function.
+      choices:
+        "1": The transformation is applied — they become uppercase, not left lowercase.
+        "2": map doesn't combine the elements. It returns a list of the same length.
+        "3": Three elements are each transformed, leaving three — they aren't merged into one.
+  map-meaning:
+    prompt: Which single sentence best describes `list.map`?
+    choices:
+      - It transforms each element 1:1 to build a new list of the **same length**
+      - It picks only the elements that match a condition to build a **shorter** list
+      - It folds the list into a **single value**
+      - It reverses the order of the list's elements
+    feedback:
+      correct: Right! The essence of map is '1:1 transformation, length preserved.' Its role differs from filtering (filter) and folding (fold).
+      choices:
+        "1": That's `filter`. map doesn't filter elements — it transforms them all, keeping the length the same.
+        "2": That's `fold`. The result of map is a **list**, not a single value.
+        "3": Reversing order is `list.reverse` — map preserves order.

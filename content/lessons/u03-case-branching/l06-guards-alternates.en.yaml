@@ -1,0 +1,65 @@
+title: Guards, _, and Alternate Patterns
+blocks:
+  guards:
+    markdown: |-
+      Patterns alone cannot express a condition like "90 or higher". For that we use a **guard**: by adding `if condition` after a pattern, the branch is chosen only when the pattern matches *and* that condition is true.
+
+      ```
+      case score {
+        s if s >= 90 -> "A"
+        s if s >= 80 -> "B"
+        _ -> "F"
+      }
+      ```
+
+      Branches are checked in order, **top to bottom**, and the first one to pass wins.
+  grade-guard:
+    prompt: What is the value of `grade(85)`?
+    choices:
+      - '"A"'
+      - '"B"'
+      - '"F"'
+      - "85"
+    feedback:
+      correct: Correct! 85 is below 90, so it fails the first branch, and being 80 or above it stops at "B".
+      choices:
+        "0": Guards are checked from the top. `85 >= 90` is false, so it drops to the next branch.
+        "2": To reach "F" both guards must fail. 85 is 80 or above.
+        "3": A case returns the branch's result ("B"), not the number that was inspected.
+  alternates:
+    markdown: When several literals should lead to the same result, you can group them into one branch with an **alternate pattern**, like `1 | 2 | 3 ->`. Read `|` as "or" — if any one of the three matches, that branch is chosen.
+  alternate-pattern:
+    prompt: What is the value of `size(2)`?
+    choices:
+      - '"small"'
+      - '"big"'
+      - "2"
+      - '"1 | 2 | 3"'
+    feedback:
+      correct: Correct! 2 is one of `1 | 2 | 3`, so it binds to the "small" branch.
+      choices:
+        "1": '"big" is for when none of 1, 2, or 3 match. 2 is included in that set.'
+        "2": A case returns the result of the matching branch, not the inspected value — "small".
+        "3": "`1 | 2 | 3` is a pattern, not an output string."
+    code: |-
+      fn size(n: Int) -> String {
+        case n {
+          1 | 2 | 3 -> "small"
+          _ -> "big"
+        }
+      }
+  order-trap:
+    markdown: Branch order **matters**. Since `_` matches every value, if you put `_` at the top, the branches below it can never be reached (dead code). In that case the Gleam compiler emits an "Unreachable pattern" warning — get into the habit of reading warnings too.
+  reversed-guard-order:
+    prompt: Here the branch order is reversed so that `_ -> "F"` is at the top. What is the value of `grade(95)`?
+    choices:
+      - '"A"'
+      - '"B"'
+      - '"F"'
+      - compile error
+    feedback:
+      correct: Correct! Since `_` is at the top, every value including 95 ends at the first branch with "F". The two branches below are dead code (a warning is emitted).
+      choices:
+        "0": 95 is indeed 90 or above, but `_` catches everything first, before that branch is reached.
+        "1": The "B" branch is also unreachable — `_` at the top takes every value.
+        "3": An unreachable branch is only a *warning*, not an error — it compiles and always yields "F".

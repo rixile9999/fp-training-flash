@@ -1,0 +1,72 @@
+title: labelled arguments
+blocks:
+  intro:
+    markdown: |-
+      When a function has several arguments, the call site can leave you wondering "which slot was this value again?" Gleam lets you attach **labels** to arguments so calls read like a sentence.
+
+      When defining, put a label in front of the argument as `label name: type`:
+
+      ```gleam
+      pub fn replace(
+        in string: String,
+        each pattern: String,
+        with replacement: String,
+      ) -> String {
+        string.replace(string, pattern, replacement)
+      }
+
+      replace(in: "a,b,c", each: ",", with: " ")  // "a b c"
+      ```
+
+      `in`, `each`, and `with` are the labels, while `string`, `pattern`, and `replacement` are the internal names used in the body.
+  labelled-call:
+    prompt: What is the result of calling `replace` above with labels?
+    choices:
+      - '`"a b c"`'
+      - '`"a,b,c"`'
+      - '`"abc"`'
+      - '`" "`'
+    feedback:
+      correct: Exactly! Every `,` in "a,b,c" is replaced with a space, giving "a b c".
+      choices:
+        "1": replace is applied, so it doesn't stay unchanged — the `,` characters become spaces.
+        "2": The `,` is replaced with a *space*, not an empty string — spaces remain between the letters.
+        "3": The letters a, b, c stay; only the separators change — "a b c".
+  order-free:
+    markdown: |-
+      The real benefit of labels is that you become **free from order**. When you call with labels, you can list the arguments in any order and they're matched by name — you don't have to memorize the defined order.
+
+      ```gleam
+      replace(each: ",", with: " ", in: "a,b,c")
+      // the same "a b c" as above
+      ```
+
+      That's because a labelled call matches by *name*, not *position*.
+  labelled-reorder:
+    prompt: Here the labels are reordered in the call. What is this result?
+    choices:
+      - '`"a b c"`'
+      - '`",a,b,c "`'
+      - Compile error
+      - '`"a,b,c"`'
+    feedback:
+      correct: Right! Labels are matched by name, so reordering them gives the same result — "a b c".
+      choices:
+        "1": Labels are paired by name, not position — `in` is still the target string and `each` is still what to find.
+        "2": A labelled call is legal even with a different order — it compiles and gives "a b c".
+        "3": replace is applied normally — the `,` becomes a space, giving "a b c".
+  shorthand:
+    markdown: "When a variable's name is the same as the label, you can use **label shorthand**. When the names overlap, like `greet(name: name, greeting: greeting)`, you can shorten it to `greet(name:, greeting:)` — leaving the part after the label blank means \"use the variable of the same name.\""
+  shorthand-meaning:
+    prompt: Given variables called `name` and `greeting`, what is `greet(name:, greeting:)` equivalent to?
+    choices:
+      - "`greet(name: name, greeting: greeting)`"
+      - "`greet(name, greeting)`"
+      - "`greet()` — an empty call"
+      - Compile error
+    feedback:
+      correct: Right! Leaving the part after the label blank is the shorthand for putting the *variable of the same name* into that label.
+      choices:
+        "1": The shorthand is still a *labelled* call — the labels `name:`/`greeting:` are still there.
+        "2": It doesn't leave the argument empty; it's a shorthand that fills in the variable of the same name.
+        "3": It's legal shorthand when a variable of the same name exists, so it compiles fine.

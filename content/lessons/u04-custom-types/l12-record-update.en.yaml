@@ -1,0 +1,79 @@
+title: Record update — what 'modifying' really is
+blocks:
+  intro:
+    markdown: |-
+      When you want to change just one field of a record, Gleam gives you the **record update** syntax `Player(..p, level: p.level + 1)`. It means "leave the rest of `p`'s fields as they are, and set only `level` to a new value."
+
+      ```gleam
+      pub type Player {
+        Player(name: String, score: Int, level: Int)
+      }
+
+      pub fn level_up(p: Player) -> Player {
+        Player(..p, level: p.level + 1)
+      }
+      ```
+
+      But here U1's immutability shows up again: this syntax does **not change** `p`. It just makes a **new record** with the changed value (the rest shares structure, so it's cheap).
+  level-up-both:
+    prompt: In the code below, what are `p1.level` and `p2.level` respectively?
+    choices:
+      - "`1` and `2`"
+      - "`2` and `2`"
+      - "`1` and `1`"
+      - "`2` and `1`"
+    feedback:
+      correct: Exactly! `level_up` just makes and returns a new record; `p1` stays level 1 forever — only `p2` is 2.
+      choices:
+        "1": Record update doesn't touch the original. `p1` stays level 1 — read it as 'makes a changed copy', not 'changes it'.
+        "2": "`p2` is a new record with `level + 1` applied, so it's 2 — they aren't both 1."
+        "3": The order is swapped. The original `p1` is 1, and the newly made `p2` is 2.
+    code: |-
+      pub fn level_up(p: Player) -> Player {
+        Player(..p, level: p.level + 1)
+      }
+
+      let p1 = Player(name: "lucy", score: 10, level: 1)
+      let p2 = level_up(p1)
+      // p1.level and p2.level are?
+  update-semantics:
+    prompt: "What does the expression `Player(..p, level: p.level + 1)` actually do?"
+    choices:
+      - Increments `p`'s `level` field by 1 in place
+      - Leaves `p` as it is and makes a new `Player` record with only `level` changed
+      - Deletes `p` and makes it again
+      - Resets `level` to 0
+    feedback:
+      correct: Right! Record update makes a new value as if copying the original — it's U1's immutability extended to data structures.
+      choices:
+        "0": Gleam has no in-place mutation — `p` never changes and a new record is created.
+        "2": It's not delete-and-recreate; `p` stays alive and a new copy is laid on top of it.
+        "3": "`..p` brings the rest of the fields over from `p` as they are — it's preservation, not resetting."
+  update-name-untouched:
+    prompt: After a record update the original's other fields are still safe. What's the output?
+    choices:
+      - '`"lucy"`'
+      - '`""`'
+      - "`Nil`"
+      - Compile error
+    feedback:
+      correct: Right! `level_up` doesn't touch `p1` at all, so `p1.name` is still "lucy".
+      choices:
+        "1": The field isn't erased — the original `p1` is preserved exactly as made.
+        "2": '`p1.name` is a `String` value ("lucy") — not `Nil`.'
+        "3": It compiles and runs fine — accessing the original's field is no problem at all.
+  any-type:
+    markdown: "Record update works on any record, and you can change several fields at once, like `Config(..base, width: 1920, height: 1080)`. The rule is the same here: `base` stays as it is, and out comes a **new record** with new values only for the fields you specified."
+  config-update:
+    prompt: Here's code that changes several fields at once. What's the output?
+    choices:
+      - '`"1920 800"`'
+      - '`"1920 1920"`'
+      - '`"800 1920"`'
+      - '`"800 800"`'
+    feedback:
+      correct: Exactly! `big.width` is the new value 1920, and `base.width` isn't touched so it stays 800 — the original is safe.
+      choices:
+        "1": "`base` isn't affected by the record update — `base.width` is still 800."
+        "2": The order is swapped. The expression outputs `big.width` (1920) first, then `base.width` (800).
+        "3": "`big` is a new record with `width: 1920` changed — `big.width` is 1920, not 800."

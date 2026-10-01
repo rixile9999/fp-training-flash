@@ -1,0 +1,116 @@
+title: 실패할 수 있는 연산 — Result
+tags:
+  - concept:results
+  - tricky:exhaustiveness
+blocks:
+  - prose: intro
+    markdown: |-
+      Gleam에는 예외(exception)가 **없습니다**. `try/catch`로 어딘가에서 날아오는 에러를 잡는 일이 없어요. 대신 실패 가능성을 **반환 타입에 적습니다**: `Result(성공타입, 실패타입)`.
+
+      `Result(a, e)`도 모양이 둘뿐인 커스텀 타입입니다:
+
+      - `Ok(값)` — **성공**, 안에 성공값
+      - `Error(이유)` — **실패**, 안에 실패 이유
+
+      호출자는 `case`로 **두 경우 모두** 다뤄야 컴파일됩니다(U4 exhaustiveness의 재등장). "에러를 깜빡하고 안 다루는" 선택지가 타입 시스템에 아예 없어요.
+  - exercise: result-ok
+    type: predict
+    prompt: "`safe_div`는 0으로 나누기를 막습니다. `safe_div(20, 4)`의 값은?"
+    code: |-
+      fn safe_div(a: Int, b: Int) -> Result(Int, Nil) {
+        case b {
+          0 -> Error(Nil)
+          _ -> Ok(a / b)
+        }
+      }
+
+      // safe_div(20, 4) 은?
+    choices:
+      - "`Ok(5)`"
+      - "`5`"
+      - "`Error(Nil)`"
+      - "`Ok(20)`"
+    answer: 0
+    feedback:
+      correct: 맞아요! 나누기가 성공해 몫 5가 `Ok`로 포장됩니다 — `Ok(5)`. 성공값도 맨몸으로는 안 나와요.
+      choices:
+        "1": 값은 5가 맞지만, `Result` 타입이라 `Ok(5)`로 포장돼요 — 꺼내려면 패턴 매칭이 필요합니다.
+        "2": "`Error(Nil)`은 `b`가 0일 때예요. 여기선 4로 나누어 성공합니다."
+        "3": 결과는 몫 `20 / 4 = 5`예요 — `Ok(20)`이 아니라 `Ok(5)`.
+  - exercise: result-error
+    type: predict
+    prompt: 같은 함수에서 `safe_div(20, 0)`의 값은?
+    code: |-
+      fn safe_div(a: Int, b: Int) -> Result(Int, Nil) {
+        case b {
+          0 -> Error(Nil)
+          _ -> Ok(a / b)
+        }
+      }
+
+      // safe_div(20, 0) 은?
+    choices:
+      - "`Error(Nil)`"
+      - "`Ok(0)`"
+      - 프로그램이 크래시한다
+      - "`0`"
+    answer: 0
+    feedback:
+      correct: 정확해요! `b`가 0이라 `Error(Nil)` 가지가 선택됩니다 — 실패가 *값*으로 표현되니 크래시하지 않아요.
+      choices:
+        "1": 0으로 나누기는 성공이 아니에요 — `Ok`가 아니라 `Error(Nil)`로 막습니다.
+        "2": 예외가 없으니 크래시하지 않아요. 실패는 `Error` 값으로 안전하게 돌아옵니다.
+        "3": 실패는 맨 `0`이 아니라 `Error(Nil)`로 표현됩니다 — 호출자가 `case`로 구분할 수 있게요.
+  - prose: handle-both
+    markdown: |-
+      `Result`에서 값을 쓰려면 `Ok`와 `Error`를 **둘 다** `case`로 풀어야 합니다.
+
+      ```gleam
+      case result {
+        Ok(n) -> "값은 " <> int.to_string(n)
+        Error(Nil) -> "값이 없음"
+      }
+      ```
+
+      만약 `Ok(n)` 가지만 쓰고 `Error`를 빼먹으면, U4에서 본 것과 **똑같은** "Inexhaustive patterns" 컴파일 에러가 납니다. 에러를 안 다루는 건 선택이 아니라 컴파일 실패예요.
+  - exercise: result-case-ok
+    type: predict
+    prompt: 위 패턴으로 만든 `describe` 함수에서 `describe(Ok(20))`의 값은?
+    code: |-
+      import gleam/int
+
+      fn describe(r: Result(Int, Nil)) -> String {
+        case r {
+          Ok(n) -> "값은 " <> int.to_string(n)
+          Error(Nil) -> "값이 없음"
+        }
+      }
+
+      // describe(Ok(20)) 은?
+    choices:
+      - '`"값은 20"`'
+      - '`"값이 없음"`'
+      - "`Ok(20)`"
+      - "`20`"
+    answer: 0
+    feedback:
+      correct: 맞아요! `Ok(20)`이 `Ok(n)` 가지에 맞아 `n`에 20이 묶이고, "값은 20"이 만들어집니다.
+      choices:
+        "1": '"값이 없음"은 `Error` 가지의 결과예요 — 입력은 `Ok(20)`이라 성공 가지로 갑니다.'
+        "2": '`case`는 입력 그대로가 아니라 가지의 *결과 문자열*을 돌려줘요 — `Ok(20)`이 아니라 "값은 20".'
+        "3": '`Ok(n)` 가지에서 `n`(=20)을 꺼내 문자열에 끼워 넣은 "값은 20"이 결과입니다.'
+  - exercise: inexhaustive
+    type: choice
+    prompt: "`Result(Int, Nil)`을 받는 `case`에서 `Ok(n) -> ...` 가지만 쓰고 `Error`를 안 썼습니다. 어떻게 될까요?"
+    choices:
+      - 런타임에 `Error`가 들어오면 그때 크래시한다
+      - 컴파일 에러 — `Error` 경우가 빠져 "Inexhaustive patterns"
+      - "`Error`는 자동으로 무시된다"
+      - "`Error`일 땐 `Nil`을 알아서 돌려준다"
+    answer: 1
+    feedback:
+      correct: 맞아요! `Ok`/`Error` 둘 다 다뤄야 컴파일됩니다. 에러를 "안 다루는" 선택지가 타입 시스템에 없는 것 — 이게 예외 대신 `Result`를 쓰는 대가이자 보상이에요.
+      choices:
+        "0": 런타임까지 가지 않아요 — *컴파일 타임*에 빠진 케이스를 잡아 실행조차 막습니다.
+        "2": Gleam은 빠진 가지를 조용히 무시하지 않아요 — 컴파일 에러로 분명히 알려줍니다.
+        "3": 자동 기본값 같은 건 없어요. 모든 경우를 직접 명시해야 합니다.

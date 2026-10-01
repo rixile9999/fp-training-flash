@@ -1,0 +1,102 @@
+title: The Accumulator Pattern
+blocks:
+  intro:
+    markdown: |-
+      The key to turning non-tail recursion into tail recursion is an **accumulator**. You carry "the answer so far" down as an argument.
+
+      Instead of adding *after* the call returns, like `1 + total(rest)`, you add ahead of time on the way down with `acc + first` and pass it to the next call. That makes the recursive call the **last action** of the branch.
+
+      ```gleam
+      fn sum_loop(numbers: List(Int), acc: Int) -> Int {
+        case numbers {
+          [] -> acc
+          [first, ..rest] -> sum_loop(rest, acc + first)
+        }
+      }
+      ```
+
+      Starting `acc` at 0, you add the elements one by one.
+  sumloop-from-zero:
+    prompt: What is `sum_loop([4, 5, 6], 0)`?
+    choices:
+      - "`15`"
+      - "`0`"
+      - "`4`"
+      - "`456`"
+    feedback:
+      correct: Right! acc grows 0→4→9→15, and the empty list returns 15.
+      choices:
+        "1": 0 is the *starting* accumulator — once you add the elements it becomes 15.
+        "2": It's not just the first element 4 — 5 and 6 get accumulated too.
+        "3": It doesn't concatenate the digits, it *adds* them — 4+5+6 = 15.
+    code: |-
+      fn sum_loop(numbers: List(Int), acc: Int) -> Int {
+        case numbers {
+          [] -> acc
+          [first, ..rest] -> sum_loop(rest, acc + first)
+        }
+      }
+
+      // sum_loop([4, 5, 6], 0) is?
+  empty-returns-acc:
+    markdown: |-
+      Here's the most confusing point: what should go in the terminating branch `[] -> ???`?
+
+      In the non-tail version (`total`), it was `[] -> 0`. There, 0 was the *seed* meaning "the sum of an empty list is 0." But in the accumulator version, the sum has already been gathered up in `acc`. **The `acc` at the moment of termination is exactly the answer.**
+  empty-branch-hole:
+    prompt: We put `acc` in the `[] -> ???` slot. What is `sum_loop([1, 2, 3], 10)`? (starting acc is 10)
+    choices:
+      - "`6`"
+      - "`16`"
+      - "`10`"
+      - "`0`"
+    feedback:
+      correct: Exactly! Adding 1+2+3 to the starting acc of 10 gives 16. The terminating branch returns the acc it gathered, just as it is.
+      choices:
+        "0": You left out the starting value 10 — acc starts at 10 and becomes 16.
+        "2": 10 is the starting accumulator — you have to add the elements to it to get 16.
+        "3": Because it's `[] -> acc`, it returns the gathered value — if it were `[] -> 0`, it would throw away what it gathered, which would be a bug.
+    code: |-
+      fn sum_loop(numbers: List(Int), acc: Int) -> Int {
+        case numbers {
+          [] -> acc
+          [first, ..rest] -> sum_loop(rest, acc + first)
+        }
+      }
+
+      // sum_loop([1, 2, 3], 10) is?
+  empty-zero-bug:
+    prompt: If you changed the terminating branch to `[] -> 0`, what would `sum_loop([1, 2, 3], 0)` do?
+    choices:
+      - Still gives `6`
+      - Gives `0` — because it discards the acc it gathered at the end
+      - A compile error occurs
+      - It falls into infinite recursion
+    feedback:
+      correct: Right! It goes all the way down building acc up to 6, and then the terminating branch ignores it and returns 0 — a bug that throws away everything you gathered.
+      choices:
+        "0": The terminating branch returns 0 instead of acc, so 6 doesn't come out — it discards the gathered value.
+        "2": The types match, so it compiles — it's a *logic* bug, so it silently returns 0.
+        "3": The list gets shorter each time, so it does terminate — it just returns a wrong 0.
+  count-with-acc:
+    prompt: Counting works with the same pattern. What is `count_loop([7, 8, 9], 0)`?
+    choices:
+      - "`3`"
+      - "`24`"
+      - "`0`"
+      - "`9`"
+    feedback:
+      correct: Right! For each element you add 1 to acc, 0→1→2→3. At termination acc(=3) is the length.
+      choices:
+        "1": It doesn't add the element values, it counts *by 1* each time — count 3, not sum 24.
+        "2": 0 is the starting accumulator — counting three elements gives 3.
+        "3": It returns the *count* (3), not the value of the last element (9).
+    code: |-
+      fn count_loop(xs: List(Int), acc: Int) -> Int {
+        case xs {
+          [] -> acc
+          [_, ..rest] -> count_loop(rest, acc + 1)
+        }
+      }
+
+      // count_loop([7, 8, 9], 0) is?

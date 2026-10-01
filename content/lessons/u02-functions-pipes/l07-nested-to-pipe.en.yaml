@@ -1,0 +1,66 @@
+title: Turning Nested Calls into Pipes
+blocks:
+  intro:
+    markdown: |-
+      A nested call like `c(b(a(x)))` must be read **from the inside out** — a first, then b, then c. The reading order is the reverse of the execution order.
+
+      Rewriting it as a pipe gives `x |> a |> b |> c`, which reads **in the exact order the data is transformed**. The two expressions produce exactly the same value.
+  nested-value:
+    prompt: What is the value of this nested call?
+    choices:
+      - '`"HI"`'
+      - '`"  HI "`'
+      - '`"hi"`'
+      - '`"  hi "`'
+    feedback:
+      correct: Correct! The inner trim produces "hi", and the outer uppercase turns it into "HI".
+      choices:
+        "1": The inner trim removes the whitespace first — none is left over.
+        "2": The outer uppercase converts to capitals.
+        "3": Both functions apply, producing "HI".
+  equivalence:
+    markdown: |-
+      The `string.uppercase(string.trim("  hi "))` above is written with pipes like this:
+
+      ```gleam
+      "  hi "
+      |> string.trim
+      |> string.uppercase
+      ```
+
+      It yields the same value ("HI"), but the thing that happens first (trim) comes at the top.
+  rewrite:
+    prompt: Which correctly rewrites `c(b(a(x)))` as a pipe?
+    choices:
+      - "`x |> a |> b |> c`"
+      - "`x |> c |> b |> a`"
+      - "`c |> b |> a |> x`"
+      - "`a |> b |> c |> x`"
+    feedback:
+      correct: Exactly! The innermost (first-executed) a comes first, and the outer c comes last.
+      choices:
+        "1": The order is reversed — the innermost a should come first.
+        "2": x is the starting data, so it must come at the front.
+        "3": x is not a function but the value to flow through, so it goes at the front.
+  shout-chain:
+    prompt: Given the function `shout` defined below, what is the value of `shout("  lucy ")`?
+    choices:
+      - '`"LUCY!"`'
+      - '`"!LUCY"`'
+      - '`"  LUCY !"`'
+      - '`"lucy!"`'
+    feedback:
+      correct: Correct! trim→"lucy", uppercase→"LUCY", append("!")→"LUCY!".
+      choices:
+        "1": append adds to the end — "!" comes after "LUCY", so it's "LUCY!".
+        "2": trim removes the whitespace first, so none is left over.
+        "3": The uppercase step converts to capitals — it doesn't stay lowercase.
+    code: |-
+      pub fn shout(name: String) -> String {
+        name
+        |> string.trim
+        |> string.uppercase
+        |> string.append("!")
+      }
+
+      // shout("  lucy ") is?

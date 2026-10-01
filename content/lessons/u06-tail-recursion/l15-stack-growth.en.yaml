@@ -1,0 +1,72 @@
+title: Recursion That Grows the Stack, and Recursion That Doesn't
+blocks:
+  intro:
+    markdown: |-
+      Let's look again at the recursion we wrote in U5. With `1 + length(rest)`, there's still work to do (`1 +`) **after** `length(rest)` comes back. That "work to do later" has to be recorded somewhere, so each layer of calls pushes one more **stack frame**.
+
+      ```gleam
+      pub fn length(xs: List(Int)) -> Int {
+        case xs {
+          [] -> 0
+          [_, ..rest] -> 1 + length(rest)
+        }
+      }
+      ```
+
+      As the list grows longer, the frames pile up just as deep. On the JavaScript target a very long input can overflow the stack; on Erlang (the BEAM) it does not overflow but uses memory in proportion to the input length.
+  length-still-works:
+    prompt: The value itself is correct. What is `length([10, 20, 30, 40])`?
+    choices:
+      - "`3`"
+      - "`4`"
+      - "`100`"
+      - "`0`"
+    feedback:
+      correct: Right! With four elements, `1 +` stacks up four times, giving 4. The result is correct, but along the way the stack grew four layers deep.
+      choices:
+        "0": It counts as many as there are elements — four, so 4. 3 misses one.
+        "2": It doesn't add the values, it counts the *number* of them — length 4, not sum 100.
+        "3": 0 is the terminating value for an empty list. Here there are four elements.
+    code: |-
+      pub fn length(xs: List(Int)) -> Int {
+        case xs {
+          [] -> 0
+          [_, ..rest] -> 1 + length(rest)
+        }
+      }
+
+      // length([10, 20, 30, 40]) is?
+  what-is-tail:
+    markdown: |-
+      The key distinction is "is the recursive call the **last action** of that branch?"
+
+      - `1 + length(rest)` — there's still `1 +` left after the call returns → **not a tail call** (stack grows)
+      - `count_loop(rest, acc + 1)` — the call itself is the last thing → **tail call** (stack doesn't grow)
+
+      When the recursive call is the last action, Gleam compiles it into a **jump** (tail-call optimisation, TCO). Instead of pushing a new frame, it reuses the same frame.
+  which-is-tail:
+    prompt: Which of the following branches is a **tail call** (the recursive call is the last action)?
+    choices:
+      - "`[first, ..rest] -> first + sum(rest)`"
+      - "`[_, ..rest] -> 1 + length(rest)`"
+      - "`[first, ..rest] -> sum_loop(rest, acc + first)`"
+      - "`[first, ..rest] -> { let n = go(rest) n * 2 }`"
+    feedback:
+      correct: Right! `sum_loop(rest, acc + first)` is itself the result of that branch — there's no work *after* the call, so it's a tail call and gets optimised into a jump.
+      choices:
+        "0": There's still `first +` left on the recursive result — if an addition remains after the call, it's not a tail call.
+        "1": There's still `1 +` left on the recursive result — the last action is an addition, so it's not a tail call.
+        "3": It binds the recursive result to `n` and then does `n * 2` — a multiplication remains after the call, so it's not a tail call.
+  why-tco:
+    prompt: What's the benefit of making the recursive call the "last action"?
+    choices:
+      - The result value changes
+      - It loops by jumping instead of pushing stack frames, so the stack won't overflow even on long inputs
+      - Compilation gets faster
+      - It automatically converts recursion into a for loop
+    feedback:
+      correct: Right! When there's no work after the call, Gleam compiles it into a jump — no frames pile up, so it's safe no matter how long the input is.
+      choices:
+        "0": The value stays the same — only *how* you compute the same answer (stack vs jump) differs.
+        "2": It has nothing to do with compile speed — the point is that the stack doesn't grow at run time.
+        "3": Gleam has no for loops — the tail call itself becomes a loop that runs as a jump.

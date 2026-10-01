@@ -1,0 +1,105 @@
+title: Operations That Can Fail — Result
+blocks:
+  intro:
+    markdown: |-
+      Gleam has **no** exceptions. There's no catching an error that flies in from somewhere with `try/catch`. Instead, you write the possibility of failure **into the return type**: `Result(success_type, failure_type)`.
+
+      `Result(a, e)` is also a custom type with just two shapes:
+
+      - `Ok(value)` — **success**, with the success value inside
+      - `Error(reason)` — **failure**, with the reason for failure inside
+
+      The caller only compiles if they handle **both cases** with `case` (U4 exhaustiveness returns). The option of "forgetting to handle the error" simply doesn't exist in the type system.
+  result-ok:
+    prompt: "`safe_div` guards against division by zero. What is the value of `safe_div(20, 4)`?"
+    choices:
+      - "`Ok(5)`"
+      - "`5`"
+      - "`Error(Nil)`"
+      - "`Ok(20)`"
+    feedback:
+      correct: Right! The division succeeds, so the quotient 5 is wrapped in `Ok` — `Ok(5)`. Success values don't come out bare either.
+      choices:
+        "1": The value is indeed 5, but it's a `Result` type so it's wrapped as `Ok(5)` — you need pattern matching to take it out.
+        "2": "`Error(Nil)` is when `b` is 0. Here we divide by 4 and succeed."
+        "3": The result is the quotient `20 / 4 = 5` — `Ok(5)`, not `Ok(20)`.
+    code: |-
+      fn safe_div(a: Int, b: Int) -> Result(Int, Nil) {
+        case b {
+          0 -> Error(Nil)
+          _ -> Ok(a / b)
+        }
+      }
+
+      // safe_div(20, 4) is?
+  result-error:
+    prompt: For the same function, what is the value of `safe_div(20, 0)`?
+    choices:
+      - "`Error(Nil)`"
+      - "`Ok(0)`"
+      - the program crashes
+      - "`0`"
+    feedback:
+      correct: Exactly! `b` is 0, so the `Error(Nil)` branch is chosen — failure is expressed as a *value*, so it doesn't crash.
+      choices:
+        "1": Dividing by zero isn't success — it's blocked with `Error(Nil)`, not `Ok`.
+        "2": There are no exceptions, so it doesn't crash. The failure comes back safely as an `Error` value.
+        "3": Failure is expressed as `Error(Nil)`, not a bare `0` — so the caller can tell them apart with `case`.
+    code: |-
+      fn safe_div(a: Int, b: Int) -> Result(Int, Nil) {
+        case b {
+          0 -> Error(Nil)
+          _ -> Ok(a / b)
+        }
+      }
+
+      // safe_div(20, 0) is?
+  handle-both:
+    markdown: |-
+      To use the value in a `Result`, you have to unpack **both** `Ok` and `Error` with `case`.
+
+      ```gleam
+      case result {
+        Ok(n) -> "The value is " <> int.to_string(n)
+        Error(Nil) -> "No value"
+      }
+      ```
+
+      If you only write the `Ok(n)` branch and leave out `Error`, you get the **exact same** "Inexhaustive patterns" compile error you saw in U4. Not handling the error isn't an option — it's a compile failure.
+  result-case-ok:
+    prompt: For a `describe` function built with the pattern above, what is the value of `describe(Ok(20))`?
+    choices:
+      - '`"The value is 20"`'
+      - '`"No value"`'
+      - "`Ok(20)`"
+      - "`20`"
+    feedback:
+      correct: Right! `Ok(20)` matches the `Ok(n)` branch, `n` is bound to 20, and "The value is 20" is produced.
+      choices:
+        "1": '"No value" is the result of the `Error` branch — the input is `Ok(20)`, so it goes to the success branch.'
+        "2": "`case` returns the branch's *result string*, not the input as-is — \"The value is 20\", not `Ok(20)`."
+        "3": The result is "The value is 20", with `n` (= 20) pulled from the `Ok(n)` branch and spliced into the string.
+    code: |-
+      import gleam/int
+
+      fn describe(r: Result(Int, Nil)) -> String {
+        case r {
+          Ok(n) -> "The value is " <> int.to_string(n)
+          Error(Nil) -> "No value"
+        }
+      }
+
+      // describe(Ok(20)) is?
+  inexhaustive:
+    prompt: In a `case` over `Result(Int, Nil)`, you only wrote the `Ok(n) -> ...` branch and didn't write `Error`. What happens?
+    choices:
+      - It crashes at runtime, but only once an `Error` actually arrives
+      - 'A compile error — the `Error` case is missing: "Inexhaustive patterns"'
+      - "`Error` is automatically ignored"
+      - When it's `Error` it returns `Nil` on its own
+    feedback:
+      correct: Right! You must handle both `Ok` and `Error` for it to compile. The option of "not handling" the error doesn't exist in the type system — that's both the price and the payoff of using `Result` instead of exceptions.
+      choices:
+        "0": It never reaches runtime — the missing case is caught at *compile time*, blocking it from even running.
+        "2": Gleam doesn't silently ignore a missing branch — it tells you clearly with a compile error.
+        "3": There's no automatic default. You have to spell out every case yourself.

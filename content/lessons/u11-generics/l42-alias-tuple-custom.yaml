@@ -1,0 +1,102 @@
+title: type alias, 그리고 tuple vs 커스텀 타입
+tags:
+  - concept:type-aliases
+blocks:
+  - prose: intro
+    markdown: |-
+      긴 타입을 매번 쓰기 번거로울 때 **type alias**로 짧은 별명을 붙입니다.
+
+      ```gleam
+      pub type Pair =
+        #(String, Int)
+      ```
+
+      주의: alias는 *새 타입을 만들지 않습니다*. `Pair`는 그저 `#(String, Int)`의 **다른 이름**일 뿐이라, 둘은 완전히 호환됩니다. 커스텀 타입(`pub type Box(a) { Box(...) }`)이 새 타입을 *만드는* 것과는 다릅니다.
+  - exercise: alias-use
+    type: predict
+    prompt: |-
+      `make`는 `Pair`(즉 `#(String, Int)`)를 돌려줍니다. 아래 출력은?
+
+      ```gleam
+      pub type Pair = #(String, Int)
+      pub fn make() -> Pair { #("score", 100) }
+      ```
+    code: |-
+      let p = make()
+      p.0 <> "=" <> int.to_string(p.1)
+    choices:
+      - '`"score=100"`'
+      - '`"score"`'
+      - '`"100"`'
+      - 컴파일 에러
+    answer: 0
+    feedback:
+      correct: 맞아요! `Pair`는 그냥 `#(String, Int)`라 튜플처럼 `.0`/`.1`로 접근합니다 — "score" <> "=" <> "100".
+      choices:
+        "1": '`.0`만 쓴 게 아니라 `.1`도 이어붙였어요 — 결과는 "score=100".'
+        "2": '`.0`("score")도 함께 이어붙입니다 — "100"만 나오지 않아요.'
+        "3": alias는 새 타입이 아니라 튜플 그 자체라, `.0`/`.1` 접근이 정상 동작합니다.
+  - prose: tuple-access
+    markdown: '튜플의 원소는 위치로 꺼냅니다: 첫째는 `.0`, 둘째는 `.1`. 이름이 아니라 **순서**로 구분하죠. 그래서 튜플은 "가볍지만 각 칸이 무슨 뜻인지 코드에 안 적힌다"는 단점이 있습니다.'
+  - exercise: tuple-index
+    type: predict
+    prompt: 튜플의 둘째 원소를 꺼내면?
+    code: |-
+      let user = #("lucy", 30)
+      user.1
+    choices:
+      - "`30`"
+      - '`"lucy"`'
+      - '`#("lucy", 30)`'
+      - "`1`"
+    answer: 0
+    feedback:
+      correct: 정확해요! `.1`은 **둘째** 원소(0부터 셉니다)라 30입니다.
+      choices:
+        "1": '`.1`이 아니라 `.0`이 첫째("lucy")예요 — 인덱스는 0부터 셉니다.'
+        "2": "`.1`은 튜플 전체가 아니라 *한 칸*만 꺼냅니다 — 30이에요."
+        "3": "`.1`은 인덱스 표기지 그 숫자 자체를 돌려주는 게 아니에요 — 둘째 원소 30입니다."
+  - prose: custom-access
+    markdown: |-
+      반대로 커스텀 레코드는 칸마다 **이름**이 있습니다. `User(name: "lucy", age: 30)`의 둘째 칸은 `.1`이 아니라 `.age`로 꺼내죠.
+
+      ```gleam
+      pub type User {
+        User(name: String, age: Int)
+      }
+      ```
+
+      원소가 두세 개뿐이고 의미가 자명하면 튜플로 충분하지만, 칸이 늘거나 "이 칸이 무슨 뜻이지?" 싶어지면 **이름 있는 커스텀 타입**으로 올리는 게 관용입니다.
+  - exercise: record-field
+    type: predict
+    prompt: 이름 있는 필드로 접근하면?
+    code: |-
+      let u = User(name: "lucy", age: 30)
+      u.name
+    choices:
+      - '`"lucy"`'
+      - "`30`"
+      - '`"name"`'
+      - "`User(...)`"
+    answer: 0
+    feedback:
+      correct: 맞아요! `.name` 필드는 "lucy"를 가리킵니다 — 위치(`.0`)가 아니라 *이름*으로 꺼냈어요.
+      choices:
+        "1": "`.name`이 아니라 `.age`가 30이에요 — 필드 이름을 따라가야 합니다."
+        "2": '`.name`은 필드 *이름*이 아니라 그 필드의 *값*("lucy")을 돌려줍니다.'
+        "3": 레코드 *값 전체*가 아니라 `name` 한 칸만 꺼냅니다 — "lucy".
+  - exercise: tuple-vs-custom
+    type: choice
+    prompt: 다음 중 **커스텀 타입**(튜플 대신)이 더 적절한 상황은?
+    choices:
+      - 필드가 5개이고 각각의 의미를 코드에서 분명히 하고 싶을 때
+      - 두 값을 잠깐 함께 묶어 곧바로 분해할 때
+      - 좌표 `#(x, y)`처럼 의미가 자명한 두 값일 때
+      - 함수가 값 두 개를 한꺼번에 돌려줄 임시 묶음이 필요할 때
+    answer: 0
+    feedback:
+      correct: 맞아요! 칸이 많고 의미가 중요해질수록, 이름 있는 필드(커스텀 타입)가 코드를 자기 설명적으로 만듭니다.
+      choices:
+        "1": 잠깐 묶었다 바로 푸는 가벼운 묶음엔 튜플이 더 간편합니다.
+        "2": "`x, y`처럼 자명한 두 값은 튜플로도 충분히 읽힙니다."
+        "3": 임시 반환 묶음은 튜플의 전형적인 쓰임새예요 — 굳이 새 타입을 만들 필요는 적습니다.

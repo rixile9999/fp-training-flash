@@ -1,0 +1,51 @@
+title: Pipe-First Style and Its Limits
+blocks:
+  intro:
+    markdown: |-
+      The Gleam stdlib is designed to be 'pipe-friendly', so it often takes the **data to be transformed as the first argument**. That's why `string.trim`, `string.uppercase`, `string.replace`, and `string.append` all pipe naturally.
+
+      `string.replace(string, what_to_find, what_to_replace_with)` also takes the string first, so it fits pipes well.
+  replace-pipe:
+    prompt: What is the value of this expression? (`string.replace` replaces the second argument with the third within the first-argument string)
+    choices:
+      - '`"a b c"`'
+      - '`"a-b-c"`'
+      - '`"abc"`'
+      - '`"- -"`'
+    feedback:
+      correct: Correct! In "a-b-c", every "-" is replaced with " ", giving "a b c".
+      choices:
+        "1": replace is applied, so it doesn't stay unchanged — each "-" becomes a space.
+        "2": It replaces "-" with a space " ", not with an empty string.
+        "3": The letters a, b, c stay; only the separators change.
+  limits:
+    markdown: |-
+      Pipe-first style has its limits too. The pipe can only place the left value into the **first** argument. If the value being flowed through needs to go into the second or third argument slot, the pipe alone won't do.
+
+      In those cases you use a function capture (`f(fixed_value, _)`) or an anonymous function, which you'll learn in a later unit. For now, just remember the limit: 'the pipe is first-argument-only'.
+  pipe-limit:
+    prompt: Which correctly describes a limit of the pipe `|>`?
+    choices:
+      - It can only ever put the left value into the first argument
+      - It can chain at most two things at a time
+      - It can't be used with Int
+      - It can only be used when the function takes exactly one argument
+    feedback:
+      correct: Correct! The pipe only puts the left value into the first argument. For other slots you need a capture.
+      choices:
+        "1": There's no limit on how many you can chain — you can keep linking as many as you like.
+        "2": It's independent of type — you can pipe any value.
+        "3": Multiple arguments are fine — you just write the rest in the call (e.g. the `f(_)` form).
+  non-first-arg:
+    prompt: What do you do if the value to flow through needs to go into the function's **second** argument slot?
+    choices:
+      - The pipe alone is enough
+      - You need a function capture `f(fixed_value, _)` or an anonymous function
+      - It's impossible, so you can't use that function
+      - It automatically reorders the arguments for you
+    feedback:
+      correct: Exactly! The pipe is first-argument-only, so other slots are handled with a capture or an anonymous function.
+      choices:
+        "0": The pipe only puts it into the first argument — that's not enough for the second slot.
+        "2": You can use it — line up the slot with a capture or an anonymous function.
+        "3": Gleam does not automatically reorder arguments.

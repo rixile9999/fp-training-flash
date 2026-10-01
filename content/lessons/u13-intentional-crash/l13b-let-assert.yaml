@@ -1,0 +1,92 @@
+title: let assert — "이건 반드시 맞는다"
+tags:
+  - concept:let-assertions
+blocks:
+  - prose: intro
+    markdown: |-
+      `let`은 패턴이 **반드시 전체를 덮어야** 합니다. 그래서 `let [first, ..] = xs`는 컴파일 에러예요 — 빈 리스트일 가능성을 처리하지 않았으니까요.
+
+      `let assert`는 그 규칙을 깨고 **부분 패턴**을 허용합니다. 대신 약속을 합니다: "이 시점에 이 모양이 아니면 그건 내 코드의 버그다." 모양이 맞으면 값을 꺼내고, 틀리면 **즉시 크래시**합니다.
+  - exercise: let-assert-head
+    type: predict
+    prompt: 리스트가 비어있지 않으니 패턴이 맞습니다. `first_or_crash([10, 20, 30])`의 값은?
+    code: |-
+      pub fn first_or_crash(xs: List(Int)) -> Int {
+        let assert [first, ..] = xs
+        first
+      }
+
+      pub fn main() {
+        io.println(int.to_string(first_or_crash([10, 20, 30])))
+      }
+    choices:
+      - "`10`"
+      - "`30`"
+      - "`[10, 20, 30]`"
+      - 런타임 크래시
+    answer: 0
+    feedback:
+      correct: 맞아요! `[first, ..]`에서 `first`는 머리(첫 원소)인 10에 묶입니다.
+      choices:
+        "1": "`first`는 마지막이 아니라 **첫** 원소입니다 — 10이에요."
+        "2": "`first`는 리스트 전체가 아니라 첫 원소 하나입니다."
+        "3": 리스트가 비어있지 않으므로 패턴이 맞습니다 — 크래시하지 않아요.
+  - exercise: let-assert-ok
+    type: predict
+    prompt: "`let assert Ok(n)`은 `Ok`라고 단언합니다. `double_ok(Ok(21))`의 값은?"
+    code: |-
+      pub fn double_ok(r: Result(Int, String)) -> Int {
+        let assert Ok(n) = r
+        n * 2
+      }
+
+      pub fn main() {
+        io.println(int.to_string(double_ok(Ok(21))))
+      }
+    choices:
+      - "`21`"
+      - "`42`"
+      - "`Ok(42)`"
+      - 런타임 크래시
+    answer: 1
+    feedback:
+      correct: 정확해요! `Ok(21)`에서 `n`은 21로 풀리고, 21 * 2 = 42를 돌려줍니다.
+      choices:
+        "0": "`n`을 꺼낸 뒤 `n * 2`를 합니다 — 21이 아니라 42예요."
+        "2": "`let assert Ok(n)`은 껍데기를 벗겨 `n`만 꺼냅니다. 결과는 `Int`인 42예요."
+        "3": 값이 `Ok`이므로 단언이 맞습니다 — 크래시하지 않아요.
+  - prose: fails-crash
+    markdown: |-
+      그렇다면 모양이 틀리면? `first_or_crash([])`처럼 빈 리스트가 들어오면 `[first, ..]`와 맞지 않아 **즉시 크래시**합니다. 플랫폼은 캡처된 예외 메시지("Pattern match failed...")를 그대로 보여줘요.
+
+      이게 바로 `let assert`의 거래입니다: 편하게 값을 꺼내는 대가로, 약속이 깨지면 프로그램을 멈춥니다.
+  - exercise: empty-list-crash
+    type: choice
+    prompt: "`first_or_crash([])`를 실행하면 어떻게 될까요?"
+    choices:
+      - "`0`을 돌려준다"
+      - "`Error(Nil)`을 돌려준다"
+      - 패턴 불일치로 런타임 크래시한다
+      - 컴파일 에러가 난다
+    answer: 2
+    feedback:
+      correct: 맞아요! 빈 리스트는 `[first, ..]`와 맞지 않아, 단언이 깨지며 즉시 크래시합니다.
+      choices:
+        "0": "`let assert`는 기본값을 만들지 않습니다 — 맞으면 꺼내고, 틀리면 멈춰요."
+        "1": "`let assert`는 `Result`를 돌려주지 않습니다. 실패는 데이터가 아니라 크래시예요."
+        "3": 컴파일은 통과합니다 — 실패는 실행 시점(런타임)에 일어나요.
+  - exercise: when-justified
+    type: choice
+    prompt: 다음 중 `let assert`가 **정당한** 상황은? (외부 입력의 실패는 데이터, 내 불변식 위반은 버그)
+    choices:
+      - 사용자가 입력한 문자열을 숫자로 파싱하기
+      - 방금 내 코드에서 만든 3원소 리스트의 머리를 꺼내기
+      - 설정 파일을 읽어 들이기
+      - 네트워크 응답을 해석하기
+    answer: 1
+    feedback:
+      correct: 맞아요! 방금 내가 만든 3원소 리스트는 절대 비어있지 않습니다 — 비어있다면 그건 데이터가 아니라 내 코드의 버그예요.
+      choices:
+        "0": 사용자 입력은 언제든 틀릴 수 있는 **데이터**입니다 — `Result`로 다뤄야 해요.
+        "2": 설정 파일은 없거나 망가질 수 있는 외부 값입니다 — 다룰 수 있는 실패예요.
+        "3": 네트워크 응답은 외부에서 온 값이라 실패가 정상 범주입니다 — `Result`로 처리하세요.

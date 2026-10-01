@@ -1,0 +1,79 @@
+title: fold — The All-Purpose Fold
+blocks:
+  intro:
+    markdown: |-
+      map and filter take a list and return a list. But what about when you want to **fold a list down to a single value**? Like a sum, a product, a count, or a concatenated string. That's `list.fold`.
+
+      `list.fold(list, initial_value, fn(acc, item) { ... })` — starting from an **initial accumulator (acc)**, it merges each element into the accumulator one at a time. The `sum_loop` you wrote by hand in U6 is exactly a fold.
+
+      ```gleam
+      import gleam/list
+
+      list.fold([1, 2, 3, 4], 0, fn(acc, x) { acc + x })
+      // == 10
+      ```
+
+      Important: the callback's **first argument is the accumulator (acc)**, and the second is the current element.
+  fold-sum:
+    prompt: What does this `list.fold` produce?
+    choices:
+      - "`10`"
+      - "`0`"
+      - "`[1, 2, 3, 4]`"
+      - "`4`"
+    feedback:
+      correct: Right! Starting from 0 and adding 1, 2, 3, 4 in turn gives `10`.
+      choices:
+        "1": 0 is the **initial accumulator**. The elements get added onto it from there.
+        "2": fold **folds** the list down to a single value — `10`, not a list.
+        "3": 4 is just the last element (or the count); the result is the sum, `10`.
+  any-shape:
+    markdown: |-
+      fold's initial value and accumulator type **can differ from the element type**. That's why fold is "all-purpose" — products (initial value 1), counts (initial value 0, `acc + 1` in the callback), and string concatenation (initial value `""`) can all be expressed with fold.
+
+      ```gleam
+      import gleam/list
+
+      // product: initial value 1
+      list.fold([1, 2, 3, 4], 1, fn(acc, x) { acc * x })
+      // == 24
+      ```
+  fold-product:
+    prompt: This `list.fold` computes a product. What's the result?
+    choices:
+      - "`24`"
+      - "`10`"
+      - "`1`"
+      - "`0`"
+    feedback:
+      correct: Exactly! Starting from the initial value 1, it accumulates 1*1*2*3*4 = 24.
+      choices:
+        "1": 10 is the result of an **addition** fold. Here we multiply with `acc * x`.
+        "2": 1 is the initial accumulator — multiplying the elements onto it gives 24.
+        "3": Using 0 as the initial value for multiplication would make everything 0, but here we start from 1 — the result is 24.
+  fold-count:
+    prompt: This fold counts the elements. The callback ignores the element value and just does `acc + 1`. What's the result?
+    choices:
+      - "`3`"
+      - "`60`"
+      - "`30`"
+      - "`0`"
+    feedback:
+      correct: Right! It ignores the element value and adds 1 each time, so it gives the element count, `3`.
+      choices:
+        "1": 60 is the **sum** of the elements. This callback doesn't add the values — it only does `acc + 1`.
+        "2": 30 is the last element. The callback doesn't use the element value — it just counts.
+        "3": 0 is the initial value — adding 1 per element gives 3.
+  fold-callback-shape:
+    prompt: In `list.fold(xs, init, f)`, what's the correct argument order for the callback `f`?
+    choices:
+      - "`fn(acc, item)` — accumulator first"
+      - "`fn(item, acc)` — element first"
+      - "`fn(acc)` — one argument"
+      - "`fn(item)` — one argument"
+    feedback:
+      correct: Right! Gleam stdlib's fold callback is `fn(acc, item)` — the accumulator is first. In the next lesson we'll see why this order becomes a trap.
+      choices:
+        "1": The order is reversed. Gleam takes the accumulator as the **first** argument — this may differ from other languages.
+        "2": The callback must take **both** the accumulator and the element — that's two arguments.
+        "3": Taking only the element means you can't carry the accumulation forward — you take the accumulator too.

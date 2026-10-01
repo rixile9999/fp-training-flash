@@ -1,0 +1,69 @@
+title: 불변성과 shadowing
+tags:
+  - concept:basics
+  - tricky:shadowing
+blocks:
+  - prose: intro
+    markdown: |-
+      Gleam에는 변수 "수정"이 없습니다. 한번 `let`으로 묶인 값은 절대 바뀌지 않아요 — 모든 것이 **불변(immutable)**입니다.
+
+      그렇다면 "값을 바꾸고 싶을 때"는? 바꾸는 대신, **같은 이름에 다시 `let`**을 씁니다. 이러면 그 시점부터 새 값을 가리키는 새 바인딩이 이전 것을 가립니다 — 이를 **shadowing**이라 합니다. 값이 변한 게 아니라 이름이 새것을 가리킬 뿐이에요.
+  - exercise: shadowing-value
+    type: predict
+    prompt: 아래 코드가 끝났을 때 `x`의 값은?
+    code: |-
+      let x = 1
+      let x = x + 1
+      let x = x * 10
+    choices:
+      - "`2`"
+      - "`11`"
+      - "`20`"
+      - "`1`"
+    answer: 2
+    feedback:
+      correct: 정확해요! 1 → (1+1)=2 → (2*10)=20. 각 줄의 `let`이 그 시점의 `x`로 계산해 새 바인딩을 만듭니다.
+      choices:
+        "0": 두 번째 줄까지만 계산했어요. 세 번째 줄 `x * 10`도 적용됩니다.
+        "1": "`x + 1 * 10`이 아니에요. 줄 단위로 차례대로 새 `x`가 묶입니다 — 2가 된 뒤 10을 곱해요."
+        "3": "`x`는 마지막 `let`의 결과를 가리킵니다 — 1이 아니라 20."
+  - prose: no-mutation
+    markdown: "주의: shadowing은 **재대입**과 다릅니다. `let x = ...`처럼 매번 `let`을 새로 쓰는 건 합법이지만, `x = x + 1`처럼 `let` 없이 다시 대입하는 건 Gleam에 아예 없는 문법이라 컴파일되지 않습니다."
+  - exercise: reassign-illegal
+    type: choice
+    prompt: 이미 `let total = 0`으로 묶은 뒤, 다음 줄에 `total = total + 100`이라고 쓰면?
+    choices:
+      - "`total`이 100으로 바뀐다"
+      - 컴파일 에러 — Gleam엔 `let` 없는 재대입이 없다
+      - 새 `total` 바인딩이 생긴다
+      - 런타임에 에러가 난다
+    answer: 1
+    feedback:
+      correct: 맞아요! Gleam에는 재대입 연산자가 없습니다. 값을 "갱신"하려면 `let total = total + 100`처럼 새 `let`으로 이전 이름을 가리세요.
+      choices:
+        "0": 값을 직접 바꾸는 일은 Gleam에 없습니다 — 그 줄은 아예 컴파일되지 않아요.
+        "2": 새 바인딩을 만들려면 앞에 `let`이 있어야 합니다. `let` 없는 줄은 합법 문법이 아니에요.
+        "3": 런타임이 아니라 **컴파일 타임**에 막힙니다 — 실행조차 되지 않아요.
+  - prose: capture
+    markdown: 불변성의 진짜 힘은 여기서 드러납니다. 어떤 이름이 함수 안에 **캡처(capture)**되면, 나중에 같은 이름을 shadowing해도 이미 캡처된 값은 영향받지 않습니다 — 값은 절대 변하지 않으니까요.
+  - exercise: shadow-capture
+    type: predict
+    prompt: 아래 코드에서 두 줄의 출력은 차례로 무엇일까요? (`f`는 만들어질 때의 `x`를 기억합니다)
+    code: |-
+      let x = 1
+      let f = fn() { x }
+      let x = x + 10
+      echo x
+      echo f()
+    choices:
+      - "`11` 그리고 `11`"
+      - "`11` 그리고 `1`"
+      - "`1` 그리고 `1`"
+      - 컴파일 에러
+    answer: 1
+    feedback:
+      correct: 정확해요! `f`는 첫 번째 `x`(=1)를 캡처했습니다. 세 번째 줄의 `let x`는 **새 바인딩**일 뿐, `f`가 본 값을 바꾸지 못해요. 그래서 11과 1.
+      choices:
+        "0": shadowing은 mutation이 아니에요. `f`는 여전히 처음 캡처한 1을 봅니다 — 두 번째 출력은 1.
+        "2": 첫 출력 `x`는 마지막 `let`이 가리키는 11입니다 — 1이 아니에요.
+        "3": 같은 이름의 재-`let`(shadowing)은 합법입니다. 금지된 건 `let` 없는 재대입이에요.

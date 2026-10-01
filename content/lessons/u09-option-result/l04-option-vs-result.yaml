@@ -1,0 +1,61 @@
+title: Option vs Result 선택 기준
+tags:
+  - tricky:option-vs-result
+  - concept:options
+  - concept:results
+blocks:
+  - prose: intro
+    markdown: |-
+      `Option`과 `Result`는 둘 다 "값이 없을 수도"를 다루지만, 쓰임이 다릅니다. 한 줄 기준:
+
+      - **"없음이 정상적인 상태"면 `Option`** — 부재(없음) 자체가 데이터인 자리. 예: 레코드의 선택적 필드(별명이 없을 수 있다).
+      - **"실패이고 이유가 있으면" `Result`** — 무언가 잘못됐고 *왜* 잘못됐는지 전할 게 있을 때.
+
+      핵심 질문: "이 없음은 *정상*인가, *실패*인가?"
+  - exercise: optional-field
+    type: choice
+    prompt: 사용자 프로필에서 `nickname`(별명)은 "설정 안 했을 수도 있는" 선택적 필드입니다. 별명이 없는 건 오류가 아니라 흔하고 정상적인 상태예요. 이 필드의 타입으로 가장 알맞은 것은?
+    choices:
+      - "`Option(String)` — 부재가 정상 데이터라서"
+      - "`Result(String, Nil)` — 별명은 실패할 수 있어서"
+      - "`String` — 없으면 빈 문자열로"
+      - "`Result(String, String)` — 이유를 담으려고"
+    answer: 0
+    feedback:
+      correct: 맞아요! 별명 없음은 *실패*가 아니라 *정상적인 부재*예요 — 그래서 `Option(String)`이 딱 맞습니다. `None`이 "별명 미설정"을 자연스럽게 표현하죠.
+      choices:
+        "1": 별명이 없는 건 실패가 아니라 정상이에요 — 전할 "실패 이유"가 없으니 `Result`는 과합니다.
+        "2": 빈 문자열은 "있는데 빈 값"과 "아예 없음"을 구분 못 해요 — `Option`이 그 둘을 분명히 나눕니다.
+        "3": 담을 실패 이유가 없는데 에러 타입을 두는 건 군더더기예요 — 정상적 부재엔 `Option`.
+  - prose: result-default
+    markdown: 그런데 Gleam stdlib를 보면, 실패 이유가 *하나뿐*일 때조차 `Option`이 아니라 **`Result(a, Nil)`**을 쓰는 경우가 많습니다 — `int.parse`, `list.first`가 그래요. 관용적으로 **`Result`가 기본값**이고, `Option`은 "부재가 데이터인" 특별한 자리에 아껴 씁니다. "파싱 실패"나 "빈 리스트의 첫 원소"는 *정상적 부재*라기보다 *그 연산의 실패*이기 때문이에요.
+  - exercise: stdlib-idiom
+    type: choice
+    prompt: '`int.parse("abc")`가 `Option`이 아니라 `Result(Int, Nil)`로 `Error(Nil)`을 돌려주는 이유로 가장 적절한 것은?'
+    choices:
+      - '"abc를 정수로"는 정상적 부재가 아니라 연산의 *실패*라서 — stdlib는 이런 경우 Result가 기본'
+      - Gleam에는 Option이 없어서
+      - Result가 Option보다 항상 빠르기 때문에
+      - "`int.parse`만의 특수 규칙이라 다른 함수는 Option을 쓴다"
+    answer: 0
+    feedback:
+      correct: 맞아요! 파싱이 안 되는 건 "없음이 정상"이 아니라 "이 연산이 실패"라는 신호예요 — 그래서 관용적으로 `Result`(`list.first`도 동일)를 씁니다.
+      choices:
+        "1": Gleam에는 `Option`이 분명히 있어요(`gleam/option`). 다만 *실패*엔 `Result`가 관용입니다.
+        "2": 속도 때문이 아니라 *의미* 때문이에요 — 부재(데이터)냐 실패냐의 구분입니다.
+        "3": "`list.first`도 같은 이유로 `Result`를 써요 — `int.parse`만의 예외가 아닙니다."
+  - exercise: spot-awkward
+    type: choice
+    prompt: 다음 네 함수 시그니처 중, 타입 선택이 **어색한** 것 하나는?
+    choices:
+      - "`fn divide(a: Int, b: Int) -> Option(Int)`"
+      - "`fn find_user(id: Int) -> Result(User, Nil)`"
+      - "`fn middle_name(p: Person) -> Option(String)`"
+      - "`fn parse_age(s: String) -> Result(Int, AgeError)`"
+    answer: 0
+    feedback:
+      correct: '맞아요! 0으로 나누기는 *정상적 부재*가 아니라 연산의 *실패*예요 — `Option`보다 `Result(Int, ...)`가 적절합니다. 기준: "없음이 정상이면 Option, 실패이면 Result".'
+      choices:
+        "1": 사용자 조회 실패에 `Result`는 자연스러워요 — stdlib 관용대로 이유가 하나면 `Result(_, Nil)`도 OK.
+        "2": 중간 이름(middle name)은 "없는 게 정상"인 선택적 필드라 `Option`이 딱 맞아요 — 어색하지 않습니다.
+        "3": 나이 파싱은 실패에 이유(`AgeError`)가 있으니 `Result(Int, AgeError)`가 정석이에요 — 어색하지 않습니다.

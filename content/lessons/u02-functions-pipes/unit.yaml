@@ -1,0 +1,15 @@
+title: 함수와 파이프
+order: 2
+level: 1
+skill: gleam-basics
+prerequisites:
+  - u01-values
+lessons:
+  - l05-fn-def
+  - l06-pipe
+  - l07-nested-to-pipe
+  - l08-pipe-first
+source:
+  kind: original
+  upstream: fpdojo (~/workspace/fp-training, same author), gleam 1.17 JS;
+    re-verified on gleam 1.18.1 Erlang

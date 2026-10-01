@@ -1,0 +1,16 @@
+title: Opaque Type과 API 설계
+order: 12
+level: 4
+skill: gleam-types
+prerequisites:
+  - u10-result-use
+  - u11-generics
+lessons:
+  - l36-opaque-smart-ctor
+  - l37-invariant-boundary
+  - l38-make-invalid-unrep
+  - l39-phantom-types
+source:
+  kind: original
+  upstream: fpdojo (~/workspace/fp-training, same author), gleam 1.17 JS;
+    re-verified on gleam 1.18.1 Erlang

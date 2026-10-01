@@ -1,0 +1,134 @@
+title: variant로 상태 표현하기
+tags:
+  - concept:custom-types
+blocks:
+  - prose: intro
+    markdown: |-
+      지금까지는 Gleam이 준 타입(`Int`, `String`, `Bool` …)만 썼습니다. 이제 **나만의 타입**을 만듭니다.
+
+      `pub type 이름 { ... }` 안에 가능한 **경우(variant)**를 하나씩 나열합니다. 예를 들어 신호등은 셋 중 하나죠:
+
+      ```gleam
+      pub type TrafficLight {
+        Red
+        Yellow
+        Green
+      }
+      ```
+
+      이제 `TrafficLight` 타입의 값은 오직 `Red`, `Yellow`, `Green` 셋뿐입니다 — "불가능한 상태"를 타입으로 아예 막는 것이 커스텀 타입의 핵심입니다.
+  - exercise: variant-meaning
+    type: choice
+    prompt: 위 `TrafficLight` 정의에서 `Red`, `Yellow`, `Green`은 무엇일까요?
+    choices:
+      - 세 개의 서로 다른 타입
+      - "`TrafficLight` 타입이 가질 수 있는 세 가지 값(variant)"
+      - 세 개의 변수
+      - 세 개의 함수
+    answer: 1
+    feedback:
+      correct: 맞아요! 셋은 `TrafficLight`라는 **한 타입**이 가질 수 있는 값(variant)입니다 — 신호등은 이 셋 중 하나죠.
+      choices:
+        "0": 타입은 `TrafficLight` 하나뿐이에요. `Red`·`Yellow`·`Green`은 그 타입의 값들입니다.
+        "2": "`let`으로 묶은 변수가 아니라, 타입 정의가 나열한 가능한 값들이에요."
+        "3": 인자 없이 쓰는 이름이라 함수처럼 보이지만, 호출하지 않고 값 그 자체로 씁니다.
+  - prose: match-variant
+    markdown: |-
+      커스텀 타입은 `case`와 단짝입니다. 값이 어떤 variant인지에 따라 분기하면 되죠. variant 이름을 패턴 자리에 그대로 적습니다.
+
+      ```gleam
+      pub fn next(light: TrafficLight) -> TrafficLight {
+        case light {
+          Red -> Green
+          Green -> Yellow
+          Yellow -> Red
+        }
+      }
+      ```
+
+      결과로 또 다른 `TrafficLight` 값을 돌려줄 수도 있다는 점에 주목하세요.
+  - exercise: next-red
+    type: predict
+    prompt: 위 `next` 함수에서 `next(Red)`의 값은?
+    code: |-
+      pub type TrafficLight {
+        Red
+        Yellow
+        Green
+      }
+
+      pub fn next(light: TrafficLight) -> TrafficLight {
+        case light {
+          Red -> Green
+          Green -> Yellow
+          Yellow -> Red
+        }
+      }
+
+      // next(Red) 은?
+    choices:
+      - "`Red`"
+      - "`Yellow`"
+      - "`Green`"
+      - '`"Green"`'
+    answer: 2
+    feedback:
+      correct: 맞아요! `Red` 패턴에 맞아 결과로 `Green` variant를 돌려줍니다 — 빨강 다음은 초록.
+      choices:
+        "0": 입력 그대로가 아니에요. `Red` 가지의 **결과**인 `Green`이 나옵니다.
+        "1": "`Yellow`는 `Green` 입력일 때의 결과예요. 입력은 `Red`입니다."
+        "3": "`Green`은 문자열이 아니라 `TrafficLight`의 variant 값이에요 — 따옴표가 없습니다."
+  - exercise: label-yellow
+    type: predict
+    prompt: 신호를 한국어로 옮기는 `label`입니다. `label(Yellow)`의 값은?
+    code: |-
+      pub fn label(light: TrafficLight) -> String {
+        case light {
+          Red -> "멈춤"
+          Yellow -> "주의"
+          Green -> "출발"
+        }
+      }
+
+      // label(Yellow) 은?
+    choices:
+      - '`"멈춤"`'
+      - '`"주의"`'
+      - '`"출발"`'
+      - "`Yellow`"
+    answer: 1
+    feedback:
+      correct: 정확해요! `Yellow` 가지에 맞아 "주의"가 됩니다.
+      choices:
+        "0": '"멈춤"은 `Red` 가지의 결과예요. 입력은 `Yellow`입니다.'
+        "2": '"출발"은 `Green` 가지의 결과예요 — `Yellow`가 아니에요.'
+        "3": "`case`는 입력 variant가 아니라 맞은 가지의 결과(문자열)를 돌려줍니다."
+  - exercise: coin-payout
+    type: predict
+    prompt: 동전 던지기 보상입니다. `payout(Heads)`의 값은?
+    code: |-
+      pub type Coin {
+        Heads
+        Tails
+      }
+
+      pub fn payout(c: Coin) -> Int {
+        case c {
+          Heads -> 100
+          Tails -> 0
+        }
+      }
+
+      // payout(Heads) 은?
+    choices:
+      - "`100`"
+      - "`0`"
+      - "`Heads`"
+      - "`200`"
+    answer: 0
+    feedback:
+      correct: 맞아요! `Heads` 가지에 맞아 100이 나옵니다.
+      choices:
+        "1": 0은 `Tails`일 때의 결과예요. 입력은 `Heads`입니다.
+        "2": "`case`는 입력 variant가 아니라 가지의 결과(`Int`)를 돌려줍니다."
+        "3": 두 보상을 더하지 않아요 — 맞은 한 가지의 값만 나옵니다.

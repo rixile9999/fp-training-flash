@@ -1,0 +1,113 @@
+title: accumulator 패턴
+tags:
+  - concept:tail-call-optimisation
+  - tricky:tail-call-accumulator
+blocks:
+  - prose: intro
+    markdown: |-
+      비-꼬리 재귀를 꼬리 재귀로 바꾸는 열쇠는 **누산기(accumulator)**입니다. "지금까지의 답"을 인자로 들고 내려가는 거예요.
+
+      `1 + total(rest)`처럼 *돌아온 뒤에* 더하는 대신, 내려가면서 `acc + first`로 미리 더해 다음 호출에 넘깁니다. 그러면 재귀 호출이 그 가지의 **마지막 동작**이 됩니다.
+
+      ```gleam
+      fn sum_loop(numbers: List(Int), acc: Int) -> Int {
+        case numbers {
+          [] -> acc
+          [first, ..rest] -> sum_loop(rest, acc + first)
+        }
+      }
+      ```
+
+      `acc`에 0부터 시작해 원소를 하나씩 더해 나갑니다.
+  - exercise: sumloop-from-zero
+    type: predict
+    prompt: "`sum_loop([4, 5, 6], 0)`의 값은?"
+    code: |-
+      fn sum_loop(numbers: List(Int), acc: Int) -> Int {
+        case numbers {
+          [] -> acc
+          [first, ..rest] -> sum_loop(rest, acc + first)
+        }
+      }
+
+      // sum_loop([4, 5, 6], 0) 은?
+    choices:
+      - "`15`"
+      - "`0`"
+      - "`4`"
+      - "`456`"
+    answer: 0
+    feedback:
+      correct: 맞아요! acc가 0→4→9→15로 자라고, 빈 리스트에서 15를 돌려줍니다.
+      choices:
+        "1": 0은 *시작* 누산기예요 — 원소들을 더하면 15가 됩니다.
+        "2": 첫 원소 4만 더한 게 아니에요 — 5와 6도 누적됩니다.
+        "3": 숫자를 이어붙이는 게 아니라 *더합니다* — 4+5+6 = 15.
+  - prose: empty-returns-acc
+    markdown: |-
+      여기서 가장 헷갈리는 지점: 종료 가지 `[] -> ???`에 무엇을 둘까요?
+
+      비-꼬리 버전(`total`)에서는 `[] -> 0`이었습니다. 거기서 0은 "빈 리스트의 합은 0"이라는 *씨앗*이었어요. 하지만 누산기 버전에서는 합을 이미 `acc`에 다 모아 왔습니다. **종료 시점의 `acc`가 바로 답**입니다.
+  - exercise: empty-branch-hole
+    type: predict
+    prompt: "`[] -> ???` 자리에 `acc`를 넣었습니다. `sum_loop([1, 2, 3], 10)`의 값은? (시작 acc가 10)"
+    code: |-
+      fn sum_loop(numbers: List(Int), acc: Int) -> Int {
+        case numbers {
+          [] -> acc
+          [first, ..rest] -> sum_loop(rest, acc + first)
+        }
+      }
+
+      // sum_loop([1, 2, 3], 10) 은?
+    choices:
+      - "`6`"
+      - "`16`"
+      - "`10`"
+      - "`0`"
+    answer: 1
+    feedback:
+      correct: 정확해요! 시작 acc 10에 1+2+3을 더해 16. 종료 가지가 모아 온 acc를 그대로 돌려줍니다.
+      choices:
+        "0": 시작값 10을 빠뜨렸어요 — acc는 10에서 출발해 16이 됩니다.
+        "2": 10은 시작 누산기예요 — 거기에 원소들을 더해야 16.
+        "3": "`[] -> acc`라서 모아 온 값을 돌려줍니다 — `[] -> 0`이었다면 모은 걸 버려 버그였을 거예요."
+  - exercise: empty-zero-bug
+    type: choice
+    prompt: 만약 종료 가지를 `[] -> 0`으로 바꾸면 `sum_loop([1, 2, 3], 0)`은 어떻게 될까요?
+    choices:
+      - 여전히 `6`을 준다
+      - "`0`을 준다 — 마지막에 모아 온 acc를 버리기 때문"
+      - 컴파일 에러가 난다
+      - 무한 재귀에 빠진다
+    answer: 1
+    feedback:
+      correct: 맞아요! 끝까지 내려가 acc를 6으로 만들어 놓고도, 종료 가지가 그걸 무시하고 0을 돌려줍니다 — 모은 걸 통째로 버리는 버그예요.
+      choices:
+        "0": 종료 가지가 acc 대신 0을 돌려주므로 6이 나오지 않아요 — 모은 값을 버립니다.
+        "2": 타입은 맞아 컴파일은 됩니다 — *논리* 버그라 조용히 0이 나옵니다.
+        "3": 리스트가 매번 짧아지므로 종료는 합니다 — 다만 잘못된 0을 돌려줘요.
+  - exercise: count-with-acc
+    type: predict
+    prompt: 개수도 같은 패턴으로 셉니다. `count_loop([7, 8, 9], 0)`의 값은?
+    code: |-
+      fn count_loop(xs: List(Int), acc: Int) -> Int {
+        case xs {
+          [] -> acc
+          [_, ..rest] -> count_loop(rest, acc + 1)
+        }
+      }
+
+      // count_loop([7, 8, 9], 0) 은?
+    choices:
+      - "`3`"
+      - "`24`"
+      - "`0`"
+      - "`9`"
+    answer: 0
+    feedback:
+      correct: 맞아요! 원소마다 acc에 1을 더해 0→1→2→3. 종료 시 acc(=3)가 길이입니다.
+      choices:
+        "1": 원소 값을 더하는 게 아니라 *1씩* 셉니다 — 합 24가 아니라 개수 3.
+        "2": 0은 시작 누산기예요 — 원소 셋을 세면 3이 됩니다.
+        "3": 마지막 원소 값(9)이 아니라 *개수*(3)를 돌려줍니다.

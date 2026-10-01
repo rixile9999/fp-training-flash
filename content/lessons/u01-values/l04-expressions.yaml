@@ -1,0 +1,82 @@
+title: 모든 것이 표현식
+tags:
+  - concept:basics
+  - tricky:expressions-everywhere
+blocks:
+  - prose: intro
+    markdown: |-
+      Gleam에는 "문장(statement)"이 없습니다. `case`도, 중괄호 블록 `{ ... }`도, 조건 분기도 전부 **값을 내는 표현식**이에요.
+
+      그래서 다른 언어처럼 "if 안에서 변수에 대입"하지 않습니다. 대신 **표현식의 결과를 통째로 `let`에 묶습니다**.
+  - exercise: block-value
+    type: predict
+    prompt: 중괄호 블록도 표현식입니다 — 마지막 줄의 값이 블록 전체의 값이 돼요. `y`의 값은?
+    code: |-
+      let y = {
+        let a = 2
+        a + 3
+      }
+    choices:
+      - "`5`"
+      - "`2`"
+      - "`3`"
+      - "`Nil`"
+    answer: 0
+    feedback:
+      correct: 정확해요! 블록의 마지막 표현식 `a + 3`(=5)이 블록 전체의 값이고, 그게 `y`에 묶입니다.
+      choices:
+        "1": "`a`(2)는 블록 중간 값이에요. 블록의 값은 **마지막 표현식**입니다."
+        "2": "`3`은 리터럴일 뿐, `a + 3`이 계산되어 5가 됩니다."
+        "3": 블록은 마지막 표현식의 값을 돌려줍니다 — `Nil`이 아니라 5예요.
+  - prose: case-is-expression
+    markdown: "`case`도 값을 내는 표현식이라 그 결과를 바로 `let`에 묶을 수 있습니다. 가드(`if ...`)가 붙은 가지는 **위에서 아래로** 검사되어, 처음으로 참이 되는 가지가 선택됩니다."
+  - exercise: grade-85
+    type: predict
+    prompt: 아래 `grade` 함수에서 `grade(85)`의 값은?
+    code: |-
+      fn grade(score: Int) -> String {
+        case score {
+          s if s >= 90 -> "A"
+          s if s >= 80 -> "B"
+          _ -> "F"
+        }
+      }
+
+      grade(85)
+    choices:
+      - '`"A"`'
+      - '`"B"`'
+      - '`"F"`'
+      - "`85`"
+    answer: 1
+    feedback:
+      correct: 맞아요! 가드는 위에서부터 검사됩니다. `85 >= 90`은 거짓이라 건너뛰고, `85 >= 80`은 참이라 "B"가 선택돼요.
+      choices:
+        "0": "`85 >= 90`은 거짓이라 첫 가지는 건너뜁니다 — 다음 가지로 내려가요."
+        "2": "`_` 가지까지 가지 않습니다. `85 >= 80`이 참이라 그 위에서 멈춰요."
+        "3": '`case`는 매칭된 입력이 아니라 가지의 **결과**를 돌려줍니다 — 85가 아니라 "B".'
+  - exercise: grade-95
+    type: predict
+    prompt: 같은 `grade` 함수에서 `grade(95)`의 값은?
+    code: |-
+      fn grade(score: Int) -> String {
+        case score {
+          s if s >= 90 -> "A"
+          s if s >= 80 -> "B"
+          _ -> "F"
+        }
+      }
+
+      grade(95)
+    choices:
+      - '`"A"`'
+      - '`"B"`'
+      - '`"F"`'
+      - 컴파일 에러
+    answer: 0
+    feedback:
+      correct: 정확해요! `95 >= 90`이 참이라 첫 가지가 선택되어 "A"입니다.
+      choices:
+        "1": 첫 가지 `s if s >= 90`이 이미 참이라 거기서 멈춥니다 — "B"까지 가지 않아요.
+        "2": "`_`는 맨 아래 가지예요. 위에서 이미 매칭됐으니 도달하지 않습니다."
+        "3": 정상 컴파일됩니다 — `_` 가지가 나머지 모든 경우를 받아 빠짐없이 다뤄요.

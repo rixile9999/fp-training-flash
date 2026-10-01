@@ -1,0 +1,69 @@
+title: A world without indices — no loops
+blocks:
+  intro:
+    markdown: |-
+      Gleam has no **index access** like other languages' `for (i = 0; i < n; i++)` or `xs[i]`. Because a list is a "head + tail" structure, instead of grabbing the i-th element directly you **peel it off one layer at a time from the front**.
+
+      So "do something to every element" is also expressed with recursion: transform the head, prepend it to the result, and recurse on the tail.
+  map-example:
+    markdown: |-
+      Let's look at a function that doubles each element — no loop, just recursion:
+
+      ```gleam
+      pub fn double_all(xs: List(Int)) -> List(Int) {
+        case xs {
+          [] -> []
+          [first, ..rest] -> [first * 2, ..double_all(rest)]
+        }
+      }
+      ```
+
+      An empty list gives an empty list (base case). If it's not empty, transform the head with `* 2` and **prepend it to the result of transforming the rest**. It's the exact same skeleton as `length`/`total`.
+  double-all:
+    prompt: With the `double_all` function above, what is the value of `double_all([1, 2, 3])`?
+    choices:
+      - "`[2, 4, 6]`"
+      - "`[1, 2, 3]`"
+      - "`[6, 4, 2]`"
+      - "`12`"
+    feedback:
+      correct: Correct! It transforms each head by doubling and prepends as it goes down, giving `[2, 4, 6]` — the order is preserved.
+      choices:
+        "1": The transformation is applied — it's not unchanged; each element is doubled, giving `[2, 4, 6]`.
+        "2": The order isn't reversed — the transformed head is prepended to the **front**, so the original order `[2, 4, 6]` is preserved.
+        "3": This function returns the transformed **list**, not the sum (2+4+6) — that's `[2, 4, 6]`.
+    code: |-
+      pub fn double_all(xs: List(Int)) -> List(Int) {
+        case xs {
+          [] -> []
+          [first, ..rest] -> [first * 2, ..double_all(rest)]
+        }
+      }
+
+      // what is double_all([1, 2, 3])?
+  no-for-while:
+    prompt: What do you use to traverse every element of a list in Gleam?
+    choices:
+      - Recursion — process the head and call yourself on the tail
+      - A `for` loop
+      - A `while` loop
+      - Access by index from 0 upward with `xs[i]`
+    feedback:
+      correct: Correct! Gleam has no `for`/`while`, so iteration is expressed with recursion — the pattern of processing the head and calling yourself on the shorter tail.
+      choices:
+        "1": Gleam has no `for` loop — iteration is done with recursion (or the `list` functions in the next unit).
+        "2": Gleam has no `while` loop either — you use recursion with a base case instead.
+        "3": There's no index access like `xs[i]` — lists are handled by peeling off head/tail one layer at a time.
+  prepend-vs-append:
+    prompt: Which is correct about the cost of prepending (`[x, ..xs]`) versus appending to the back of a list?
+    choices:
+      - prepend is fast at O(1), while appending to the back has to walk to the end of the list, so it's more expensive
+      - Both are equally O(1)
+      - prepend is more expensive — it has to move every element
+      - A list can insert anywhere in O(1) by index
+    feedback:
+      correct: Exactly! Prepending at the head reuses the existing list as the tail unchanged, so it's O(1). That's why, when building results with recursion, you usually use the pattern of **prepending from the front**.
+      choices:
+        "1": Appending to the back has to walk to the end, so it's more expensive than prepend — they aren't the same.
+        "2": It's the opposite — prepend is the cheapest at O(1) (it reuses the tail).
+        "3": Arbitrary insertion by index doesn't exist for lists — because of the head/tail structure, work at the front is cheap.

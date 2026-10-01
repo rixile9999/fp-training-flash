@@ -1,0 +1,78 @@
+title: 함수 캡처 f(_, x)
+tags:
+  - concept:anonymous-functions
+  - tricky:capture-vs-currying
+blocks:
+  - prose: intro
+    markdown: |-
+      `list.map([1, 2, 3], fn(x) { add(10, x) })`처럼, "인자 하나만 비워 둔 함수"가 자주 필요합니다. Gleam은 이걸 짧게 쓰는 **함수 캡처** 문법을 줍니다: 호출에서 채울 자리에 `_`(언더스코어)를 하나 두면 돼요.
+
+      ```gleam
+      add(10, _)
+      // 는 fn(b) { add(10, b) } 의 단축
+      ```
+
+      빈칸 `_`는 정확히 **한 개**입니다. `add(10, _)`은 "첫 인자는 10으로 고정, 둘째 인자만 받는 새 함수"가 됩니다.
+  - exercise: capture-map-add
+    type: predict
+    prompt: 캡처를 `list.map`에 넘긴 결과는?
+    code: |-
+      list.map([1, 2, 3], add(10, _))
+      // add(a, b) -> a + b
+    choices:
+      - "`[11, 12, 13]`"
+      - "`[10, 20, 30]`"
+      - "`[11, 22, 33]`"
+      - "`[1, 2, 3]`"
+    answer: 0
+    feedback:
+      correct: 정확해요! `add(10, _)`는 "10을 더하는 함수"라, 각 원소에 10을 더해 [11, 12, 13]이 됩니다.
+      choices:
+        "1": 10을 *곱하는* 게 아니라 *더해요* — 1+10, 2+10, 3+10 = [11, 12, 13].
+        "2": "`_`는 각 원소 하나를 받을 뿐이에요 — 원소를 10배 하지 않고 10을 더합니다."
+        "3": "`add(10, _)`가 각 원소에 적용돼요 — 원본 그대로가 아니라 10씩 더해집니다."
+  - prose: blank-position
+    markdown: |-
+      빈칸의 **위치**가 어느 인자를 비울지를 정합니다. 이게 캡처의 핵심이에요.
+
+      `string.append(첫째, 둘째)`는 첫째 뒤에 둘째를 붙입니다.
+      - `string.append(_, "!")`는 각 값 *뒤에* `!`를 붙입니다 (값이 첫째 자리).
+      - `string.append("!", _)`는 각 값 *앞에* `!`를 붙입니다 (값이 둘째 자리).
+
+      U2에서 본 "파이프는 첫 인자 전용"이라는 한계를, 캡처가 풀어 줍니다 — 빈칸을 둘째·셋째 자리에도 둘 수 있으니까요.
+  - exercise: capture-append-suffix
+    type: predict
+    prompt: 이 캡처를 `list.map`에 넘긴 결과는?
+    code: list.map(["a", "b"], string.append(_, "!"))
+    choices:
+      - '`["a!", "b!"]`'
+      - '`["!a", "!b"]`'
+      - '`["a", "b"]`'
+      - '`["ab!"]`'
+    answer: 0
+    feedback:
+      correct: 맞아요! `append(_, "!")`는 빈칸이 첫째 자리라 각 원소 *뒤에* `!`를 붙입니다 — ["a!", "b!"].
+      choices:
+        "1": 빈칸의 위치가 중요해요. `append(_, "!")`는 값이 *앞*이라 `!`가 뒤에 붙습니다 — 앞에 붙이려면 `append("!", _)`.
+        "2": 캡처한 함수가 각 원소에 적용돼요 — 원본 그대로 남지 않습니다.
+        "3": "`map`은 각 원소를 1:1 변환해요 — 하나로 합치지 않습니다."
+  - prose: vs-currying
+    markdown: |-
+      다른 언어를 안다면 캡처를 "커링(currying)"과 헷갈리기 쉽습니다. **Gleam에는 자동 커링이 없습니다.** Haskell처럼 `add 10`만 써서 부분 적용되는 일은 일어나지 않아요.
+
+      Gleam에서 부분 적용은 *명시적으로* 빈칸 `_`를 둘 때만 일어납니다. `add(10, _)`라고 빈칸을 적어 줘야 비로소 `fn(b) { add(10, b) }`가 됩니다. 그래서 `add(10, _)`의 타입은 "아직 인자 하나가 비었다"는 뜻의 `fn(Int) -> Int`예요.
+  - exercise: capture-type
+    type: choice
+    prompt: "`add(a: Int, b: Int) -> Int`가 있을 때, 캡처 `add(10, _)`의 타입은?"
+    choices:
+      - "`fn(Int) -> Int`"
+      - "`Int`"
+      - "`fn(Int, Int) -> Int`"
+      - "`fn() -> Int`"
+    answer: 0
+    feedback:
+      correct: 맞아요! 빈칸이 하나 남았으니, 인자 하나(Int)를 더 받아 Int를 돌려주는 함수 — `fn(Int) -> Int`입니다.
+      choices:
+        "1": 캡처는 아직 호출이 끝나지 않은 *함수 값*이에요 — 결과 Int가 아니라 함수입니다.
+        "2": 이미 첫 인자를 10으로 채웠어요 — 남은 빈칸은 하나라 `fn(Int) -> Int`입니다.
+        "3": 빈칸 `_`가 하나 있으니 인자 하나를 받아요 — `fn() -> Int`가 아닙니다.

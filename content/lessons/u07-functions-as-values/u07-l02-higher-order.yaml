@@ -1,0 +1,98 @@
+title: 고차 함수 — 함수를 받는 함수
+tags:
+  - concept:anonymous-functions
+blocks:
+  - prose: intro
+    markdown: |-
+      함수가 값이라면, 함수를 **인자로 받는** 함수도 만들 수 있겠죠. 함수를 받거나 함수를 돌려주는 함수를 **고차 함수(higher-order function)**라고 합니다.
+
+      함수 타입은 `fn(입력타입) -> 출력타입`으로 적습니다. 예를 들어 "Int를 받아 Int를 돌려주는 함수"는 `fn(Int) -> Int`예요.
+
+      ```gleam
+      fn apply(f: fn(Int) -> Int, x: Int) -> Int {
+        f(x)
+      }
+
+      apply(fn(n) { n * 2 }, 5)  // 10
+      ```
+
+      `apply`는 첫 인자로 *함수*를, 둘째 인자로 값을 받아, 그 함수를 값에 적용합니다.
+  - exercise: apply-fn
+    type: predict
+    prompt: 위 `apply`에 두 배 함수와 5를 넘기면? `apply(fn(n) { n * 2 }, 5)`의 값은?
+    code: |-
+      fn apply(f: fn(Int) -> Int, x: Int) -> Int {
+        f(x)
+      }
+
+      // apply(fn(n) { n * 2 }, 5) 은?
+    choices:
+      - "`10`"
+      - "`5`"
+      - "`7`"
+      - "`25`"
+    answer: 0
+    feedback:
+      correct: 정확해요! `apply`는 받은 함수 `fn(n) { n * 2 }`를 5에 적용해요 — 5 * 2 = 10.
+      choices:
+        "1": "`apply`는 받은 함수를 적용해요 — 5를 그대로 두지 않고 두 배로 만듭니다."
+        "2": "`n * 2`는 곱셈이라 5 * 2 = 10이에요 — 5 + 2가 아닙니다."
+        "3": "`n * 2`는 5 * 2 = 10이지 5 * 5 = 25가 아니에요."
+  - prose: list-map
+    markdown: |-
+      고차 함수의 진짜 위력은 리스트에서 드러납니다. `list.map(리스트, 함수)`는 리스트의 **각 원소에 함수를 적용**해 새 리스트를 만듭니다 — U5의 직접 재귀를 추상화한 도구예요.
+
+      ```gleam
+      import gleam/list
+
+      list.map([1, 2, 3], fn(x) { x * 2 })  // [2, 4, 6]
+      ```
+
+      각 원소에 익명 함수 `fn(x) { x * 2 }`가 적용되어 두 배가 됩니다.
+  - exercise: map-double
+    type: predict
+    prompt: 이 `list.map`의 결과는?
+    code: list.map([1, 2, 3], fn(x) { x * 2 })
+    choices:
+      - "`[2, 4, 6]`"
+      - "`[1, 2, 3]`"
+      - "`6`"
+      - "`[1, 4, 9]`"
+    answer: 0
+    feedback:
+      correct: 맞아요! 각 원소에 `x * 2`를 적용해 [2, 4, 6]이 됩니다.
+      choices:
+        "1": 함수가 각 원소에 적용돼요 — 원본 그대로가 아니라 두 배가 됩니다.
+        "2": "`map`은 합치는 게 아니라 각 원소를 1:1 변환해 *리스트*를 돌려줘요 — 6이 아니라 [2, 4, 6]."
+        "3": "`x * 2`는 두 배예요(제곱 `x * x`가 아니라) — [2, 4, 6]입니다."
+  - exercise: filter-even
+    type: predict
+    prompt: "`list.filter(리스트, 조건함수)`는 조건이 `True`인 원소만 남깁니다. 이 결과는?"
+    code: list.filter([1, 2, 3, 4], fn(x) { x % 2 == 0 })
+    choices:
+      - "`[2, 4]`"
+      - "`[1, 3]`"
+      - "`[1, 2, 3, 4]`"
+      - "`[True, False, True, False]`"
+    answer: 0
+    feedback:
+      correct: 정확해요! `x % 2 == 0`(짝수)이 참인 2와 4만 남습니다.
+      choices:
+        "1": 조건이 *참*인 원소를 남겨요 — 짝수(2, 4)가 남고 홀수가 걸러집니다.
+        "2": "`filter`는 조건에 맞는 것만 골라내요 — 전부 남기지 않습니다."
+        "3": "`filter`는 Bool 리스트가 아니라 *원소 자체*를 골라 돌려줘요 — [2, 4]."
+  - exercise: fn-type
+    type: choice
+    prompt: '"Int를 받아 Bool을 돌려주는 함수"의 타입 표기로 옳은 것은?'
+    choices:
+      - "`fn(Int) -> Bool`"
+      - "`fn(Bool) -> Int`"
+      - "`Int -> Bool`"
+      - "`fn Int Bool`"
+    answer: 0
+    feedback:
+      correct: 맞아요! 함수 타입은 `fn(입력) -> 출력`이에요 — 입력 `Int`, 출력 `Bool`.
+      choices:
+        "1": 입력과 출력이 뒤바뀌었어요 — Int가 입력, Bool이 출력입니다.
+        "2": 함수 타입에도 `fn(...)`과 괄호가 필요해요 — `Int -> Bool`만으로는 안 됩니다.
+        "3": "`->`로 입력과 출력을 잇고 입력은 괄호로 감쌉니다 — `fn(Int) -> Bool`."

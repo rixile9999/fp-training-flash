@@ -1,0 +1,112 @@
+title: result.map과 result.try
+tags:
+  - concept:results
+blocks:
+  - prose: intro
+    markdown: |-
+      계단을 펴기 전에, 두 가지 도구를 익힙니다. 둘 다 **"Error면 그대로 흘려보내고, Ok면 안쪽 값에 함수를 적용"**한다는 점은 같지만, 적용하는 함수의 반환 타입이 다릅니다.
+
+      - `result.map(결과, fn(x) { ... })` — 콜백이 **평범한 값**을 돌려줍니다. map이 그 값을 다시 `Ok(...)`로 포장해 줍니다.
+      - `result.try(결과, fn(x) { ... })` — 콜백이 **또 다른 Result**를 돌려줍니다. try는 그것을 그대로 결과로 씁니다(이중 포장 없음).
+  - exercise: map-ok
+    type: predict
+    prompt: "`result.map`은 Ok면 안쪽 값에 함수를 적용하고 다시 Ok로 포장합니다. 이 값은?"
+    code: result.map(Ok(5), fn(x) { x * 2 })
+    choices:
+      - "`Ok(10)`"
+      - "`10`"
+      - "`Ok(5)`"
+      - "`Ok(Ok(10))`"
+    answer: 0
+    feedback:
+      correct: 정확해요! `Ok(5)`의 안쪽 5에 `* 2`를 적용해 10, 그걸 다시 `Ok`로 포장해 `Ok(10)`.
+      choices:
+        "1": map은 결과를 다시 `Ok`로 포장합니다 — 맨몸 `10`이 아니라 `Ok(10)`이에요.
+        "2": 함수 `x * 2`가 적용되므로 안쪽 값이 바뀝니다 — `Ok(5)`가 아니라 `Ok(10)`.
+        "3": 콜백이 평범한 값(`10`)을 돌려주므로 포장은 한 겹뿐이에요 — `Ok(10)`이지 `Ok(Ok(10))`이 아닙니다.
+  - exercise: map-error
+    type: predict
+    prompt: "`result.map`에 `Error`가 들어오면 콜백은 호출되지 않고 Error가 그대로 통과합니다. 이 값은?"
+    code: |-
+      let r: Result(Int, String) = Error("nope")
+      result.map(r, fn(x) { x * 2 })
+    choices:
+      - '`Error("nope")`'
+      - '`Ok("nope")`'
+      - "`Error(0)`"
+      - '`"nope"`'
+    answer: 0
+    feedback:
+      correct: 맞아요! Error면 콜백 `x * 2`는 아예 실행되지 않고, `Error("nope")`가 손대지 않은 채 그대로 나옵니다.
+      choices:
+        "1": 에러가 `Ok`로 바뀌지 않아요 — map은 Error를 만나면 손대지 않고 그대로 흘려보냅니다.
+        "2": 에러 안의 값도 바뀌지 않습니다. `x * 2`는 Ok의 안쪽에만 적용돼요 — Error는 통과만 합니다.
+        "3": Result에서 값은 맨몸으로 나오지 않아요. 포장이 벗겨지지 않고 `Error("nope")` 그대로입니다.
+  - prose: try-chains
+    markdown: |-
+      이제 핵심인 `result.try`입니다. 콜백이 **Result를 돌려줄 때** 씁니다 — 그래서 Result를 내는 연산을 줄줄이 이을 수 있어요. "Ok면 콜백으로 계속, Error면 즉시 단락(short-circuit)"이 정확히 계단의 `Error(e) -> Error(e)`를 대신합니다.
+
+      ```gleam
+      result.try(int.parse("4"), fn(n) {
+        result.try(int.parse("6"), fn(m) {
+          Ok(n + m)
+        })
+      })
+      ```
+  - exercise: try-chain-ok
+    type: predict
+    prompt: 위 `result.try` 중첩 호출의 값은? (`int.parse`는 `Result(Int, Nil)`)
+    code: |-
+      result.try(int.parse("4"), fn(n) {
+        result.try(int.parse("6"), fn(m) {
+          Ok(n + m)
+        })
+      })
+    choices:
+      - "`Ok(10)`"
+      - "`10`"
+      - "`Ok(Ok(10))`"
+      - "`Error(Nil)`"
+    answer: 0
+    feedback:
+      correct: 정확해요! `int.parse("4")`=`Ok(4)`라 `n`=4로 진행, `int.parse("6")`=`Ok(6)`라 `m`=6, 마지막 `Ok(4 + 6)` = `Ok(10)`.
+      choices:
+        "1": 마지막 줄이 `Ok(n + m)`이라 결과는 `Ok`로 포장돼요 — `10`이 아니라 `Ok(10)`.
+        "2": "`try`는 콜백이 돌려준 Result를 그대로 씁니다(이중 포장 없음). 마지막이 `Ok(10)`이라 전체도 `Ok(10)`이에요."
+        "3": 두 파싱 모두 성공하므로 단락되지 않아요 — `Error(Nil)`이 아니라 `Ok(10)`입니다.
+  - exercise: try-chain-shortcircuit
+    type: predict
+    prompt: 같은 모양에서 첫 파싱이 실패하면? `int.parse("x")`는 `Error(Nil)`입니다. 이 값은?
+    code: |-
+      result.try(int.parse("x"), fn(n) {
+        result.try(int.parse("6"), fn(m) {
+          Ok(n + m)
+        })
+      })
+    choices:
+      - "`Ok(6)`"
+      - "`Error(Nil)`"
+      - "`Ok(Error(Nil))`"
+      - "`Ok(0)`"
+    answer: 1
+    feedback:
+      correct: 맞아요! 첫 `int.parse("x")`가 `Error(Nil)`라 `try`가 즉시 단락합니다 — 콜백은 실행되지 않고 `Error(Nil)`이 그대로 결과예요.
+      choices:
+        "0": 첫 단계가 실패하면 안쪽 콜백은 아예 실행되지 않아요. `int.parse("6")`에는 도달조차 못 합니다 — `Error(Nil)`입니다.
+        "2": 단락된 Error는 `Ok`로 감싸이지 않아요. try는 Error를 그대로 흘려보내 `Error(Nil)`을 냅니다.
+        "3": 실패가 기본값으로 무마되지 않습니다 — 에러가 타입에 그대로 남아 `Error(Nil)`로 나와요.
+  - exercise: map-vs-try
+    type: choice
+    prompt: '콜백이 **그 자체로 또 다른 Result를 돌려줄 때** `result.map`을 쓰면 어떤 일이 생기나요? 예: `result.map(int.parse("4"), fn(n) { Ok(n + 1) })`'
+    choices:
+      - "`Ok(5)` — map이 알아서 한 겹으로 평탄화한다"
+      - "`Ok(Ok(5))` — map은 콜백 결과를 무조건 한 번 더 Ok로 감싸 이중 포장이 된다"
+      - 컴파일 에러 — map은 Result를 돌려주는 콜백을 받을 수 없다
+      - "`Error(Nil)` — Result가 섞이면 실패로 본다"
+    answer: 1
+    feedback:
+      correct: 맞아요! map은 콜백이 무엇을 돌려주든 한 번 더 `Ok`로 감쌉니다. 콜백이 이미 `Ok(5)`를 돌려주면 `Ok(Ok(5))`라는 이중 포장이 돼요 — 이럴 땐 `try`를 써야 합니다.
+      choices:
+        "0": 평탄화는 `try`의 일이에요. map은 무조건 한 겹을 더 씌우므로 여기선 `Ok(Ok(5))`가 됩니다.
+        "2": 컴파일은 됩니다 — 다만 의도와 달리 `Ok(Ok(5))`처럼 이중 포장된 타입이 나와 버려요.
+        "3": Result가 섞였다고 실패로 보지 않아요. 두 겹으로 포장된 성공값 `Ok(Ok(5))`가 나옵니다.

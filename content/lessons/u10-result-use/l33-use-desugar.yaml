@@ -1,0 +1,104 @@
+title: use의 정체 — 디슈가링과 한계
+tags:
+  - concept:use-expressions
+  - tricky:use-desugaring
+blocks:
+  - prose: intro
+    markdown: |-
+      `use`는 마법이 아니라 **문법 설탕(syntactic sugar)**입니다. 정체를 알면 헷갈릴 일이 없어요.
+
+      ```gleam
+      use x <- f(arg)
+      나머지_코드
+      ```
+
+      이 한 줄은 정확히 다음과 같이 풀립니다(디슈가링):
+
+      ```gleam
+      f(arg, fn(x) { 나머지_코드 })
+      ```
+
+      핵심: **`use` 줄 아래의 "나머지 코드 전체"가 마지막 인자인 콜백 `fn(x) { ... }`의 본문으로 통째로 들어갑니다.** 일부만 들어가는 게 아니라 전부입니다.
+  - exercise: desugar-equiv
+    type: predict
+    prompt: 다음 두 코드는 같은 함수입니다(하나는 use, 하나는 디슈가링된 형태). `add("10", "5")`의 값은?
+    code: |-
+      // use 버전
+      //   use x <- result.try(int.parse(a))
+      //   use y <- result.try(int.parse(b))
+      //   Ok(x + y)
+      // 디슈가링 버전:
+      result.try(int.parse("10"), fn(x) {
+        result.try(int.parse("5"), fn(y) {
+          Ok(x + y)
+        })
+      })
+    choices:
+      - "`Ok(15)`"
+      - "`15`"
+      - "`Ok(Ok(15))`"
+      - "`Error(Nil)`"
+    answer: 0
+    feedback:
+      correct: 정확해요! 두 형태는 완전히 같은 코드예요. `x`=10, `y`=5로 내려가 마지막 `Ok(10 + 5)` = `Ok(15)`입니다.
+      choices:
+        "1": 마지막이 `Ok(x + y)`라 결과는 포장돼요 — 맨몸 `15`가 아니라 `Ok(15)`.
+        "2": "`try`는 콜백이 돌려준 Result를 그대로 써요(이중 포장 없음) — `Ok(15)`이지 `Ok(Ok(15))`가 아닙니다."
+        "3": 두 파싱 모두 성공하므로 단락되지 않아요 — `Ok(15)`입니다.
+  - prose: general-sugar
+    markdown: |-
+      여기서 중요한 통찰: `use`는 `result.try` 전용이 **아닙니다**. 디슈가링이 "마지막 인자로 콜백을 넘긴다"이므로, **마지막 인자가 함수인 어떤 함수와도** 쓸 수 있어요(예: `list.map`도 문법적으로는 가능). 다만 단락 흐름이 아닌 곳에 쓰면 오히려 읽기 어려워져서, 관용적으로는 `result.try`/`option`처럼 "이어가기/단락" 맥락에 씁니다.
+
+      남용 주의: `use`는 들여쓰기를 없애 줄 뿐, 의미를 바꾸지 않습니다.
+  - exercise: desugar-wrong-pairing
+    type: choice
+    prompt: 다음 중 `use`와 디슈가링이 **잘못** 짝지어진 것은?
+    choices:
+      - "`use x <- f(a)` ⟶ `f(a, fn(x) { 나머지 })`"
+      - "`use x <- f(a)` ⟶ `f(fn(x) { 나머지 }, a)`  (콜백이 첫 인자)"
+      - "`use a, b <- f(x)` ⟶ `f(x, fn(a, b) { 나머지 })`"
+      - "`use <- f(x)` ⟶ `f(x, fn() { 나머지 })`  (받는 값 없음)"
+    answer: 1
+    feedback:
+      correct: 맞아요! 콜백은 항상 **마지막** 인자로 들어갑니다. 첫 인자로 넣는 (2)가 잘못된 짝이에요 — 디슈가링 규칙은 "나머지 코드를 마지막 인자 콜백으로"입니다.
+      choices:
+        "0": 이건 올바른 짝이에요. `use x <- f(a)`는 정확히 `f(a, fn(x) { 나머지 })`로 풀립니다.
+        "2": 이것도 올바릅니다. 화살표 왼쪽에 여러 이름을 쓰면 콜백 인자도 그만큼(`fn(a, b)`) 됩니다.
+        "3": 이것도 올바른 짝이에요. 화살표 왼쪽이 비면 인자 없는 콜백 `fn() { ... }`이 됩니다.
+  - exercise: callback-scope
+    type: choice
+    prompt: "`use` 줄 아래에 코드가 세 줄 더 있습니다. 그중 콜백 `fn(x) { ... }`의 본문에 들어가는 것은?"
+    choices:
+      - 바로 다음 한 줄만
+      - "`use` 줄 아래의 세 줄 전부"
+      - 마지막 `Ok(...)` 줄만
+      - 아무 줄도 안 들어간다 — use는 그 줄에서 끝난다
+    answer: 1
+    feedback:
+      correct: 맞아요! 디슈가링의 핵심은 "나머지 코드 전체"가 콜백 본문이 된다는 것입니다 — 아래 세 줄 모두 `fn(x) { ... }` 안으로 들어갑니다.
+      choices:
+        "0": 한 줄만 들어가는 게 아니에요. use 아래의 모든 줄이 통째로 콜백 본문이 됩니다.
+        "2": 마지막 줄만이 아니라 use 아래 전부가 콜백 본문이에요 — 중간 줄들도 함께 들어갑니다.
+        "3": use는 그 줄에서 끝나지 않아요 — 오히려 아래 코드 전체를 콜백으로 감싸 이어 줍니다.
+  - exercise: use-single-line
+    type: predict
+    prompt: 한 단계짜리 `use`도 같은 규칙입니다. `inc("41")`의 값은?
+    code: |-
+      pub fn inc(s: String) -> Result(Int, Nil) {
+        use n <- result.try(int.parse(s))
+        Ok(n + 1)
+      }
+
+      inc("41")
+    choices:
+      - "`Ok(42)`"
+      - "`42`"
+      - "`Ok(Ok(42))`"
+      - "`Error(Nil)`"
+    answer: 0
+    feedback:
+      correct: 정확해요! `int.parse("41")`=`Ok(41)`라 `n`=41, 콜백 본문 `Ok(41 + 1)` = `Ok(42)`. 디슈가링하면 `result.try(int.parse("41"), fn(n) { Ok(n + 1) })`와 같아요.
+      choices:
+        "1": 함수 반환 타입이 `Result`라 마지막도 `Ok(...)`예요 — `42`가 아니라 `Ok(42)`.
+        "2": "`try`는 평탄화하므로 포장이 한 겹뿐이에요 — `Ok(42)`이지 `Ok(Ok(42))`가 아닙니다."
+        "3": '`"41"`은 정상 숫자라 파싱이 성공해요 — 단락되지 않고 `Ok(42)`입니다.'

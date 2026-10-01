@@ -1,0 +1,85 @@
+title: 제네릭 커스텀 타입
+tags:
+  - concept:generics
+blocks:
+  - prose: intro
+    markdown: |-
+      타입 변수는 함수뿐 아니라 **커스텀 타입**에도 붙일 수 있습니다. 사실 이미 써온 `List(a)`, `Option(a)`, `Result(a, e)`가 전부 그런 **제네릭 커스텀 타입**이에요 — 당신도 직접 만들 수 있습니다.
+
+      ```gleam
+      pub type Box(a) {
+        Box(inner: a)
+      }
+      ```
+
+      `Box(a)`는 "무언가 하나를 담는 상자"입니다. `Box(42)`는 `Box(Int)`, `Box("hi")`는 `Box(String)`이 되죠. 담긴 값의 타입이 곧 `a`입니다.
+  - prose: unbox
+    markdown: |-
+      상자에서 값을 꺼내는 함수도 제네릭으로 씁니다. `Box(a)`를 받아 그 안의 `a`를 그대로 돌려줘요.
+
+      ```gleam
+      pub fn unbox(box: Box(a)) -> a {
+        box.inner
+      }
+      ```
+
+      레코드 필드 접근(`box.inner`)은 U4에서 본 그대로입니다 — 제네릭이라고 달라지지 않아요.
+  - exercise: unbox-int
+    type: predict
+    prompt: "`Box(42)`를 풀면? (`unbox(box) -> a`는 `box.inner`를 돌려줍니다)"
+    code: unbox(Box(42))
+    choices:
+      - "`42`"
+      - "`Box(42)`"
+      - "`Box(inner: 42)`"
+      - "`a`"
+    answer: 0
+    feedback:
+      correct: 정확해요! `unbox`는 상자 안의 값을 그대로 꺼냅니다 — 포장을 벗긴 `42`.
+      choices:
+        "1": "`unbox`는 포장을 **벗깁니다** — 상자째로 돌려주지 않아요."
+        "2": 그건 상자 *자체*를 들여다본 모양이에요. `unbox`는 `inner` 값만 꺼냅니다.
+        "3": "`a`는 타입 변수(자리표시자)일 뿐, 실제 값이 아니에요 — 여기선 `42`로 채워집니다."
+  - prose: map-box
+    markdown: |-
+      이제 "상자를 열지 않고 안의 값만 변환"하는 함수를 봅시다. 입력 타입 `a`와 출력 타입 `b`가 다를 수 있으니 두 타입 변수를 씁니다.
+
+      ```gleam
+      pub fn map_box(box: Box(a), f: fn(a) -> b) -> Box(b) {
+        Box(f(box.inner))
+      }
+      ```
+
+      낯익지 않나요? 이건 `result.map`, `option.map`과 **똑같은 모양**입니다 — 당신은 방금 그들의 사촌을 만들었어요.
+  - exercise: map-box-incr
+    type: predict
+    prompt: 안의 값에 1을 더하면? `string.inspect`로 찍은 모양을 고르세요.
+    code: map_box(Box(5), fn(n) { n + 1 })
+    choices:
+      - "`Box(6)`"
+      - "`6`"
+      - "`Box(5)`"
+      - "`Box(5, 6)`"
+    answer: 0
+    feedback:
+      correct: 맞아요! `f`가 안의 5를 6으로 바꾸고, 결과는 **다시 상자에 담겨** `Box(6)`.
+      choices:
+        "1": "`map_box`는 상자째 돌려줍니다. 벗긴 값(`6`)이 아니라 `Box(6)`이에요. (벗기려면 `unbox`)"
+        "2": "`f`가 적용돼 5가 6이 됩니다 — 원래 값이 그대로 남지 않아요."
+        "3": 상자엔 변환된 값 하나만 들어갑니다 — 옛 값과 새 값이 둘 다 남지 않아요.
+  - exercise: map-box-upper
+    type: predict
+    prompt: 이번엔 문자열을 대문자화합니다. 결과의 모양은?
+    code: map_box(Box("gleam"), string.uppercase)
+    choices:
+      - '`Box("GLEAM")`'
+      - '`"GLEAM"`'
+      - '`Box("gleam")`'
+      - 컴파일 에러
+    answer: 0
+    feedback:
+      correct: 정확해요! 여기선 `a = String`, `b = String`. 안의 "gleam"이 "GLEAM"이 되어 다시 상자에 담깁니다.
+      choices:
+        "1": 결과는 상자입니다. 벗긴 문자열이 아니라 `Box("GLEAM")`이에요.
+        "2": "`string.uppercase`가 적용돼 대문자가 됩니다 — 원래대로 남지 않아요."
+        "3": "`String -> String` 함수라 `fn(a) -> b`에 잘 맞습니다 — 정상 컴파일돼요."

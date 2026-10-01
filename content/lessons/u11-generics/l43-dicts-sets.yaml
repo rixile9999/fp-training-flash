@@ -1,0 +1,96 @@
+title: Dict와 Set 한 바퀴
+tags:
+  - concept:dicts
+blocks:
+  - prose: intro
+    markdown: |-
+      마지막으로 제네릭 컬렉션 둘을 둘러봅니다. **`Dict(k, v)`**는 키(`k`)로 값(`v`)을 찾는 사전입니다(`import gleam/dict`). 타입 변수가 *둘*이라 "무슨 키든, 무슨 값이든" 담을 수 있어요.
+
+      ```gleam
+      let scores = dict.from_list([#("lucy", 10), #("max", 7)])
+      ```
+
+      중요한 점: `dict.get`은 키가 없을 수도 있으니 **`Result`를 돌려줍니다**(U9의 재등장!). 있으면 `Ok(값)`, 없으면 `Error(Nil)`.
+  - exercise: dict-get-hit
+    type: predict
+    prompt: 키가 있을 때 `dict.get`의 값은?
+    code: |-
+      let scores = dict.from_list([#("lucy", 10), #("max", 7)])
+      dict.get(scores, "lucy")
+    choices:
+      - "`Ok(10)`"
+      - "`10`"
+      - "`Some(10)`"
+      - "`Error(Nil)`"
+    answer: 0
+    feedback:
+      correct: 맞아요! 값이 있어도 맨몸으로 나오지 않습니다 — `Ok(10)`으로 포장돼 옵니다. 꺼내려면 패턴 매칭.
+      choices:
+        "1": Dict 조회는 실패할 수 있어서 결과가 `Result`로 포장됩니다 — `10`이 아니라 `Ok(10)`.
+        "2": "`dict.get`은 `Option`이 아니라 `Result`를 돌려줍니다 — `Some`이 아니라 `Ok`예요."
+        "3": '`Error(Nil)`은 키가 *없을* 때예요. "lucy"는 사전에 있습니다.'
+  - exercise: dict-get-miss
+    type: predict
+    prompt: 없는 키를 찾으면?
+    code: |-
+      let scores = dict.from_list([#("lucy", 10), #("max", 7)])
+      dict.get(scores, "nobody")
+    choices:
+      - "`Error(Nil)`"
+      - "`Nil`"
+      - "`None`"
+      - 런타임 크래시
+    answer: 0
+    feedback:
+      correct: 정확해요! 키가 없으면 `Error(Nil)`입니다 — 크래시가 아니라 *타입에 적힌 실패*예요. 호출자가 case로 다뤄야 합니다.
+      choices:
+        "1": 맨 `Nil`이 아니라 `Error(Nil)`로 포장됩니다 — `dict.get`은 `Result`를 돌려줘요.
+        "2": "`None`은 `Option`의 부재예요. `dict.get`은 `Result`라 `Error(Nil)`을 씁니다."
+        "3": 없는 키는 크래시가 아니라 `Error(Nil)`로 안전하게 표현됩니다 — 예외가 없으니까요.
+  - prose: dict-insert
+    markdown: Dict도 불변입니다. `dict.insert(d, 키, 값)`은 원본을 바꾸지 않고 *새 Dict*를 돌려줘요. 그리고 **같은 키에 다시 넣으면 덮어씁니다** — 키는 중복되지 않습니다.
+  - exercise: dict-insert-overwrite
+    type: predict
+    prompt: 같은 키 `"a"`에 두 번 넣은 뒤의 크기(`dict.size`)는?
+    code: |-
+      let d =
+        dict.new()
+        |> dict.insert("a", 1)
+        |> dict.insert("a", 99)
+      dict.size(d)
+    choices:
+      - "`1`"
+      - "`2`"
+      - "`99`"
+      - "`0`"
+    answer: 0
+    feedback:
+      correct: 맞아요! 같은 키는 덮어쓰여 하나로 합쳐집니다 — 크기는 1(값은 99로 갱신).
+      choices:
+        "1": 키 `"a"`가 같아서 두 칸이 되지 않아요 — 둘째 insert가 첫째를 덮습니다.
+        "2": "`99`는 저장된 *값*이지 *크기*가 아니에요 — 항목은 하나뿐입니다."
+        "3": 항목을 넣었으니 비어 있지 않아요 — 크기는 1입니다.
+  - prose: set
+    markdown: '**`Set(a)`**는 "중복 없는 모음"입니다(`import gleam/set`). 같은 값을 여러 번 넣어도 하나로 합쳐지고, `set.contains`로 들어있는지만 묻습니다 — 순서나 개수는 신경 쓰지 않아요.'
+  - exercise: set-dedup
+    type: predict
+    prompt: 1을 두 번, 2를 한 번 넣은 Set의 크기(`set.size`)는?
+    code: |-
+      let s =
+        set.new()
+        |> set.insert(1)
+        |> set.insert(2)
+        |> set.insert(1)
+      set.size(s)
+    choices:
+      - "`2`"
+      - "`3`"
+      - "`1`"
+      - "`0`"
+    answer: 0
+    feedback:
+      correct: 정확해요! Set은 중복을 합칩니다 — 1이 두 번 들어가도 하나로 세어, 서로 다른 값은 1과 2뿐이라 크기는 2.
+      choices:
+        "1": 넣은 *횟수*가 아니라 *서로 다른 값*의 수예요 — 1의 중복이 합쳐져 2입니다.
+        "2": 값이 두 종류(1, 2)라 크기는 1이 아니에요. 중복만 합쳐집니다.
+        "3": 원소를 넣었으니 비어 있지 않아요 — 크기는 2입니다.

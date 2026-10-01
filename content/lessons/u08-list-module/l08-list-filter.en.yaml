@@ -1,0 +1,77 @@
+title: filter — Picking Things Out
+blocks:
+  intro:
+    markdown: |-
+      If map is "transform every element," then `list.filter` is "**keep only the elements that match a condition**."
+
+      The function you pass is a **predicate** that takes one element and returns a `Bool`. If it's `True`, the element is kept; if `False`, it's discarded. The elements themselves aren't changed, but **the count can shrink**.
+
+      ```gleam
+      import gleam/list
+
+      list.filter([1, 2, 3, 4, 5], fn(x) { x > 2 })
+      // == [3, 4, 5]
+      ```
+  filter-gt2:
+    prompt: What does this `list.filter` produce? (only elements where the predicate is `True` are kept)
+    choices:
+      - "`[3, 4, 5]`"
+      - "`[1, 2]`"
+      - "`[True, True, True]`"
+      - "`3`"
+    feedback:
+      correct: Right! Only the elements where `x > 2` is true (3, 4, 5) are kept; the rest are discarded.
+      choices:
+        "1": Elements where the predicate is `True` are **kept** — not the `False` ones. The elements where `x > 2` is true are 3, 4, 5.
+        "2": filter keeps the **original elements**, not the predicate's result (`Bool`) — `[3, 4, 5]`.
+        "3": filter returns the filtered **list**, not a single value.
+  predicate:
+    markdown: |-
+      The predicate must return a `Bool`. If you want to filter for even numbers, use a function that gives a `Bool`, like `int.is_even`, or write a comparison directly, like `fn(x) { x % 2 == 0 }`. (`%` is the remainder operator, so `x % 2 == 0` means even.)
+
+      ```gleam
+      import gleam/int
+      import gleam/list
+
+      list.filter([1, 2, 3, 4, 5], int.is_even)
+      // == [2, 4]
+      ```
+  filter-even:
+    prompt: This `list.filter` passes a function value directly. What's the result?
+    choices:
+      - "`[2, 4]`"
+      - "`[1, 3, 5]`"
+      - "`[2, 4, 6]`"
+      - "`2`"
+    feedback:
+      correct: Exactly! The elements where `int.is_even` is `True` — the even numbers 2 and 4 — are kept.
+      choices:
+        "1": It keeps the ones where `is_even` is true (the evens) — `[2, 4]`, not the odd numbers.
+        "2": A 6 that wasn't in the list can't appear. filter doesn't add elements.
+        "3": filter returns the filtered **list**, not a count (a single value).
+  filter-then-length:
+    prompt: What's the value of the filter result counted by length?
+    choices:
+      - "`3`"
+      - "`2`"
+      - "`6`"
+      - "`[2, 4, 6]`"
+    feedback:
+      correct: Right! The even numbers are 2, 4, 6 — three of them, so `list.length` gives `3`.
+      choices:
+        "1": The even numbers between 1 and 6 are 2, 4, 6 — three of them, not two.
+        "2": 6 is the original length. filter keeps only the evens first, then the length is counted.
+        "3": The final `list.length` turns the list into a **count** — `3`, not a list.
+  filter-vs-map:
+    prompt: What's the biggest difference between map and filter?
+    choices:
+      - filter's result length can shrink, while map's length is always the same
+      - filter keeps the same length, while map's length can shrink
+      - Both always return a single value
+      - Both take a predicate (a function returning `Bool`)
+    feedback:
+      correct: Right! filter discards elements, so its length can shrink (or stay the same), while map is a 1:1 transformation, so length is preserved.
+      choices:
+        "1": You've got it backwards — the length that can change is filter's, and the one preserved is map's.
+        "2": Both return a **list**. Folding down to a single value is fold.
+        "3": Only filter takes a predicate (returning `Bool`). map's function can return any type.

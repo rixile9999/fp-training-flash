@@ -1,0 +1,92 @@
+title: fold — 만능 접기
+tags:
+  - concept:lists
+blocks:
+  - prose: intro
+    markdown: |-
+      map과 filter는 리스트를 받아 리스트를 돌려줍니다. 그런데 리스트를 **값 하나로 접고** 싶을 때는요? 합계, 곱, 개수, 이어붙인 문자열처럼요. 그게 `list.fold`입니다.
+
+      `list.fold(리스트, 초기값, fn(acc, item) { ... })` — **초기 누산기(acc)**에서 시작해, 원소를 하나씩 누산기에 합쳐 나갑니다. U6에서 손으로 쓴 `sum_loop`가 정확히 fold예요.
+
+      ```gleam
+      import gleam/list
+
+      list.fold([1, 2, 3, 4], 0, fn(acc, x) { acc + x })
+      // == 10
+      ```
+
+      중요: 콜백의 **첫 번째 인자가 누산기(acc)**, 두 번째가 현재 원소입니다.
+  - exercise: fold-sum
+    type: predict
+    prompt: 이 `list.fold`의 결과는?
+    code: list.fold([1, 2, 3, 4], 0, fn(acc, x) { acc + x })
+    choices:
+      - "`10`"
+      - "`0`"
+      - "`[1, 2, 3, 4]`"
+      - "`4`"
+    answer: 0
+    feedback:
+      correct: 맞아요! 0에서 시작해 1, 2, 3, 4를 차례로 더해 `10`이 됩니다.
+      choices:
+        "1": 0은 **초기 누산기**예요. 거기에 원소들을 더해 나갑니다.
+        "2": fold는 리스트를 값 하나로 **접습니다** — 리스트가 아니라 `10`이에요.
+        "3": 4는 마지막 원소(또는 개수)일 뿐, 결과는 합 `10`입니다.
+  - prose: any-shape
+    markdown: |-
+      fold의 초기값과 누산기 타입은 **원소 타입과 달라도** 됩니다. 그래서 fold는 "만능"이에요 — 곱(초기값 1), 개수(초기값 0, 콜백에서 `acc + 1`), 문자열 이어붙이기(초기값 `""`)까지 전부 fold로 표현됩니다.
+
+      ```gleam
+      import gleam/list
+
+      // 곱: 초기값 1
+      list.fold([1, 2, 3, 4], 1, fn(acc, x) { acc * x })
+      // == 24
+      ```
+  - exercise: fold-product
+    type: predict
+    prompt: 곱을 구하는 `list.fold`입니다. 결과는?
+    code: list.fold([1, 2, 3, 4], 1, fn(acc, x) { acc * x })
+    choices:
+      - "`24`"
+      - "`10`"
+      - "`1`"
+      - "`0`"
+    answer: 0
+    feedback:
+      correct: 정확해요! 초기값 1에서 1*1*2*3*4 = 24를 누적합니다.
+      choices:
+        "1": 10은 **덧셈** fold의 결과예요. 여기선 `acc * x`로 곱합니다.
+        "2": 1은 초기 누산기예요 — 원소들을 곱해 나가면 24가 됩니다.
+        "3": 곱셈의 초기값을 0으로 두면 전부 0이 되겠지만, 여기선 1로 시작합니다 — 결과는 24.
+  - exercise: fold-count
+    type: predict
+    prompt: 원소 개수를 세는 fold입니다. 콜백이 원소 값을 안 쓰고 `acc + 1`만 합니다. 결과는?
+    code: list.fold([10, 20, 30], 0, fn(acc, _x) { acc + 1 })
+    choices:
+      - "`3`"
+      - "`60`"
+      - "`30`"
+      - "`0`"
+    answer: 0
+    feedback:
+      correct: 맞아요! 원소 값을 무시하고 매번 1씩 더하므로, 원소 개수인 `3`이 됩니다.
+      choices:
+        "1": 60은 원소들의 **합**이에요. 이 콜백은 값을 더하지 않고 `acc + 1`만 합니다.
+        "2": 30은 마지막 원소예요. 콜백은 원소 값을 쓰지 않습니다 — 개수만 셉니다.
+        "3": 0은 초기값이에요 — 원소마다 1을 더해 3이 됩니다.
+  - exercise: fold-callback-shape
+    type: choice
+    prompt: "`list.fold(xs, init, f)`에서 콜백 `f`의 올바른 인자 순서는?"
+    choices:
+      - "`fn(acc, item)` — 누산기가 먼저"
+      - "`fn(item, acc)` — 원소가 먼저"
+      - "`fn(acc)` — 인자 하나"
+      - "`fn(item)` — 인자 하나"
+    answer: 0
+    feedback:
+      correct: 맞아요! Gleam stdlib의 fold 콜백은 `fn(acc, item)`입니다 — 누산기가 첫 번째예요. 다음 레슨에서 이 순서가 왜 함정이 되는지 봅니다.
+      choices:
+        "1": 순서가 반대예요. Gleam은 누산기를 **첫 번째** 인자로 받습니다 — 다른 언어와 다를 수 있어요.
+        "2": 콜백은 누산기와 원소 **둘 다** 받아야 합니다 — 인자가 둘이에요.
+        "3": 원소만 받으면 누산을 이어갈 수 없어요 — 누산기도 함께 받습니다.

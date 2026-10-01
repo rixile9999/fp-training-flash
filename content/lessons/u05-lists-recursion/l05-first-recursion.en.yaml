@@ -1,0 +1,103 @@
+title: "First recursion: counting length and summing"
+blocks:
+  intro:
+    markdown: |-
+      Gleam has **neither** `for` nor `while`. So how do you traverse a list? The answer is **recursion**: process one head, then **call yourself again on the tail**.
+
+      Every recursion is designed around two questions:
+      1. If the input is the smallest possible (an empty list), what's the answer? — the **base case (termination condition)**
+      2. After processing one head, what problem remains? — the **recursive step**
+  length-example:
+    markdown: |-
+      Let's look at a function that counts the length of a list:
+
+      ```gleam
+      pub fn length(xs: List(Int)) -> Int {
+        case xs {
+          [] -> 0
+          [_, ..rest] -> 1 + length(rest)
+        }
+      }
+      ```
+
+      The length of an empty list is 0 (base case). If it's not empty, add one head (`+1`) to **the length of the rest**. We don't use the head value itself, so we caught it with `_`.
+  length-3:
+    prompt: With the `length` function above, what is the value of `length([10, 20, 30])`?
+    choices:
+      - "`3`"
+      - "`60`"
+      - "`0`"
+      - "`30`"
+    feedback:
+      correct: Correct! 1 + (1 + (1 + 0)) = 3. It peels off one head at a time, stacking up +1, and finishes with 0 at the empty list.
+      choices:
+        "1": This function **counts** elements — it counts the quantity 3, it doesn't add them up (10+20+30).
+        "2": 0 is for an empty list — there are 3 elements, so the result is 3.
+        "3": It returns the **count**, not the last element (30) — that's 3.
+    code: |-
+      pub fn length(xs: List(Int)) -> Int {
+        case xs {
+          [] -> 0
+          [_, ..rest] -> 1 + length(rest)
+        }
+      }
+
+      // what is length([10, 20, 30])?
+  length-empty:
+    prompt: With the same `length` function, what is the value of `length([])`? (The base case is the very seed of the answer.)
+    choices:
+      - "`0`"
+      - "`1`"
+      - "`Nil`"
+      - compile error
+    feedback:
+      correct: Exactly! An empty list matches the first branch `[] -> 0` right away — the base case returns 0.
+      choices:
+        "1": An empty list has no elements — its length is 0, not 1.
+        "2": The `[] -> 0` branch returns the `Int` 0 — it's not `Nil`.
+        "3": It compiles fine — `[]` and `[_, ..rest]` cover every case.
+    code: |-
+      pub fn length(xs: List(Int)) -> Int {
+        case xs {
+          [] -> 0
+          [_, ..rest] -> 1 + length(rest)
+        }
+      }
+
+      // what is length([])?
+  total-example:
+    markdown: |-
+      Using the same skeleton, we can also compute a **sum**. This time we need the head value, so we catch it with a name (`first`):
+
+      ```gleam
+      pub fn total(xs: List(Int)) -> Int {
+        case xs {
+          [] -> 0
+          [first, ..rest] -> first + total(rest)
+        }
+      }
+      ```
+
+      The sum of an empty list is 0 (base case). If it's not empty, it's the **head value** + **the sum of the rest**. It's nearly identical to `length`, with just `first` in place of `1`.
+  total-sum:
+    prompt: With the `total` function above, what is the value of `total([2, 3, 5])`?
+    choices:
+      - "`10`"
+      - "`3`"
+      - "`0`"
+      - "`5`"
+    feedback:
+      correct: Correct! 2 + (3 + (5 + 0)) = 10. It adds the head values one by one and closes out with 0 at the empty list.
+      choices:
+        "1": This function computes a sum — that's 2+3+5 = 10, not the count (3).
+        "2": 0 is the base-case value for an empty list — the sum of the elements is 10.
+        "3": It adds up **all** of them, not just the last element (5) — that's 10.
+    code: |-
+      pub fn total(xs: List(Int)) -> Int {
+        case xs {
+          [] -> 0
+          [first, ..rest] -> first + total(rest)
+        }
+      }
+
+      // what is total([2, 3, 5])?

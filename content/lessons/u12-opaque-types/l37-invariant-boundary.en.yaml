@@ -1,0 +1,64 @@
+title: Enforce invariants at the module boundary
+blocks:
+  intro:
+    markdown: |-
+      An **invariant** is "a property that is *always* true of any value of this type." For example: "the cents of an `Amount` are never negative."
+
+      With `opaque` + a smart constructor, you only need to enforce this invariant **in a single place — the module boundary**. That's because the only way to create a value is through functions inside the module. Once something has become an `Amount`, *all the rest of your code can trust* that its cents can't be negative.
+  subtract-ok:
+    prompt: What is the result of this code? (`subtract` calls `new(cents(a) - cents(b))` inside the module.)
+    choices:
+      - "`70`"
+      - "`130`"
+      - "`-1`"
+      - "`Ok(70)`"
+    feedback:
+      correct: Correct! 100 - 30 = 70, and 70 >= 0, so `new` returns `Ok`. Pulling it out with `cents` gives 70.
+      choices:
+        "1": It's a subtraction — not addition (130) but 100 - 30 = 70.
+        "2": "`-1` is the value of the `Error` branch. 70 isn't negative, so it passes validation."
+        "3": Since you've pulled it out once with `cents`, it's the `Int` 70 that goes in, not a `Result`.
+  subtract-underflow:
+    prompt: Now this one? (same `subtract`)
+    choices:
+      - "`Ok(Amount(-70))`"
+      - '`Error("amount must not be negative")`'
+      - "`-70`"
+      - '`Error("setup")`'
+    feedback:
+      correct: Exactly! 30 - 100 = -70, and `subtract` calls `new(-70)`, so the invariant check blocks it and the result is `Error`.
+      choices:
+        "0": A negative `Amount` can't be created — that's the whole point of the invariant.
+        "2": "`subtract` returns a `Result`, not a raw value."
+        "3": Both `new(30)` and `new(100)` succeed, so it never reaches the `"setup"` branch. The validation catches it at `new(-70)`.
+  where:
+    markdown: |-
+      The key here is that you "don't scatter the negative check across every place that calls." The invariant is enforced once, inside the module's `new`/`subtract`, and outside code that receives an `Amount` trusts it to be "already valid" and uses it.
+
+      The same goes for other domains. For `Email`, the invariant would be "contains an `@`."
+  email-invalid:
+    prompt: When `Email`'s smart constructor validates with `string.contains(raw, "@")`, what is the result of `new("ab")`?
+    choices:
+      - '`Ok(Email("ab"))`'
+      - '`Error("invalid email")`'
+      - '`"ab"`'
+      - "`True`"
+    feedback:
+      correct: Correct! `"ab"` has no `@`, so `string.contains` is `False` — it takes the `Error` branch.
+      choices:
+        "0": Without an `@` it doesn't become `Ok` — the invariant blocks it.
+        "2": "`new` returns a `Result`, not a raw string."
+        "3": "`string.contains` is just the value tested by the `case`; the result of `new` is a `Result`."
+  boundary-benefit:
+    prompt: What is the biggest benefit of a design that enforces invariants "only at the module boundary"?
+    choices:
+      - You have to copy-paste the validation code into every call site that uses the value
+      - Once a value is created you can trust it's valid everywhere, so defensive code disappears
+      - Runtime validation happens more often, making it safer
+      - Making the type `opaque` auto-generates the validation
+    feedback:
+      correct: Correct! Since the path to creating values is sealed, any `Amount` you receive is already valid. The scattered `if cents < 0` defensive code is no longer needed.
+      choices:
+        "0": That's the exact opposite — enforcing it once at the boundary eliminates the copy-paste.
+        "2": Validating once at creation is enough. Doing it often isn't the goal.
+        "3": "`opaque` only seals the path; you write the validation logic in `new` yourself."

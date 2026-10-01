@@ -1,0 +1,112 @@
+title: Custom types instead of Bool
+blocks:
+  intro:
+    markdown: |-
+      When there are only two states, you're tempted to use `Bool` — like `is_admin: Bool`. But once the states grow to three or more, `Bool` can't express it. On top of that, `True`/`False` doesn't let you read "what is true" from the code (so-called *boolean blindness*).
+
+      That's why in Gleam we love to make **variants with meaningful names**.
+
+      ```gleam
+      pub type Access {
+        Guest
+        Member
+        Admin
+      }
+      ```
+
+      `Admin` is clear in meaning by itself, and even if you slot in `Moderator` later, the compiler points out all the places to fix.
+  why-custom:
+    prompt: "Which is a correct reason it's good to represent permissions with the custom type `Access { Guest Member Admin }` instead of `is_admin: Bool`?"
+    choices:
+      - It's always faster than Bool
+      - It can be expressed even with three or more states, and each state's meaning shows up in its name
+      - You no longer need to use `case`
+      - It uses less memory
+    feedback:
+      correct: Right! Two `Bool` values can't hold three or more, and `True`/`False` hides the meaning. Variants give you both meaning and extensibility.
+      choices:
+        "0": Speed isn't the goal — expressiveness and clarity of meaning are the point.
+        "2": On the contrary, you handle each variant with `case`, and you even gain the exhaustiveness safety net.
+        "3": Saving memory isn't the goal; the goal is to 'rule out impossible states and reveal meaning'.
+  can-delete-member:
+    prompt: Here's whether each permission can delete. What is the value of `can_delete(Member)`?
+    choices:
+      - "`True`"
+      - "`False`"
+      - "`Member`"
+      - Compile error
+    feedback:
+      correct: Right! The `Member` branch returns `False` — a member has no delete permission.
+      choices:
+        "0": "`True` is when it's `Admin`. The input is `Member`, so it's `False`."
+        "2": "`case` returns the result of the branch (a `Bool`), not the input variant."
+        "3": All three variants are handled so it's exhaustive — it compiles fine.
+    code: |-
+      pub type Access {
+        Guest
+        Member
+        Admin
+      }
+
+      pub fn can_delete(a: Access) -> Bool {
+        case a {
+          Admin -> True
+          Member -> False
+          Guest -> False
+        }
+      }
+
+      // can_delete(Member) is?
+  states-as-type:
+    markdown: |-
+      Where boolean blindness especially hurts is intermediate states like "in progress." If you make the connection state `is_connected: Bool`, there's no place to express "connecting." With a variant it's clean:
+
+      ```gleam
+      pub type Connection {
+        Connecting
+        Connected
+        Disconnected
+      }
+      ```
+  connection-message:
+    prompt: Here's a message per connection state. What is the value of `message(Connected)`?
+    choices:
+      - '`"연결 중..."`'
+      - '`"연결됨"`'
+      - '`"끊김"`'
+      - "`Connected`"
+    feedback:
+      correct: Exactly! It matches the `Connected` branch and becomes "연결됨" — if it were a `Bool` you couldn't have held these three states.
+      choices:
+        "0": '"연결 중..." is the `Connecting` branch — the input is `Connected`.'
+        "2": '"끊김" is the `Disconnected` branch — not `Connected`.'
+        "3": "`case` returns the result (a string) of the matched branch, not the input variant."
+    code: |-
+      pub type Connection {
+        Connecting
+        Connected
+        Disconnected
+      }
+
+      pub fn message(c: Connection) -> String {
+        case c {
+          Connecting -> "연결 중..."
+          Connected -> "연결됨"
+          Disconnected -> "끊김"
+        }
+      }
+
+      // message(Connected) is?
+  boolean-blindness:
+    prompt: "Which is the most correct problem with the function signature `fn render(loading: Bool, error: Bool) -> ...`?"
+    choices:
+      - Bool can't be used as a function argument
+      - A contradictory 'impossible state' like `(True, True)` is allowed by the type, and the meaning isn't revealed in names
+      - It's slow because there are two arguments
+      - Bool can't be used in `case`
+    feedback:
+      correct: Right! `(True, True)` — loading and erroring at the same time — makes no sense, yet the type can't prevent it. If you bundle the one state into a variant type, you can eliminate the impossible combination entirely.
+      choices:
+        "0": "`Bool` works perfectly well as an argument — the problem is that several `Bool`s allow a contradictory state."
+        "2": The number of arguments and speed are unrelated — the key is that the type can't prevent impossible states.
+        "3": "`Bool` can be handled fine with `case True/False` — that's not the problem."

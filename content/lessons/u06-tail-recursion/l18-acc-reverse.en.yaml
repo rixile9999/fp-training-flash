@@ -1,0 +1,101 @@
+title: "A Side Effect of Accumulation: the Reversed Result"
+blocks:
+  intro:
+    markdown: |-
+      When you build a *list* with an accumulator, one side effect appears. You stack each new element by **prepending it to the front** of the accumulator (`[x, ..acc]`), and since prepend is O(1), stacking this way is the right choice. But the price is that **the result comes out reversed**.
+
+      ```gleam
+      fn double_loop(xs: List(Int), acc: List(Int)) -> List(Int) {
+        case xs {
+          [] -> acc
+          [first, ..rest] -> double_loop(rest, [first * 2, ..acc])
+        }
+      }
+      ```
+
+      The first element goes in *first* and ends up buried *deepest*, while the last element comes to the front.
+  double-loop-reversed:
+    prompt: What is `double_loop([1, 2, 3], [])`?
+    choices:
+      - "`[2, 4, 6]`"
+      - "`[6, 4, 2]`"
+      - "`[1, 2, 3]`"
+      - "`[6]`"
+    feedback:
+      correct: Right! 2 goes in front of []→[2], 4 in front→[4, 2], 6 in front→[6, 4, 2]. Prepend accumulation reverses the order.
+      choices:
+        "0": Each value is doubled, true, but *the order is reversed* — 1 goes in first and ends up buried deepest, giving [6, 4, 2].
+        "2": The values get doubled — it's 2,4,6 not 1,2,3, and on top of that the order is reversed to [6, 4, 2].
+        "3": Every element gets stacked — it's not just the last [6] that remains, it's [6, 4, 2].
+    code: |-
+      fn double_loop(xs: List(Int), acc: List(Int)) -> List(Int) {
+        case xs {
+          [] -> acc
+          [first, ..rest] -> double_loop(rest, [first * 2, ..acc])
+        }
+      }
+
+      // double_loop([1, 2, 3], []) is?
+  accumulate-then-reverse:
+    markdown: |-
+      This reversal is **a pattern, not a bug**. If you want to preserve the order, you just pass through `list.reverse` once at the end in the wrapper. This is called the **accumulate-then-reverse** idiom (stack up, then reverse at the end).
+
+      ```gleam
+      pub fn double_all(xs: List(Int)) -> List(Int) {
+        list.reverse(double_loop(xs, []))
+      }
+      ```
+
+      You stack quickly (O(1)) with prepend, then reverse exactly once at the end to restore the original order.
+  double-all-restored:
+    prompt: What is `double_all([1, 2, 3])`? (the wrapper applies `list.reverse` at the end)
+    choices:
+      - "`[6, 4, 2]`"
+      - "`[2, 4, 6]`"
+      - "`[1, 2, 3]`"
+      - "`[3, 2, 1]`"
+    feedback:
+      correct: Exactly! The loop builds [6, 4, 2], and `list.reverse` turns it back into [2, 4, 6], restoring the original order.
+      choices:
+        "0": That's the value *before* reverse — the wrapper reverses it once into [2, 4, 6].
+        "2": The values get doubled — the elements aren't left as is, they become 2,4,6.
+        "3": You have to double the values — it's 2,4,6 not 1,2,3.
+    code: |-
+      fn double_loop(xs: List(Int), acc: List(Int)) -> List(Int) {
+        case xs {
+          [] -> acc
+          [first, ..rest] -> double_loop(rest, [first * 2, ..acc])
+        }
+      }
+
+      pub fn double_all(xs: List(Int)) -> List(Int) {
+        list.reverse(double_loop(xs, []))
+      }
+
+      // double_all([1, 2, 3]) is?
+  why-prepend:
+    prompt: Why use prepend (`[x, ..acc]`) instead of append (`acc <> [x]`) in list accumulation and reverse at the end?
+    choices:
+      - Because append is impossible
+      - Because prepend is O(1) and fast, and the reversal is solved by a single reverse at the end
+      - Because reverse changes the result value
+      - Because prepend preserves the order
+    feedback:
+      correct: Right! Prepend is always O(1), so every step is fast. The reversal is cleanly fixed with a single reverse (O(n)) at the end.
+      choices:
+        "0": Append is possible too — it's just slow because each time it scans to the end of the list, making it O(n).
+        "2": Reverse only changes the *order* — the values themselves (the doubled results) stay the same.
+        "3": Prepend *reverses* the order — that's exactly why you need reverse at the end.
+  reverse-is-pattern:
+    prompt: When you see that a list built with an accumulator comes out reversed, what's the best conclusion?
+    choices:
+      - It's a bug — the recursion was written wrong
+      - It's normal — it's the natural result of prepend accumulation, and if needed you restore it with `list.reverse` at the end
+      - The terminating condition is wrong
+      - The starting acc should be `[0]` instead of `[]`
+    feedback:
+      correct: Right! When you stack with prepend, coming out reversed is normal — it's a pattern, not a bug. If order matters, just reverse once in the wrapper.
+      choices:
+        "0": It's not a bug — prepend accumulation inherently produces a reversed result. You just finish off with reverse.
+        "2": The terminating condition `[] -> acc` is correct — the reversal is due to prepend, not termination.
+        "3": The starting value is correctly the empty list `[]` — giving `[0]` would mix a stray 0 into the result.

@@ -1,0 +1,45 @@
+title: 값과 let
+tags:
+  - concept:basics
+blocks:
+  - prose: intro
+    markdown: |-
+      프로그램은 결국 **값**을 다루는 일입니다. `1`, `3.14`, `"안녕"`, `True` — 이 모두가 값이에요.
+
+      Gleam에서는 `let`으로 값에 **이름**을 붙입니다. `let pi = 3.14`라고 쓰면 그 시점부터 `pi`라는 이름이 `3.14`를 가리킵니다.
+  - exercise: bind-syntax
+    type: choice
+    prompt: 함수 본문 안에서 값을 이름에 묶는 올바른 문법은 무엇일까요?
+    choices:
+      - "`x = 5`"
+      - "`let x = 5`"
+      - "`var x = 5`"
+      - "`const x = 5`"
+    answer: 1
+    feedback:
+      correct: 맞아요! Gleam은 함수 안에서 `let`으로만 바인딩합니다. `var`도 없고, 재대입도 없어요.
+      choices:
+        "0": "`=`만으로는 안 됩니다. 바인딩엔 반드시 `let`이 필요해요."
+        "2": Gleam에는 `var`가 없습니다 — 재할당이라는 개념 자체가 없으니까요.
+        "3": "`const`는 모듈 최상위 상수용입니다. 함수 안의 바인딩은 `let`이에요."
+  - prose: use-name
+    markdown: 이름을 붙이면 뒤에서 그 이름으로 값을 다시 꺼내 쓸 수 있습니다. 표현식 안에서 이름은 곧 그 값으로 치환된다고 생각하면 됩니다.
+  - exercise: let-use
+    type: predict
+    prompt: 아래 코드가 끝났을 때 `total`의 값은?
+    code: |-
+      let price = 100
+      let count = 3
+      let total = price * count
+    choices:
+      - "`3`"
+      - "`100`"
+      - "`300`"
+      - "`103`"
+    answer: 2
+    feedback:
+      correct: 정확해요! `price`는 100, `count`는 3 — `total`은 100 * 3 = 300입니다.
+      choices:
+        "0": "`count`(3)만 본 거예요. `total`은 `price * count`로 계산됩니다."
+        "1": "`price`(100)만 본 거예요. `count`를 곱해야 합니다."
+        "3": "`*`는 곱셈입니다 — 더하기(100+3)가 아니라 100*3 = 300이에요."

@@ -1,0 +1,101 @@
+title: make invalid states unrepresentable
+tags:
+  - concept:opaque-types
+  - tricky:invalid-states
+blocks:
+  - prose: intro
+    markdown: |-
+      한 발 더 나아가는 원칙: **"불가능한 상태를 표현조차 불가능하게(make invalid states unrepresentable)"**.
+
+      검증으로 잘못된 값을 *막는* 것도 좋지만, 더 나은 건 타입 자체를 "잘못된 조합이 애초에 만들어질 수 없게" 짜는 것입니다.
+
+      흔한 안티패턴: `User(is_member: Bool, name: String, points: Int)` — 손님인데 `name`이 채워지거나, 회원인데 `points`가 비는 모순된 조합이 가능합니다. 대신 합 타입(sum type)으로 쪼개면 각 상태가 *자기에게 필요한 데이터만* 동반합니다.
+  - exercise: member-greeting
+    type: predict
+    prompt: 다음 타입과 함수에서 `greeting(Member("수민", 50))`의 값은?
+    code: |-
+      pub type User {
+        Guest
+        Member(name: String, points: Int)
+      }
+
+      fn greeting(u: User) -> String {
+        case u {
+          Guest -> "환영합니다, 손님"
+          Member(name, points) -> name <> ": " <> int.to_string(points) <> "p"
+        }
+      }
+    choices:
+      - '`"환영합니다, 손님"`'
+      - '`"수민: 50p"`'
+      - '`"수민"`'
+      - '`"Member"`'
+    answer: 1
+    feedback:
+      correct: '맞아요! `Member` 가지가 맞아 `name`과 `points`를 꺼내 `"수민: 50p"`를 만듭니다.'
+      choices:
+        "0": 그건 `Guest` 가지의 결과예요. 입력은 `Member`입니다.
+        "2": "`points`도 함께 문자열에 붙어요 — 이름만 나오지 않습니다."
+        "3": case는 생성자 이름이 아니라 가지의 *결과 식*을 돌려줘요.
+  - prose: data-per-state
+    markdown: |-
+      핵심은 `Guest`에는 `name`/`points` 필드가 *아예 없다*는 점입니다. "손님인데 포인트가 있는" 상태는 만들 방법이 없죠. 각 상태가 자기 데이터만 가지니, 모순된 조합이 타입 수준에서 사라집니다.
+
+      또 하나의 이득: `case`로 다룰 때 컴파일러가 "모든 상태를 처리했는지"(exhaustiveness)를 검사해 줍니다.
+  - exercise: connection-state
+    type: predict
+    prompt: '`describe(Connected("abc"))`의 값은?'
+    code: |-
+      pub type Connection {
+        Disconnected
+        Connected(session: String)
+      }
+
+      fn describe(c: Connection) -> String {
+        case c {
+          Disconnected -> "offline"
+          Connected(session) -> "online:" <> session
+        }
+      }
+    choices:
+      - '`"offline"`'
+      - '`"online:abc"`'
+      - '`"online:"`'
+      - '`"abc"`'
+    answer: 1
+    feedback:
+      correct: 정확해요! `Connected` 가지가 `session`("abc")을 꺼내 `"online:" <> "abc"`를 만듭니다.
+      choices:
+        "0": 그건 `Disconnected` 가지예요. 입력은 `Connected`입니다.
+        "2": '`session`이 비어 있지 않아요 — "abc"가 뒤에 붙습니다.'
+        "3": case는 가지의 결과 식 전체를 돌려줘요 — 접두사 "online:"까지 포함됩니다.
+  - exercise: design-choice
+    type: choice
+    prompt: '"연결됨일 때만 세션 ID가 있고, 끊김일 때는 없다"를 가장 잘 표현하는 설계는?'
+    choices:
+      - "`Connection(connected: Bool, session: String)` — 끊김일 땐 빈 문자열로"
+      - "`Connection(connected: Bool, session: Result(String, Nil))`"
+      - "`Disconnected` / `Connected(session: String)` 두 변형의 합 타입"
+      - '`session: String`만 두고 끊김은 `"NONE"` 같은 약속된 값으로'
+    answer: 2
+    feedback:
+      correct: 맞아요! 합 타입으로 쪼개면 "끊겼는데 세션이 있는" 모순이 표현 불가능해집니다 — 정확히 make-invalid-states-unrepresentable.
+      choices:
+        "0": 빈 문자열도 엄연한 값이라 "끊겼는데 세션이 있는" 상태가 여전히 표현 가능해요.
+        "1": 조금 낫지만 `connected:False`인데 `session:Ok(..)`인 모순 조합이 아직 가능합니다.
+        "3": 약속된 마법값(`"NONE"`)은 깨지기 쉽고, 타입이 막아 주지 못해요.
+  - exercise: exhaustiveness-benefit
+    type: choice
+    prompt: 잘못된 상태를 타입으로 제거했을 때, `case`에서 추가로 얻는 안전망은?
+    choices:
+      - 런타임이 더 빨라진다
+      - 컴파일러가 모든 변형을 처리했는지(exhaustiveness) 검사해 누락을 막는다
+      - 필드 값이 자동으로 검증된다
+      - 패턴 매칭을 생략할 수 있게 된다
+    answer: 1
+    feedback:
+      correct: 맞아요! 변형이 명시돼 있으니 컴파일러가 빠뜨린 가지를 잡아 줍니다 — 새 상태를 추가하면 그걸 처리 안 한 case가 전부 컴파일 에러로 드러나죠.
+      choices:
+        "0": exhaustiveness는 속도가 아니라 *누락 방지*에 관한 이야기입니다.
+        "2": 값 검증은 별개예요 — 그건 smart constructor의 몫입니다.
+        "3": 오히려 모든 변형을 다뤄야 합니다 — 생략이 아니라 빠짐없음이 핵심이에요.

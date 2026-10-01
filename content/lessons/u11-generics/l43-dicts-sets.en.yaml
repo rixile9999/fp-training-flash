@@ -1,0 +1,67 @@
+title: A Tour of Dict and Set
+blocks:
+  intro:
+    markdown: |-
+      Finally, let's tour two generic collections. **`Dict(k, v)`** is a dictionary that looks up a value (`v`) by a key (`k`) (`import gleam/dict`). It has *two* type variables, so it can hold "any key, any value."
+
+      ```gleam
+      let scores = dict.from_list([#("lucy", 10), #("max", 7)])
+      ```
+
+      Important point: since the key may not exist, `dict.get` **returns a `Result`** (U9 makes a comeback!). If present, `Ok(value)`; if not, `Error(Nil)`.
+  dict-get-hit:
+    prompt: When the key exists, what is the value of `dict.get`?
+    choices:
+      - "`Ok(10)`"
+      - "`10`"
+      - "`Some(10)`"
+      - "`Error(Nil)`"
+    feedback:
+      correct: Right! Even when the value exists, it doesn't come out bare — it arrives wrapped as `Ok(10)`. To extract it, use pattern matching.
+      choices:
+        "1": A Dict lookup can fail, so the result is wrapped in a `Result` — `Ok(10)`, not `10`.
+        "2": "`dict.get` returns a `Result`, not an `Option` — so it's `Ok`, not `Some`."
+        "3": '`Error(Nil)` is for when the key is *absent*. "lucy" is in the dictionary.'
+  dict-get-miss:
+    prompt: What if you look up a key that doesn't exist?
+    choices:
+      - "`Error(Nil)`"
+      - "`Nil`"
+      - "`None`"
+      - runtime crash
+    feedback:
+      correct: Exactly! When the key is absent it's `Error(Nil)` — not a crash, but a *failure written into the type*. The caller has to handle it with case.
+      choices:
+        "1": It's wrapped as `Error(Nil)`, not bare `Nil` — `dict.get` returns a `Result`.
+        "2": "`None` is the absence of an `Option`. `dict.get` is a `Result`, so it uses `Error(Nil)`."
+        "3": A missing key isn't a crash but is safely expressed as `Error(Nil)` — there are no exceptions.
+  dict-insert:
+    markdown: Dict is immutable too. `dict.insert(d, key, value)` doesn't modify the original; it returns a *new Dict*. And **inserting again at the same key overwrites it** — keys are never duplicated.
+  dict-insert-overwrite:
+    prompt: After inserting twice at the same key `"a"`, what's the size (`dict.size`)?
+    choices:
+      - "`1`"
+      - "`2`"
+      - "`99`"
+      - "`0`"
+    feedback:
+      correct: Right! The same key gets overwritten and collapses into one — the size is 1 (with the value updated to 99).
+      choices:
+        "1": The key `"a"` is the same, so you don't get two slots — the second insert overwrites the first.
+        "2": "`99` is the stored *value*, not the *size* — there's only one entry."
+        "3": You inserted an entry, so it isn't empty — the size is 1.
+  set:
+    markdown: "**`Set(a)`** is a \"collection without duplicates\" (`import gleam/set`). Inserting the same value multiple times collapses it into one, and `set.contains` only asks whether something is in it — it doesn't care about order or count."
+  set-dedup:
+    prompt: If you insert 1 twice and 2 once, what's the Set's size (`set.size`)?
+    choices:
+      - "`2`"
+      - "`3`"
+      - "`1`"
+      - "`0`"
+    feedback:
+      correct: Exactly! A Set merges duplicates — even though 1 is inserted twice it's counted once, and the only distinct values are 1 and 2, so the size is 2.
+      choices:
+        "1": It's the count of *distinct values*, not the number of *insertions* — the duplicate 1 collapses, giving 2.
+        "2": There are two kinds of values (1, 2), so the size isn't 1. Only duplicates collapse.
+        "3": You inserted elements, so it isn't empty — the size is 2.

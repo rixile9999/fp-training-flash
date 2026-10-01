@@ -1,0 +1,80 @@
+title: Higher-Order Functions — Functions That Take Functions
+blocks:
+  intro:
+    markdown: |-
+      If a function is a value, then you can also make functions that **take a function as an argument**. A function that takes or returns a function is called a **higher-order function**.
+
+      A function type is written `fn(input_type) -> output_type`. For example, "a function that takes an Int and returns an Int" is `fn(Int) -> Int`.
+
+      ```gleam
+      fn apply(f: fn(Int) -> Int, x: Int) -> Int {
+        f(x)
+      }
+
+      apply(fn(n) { n * 2 }, 5)  // 10
+      ```
+
+      `apply` takes a *function* as its first argument and a value as its second, then applies that function to the value.
+  apply-fn:
+    prompt: If you pass the doubling function and 5 to `apply` above, what is the value of `apply(fn(n) { n * 2 }, 5)`?
+    choices:
+      - "`10`"
+      - "`5`"
+      - "`7`"
+      - "`25`"
+    feedback:
+      correct: Exactly! `apply` applies the function it received, `fn(n) { n * 2 }`, to 5 — 5 * 2 = 10.
+      choices:
+        "1": "`apply` applies the function it was given — it doesn't leave 5 untouched, it doubles it."
+        "2": "`n * 2` is multiplication, so 5 * 2 = 10 — not 5 + 2."
+        "3": "`n * 2` is 5 * 2 = 10, not 5 * 5 = 25."
+  list-map:
+    markdown: |-
+      The real power of higher-order functions shows up with lists. `list.map(list, fn)` **applies a function to each element** of the list to build a new list — it's a tool that abstracts the manual recursion from U5.
+
+      ```gleam
+      import gleam/list
+
+      list.map([1, 2, 3], fn(x) { x * 2 })  // [2, 4, 6]
+      ```
+
+      The anonymous function `fn(x) { x * 2 }` is applied to each element, doubling it.
+  map-double:
+    prompt: What is the result of this `list.map`?
+    choices:
+      - "`[2, 4, 6]`"
+      - "`[1, 2, 3]`"
+      - "`6`"
+      - "`[1, 4, 9]`"
+    feedback:
+      correct: Right! `x * 2` is applied to each element, giving [2, 4, 6].
+      choices:
+        "1": The function is applied to each element — they get doubled, not left as the original.
+        "2": "`map` doesn't combine; it transforms each element 1-to-1 and returns a *list* — not 6 but [2, 4, 6]."
+        "3": "`x * 2` is doubling (not squaring `x * x`) — so [2, 4, 6]."
+  filter-even:
+    prompt: "`list.filter(list, predicate)` keeps only the elements for which the predicate is `True`. What is this result?"
+    choices:
+      - "`[2, 4]`"
+      - "`[1, 3]`"
+      - "`[1, 2, 3, 4]`"
+      - "`[True, False, True, False]`"
+    feedback:
+      correct: Exactly! Only 2 and 4, for which `x % 2 == 0` (even) is true, remain.
+      choices:
+        "1": It keeps the elements where the predicate is *true* — the evens (2, 4) stay and the odds are filtered out.
+        "2": "`filter` selects only the ones that match the condition — it doesn't keep them all."
+        "3": "`filter` returns the *elements themselves*, not a list of Bools — [2, 4]."
+  fn-type:
+    prompt: Which is the correct type notation for "a function that takes an Int and returns a Bool"?
+    choices:
+      - "`fn(Int) -> Bool`"
+      - "`fn(Bool) -> Int`"
+      - "`Int -> Bool`"
+      - "`fn Int Bool`"
+    feedback:
+      correct: Right! A function type is `fn(input) -> output` — input `Int`, output `Bool`.
+      choices:
+        "1": The input and output are swapped — Int is the input, Bool is the output.
+        "2": A function type also needs `fn(...)` with parentheses — `Int -> Bool` alone won't do.
+        "3": "`->` joins input and output, and the input is wrapped in parentheses — `fn(Int) -> Bool`."

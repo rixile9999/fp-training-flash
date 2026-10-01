@@ -1,0 +1,140 @@
+title: 종합 1 — CSV 한 줄 파서
+tags:
+  - concept:basics
+blocks:
+  - prose: intro
+    markdown: |-
+      드디어 캡스톤입니다. 지금까지 배운 도구를 **하나의 작은 프로그램**으로 엮어 봅시다.
+
+      목표: `"lucy,8"` 같은 CSV 한 줄을 받아 `Player(name, age)`로 파싱하고, 실패하면 **이유를 담은 에러**를 돌려주는 함수입니다. 동원하는 것 — 커스텀 타입(U4), `Result`와 에러 타입(U9), `string.split`/`case` 패턴(U3·U5), 그리고 조립을 위한 `use`(U10).
+
+      ```gleam
+      import gleam/int
+      import gleam/string
+
+      pub type ParseError {
+        WrongFieldCount
+        BadAge
+      }
+
+      pub type Player {
+        Player(name: String, age: Int)
+      }
+
+      fn parse_age(s: String) -> Result(Int, ParseError) {
+        case int.parse(s) {
+          Ok(n) -> Ok(n)
+          Error(_) -> Error(BadAge)
+        }
+      }
+
+      fn parse_line(line: String) -> Result(Player, ParseError) {
+        case string.split(line, ",") {
+          [name, age_str] ->
+            case parse_age(age_str) {
+              Ok(age) -> Ok(Player(name: name, age: age))
+              Error(e) -> Error(e)
+            }
+          _ -> Error(WrongFieldCount)
+        }
+      }
+      ```
+
+      핵심은 두 가지 실패 경로(필드 개수가 틀림, 나이가 숫자가 아님)를 **타입으로** 구분해 둔 것입니다.
+  - exercise: parse-happy
+    type: predict
+    prompt: 정상 입력입니다. `parse_line("lucy,8")`의 값은?
+    code: parse_line("lucy,8")
+    choices:
+      - '`Ok(Player(name: "lucy", age: 8))`'
+      - '`Player("lucy", 8)`'
+      - '`Ok(#("lucy", 8))`'
+      - "`Error(BadAge)`"
+    answer: 0
+    feedback:
+      correct: 정확해요! `split`이 `["lucy", "8"]`로 두 필드가 되고, `parse_age("8")`가 `Ok(8)`이라 `Ok(Player(...))`로 감싸집니다.
+      choices:
+        "1": 성공 경로는 항상 `Ok(...)`로 **감싸** 돌려줍니다 — 함수 반환 타입이 `Result`예요.
+        "2": 튜플이 아니라 우리가 정의한 `Player` 레코드를 만듭니다.
+        "3": '`"8"`은 숫자로 잘 파싱되니 `BadAge`가 아니라 성공입니다.'
+  - prose: split-shape
+    markdown: 왜 `case string.split(line, ",")`의 가지가 `[name, age_str]`일까요? `string.split`은 **리스트**를 돌려주기 때문입니다. `"lucy,8"`은 `["lucy", "8"]` — 정확히 원소 2개. 그래서 `[name, age_str]` 패턴이 맞아떨어지고, 그 외 모든 모양은 `_`로 떨어져 `WrongFieldCount`가 됩니다.
+  - exercise: split-result
+    type: predict
+    prompt: 이 `string.split`의 결과는?
+    code: string.split("lucy,8", ",")
+    choices:
+      - '`["lucy", "8"]`'
+      - '`#("lucy", "8")`'
+      - '`"lucy 8"`'
+      - '`["lucy,8"]`'
+    answer: 0
+    feedback:
+      correct: 맞아요! `split`은 구분자로 잘라 **문자열 리스트**를 줍니다 — 원소 2개라 `[name, age_str]` 패턴과 일치합니다.
+      choices:
+        "1": 튜플이 아니라 리스트예요 — 그래서 `[...]` 패턴으로 매칭합니다.
+        "2": split은 자르는 함수예요 — 합치지 않습니다.
+        "3": 구분자 `,`로 **나뉘므로** 원소가 둘이 됩니다 — 통째로 한 개가 아니에요.
+  - exercise: parse-fewfields
+    type: predict
+    prompt: 필드가 부족합니다. `parse_line("lucy")`의 값은?
+    code: parse_line("lucy")
+    choices:
+      - "`Error(WrongFieldCount)`"
+      - "`Error(BadAge)`"
+      - '`Ok(Player("lucy", 0))`'
+      - "`Error(Nil)`"
+    answer: 0
+    feedback:
+      correct: 정확해요! `split("lucy", ",")`는 `["lucy"]` — 원소 1개라 `[name, age_str]`에 안 맞고 `_` 가지로 떨어집니다.
+      choices:
+        "1": 나이를 파싱하는 단계까지 가지도 못해요 — 필드 개수에서 먼저 걸립니다.
+        "2": 빠진 값을 0으로 채우지 않습니다 — 실패는 실패로 보고해요.
+        "3": 에러를 막연한 `Nil`이 아니라 **이유가 있는** `WrongFieldCount`로 구분해 둔 게 핵심입니다.
+  - exercise: parse-badage
+    type: predict
+    prompt: 나이가 숫자가 아닙니다. `parse_line("lucy,eight")`의 값은?
+    code: parse_line("lucy,eight")
+    choices:
+      - "`Error(BadAge)`"
+      - "`Error(WrongFieldCount)`"
+      - '`Ok(Player("lucy", 0))`'
+      - '`Ok(Player("lucy", 8))`'
+    answer: 0
+    feedback:
+      correct: 맞아요! 필드는 2개라 통과하지만 `int.parse("eight")`가 `Error(_)` → `parse_age`가 `BadAge`를 돌려줍니다.
+      choices:
+        "1": 필드 개수는 2개로 맞아요 — 막히는 곳은 나이 파싱 단계입니다.
+        "2": '`"eight"`를 숫자로 추측해 채우지 않아요 — 파싱 실패를 그대로 보고합니다.'
+        "3": '`"eight"`는 정수로 파싱되지 않습니다 — `8`이라는 값은 나오지 않아요.'
+  - prose: use-assembly
+    markdown: |-
+      중첩된 `case`가 거슬리죠? 두 단계를 각각 `Result`를 돌려주는 작은 함수로 쪼개면 `use`(U10)로 평평하게 조립됩니다. 단계 중 하나라도 `Error`면 **즉시 단락(short-circuit)**되어 그 에러가 그대로 반환됩니다.
+
+      ```gleam
+      import gleam/result
+
+      fn parse_line(line: String) -> Result(Player, ParseError) {
+        use pair <- result.try(fields(line))
+        let #(name, age_str) = pair
+        use age <- result.try(parse_age(age_str))
+        Ok(Player(name: name, age: age))
+      }
+      ```
+
+      동작은 중첩 `case` 버전과 **완전히 같습니다** — 읽기만 쉬워졌어요.
+  - exercise: use-shortcircuit
+    type: choice
+    prompt: 위 `use` 버전에서 `fields(line)`이 `Error(WrongFieldCount)`를 돌려주면 그 다음 줄들은 어떻게 될까요?
+    choices:
+      - 실행되지 않고 `Error(WrongFieldCount)`가 즉시 반환된다
+      - "`age`가 `0`으로 채워진 채 계속 실행된다"
+      - 런타임 크래시가 난다
+      - 마지막 `Ok(Player(...))`가 그대로 반환된다
+    answer: 0
+    feedback:
+      correct: 맞아요! `result.try`는 첫 `Error`에서 단락합니다 — 뒤 단계는 건너뛰고 그 에러가 함수 결과가 됩니다.
+      choices:
+        "1": 빈자리를 기본값으로 메우지 않아요 — `use`는 실패를 만나면 멈춥니다.
+        "2": 이건 정상적인 `Result` 흐름이라 크래시가 아니에요 — 에러를 **값으로** 돌려줍니다.
+        "3": 마지막 `Ok`까지 도달하려면 모든 단계가 `Ok`여야 합니다 — 하나라도 `Error`면 못 가요.

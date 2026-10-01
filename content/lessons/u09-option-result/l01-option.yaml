@@ -1,0 +1,123 @@
+title: 없을 수도 있는 값 — Option
+tags:
+  - concept:options
+blocks:
+  - prose: intro
+    markdown: |-
+      다른 언어의 `null`은 "값이 없음"을 어디에나 몰래 끼워 넣어, 결국 NPE(null 참조 오류)로 폭발하곤 합니다. Gleam에는 `null`이 **없습니다**. 대신 "있을 수도, 없을 수도"를 타입에 적어두는 **`Option(a)`**를 씁니다.
+
+      `Option(a)`는 두 가지 모양뿐인 커스텀 타입입니다(U4에서 본 variant 그대로예요):
+
+      - `Some(값)` — 값이 **있다**
+      - `None` — 값이 **없다**
+
+      `import gleam/option.{type Option, None, Some}`로 가져와 씁니다.
+  - exercise: some-shape
+    type: predict
+    prompt: '`find_nickname("lucy")`가 별명을 찾아 돌려줍니다. 그 값은 어떤 모양일까요?'
+    code: |-
+      import gleam/option.{type Option, Some}
+
+      fn find_nickname(name: String) -> Option(String) {
+        case name {
+          "lucy" -> Some("루시")
+          _ -> Some("?")
+        }
+      }
+
+      // find_nickname("lucy") 은?
+    choices:
+      - '`Some("루시")`'
+      - '`"루시"`'
+      - "`None`"
+      - '`Ok("루시")`'
+    answer: 0
+    feedback:
+      correct: 맞아요! `Option`에서 값은 맨몸으로 나오지 않고 `Some(...)`으로 포장됩니다 — `Some("루시")`.
+      choices:
+        "1": 값이 "루시"이긴 하지만, `Option` 타입이라 `Some`으로 감싸여 나옵니다. 꺼내려면 패턴 매칭이 필요해요.
+        "2": '`None`은 별명이 *없을* 때의 모양이에요. 여기선 "lucy" 가지가 값을 찾았습니다.'
+        "3": "`Ok`는 `Result`의 생성자예요. `Option`은 `Some`/`None`을 씁니다."
+  - exercise: none-shape
+    type: predict
+    prompt: 같은 함수가 별명을 못 찾으면(`_` 가지) `None`을 돌려주도록 바꿨습니다. `find_nickname("bob")`의 값은?
+    code: |-
+      import gleam/option.{type Option, None, Some}
+
+      fn find_nickname(name: String) -> Option(String) {
+        case name {
+          "lucy" -> Some("루시")
+          _ -> None
+        }
+      }
+
+      // find_nickname("bob") 은?
+    choices:
+      - "`None`"
+      - '`Some("bob")`'
+      - '`""`'
+      - "`Nil`"
+    answer: 0
+    feedback:
+      correct: 정확해요! "bob"은 `_` 가지로 떨어져 `None` — "값이 없음"을 명시적으로 표현합니다.
+      choices:
+        "1": "`bob`에 해당하는 별명이 없어 `_` 가지가 선택돼요 — `Some`이 아니라 `None`."
+        "2": 빈 문자열 `""`도 엄연히 *있는* 값이에요. "없음"은 `None`으로 표현합니다.
+        "3": '`Nil`은 다른 타입(빈 값)이에요. `Option`의 "없음"은 `None`입니다.'
+  - prose: pattern-match
+    markdown: |-
+      `Some`인지 `None`인지는 **`case`로 분기**해 꺼냅니다. `Some(x)` 가지에서 이름 `x`에 안쪽 값이 묶여요. `Option`도 variant가 둘뿐이라, U4의 exhaustiveness 그대로 — `Some`과 `None`을 **둘 다** 다뤄야 컴파일됩니다.
+
+      ```gleam
+      case nickname {
+        Some(nick) -> "안녕, " <> nick <> "!"
+        None -> "안녕, 손님!"
+      }
+      ```
+  - exercise: case-none
+    type: predict
+    prompt: 위 패턴으로 만든 `greet` 함수에서 `greet(None)`의 값은?
+    code: |-
+      import gleam/option.{type Option, None, Some}
+
+      fn greet(nickname: Option(String)) -> String {
+        case nickname {
+          Some(nick) -> "안녕, " <> nick <> "!"
+          None -> "안녕, 손님!"
+        }
+      }
+
+      // greet(None) 은?
+    choices:
+      - '`"안녕, 손님!"`'
+      - '`"안녕, !"`'
+      - "`None`"
+      - 컴파일 에러
+    answer: 0
+    feedback:
+      correct: 맞아요! 입력이 `None`이라 `None` 가지가 선택되어 "안녕, 손님!"이 됩니다.
+      choices:
+        "1": "`None`엔 안쪽 값이 없어요 — `Some(nick)` 가지로 가지 않으니 `nick`을 쓰는 결과가 나오지 않습니다."
+        "2": '`case`는 매칭된 입력이 아니라 가지의 *결과*를 돌려줘요 — `None`이 아니라 "안녕, 손님!".'
+        "3": "`Some`과 `None`을 모두 다뤘으니 빠짐없이 처리되어 정상 컴파일됩니다."
+  - prose: unwrap
+    markdown: '"값이 있으면 그 값, 없으면 기본값"이 필요할 때마다 `case`를 쓰긴 번거롭습니다. `option.unwrap(opt, 기본값)`이 그 패턴을 한 줄로 해줘요: `Some(x)`면 `x`, `None`이면 기본값을 돌려줍니다.'
+  - exercise: unwrap-none
+    type: predict
+    prompt: "`option.unwrap`의 결과는?"
+    code: |-
+      import gleam/option.{None}
+
+      option.unwrap(None, "익명")
+    choices:
+      - '`"익명"`'
+      - "`None`"
+      - '`Some("익명")`'
+      - '`""`'
+    answer: 0
+    feedback:
+      correct: 정확해요! `None`이라 기본값 "익명"이 그대로 나옵니다 — `unwrap`은 포장을 벗겨 맨 값을 줍니다.
+      choices:
+        "1": '`unwrap`은 포장(`Option`)을 벗긴 맨 값을 돌려줘요 — `None`이 아니라 기본값 "익명".'
+        "2": "`unwrap`의 결과는 더 이상 `Option`이 아니에요 — `Some`으로 다시 감싸지 않습니다."
+        "3": 기본값으로 "익명"을 줬으니 빈 문자열이 아니라 "익명"이 나옵니다.

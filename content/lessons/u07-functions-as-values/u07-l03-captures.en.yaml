@@ -1,0 +1,65 @@
+title: Function Captures f(_, x)
+blocks:
+  intro:
+    markdown: |-
+      Like `list.map([1, 2, 3], fn(x) { add(10, x) })`, you often need "a function with just one argument left blank." Gleam gives you a short **function capture** syntax for this: put a single `_` (underscore) where the call should be filled in.
+
+      ```gleam
+      add(10, _)
+      // is shorthand for fn(b) { add(10, b) }
+      ```
+
+      There is exactly **one** blank `_`. `add(10, _)` becomes "a new function with the first argument fixed at 10, taking only the second argument."
+  capture-map-add:
+    prompt: What is the result of passing a capture to `list.map`?
+    choices:
+      - "`[11, 12, 13]`"
+      - "`[10, 20, 30]`"
+      - "`[11, 22, 33]`"
+      - "`[1, 2, 3]`"
+    feedback:
+      correct: Exactly! `add(10, _)` is "a function that adds 10," so each element gains 10, giving [11, 12, 13].
+      choices:
+        "1": It *adds* 10, not *multiplies* by 10 — 1+10, 2+10, 3+10 = [11, 12, 13].
+        "2": "`_` just receives one element at a time — it doesn't multiply by 10, it adds 10."
+        "3": "`add(10, _)` is applied to each element — they each gain 10, not left as the original."
+  blank-position:
+    markdown: |-
+      The **position** of the blank determines which argument is left empty. This is the heart of captures.
+
+      `string.append(first, second)` appends `second` after `first`.
+      - `string.append(_, "!")` appends `!` *after* each value (the value goes in the first slot).
+      - `string.append("!", _)` puts `!` *before* each value (the value goes in the second slot).
+
+      The "pipes are for the first argument only" limitation we saw in U2 is solved by captures — because you can place the blank in the second, third, etc. slot too.
+  capture-append-suffix:
+    prompt: What is the result of passing this capture to `list.map`?
+    choices:
+      - '`["a!", "b!"]`'
+      - '`["!a", "!b"]`'
+      - '`["a", "b"]`'
+      - '`["ab!"]`'
+    feedback:
+      correct: Right! In `append(_, "!")` the blank is in the first slot, so `!` is appended *after* each element — ["a!", "b!"].
+      choices:
+        "1": The blank's position matters. In `append(_, "!")` the value goes *first*, so `!` is appended after it — to put it before, use `append("!", _)`.
+        "2": The captured function is applied to each element — they don't stay as the originals.
+        "3": "`map` transforms each element 1-to-1 — it doesn't combine them into one."
+  vs-currying:
+    markdown: |-
+      If you know other languages, it's easy to confuse captures with "currying." **Gleam has no automatic currying.** Unlike Haskell, writing just `add 10` will never partially apply.
+
+      In Gleam, partial application happens *only* when you explicitly place a blank `_`. You have to write the blank, `add(10, _)`, for it to become `fn(b) { add(10, b) }`. That's why the type of `add(10, _)` is `fn(Int) -> Int`, meaning "one argument is still left blank."
+  capture-type:
+    prompt: "Given `add(a: Int, b: Int) -> Int`, what is the type of the capture `add(10, _)`?"
+    choices:
+      - "`fn(Int) -> Int`"
+      - "`Int`"
+      - "`fn(Int, Int) -> Int`"
+      - "`fn() -> Int`"
+    feedback:
+      correct: Right! One blank remains, so it's a function that takes one more argument (Int) and returns an Int — `fn(Int) -> Int`.
+      choices:
+        "1": A capture is a *function value* whose call isn't finished yet — it's a function, not a resulting Int.
+        "2": The first argument is already filled with 10 — only one blank remains, so it's `fn(Int) -> Int`.
+        "3": There's one blank `_`, so it takes one argument — not `fn() -> Int`.

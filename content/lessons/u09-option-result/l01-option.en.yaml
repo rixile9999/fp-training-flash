@@ -1,0 +1,113 @@
+title: Values That Might Not Exist — Option
+blocks:
+  intro:
+    markdown: |-
+      In other languages `null` sneaks "no value here" in everywhere, and eventually blows up as an NPE (null reference error). Gleam has **no** `null`. Instead it uses **`Option(a)`**, which records "might be there, might not" right in the type.
+
+      `Option(a)` is a custom type with just two shapes (the very same variants you saw in U4):
+
+      - `Some(value)` — a value **is** present
+      - `None` — there is **no** value
+
+      You bring it in with `import gleam/option.{type Option, None, Some}`.
+  some-shape:
+    prompt: '`find_nickname("lucy")` looks up a nickname and returns it. What shape does that value have?'
+    choices:
+      - '`Some("Lucy")`'
+      - '`"Lucy"`'
+      - "`None`"
+      - '`Ok("Lucy")`'
+    feedback:
+      correct: "Right! In an `Option` a value never comes out bare — it's wrapped in `Some(...)`: `Some(\"Lucy\")`."
+      choices:
+        "1": The value is indeed "Lucy", but it's an `Option` type, so it comes out wrapped in `Some`. You need pattern matching to take it out.
+        "2": "`None` is the shape when there's *no* nickname. Here the \"lucy\" branch found a value."
+        "3": "`Ok` is a constructor of `Result`. `Option` uses `Some`/`None`."
+    code: |-
+      import gleam/option.{type Option, Some}
+
+      fn find_nickname(name: String) -> Option(String) {
+        case name {
+          "lucy" -> Some("Lucy")
+          _ -> Some("?")
+        }
+      }
+
+      // find_nickname("lucy") is?
+  none-shape:
+    prompt: The same function is changed so that when no nickname is found (the `_` branch) it returns `None`. What is the value of `find_nickname("bob")`?
+    choices:
+      - "`None`"
+      - '`Some("bob")`'
+      - '`""`'
+      - "`Nil`"
+    feedback:
+      correct: Exactly! "bob" falls into the `_` branch and gives `None` — an explicit way of saying "no value".
+      choices:
+        "1": There's no nickname for `bob`, so the `_` branch is chosen — `None`, not `Some`.
+        "2": An empty string `""` is still a value that *is* present. "Absence" is expressed with `None`.
+        "3": '`Nil` is a different type (the empty value). The "absence" in `Option` is `None`.'
+    code: |-
+      import gleam/option.{type Option, None, Some}
+
+      fn find_nickname(name: String) -> Option(String) {
+        case name {
+          "lucy" -> Some("Lucy")
+          _ -> None
+        }
+      }
+
+      // find_nickname("bob") is?
+  pattern-match:
+    markdown: |-
+      Whether it's `Some` or `None`, you pull the value out by **branching with `case`**. In the `Some(x)` branch the inner value is bound to the name `x`. `Option` also has just two variants, so the same U4 exhaustiveness applies — your code only compiles if you handle **both** `Some` and `None`.
+
+      ```gleam
+      case nickname {
+        Some(nick) -> "Hi, " <> nick <> "!"
+        None -> "Hi, guest!"
+      }
+      ```
+  case-none:
+    prompt: For a `greet` function built with the pattern above, what is the value of `greet(None)`?
+    choices:
+      - '`"Hi, guest!"`'
+      - '`"Hi, !"`'
+      - "`None`"
+      - compile error
+    feedback:
+      correct: Right! The input is `None`, so the `None` branch is chosen and the result is "Hi, guest!".
+      choices:
+        "1": "`None` has no inner value — it doesn't go to the `Some(nick)` branch, so no result that uses `nick` is produced."
+        "2": '`case` returns the *result* of the matched branch, not the input — "Hi, guest!", not `None`.'
+        "3": Both `Some` and `None` are handled, so everything is covered and it compiles fine.
+    code: |-
+      import gleam/option.{type Option, None, Some}
+
+      fn greet(nickname: Option(String)) -> String {
+        case nickname {
+          Some(nick) -> "Hi, " <> nick <> "!"
+          None -> "Hi, guest!"
+        }
+      }
+
+      // greet(None) is?
+  unwrap:
+    markdown: "Writing a `case` every time you want \"the value if it's there, a default otherwise\" gets tedious. `option.unwrap(opt, default)` does that pattern in one line: if it's `Some(x)` it returns `x`, and if it's `None` it returns the default."
+  unwrap-none:
+    prompt: What is the result of `option.unwrap`?
+    choices:
+      - '`"anonymous"`'
+      - "`None`"
+      - '`Some("anonymous")`'
+      - '`""`'
+    feedback:
+      correct: Exactly! It's `None`, so the default "anonymous" comes straight out — `unwrap` strips off the wrapper and gives you the bare value.
+      choices:
+        "1": '`unwrap` returns the bare value with the `Option` wrapper removed — the default "anonymous", not `None`.'
+        "2": The result of `unwrap` is no longer an `Option` — it isn't wrapped back up in `Some`.
+        "3": You gave "anonymous" as the default, so you get "anonymous", not an empty string.
+    code: |-
+      import gleam/option.{None}
+
+      option.unwrap(None, "anonymous")

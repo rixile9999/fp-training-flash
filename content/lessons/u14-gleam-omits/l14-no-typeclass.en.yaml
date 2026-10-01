@@ -1,0 +1,68 @@
+title: Why There Are No Type Classes
+blocks:
+  intro:
+    markdown: |-
+      If you came from Haskell, the first thing you'll miss is **type classes**. Promises like `Ord`, `Eq`, and `Show` — "this type can be compared" — simply don't exist in Gleam.
+
+      The official FAQ gives three reasons — **confusing error messages**, **slower compile times**, and the **runtime cost** that comes with dispatch. Gleam left type classes out entirely to avoid all three.
+  instead:
+    markdown: |-
+      What Gleam gives you instead is simple: **state the behavior you need as a function and pass it in**.
+
+      For sorting, for example, there's no "hidden `Ord` instance." `list.sort` takes the comparison function **directly as an argument**:
+
+      ```gleam
+      list.sort([3, 1, 2], by: int.compare)
+      ```
+
+      What you compare by is right there in the code — no magic, no implicit dispatch.
+  sort-explicit:
+    prompt: What does this sort produce when you pass the comparison function directly?
+    choices:
+      - "`[1, 2, 3]`"
+      - "`[3, 2, 1]`"
+      - "`[3, 1, 2]`"
+      - compile error
+    feedback:
+      correct: Right! You passed `int.compare` as an ascending comparator, so it's [1, 2, 3]. There's no hidden `Ord` — the function you name decides the order.
+      choices:
+        "1": "`int.compare` is ascending. For descending you have to flip it yourself, like `fn(a, b) { int.compare(b, a) }`."
+        "2": "`sort` returns a new sorted list — the original order doesn't come back out."
+        "3": You passed a comparison function via `by:`, so it compiles fine — even without type classes, sorting works by passing a function.
+  describe:
+    markdown: "\"How to render this type as text\" (Haskell's `Show`) works the same way. Instead of an instance that gets called automatically per type, you **hand over the conversion function directly**. The `describe_all` below works for any type as long as it receives a `to_text` function — an explicit substitute for type classes."
+  describe-pass:
+    prompt: This code passes a function directly to turn each element into text. What's the result?
+    choices:
+      - '`["heads", "tails", "heads"]`'
+      - '`["tails", "heads", "tails"]`'
+      - "`[True, False, True]`"
+      - compile error (no Show instance)
+    feedback:
+      correct: Exactly! You passed `coin_text` explicitly to turn each Bool into text — ["heads", "tails", "heads"]. This is how you inject behavior without type classes.
+      choices:
+        "1": '`True` is "heads" and `False` is "tails" — the first element `True` starts with "heads".'
+        "2": "`to_text` turns each element into a String, so the result is a list of strings, not a list of Bools."
+        "3": Gleam has no `Show` at all, but since you passed the conversion function **as an argument**, it compiles with no trouble.
+    code: |-
+      fn describe_all(xs, to_text) {
+        list.map(xs, to_text)
+      }
+      fn coin_text(heads) {
+        case heads { True -> "heads"  False -> "tails" }
+      }
+
+      describe_all([True, False, True], coin_text)
+  why-no-typeclass:
+    prompt: Which of these is NOT one of the reasons the official FAQ gives for Gleam having no type classes?
+    choices:
+      - To avoid confusing compile error messages
+      - To keep compile times short
+      - To avoid the runtime cost of dispatch
+      - Because it gave up on type inference entirely
+    feedback:
+      correct: Right! Gleam does type inference well — the reasons it left type classes out are error messages, compile times, and runtime cost.
+      choices:
+        "0": This is one of the real reasons. Type classes often produce cryptic errors.
+        "1": This is a real reason too — instance resolution can slow down compilation.
+        "2": This is a valid reason as well — dynamic dispatch carries a runtime cost.

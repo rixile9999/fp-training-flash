@@ -1,0 +1,121 @@
+title: 빠짐없이 다루기 — exhaustiveness
+tags:
+  - concept:case-expressions
+  - tricky:exhaustiveness
+blocks:
+  - prose: intro
+    markdown: |-
+      커스텀 타입에 `case`를 쓸 때 Gleam의 진짜 안전망이 켜집니다: **모든 variant를 다뤄야 컴파일됩니다**. 하나라도 빠뜨리면 컴파일 자체가 안 돼요.
+
+      ```gleam
+      pub type Shape {
+        Circle(radius: Float)
+        Rectangle(width: Float, height: Float)
+      }
+
+      pub fn area(shape: Shape) -> Float {
+        case shape {
+          Circle(radius: r) -> 3.14159 *. r *. r
+          Rectangle(width: w, height: h) -> w *. h
+        }
+      }
+      ```
+
+      넓이는 Float 연산이라 `*.`을 씁니다. 패턴 안에서 `radius: r`은 그 필드를 이름 `r`에 묶어 결과 식에서 쓰게 해줘요.
+  - exercise: area-circle
+    type: predict
+    prompt: "위 `area`에서 `area(Circle(radius: 2.0))`의 값은?"
+    code: |-
+      pub type Shape {
+        Circle(radius: Float)
+        Rectangle(width: Float, height: Float)
+      }
+
+      pub fn area(shape: Shape) -> Float {
+        case shape {
+          Circle(radius: r) -> 3.14159 *. r *. r
+          Rectangle(width: w, height: h) -> w *. h
+        }
+      }
+
+      // area(Circle(radius: 2.0)) 은?
+    choices:
+      - "`12.56636`"
+      - "`6.28318`"
+      - "`4.0`"
+      - "`12`"
+    answer: 0
+    feedback:
+      correct: 맞아요! 3.14159 *. 2.0 *. 2.0 = 12.56636. `r`에 2.0이 묶여 반지름의 제곱에 파이를 곱합니다.
+      choices:
+        "1": 그건 3.14159 *. 2.0(지름 곱)이에요. 넓이는 반지름을 **두 번** 곱합니다 — r *. r.
+        "2": 4.0은 2.0 *. 2.0(r 제곱)일 뿐, 파이(3.14159)를 아직 안 곱했어요.
+        "3": 결과는 `Float`라 `12`(Int)가 아니라 `12.56636`입니다 — 타입이 달라요.
+  - prose: inexhaustive
+    markdown: |-
+      만약 `Rectangle` 가지를 지우면 어떻게 될까요? Gleam은 다음과 같은 컴파일 에러를 냅니다:
+
+      ```
+      error: Inexhaustive patterns
+
+      This case expression does not have a pattern for all possible values.
+      The missing patterns are:
+
+          Rectangle(width:, height:)
+      ```
+
+      컴파일러가 **정확히 빠진 variant를 짚어줍니다**. 이것이 안전망입니다: 나중에 `Triangle`을 추가하면, 이 `case`를 포함해 고쳐야 할 모든 곳을 컴파일러가 알려줘요.
+  - exercise: missing-pattern
+    type: choice
+    prompt: '`Rectangle` 가지를 지운 `area`를 컴파일하면 "Inexhaustive patterns" 에러가 납니다. 이 에러를 가장 올바르게 고치는 방법은?'
+    choices:
+      - "`Rectangle(width: w, height: h) -> w *. h` 가지를 추가한다"
+      - "`_ -> 0.0` 가지를 추가한다"
+      - "`case`를 `if`로 바꾼다"
+      - "`Rectangle` variant를 타입 정의에서 지운다"
+    answer: 0
+    feedback:
+      correct: 맞아요! 빠진 variant를 명시적으로 다루는 게 정답입니다 — 컴파일러가 짚어준 `Rectangle`을 그대로 추가하세요.
+      choices:
+        "1": 컴파일은 되지만 함정이에요. `_`는 exhaustiveness 검사를 꺼버려서, 나중에 `Triangle`을 추가해도 컴파일러가 침묵합니다 — variant를 명시하세요.
+        "2": Gleam엔 `if` 문이 따로 없고, 문제는 분기 도구가 아니라 빠진 가지예요 — `Rectangle` 가지를 추가하면 됩니다.
+        "3": 그러면 사각형을 표현할 수 없게 됩니다 — 다루는 게 목적이지 타입에서 지우는 게 아니에요.
+  - exercise: wildcard-trap
+    type: choice
+    prompt: exhaustiveness를 만족시키려고 모든 case 끝에 `_ -> ...`를 습관처럼 붙이는 것이 위험한 이유는?
+    choices:
+      - 컴파일이 느려져서
+      - '`_`가 미래의 새 variant까지 조용히 삼켜, 컴파일러의 "고칠 곳" 경고를 꺼버려서'
+      - "`_`는 문법 오류라서"
+      - 런타임이 느려져서
+    answer: 1
+    feedback:
+      correct: 정확해요! variant를 추가했을 때 컴파일러가 알려주는 안전망이 `_` 때문에 작동하지 않습니다 — 새 variant가 말없이 `_`로 떨어져요.
+      choices:
+        "0": 컴파일 속도와는 무관해요. 문제는 미래의 안전망을 잃는다는 점입니다.
+        "2": "`_`는 정상 문법이에요 — 위험한 건 문법이 아니라 '모든 미래 변경을 삼킨다'는 점입니다."
+        "3": 런타임 성능 문제가 아니라, 컴파일 타임 검사를 무력화한다는 점이 문제예요.
+  - exercise: area-rectangle
+    type: predict
+    prompt: "같은 `area`에서 `area(Rectangle(width: 3.0, height: 4.0))`의 값은?"
+    code: |-
+      pub fn area(shape: Shape) -> Float {
+        case shape {
+          Circle(radius: r) -> 3.14159 *. r *. r
+          Rectangle(width: w, height: h) -> w *. h
+        }
+      }
+
+      // area(Rectangle(width: 3.0, height: 4.0)) 은?
+    choices:
+      - "`12.0`"
+      - "`7.0`"
+      - "`12`"
+      - "`14.0`"
+    answer: 0
+    feedback:
+      correct: 맞아요! `Rectangle` 가지가 `w *. h` = 3.0 *. 4.0 = 12.0을 돌려줍니다.
+      choices:
+        "1": 7.0은 3.0 +. 4.0(더하기)이에요. 넓이는 곱(`*.`)이라 12.0입니다.
+        "2": 결과는 `Float`라 `12`(Int)가 아니라 `12.0`이에요 — 타입이 달라요.
+        "3": 14.0은 둘레의 절반 같은 값이에요. 넓이는 w *. h = 12.0입니다.

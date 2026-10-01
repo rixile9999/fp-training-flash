@@ -1,0 +1,15 @@
+title: 함수를 값으로
+order: 7
+level: 2
+skill: gleam-lists-recursion
+prerequisites:
+  - u05-lists-recursion
+lessons:
+  - u07-l01-anonymous-functions
+  - u07-l02-higher-order
+  - u07-l03-captures
+  - u07-l04-labelled-args
+source:
+  kind: original
+  upstream: fpdojo (~/workspace/fp-training, same author), gleam 1.17 JS;
+    re-verified on gleam 1.18.1 Erlang

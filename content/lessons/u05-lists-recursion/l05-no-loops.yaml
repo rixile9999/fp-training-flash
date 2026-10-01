@@ -1,0 +1,78 @@
+title: 인덱스 없는 세계 — no loops
+tags:
+  - concept:lists
+  - concept:recursion
+blocks:
+  - prose: intro
+    markdown: |-
+      다른 언어의 `for (i = 0; i < n; i++)`나 `xs[i]` 같은 **인덱스 접근**이 Gleam에는 없습니다. 리스트는 "머리 + 꼬리" 구조라, i번째 원소를 바로 집는 대신 **앞에서부터 한 겹씩** 벗겨 나갑니다.
+
+      그래서 "모든 원소에 무언가 하기"도 재귀로 표현합니다: 머리를 변환해 결과 앞에 붙이고, 꼬리에 대해 재귀하는 식이에요.
+  - prose: map-example
+    markdown: |-
+      각 원소를 2배로 만드는 함수를 봅시다 — 루프 없이 재귀로:
+
+      ```gleam
+      pub fn double_all(xs: List(Int)) -> List(Int) {
+        case xs {
+          [] -> []
+          [first, ..rest] -> [first * 2, ..double_all(rest)]
+        }
+      }
+      ```
+
+      빈 리스트는 빈 리스트(종료 조건). 비어 있지 않으면 머리를 `* 2` 변환해 **나머지를 변환한 결과 앞에 prepend**합니다. `length`/`total`과 똑같은 뼈대예요.
+  - exercise: double-all
+    type: predict
+    prompt: 위 `double_all` 함수에서 `double_all([1, 2, 3])`의 값은?
+    code: |-
+      pub fn double_all(xs: List(Int)) -> List(Int) {
+        case xs {
+          [] -> []
+          [first, ..rest] -> [first * 2, ..double_all(rest)]
+        }
+      }
+
+      // double_all([1, 2, 3]) 은?
+    choices:
+      - "`[2, 4, 6]`"
+      - "`[1, 2, 3]`"
+      - "`[6, 4, 2]`"
+      - "`12`"
+    answer: 0
+    feedback:
+      correct: 맞아요! 각 머리를 2배로 변환해 앞에 붙이며 내려가 `[2, 4, 6]`이 됩니다 — 순서는 그대로 유지돼요.
+      choices:
+        "1": 변환이 적용돼요 — 그대로가 아니라 각 원소가 2배가 된 `[2, 4, 6]`입니다.
+        "2": 순서는 뒤집히지 않아요 — 머리를 변환한 결과를 **앞에** 붙여 원래 순서 `[2, 4, 6]`이 유지됩니다.
+        "3": 이 함수는 합(2+4+6)이 아니라 변환된 **리스트**를 돌려줘요 — `[2, 4, 6]`입니다.
+  - exercise: no-for-while
+    type: choice
+    prompt: Gleam에서 리스트의 모든 원소를 훑으려면 무엇을 쓸까요?
+    choices:
+      - 재귀 — 머리를 처리하고 꼬리에 대해 자기 자신을 부른다
+      - "`for` 루프"
+      - "`while` 루프"
+      - "`xs[i]`로 인덱스를 0부터 증가시키며 접근"
+    answer: 0
+    feedback:
+      correct: 맞아요! Gleam엔 `for`/`while`이 없어 반복은 재귀로 표현합니다 — 머리를 처리하고 더 짧은 꼬리에 대해 자신을 부르는 패턴이에요.
+      choices:
+        "1": Gleam에는 `for` 루프가 없습니다 — 반복은 재귀(또는 다음 유닛의 `list` 함수)로 합니다.
+        "2": Gleam에는 `while` 루프도 없어요 — 종료 조건이 있는 재귀로 대신합니다.
+        "3": "`xs[i]` 같은 인덱스 접근이 없어요 — 리스트는 머리/꼬리로 한 겹씩 벗겨 다룹니다."
+  - exercise: prepend-vs-append
+    type: choice
+    prompt: 리스트 앞에 붙이기(prepend, `[x, ..xs]`)와 뒤에 붙이기(append)의 비용에 대해 옳은 것은?
+    choices:
+      - prepend는 O(1)로 빠르고, 뒤에 붙이려면 리스트 끝까지 가야 해 더 비싸다
+      - 둘 다 똑같이 O(1)이다
+      - prepend가 더 비싸다 — 모든 원소를 옮겨야 한다
+      - 리스트는 인덱스로 어디든 O(1)에 끼워넣을 수 있다
+    answer: 0
+    feedback:
+      correct: 정확해요! 머리에 붙이는 prepend는 기존 리스트를 그대로 꼬리로 재사용하니 O(1)입니다. 그래서 재귀로 결과를 만들 때 보통 **앞에서부터 prepend**하는 패턴을 씁니다.
+      choices:
+        "1": 뒤에 붙이기는 끝까지 훑어가야 해 prepend보다 비싸요 — 둘이 같지 않습니다.
+        "2": 거꾸로예요 — prepend가 O(1)로 가장 쌉니다(꼬리 재사용).
+        "3": 인덱스 임의 삽입은 리스트에 없어요 — 머리/꼬리 구조라 앞쪽 작업이 쌉니다.

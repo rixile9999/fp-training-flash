@@ -1,0 +1,90 @@
+title: case 표현식 해부
+tags:
+  - concept:case-expressions
+blocks:
+  - prose: intro
+    markdown: |-
+      Gleam에서 분기의 중심은 `case`입니다. 모양은 이렇습니다:
+
+      ```
+      case 검사할_값 {
+        패턴1 -> 결과1
+        패턴2 -> 결과2
+        _ -> 나머지_결과
+      }
+      ```
+
+      위에서 아래로 패턴을 하나씩 맞춰 보고, **처음으로 맞는 가지**의 결과가 곧 `case` 전체의 값이 됩니다. `case`는 문장이 아니라 **표현식**이라, 그 자리에 값 하나를 남깁니다.
+  - exercise: case-basic-3
+    type: predict
+    prompt: 이 case 표현식의 값은?
+    code: |-
+      case 3 {
+        1 -> "하나"
+        2 -> "둘"
+        _ -> "많음"
+      }
+    choices:
+      - '"하나"'
+      - '"둘"'
+      - '"많음"'
+      - "3"
+    answer: 2
+    feedback:
+      correct: 맞아요! 3은 1도 2도 아니라 마지막 `_` 가지에 걸려 "많음"이 됩니다.
+      choices:
+        "0": 3은 1이 아니에요. case는 위에서부터 맞는 첫 가지를 찾습니다.
+        "1": 3은 2도 아니에요. 둘 다 비껴서 `_`로 떨어집니다.
+        "3": case는 검사한 값 3이 아니라 맞은 가지의 *결과*를 돌려줘요 — "많음".
+  - prose: literal-patterns
+    markdown: |-
+      패턴 자리에는 리터럴(`1`, `"red"`, `True` 등)을 그대로 쓸 수 있습니다. 검사하는 값이 그 리터럴과 같으면 그 가지가 선택됩니다.
+
+      `_`(언더스코어)는 **어떤 값과도 맞는** 와일드카드입니다. 보통 맨 아래에 두어 "나머지 전부"를 받습니다.
+  - exercise: case-string-match
+    type: predict
+    prompt: '`light("green")`의 값은?'
+    code: |-
+      fn light(color: String) -> String {
+        case color {
+          "red" -> "멈춤"
+          "green" -> "출발"
+          _ -> "주의"
+        }
+      }
+    choices:
+      - '"멈춤"'
+      - '"출발"'
+      - '"주의"'
+      - '"green"'
+    answer: 1
+    feedback:
+      correct: 맞아요! "green" 리터럴 패턴이 맞아떨어져 "출발"이 됩니다.
+      choices:
+        "0": '"멈춤"은 "red" 가지의 결과예요. 입력은 "green"입니다.'
+        "2": '"green"은 두 번째 가지에서 이미 잡히므로 `_`까지 내려가지 않아요.'
+        "3": case는 맞은 가지의 결과를 돌려줘요 — 입력 "green" 자체가 아니라 "출발".
+  - prose: bind-name
+    markdown: 패턴 자리에 `_` 대신 **이름**을 쓰면, 맞은 값이 그 이름에 묶입니다(바인딩). 그러면 결과 식에서 그 값을 쓸 수 있어요. `_`는 "받지만 안 쓴다", 이름은 "받아서 쓴다"는 차이입니다.
+  - exercise: case-bind-var
+    type: predict
+    prompt: "`describe(7)`의 값은?"
+    code: |-
+      fn describe(n: Int) -> String {
+        case n {
+          0 -> "zero"
+          other -> "got " <> int.to_string(other)
+        }
+      }
+    choices:
+      - '"zero"'
+      - '"got 0"'
+      - '"got 7"'
+      - '"other"'
+    answer: 2
+    feedback:
+      correct: 정확해요! 7은 0이 아니라 `other`에 묶이고, 결과 식에서 그 값을 씁니다.
+      choices:
+        "0": '"zero"는 0일 때의 결과예요. 입력은 7입니다.'
+        "1": "`other`에는 입력 7이 묶입니다 — 0이 아니라 7이 들어가요."
+        "3": "`other`는 값을 담는 이름일 뿐, 그 글자가 결과로 나오지 않아요."

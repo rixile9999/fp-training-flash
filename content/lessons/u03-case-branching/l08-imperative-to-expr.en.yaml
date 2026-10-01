@@ -1,0 +1,57 @@
+title: From Imperative to Expression
+blocks:
+  intro:
+    markdown: |-
+      This lesson shifts your thinking one more notch: it turns the imperative habit of **assigning a value to a variable and then overwriting it with an if** into expression thinking that **uses the result of a case expression directly**.
+
+      Where imperative code goes "empty variable → fill it per condition", Gleam goes "a single case where every branch yields a value". If you want to store it in a variable, just bind the case's result like `let x = case ... { ... }`.
+  fee-translate:
+    prompt: "Fees by age: under 13 is 0, under 65 is 1000, otherwise 500. What is the value of `fee(70)`?"
+    choices:
+      - "`0`"
+      - "`1000`"
+      - "`500`"
+      - "`70`"
+    feedback:
+      correct: Correct! 70 is neither `< 13` nor `< 65`, so it becomes 500 from the final `_` branch.
+      choices:
+        "0": 0 is for under 13. 70 does not fall there.
+        "1": 1000 is for under 65. 70 is 65 or above, so it drops to the next branch.
+        "3": A case returns the result of the matching branch (500), not the age that was inspected.
+  multi-subject:
+    markdown: "A case can also inspect **several values at once**: group them with commas like `case a, b { ... }`, and list the patterns in each branch with commas too. It is a powerful tool for flattening a nested if-ladder into one flat case."
+  fizzbuzz-translate:
+    prompt: What is the value of `fizz(15)`?
+    choices:
+      - '"FizzBuzz"'
+      - '"Fizz"'
+      - '"Buzz"'
+      - '"other"'
+    feedback:
+      correct: Correct! 15 is divisible by both 3 and 5, so it becomes `0, 0` and matches the first branch "FizzBuzz".
+      choices:
+        "1": '"Fizz" is when divisible only by 3 (`0, _`). 15 is also divisible by 5.'
+        "2": '"Buzz" is when divisible only by 5 (`_, 0`). 15 is also divisible by 3.'
+        "3": '"other" is when neither divides. 15 is divisible by both — the first branch wins.'
+    code: |-
+      fn fizz(n: Int) -> String {
+        case n % 3, n % 5 {
+          0, 0 -> "FizzBuzz"
+          0, _ -> "Fizz"
+          _, 0 -> "Buzz"
+          _, _ -> "other"
+        }
+      }
+  let-case-bind:
+    prompt: Which is the idiomatic Gleam way to write "I want to store a grade string in a variable `label` depending on the score"?
+    choices:
+      - let label = case score { s if s >= 90 -> "A" _ -> "F" }
+      - var label; if score >= 90 { label = "A" }
+      - label = case score { ... }
+      - case score { s if s >= 90 -> let label = "A" }
+    feedback:
+      correct: Correct! A case is an expression, so you can bind its result directly with `let label =` — this is expression thinking.
+      choices:
+        "1": Gleam has no `var`, nor empty-variable-then-assign. You bind the case's result all at once.
+        "2": A binding always needs `let` — `label = ...` alone is not enough.
+        "3": Doing only `let` inside a branch means the case yields no value. You must put a value ("A") in the result position.

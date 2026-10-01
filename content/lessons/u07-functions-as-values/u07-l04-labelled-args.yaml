@@ -1,0 +1,82 @@
+title: labelled arguments
+tags:
+  - concept:labelled-arguments
+blocks:
+  - prose: intro
+    markdown: |-
+      함수 인자가 여럿이면 호출부에서 "이 값이 어느 자리였더라?" 하고 헷갈립니다. Gleam은 인자에 **라벨**을 붙여 호출을 문장처럼 읽히게 합니다.
+
+      정의할 때 인자 앞에 `라벨 이름: 타입` 형태로 라벨을 붙입니다:
+
+      ```gleam
+      pub fn replace(
+        in string: String,
+        each pattern: String,
+        with replacement: String,
+      ) -> String {
+        string.replace(string, pattern, replacement)
+      }
+
+      replace(in: "a,b,c", each: ",", with: " ")  // "a b c"
+      ```
+
+      `in`, `each`, `with`가 라벨이고, `string`, `pattern`, `replacement`는 본문에서 쓰는 내부 이름입니다.
+  - exercise: labelled-call
+    type: predict
+    prompt: 위 `replace`를 라벨로 호출한 결과는?
+    code: 'replace(in: "a,b,c", each: ",", with: " ")'
+    choices:
+      - '`"a b c"`'
+      - '`"a,b,c"`'
+      - '`"abc"`'
+      - '`" "`'
+    answer: 0
+    feedback:
+      correct: 정확해요! "a,b,c"에서 모든 `,`를 공백으로 바꿔 "a b c"가 됩니다.
+      choices:
+        "1": replace가 적용되므로 그대로 남지 않아요 — `,`가 공백이 됩니다.
+        "2": "`,`를 빈 문자열이 아니라 *공백*으로 바꿔요 — 글자 사이에 공백이 남습니다."
+        "3": 글자 a, b, c는 그대로 남고 구분자만 바뀝니다 — "a b c".
+  - prose: order-free
+    markdown: |-
+      라벨의 진짜 장점은 **순서에서 자유로워진다**는 점입니다. 라벨을 붙여 호출하면 인자를 어떤 순서로 적어도 이름으로 맞춰집니다 — 정의된 순서를 외울 필요가 없어요.
+
+      ```gleam
+      replace(each: ",", with: " ", in: "a,b,c")
+      // 위와 똑같이 "a b c"
+      ```
+
+      라벨 호출은 *위치*가 아니라 *이름*으로 매칭되니까요.
+  - exercise: labelled-reorder
+    type: predict
+    prompt: 라벨 순서를 바꿔 호출했습니다. 이 결과는?
+    code: 'replace(each: ",", with: " ", in: "a,b,c")'
+    choices:
+      - '`"a b c"`'
+      - '`",a,b,c "`'
+      - 컴파일 에러
+      - '`"a,b,c"`'
+    answer: 0
+    feedback:
+      correct: 맞아요! 라벨은 이름으로 매칭되므로 순서를 바꿔도 결과가 같습니다 — "a b c".
+      choices:
+        "1": 라벨은 위치가 아니라 이름으로 짝지어요 — `in`은 여전히 대상 문자열, `each`는 찾을 것입니다.
+        "2": 라벨이 붙은 호출은 순서가 달라도 합법이에요 — 컴파일되고 "a b c"가 됩니다.
+        "3": replace가 정상 적용돼요 — `,`가 공백으로 바뀐 "a b c"입니다.
+  - prose: shorthand
+    markdown: '변수 이름이 라벨과 똑같을 때는 **단축 문법(label shorthand)**을 쓸 수 있습니다. `greet(name: name, greeting: greeting)`처럼 이름이 겹치면, `greet(name:, greeting:)`로 줄여 쓸 수 있어요 — 라벨 뒤를 비우면 "같은 이름의 변수를 넣는다"는 뜻입니다.'
+  - exercise: shorthand-meaning
+    type: choice
+    prompt: "`name`과 `greeting`이라는 변수가 있을 때, `greet(name:, greeting:)`은 무엇과 같은가요?"
+    choices:
+      - "`greet(name: name, greeting: greeting)`"
+      - "`greet(name, greeting)`"
+      - "`greet()` — 빈 호출"
+      - 컴파일 에러
+    answer: 0
+    feedback:
+      correct: 맞아요! 라벨 뒤를 비우면 *같은 이름의 변수*를 그 라벨에 넣는다는 단축 문법이에요.
+      choices:
+        "1": 단축 문법은 *라벨이 붙은* 호출이에요 — 라벨 `name:`/`greeting:`이 그대로 살아 있습니다.
+        "2": 인자를 비우는 게 아니라, 같은 이름의 변수를 채워 넣는 단축이에요.
+        "3": 같은 이름의 변수가 있으면 합법인 단축 문법이라 정상 컴파일됩니다.

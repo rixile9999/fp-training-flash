@@ -1,0 +1,74 @@
+title: 명령형을 표현식으로
+tags:
+  - concept:case-expressions
+  - tricky:no-early-return
+blocks:
+  - prose: intro
+    markdown: |-
+      이번 레슨은 사고를 한 번 더 전환합니다: **변수에 값을 대입했다가 if로 덮어쓰는** 명령형 습관을, **case 표현식의 결과를 곧장 쓰는** 표현식 사고로 바꿉니다.
+
+      명령형에서는 "빈 변수 → 조건마다 채우기"였다면, Gleam에서는 "모든 분기가 값을 내는 case 하나"입니다. 변수에 담고 싶으면 `let x = case ... { ... }`처럼 case의 결과를 묶으면 됩니다.
+  - exercise: fee-translate
+    type: predict
+    prompt: "나이별 요금: 13세 미만 0, 65세 미만 1000, 그 외 500. `fee(70)`의 값은?"
+    code: |-
+      fn fee(age: Int) -> Int {
+        case age {
+          a if a < 13 -> 0
+          a if a < 65 -> 1000
+          _ -> 500
+        }
+      }
+    choices:
+      - "`0`"
+      - "`1000`"
+      - "`500`"
+      - "`70`"
+    answer: 2
+    feedback:
+      correct: 맞아요! 70은 `< 13`도 `< 65`도 거짓이라 마지막 `_` 가지의 500이 됩니다.
+      choices:
+        "0": 0은 13세 미만일 때예요. 70은 거기 해당하지 않습니다.
+        "1": 1000은 65세 미만일 때예요. 70은 65 이상이라 다음 가지로 내려갑니다.
+        "3": case는 검사한 나이가 아니라 맞은 가지의 결과(500)를 돌려줍니다.
+  - prose: multi-subject
+    markdown: "case는 **여러 값을 동시에** 검사할 수도 있습니다: `case a, b { ... }`처럼 쉼표로 묶고, 각 가지도 쉼표로 패턴을 나열합니다. 중첩 if 사다리를 평평한 한 case로 펴는 강력한 도구입니다."
+  - exercise: fizzbuzz-translate
+    type: predict
+    prompt: "`fizz(15)`의 값은?"
+    code: |-
+      fn fizz(n: Int) -> String {
+        case n % 3, n % 5 {
+          0, 0 -> "FizzBuzz"
+          0, _ -> "Fizz"
+          _, 0 -> "Buzz"
+          _, _ -> "기타"
+        }
+      }
+    choices:
+      - '"FizzBuzz"'
+      - '"Fizz"'
+      - '"Buzz"'
+      - '"기타"'
+    answer: 0
+    feedback:
+      correct: 맞아요! 15는 3으로도 5로도 나누어떨어져 `0, 0`이 되고, 첫 가지 "FizzBuzz"에 맞습니다.
+      choices:
+        "1": '"Fizz"는 3으로만 나누어떨어질 때(`0, _`)예요. 15는 5로도 떨어집니다.'
+        "2": '"Buzz"는 5로만 떨어질 때(`_, 0`)예요. 15는 3으로도 떨어집니다.'
+        "3": '"기타"는 둘 다 안 떨어질 때예요. 15는 둘 다 떨어집니다 — 첫 가지가 이깁니다.'
+  - exercise: let-case-bind
+    type: choice
+    prompt: '"점수에 따라 등급 문자열을 변수 `label`에 담고 싶다"를 Gleam답게 쓴 것은?'
+    choices:
+      - let label = case score { s if s >= 90 -> "A" _ -> "F" }
+      - var label; if score >= 90 { label = "A" }
+      - label = case score { ... }
+      - case score { s if s >= 90 -> let label = "A" }
+    answer: 0
+    feedback:
+      correct: 맞아요! case는 표현식이라 그 결과를 곧장 `let label =`로 묶을 수 있습니다 — 이것이 표현식 사고입니다.
+      choices:
+        "1": Gleam에는 `var`도 빈 변수 후 대입도 없어요. case의 결과를 한 번에 묶습니다.
+        "2": 바인딩에는 반드시 `let`이 필요해요 — `label = ...`만으로는 안 됩니다.
+        "3": 가지 안에서 `let`만 하면 case가 값을 못 내요. 결과 자리에 값("A")을 둬야 합니다.

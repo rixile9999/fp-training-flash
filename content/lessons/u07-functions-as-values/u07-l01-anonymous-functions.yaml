@@ -1,0 +1,71 @@
+title: 익명 함수와 함수 값
+tags:
+  - concept:anonymous-functions
+blocks:
+  - prose: intro
+    markdown: |-
+      지금까지 함수는 `pub fn 이름(...) { ... }`처럼 **이름을 붙여** 정의했습니다. 하지만 Gleam에서 함수는 그 자체로 하나의 **값**이에요 — 정수나 문자열처럼 변수에 담고, 다른 함수에 건네줄 수 있습니다.
+
+      이름 없이 즉석에서 만드는 함수를 **익명 함수**라고 하며 `fn(인자) { 본문 }`으로 씁니다. `fn`만 있고 이름이 없다는 점만 다를 뿐, 똑같은 함수예요.
+
+      ```gleam
+      let double = fn(x) { x * 2 }
+      double(21)  // 42
+      ```
+
+      `fn(x) { x * 2 }`라는 값을 만들어 `double`이라는 이름에 `let`으로 묶었습니다. 그다음부터는 `double(21)`처럼 보통 함수처럼 호출합니다.
+  - exercise: anon-bind-call
+    type: predict
+    prompt: 아래 코드에서 `double(21)`의 값은?
+    code: |-
+      let double = fn(x) { x * 2 }
+
+      // double(21) 은?
+    choices:
+      - "`42`"
+      - "`21`"
+      - "`2`"
+      - 컴파일 에러
+    answer: 0
+    feedback:
+      correct: 정확해요! `fn(x) { x * 2 }`는 입력을 두 배로 만드는 함수예요. `double(21)`은 21 * 2 = 42입니다.
+      choices:
+        "1": 입력 그대로가 아니라 `x * 2`가 적용돼요 — 21 * 2 = 42.
+        "2": "`2`는 곱하는 수일 뿐, 반환값은 `x * 2` = 42입니다."
+        "3": 익명 함수를 `let`으로 묶어 호출하는 건 합법이에요 — 함수도 값이라 변수에 담깁니다.
+  - prose: anon-vs-named
+    markdown: |-
+      이름 붙은 함수와 익명 함수는 사실상 같은 것입니다. `pub fn double(x: Int) -> Int { x * 2 }`는 `double`이라는 이름에 `fn(x) { x * 2 }`를 묶어 둔 것과 본질적으로 같아요.
+
+      익명 함수에도 인자 타입과 반환 타입을 적을 수 있지만(`fn(x: Int) -> Int { x * 2 }`), 짧게 쓸 때는 컴파일러의 추론에 맡겨 생략하는 경우가 많습니다.
+  - exercise: anon-immediate
+    type: predict
+    prompt: 익명 함수를 만들자마자 바로 호출할 수도 있습니다. 이 표현식의 값은?
+    code: fn(a, b) { a + b }(3, 4)
+    choices:
+      - "`7`"
+      - "`12`"
+      - "`34`"
+      - 컴파일 에러
+    answer: 0
+    feedback:
+      correct: 맞아요! `fn(a, b) { a + b }`를 만들고 곧장 `(3, 4)`로 호출하면 3 + 4 = 7입니다.
+      choices:
+        "1": "`+`는 덧셈이지 곱셈이 아니에요 — 3 + 4 = 7입니다."
+        "2": 두 인자를 글자로 잇는 게 아니라 더해요 — 3 + 4 = 7.
+        "3": 만든 즉시 `(3, 4)`로 호출하는 건 합법이에요 — 함수 값을 바로 적용한 것.
+  - exercise: anon-syntax
+    type: choice
+    prompt: 이름 없는 익명 함수를 만드는 올바른 문법은?
+    choices:
+      - "`fn(x) { x * 2 }`"
+      - "`fn double(x) { x * 2 }`"
+      - "`lambda x: x * 2`"
+      - "`(x) => x * 2`"
+    answer: 0
+    feedback:
+      correct: 맞아요! 익명 함수는 `fn(인자) { 본문 }`이에요 — `fn` 뒤에 이름 없이 바로 괄호가 옵니다.
+      choices:
+        "1": "`fn double(...)`은 이름이 붙은 정의예요 — 익명 함수에는 이름이 없습니다."
+        "2": "`lambda`는 Gleam 문법이 아니에요. 익명 함수도 키워드는 `fn`입니다."
+        "3": "`=>` 화살표 문법은 Gleam에 없어요 — 본문은 `{ }`로 감쌉니다."

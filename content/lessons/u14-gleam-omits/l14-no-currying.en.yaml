@@ -1,0 +1,68 @@
+title: Why There's No Currying, and Capture
+blocks:
+  intro:
+    markdown: |-
+      In Haskell, `add 10` becomes "a function that takes one argument" — automatic **currying**. Gleam doesn't have that.
+
+      In Gleam, `add(10)` is not a function but a **"too few arguments" compile error**. You called a two-place function and filled only one slot.
+  map-missing-arg:
+    prompt: What happens if you fill only one slot of the two-argument function `add` and pass it to `list.map`?
+    choices:
+      - "`[11, 12]`"
+      - compile error (argument count mismatch)
+      - "`[10, 10]`"
+      - "`[1, 2]`"
+    feedback:
+      correct: Right! `add(10)` is a call missing an argument, so it won't compile. Gleam has no automatic currying.
+      choices:
+        "0": In Haskell, yes. Gleam has no automatic currying, so spell out the empty slot with `add(10, _)`.
+        "2": "`add(10)` can't produce a value and is blocked at compile time — it never even runs."
+        "3": "`add` isn't merely left unapplied; the call is a compile error, so [1, 2] doesn't come out unchanged either."
+  capture:
+    markdown: |-
+      What if you *really* want partial application? You make the intent explicit with **capture**.
+
+      `add(10, _)` is a "call with one slot left empty," shorthand for `fn(b) { add(10, b) }`. Exactly one hole `_`.
+
+      The key design intent: a mistake (forgetting an argument) and an intention (partial application) are **distinguished by syntax**. `add(10)` is a mistake; `add(10, _)` is intentional.
+  capture-map:
+    prompt: What's the result of this code, where capture makes the empty slot explicit?
+    choices:
+      - "`[11, 12]`"
+      - compile error
+      - "`[10, 20]`"
+      - "`[1, 2]`"
+    feedback:
+      correct: Exactly! `add(10, _)` is `fn(b) { add(10, b) }`, so it adds 10 to each element, giving [11, 12].
+      choices:
+        "1": This time you filled the empty slot with `_`, so it's fine — no missing argument.
+        "2": "It *adds* 10, it doesn't multiply: 1+10=11, 2+10=12."
+        "3": The capture is applied to each element, so the original doesn't come out unchanged — it's [11, 12].
+  hole-position-prose:
+    markdown: The **position** of the hole determines which argument gets left empty. Even for the same function, where you put `_` changes the result.
+  hole-position:
+    prompt: You want to append `!` *after* each string. What's the result of this capture?
+    choices:
+      - '`["a!", "b!"]`'
+      - '`["!a", "!b"]`'
+      - '`["a", "b"]`'
+      - compile error
+    feedback:
+      correct: Right! `append(_, "!")` leaves the first argument (the element) empty, so "!" is appended *after* each element — ["a!", "b!"].
+      choices:
+        "1": That's the result of `string.append("!", _)`. The hole's position decides which argument is left empty.
+        "2": "`append` actually attaches \"!\", so the original doesn't come out unchanged."
+        "3": With a single `_` leaving the first argument empty, it's a valid capture and compiles fine.
+  capture-type:
+    prompt: When `add` is `fn(Int, Int) -> Int`, what is the type of the capture `add(10, _)`?
+    choices:
+      - "`fn(Int) -> Int`"
+      - "`Int`"
+      - "`fn(Int, Int) -> Int`"
+      - "`fn() -> Int`"
+    feedback:
+      correct: "Right! You left one slot empty, so it's a function taking the one remaining argument: `fn(Int) -> Int`."
+      choices:
+        "1": A capture produces a *function*, not a value — you still have to fill the empty slot to get a result.
+        "2": The thing that takes both slots is `add` itself. The capture already filled one slot, so just one remains.
+        "3": There's one hole, so it takes one argument — it's not `fn() -> Int`.

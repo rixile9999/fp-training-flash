@@ -1,0 +1,15 @@
+title: 꼬리 재귀와 누산기
+order: 6
+level: 2
+skill: gleam-lists-recursion
+prerequisites:
+  - u05-lists-recursion
+lessons:
+  - l15-stack-growth
+  - l16-accumulator
+  - l17-wrapper-loop
+  - l18-acc-reverse
+source:
+  kind: original
+  upstream: fpdojo (~/workspace/fp-training, same author), gleam 1.17 JS;
+    re-verified on gleam 1.18.1 Erlang

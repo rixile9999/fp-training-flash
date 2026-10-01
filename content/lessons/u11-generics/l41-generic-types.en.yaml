@@ -1,0 +1,74 @@
+title: Generic Custom Types
+blocks:
+  intro:
+    markdown: |-
+      Type variables can be attached not only to functions but also to **custom types**. In fact, the `List(a)`, `Option(a)`, and `Result(a, e)` you've already been using are all such **generic custom types** — and you can build your own too.
+
+      ```gleam
+      pub type Box(a) {
+        Box(inner: a)
+      }
+      ```
+
+      `Box(a)` is "a box that holds one thing." `Box(42)` becomes `Box(Int)`, and `Box("hi")` becomes `Box(String)`. The type of the held value is exactly `a`.
+  unbox:
+    markdown: |-
+      The function that takes a value out of the box is generic too. It takes a `Box(a)` and returns the `a` inside, unchanged.
+
+      ```gleam
+      pub fn unbox(box: Box(a)) -> a {
+        box.inner
+      }
+      ```
+
+      Record field access (`box.inner`) works just as you saw in U4 — being generic changes nothing.
+  unbox-int:
+    prompt: What do you get when you unbox `Box(42)`? (`unbox(box) -> a` returns `box.inner`)
+    choices:
+      - "`42`"
+      - "`Box(42)`"
+      - "`Box(inner: 42)`"
+      - "`a`"
+    feedback:
+      correct: Exactly! `unbox` takes the value out of the box as-is — the unwrapped `42`.
+      choices:
+        "1": "`unbox` **unwraps** the box — it doesn't hand the whole box back."
+        "2": That's the shape of looking at the box *itself*. `unbox` extracts only the `inner` value.
+        "3": "`a` is just a type variable (a placeholder), not an actual value — here it's filled in with `42`."
+  map-box:
+    markdown: |-
+      Now let's look at a function that "transforms only the value inside without opening the box." Since the input type `a` and output type `b` may differ, we use two type variables.
+
+      ```gleam
+      pub fn map_box(box: Box(a), f: fn(a) -> b) -> Box(b) {
+        Box(f(box.inner))
+      }
+      ```
+
+      Look familiar? This is the **exact same shape** as `result.map` and `option.map` — you've just built their cousin.
+  map-box-incr:
+    prompt: What if you add 1 to the value inside? Pick the shape as printed by `string.inspect`.
+    choices:
+      - "`Box(6)`"
+      - "`6`"
+      - "`Box(5)`"
+      - "`Box(5, 6)`"
+    feedback:
+      correct: Right! `f` turns the inner 5 into 6, and the result is **wrapped back into a box** as `Box(6)`.
+      choices:
+        "1": "`map_box` hands back a box — not the unwrapped value (`6`) but `Box(6)`. (Use `unbox` to unwrap.)"
+        "2": "`f` is applied, turning 5 into 6 — the original value doesn't stay."
+        "3": The box holds only the single transformed value — the old and new values don't both remain.
+  map-box-upper:
+    prompt: This time it uppercases a string. What shape is the result?
+    choices:
+      - '`Box("GLEAM")`'
+      - '`"GLEAM"`'
+      - '`Box("gleam")`'
+      - compile error
+    feedback:
+      correct: Exactly! Here `a = String` and `b = String`. The inner "gleam" becomes "GLEAM" and is wrapped back into the box.
+      choices:
+        "1": The result is a box — not the unwrapped string but `Box("GLEAM")`.
+        "2": "`string.uppercase` is applied, making it uppercase — it doesn't stay as the original."
+        "3": It's a `String -> String` function, so it fits `fn(a) -> b` perfectly — it compiles fine.

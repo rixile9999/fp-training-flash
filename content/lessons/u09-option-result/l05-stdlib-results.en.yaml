@@ -1,0 +1,77 @@
+title: Results in the stdlib
+blocks:
+  intro:
+    markdown: |-
+      Now you'll start to see the standard library return `Result` all over the place. Two representative ones:
+
+      - **`int.parse(String) -> Result(Int, Nil)`** — a string to an integer. If it isn't an integer, `Error(Nil)`.
+      - **`list.first(List(a)) -> Result(a, Nil)`** — the first element of a list. If the list is empty, `Error(Nil)`.
+
+      Both have only one reason for failure, so the error type is `Nil` (the same idiom as U9-④). Still, "pattern match to take it out" applies just the same.
+  parse-int-ok:
+    prompt: What is the result of `int.parse`?
+    choices:
+      - "`Ok(42)`"
+      - "`42`"
+      - "`Error(Nil)`"
+      - "`Some(42)`"
+    feedback:
+      correct: Right! "42" parses fine as an integer, giving `Ok(42)` — success values come out wrapped in `Ok` too.
+      choices:
+        "1": The value is 42, but it's a `Result` so it's wrapped as `Ok(42)` — it doesn't come out as a bare `42`.
+        "2": "\"42\" is a perfectly good integer, so it's a success — `Error(Nil)` is for when parsing *fails*."
+        "3": "`int.parse` returns a `Result` — it wraps in `Ok`, not `Some`."
+  parse-float:
+    prompt: '`int.parse` is for *integers* only. What is the value of `int.parse("4.2")`?'
+    choices:
+      - "`Error(Nil)`"
+      - "`Ok(4)`"
+      - "`Ok(4.2)`"
+      - "`4.2`"
+    feedback:
+      correct: Exactly! "4.2" is not an *integer*, so `int.parse` fails and gives `Error(Nil)`. If there's a decimal point, integer parsing won't work.
+      choices:
+        "1": It doesn't truncate (round down to 4) — "4.2" isn't an integer format, so the whole thing fails to parse.
+        "2": "`int.parse` only produces an `Int` — it doesn't return the `Float` `4.2` (it fails to begin with)."
+        "3": The value neither comes out bare nor parses — it's `Error(Nil)`.
+  list-first:
+    markdown: "`list.first` has the same shape. If there's at least one element it returns the first as `Ok`, and if it's empty it returns `Error(Nil)`. It's the way to safely handle \"the first element of a list that might be empty\" — it doesn't crash on an empty list."
+  first-ok:
+    prompt: What is the result of `list.first`?
+    choices:
+      - "`Ok(10)`"
+      - "`10`"
+      - "`Ok([10, 20, 30])`"
+      - "`Ok(30)`"
+    feedback:
+      correct: Right! The first element, 10, is wrapped in `Ok`, giving `Ok(10)`.
+      choices:
+        "1": The value is 10, but it's a `Result` so it's wrapped as `Ok(10)` — it doesn't come out bare.
+        "2": "`first` gives just the *first single element*, not the whole list — `Ok(10)`."
+        "3": "`first` is the very *front* element — the first 10, not the last 30 (`list.last` is the last)."
+  first-empty:
+    prompt: What if you use `list.first` on an empty list? What is the value of `list.first([])`?
+    choices:
+      - "`Error(Nil)`"
+      - "`Ok(Nil)`"
+      - the program crashes
+      - "`[]`"
+    feedback:
+      correct: Exactly! An empty list has no first element, so it's `Error(Nil)` — the failure comes back as a value, so it doesn't crash.
+      choices:
+        "1": An empty list isn't a success — it reports "no first element" with `Error(Nil)`, not `Ok`.
+        "2": There are no exceptions, so it doesn't crash — `Result` safely expresses the failure.
+        "3": It's not the empty list as-is but a `Result` value (`Error(Nil)`) that comes out.
+  why-result:
+    prompt: What is the best reason that `int.parse` and `list.first` go to the trouble of returning a `Result` instead of a bare value?
+    choices:
+      - To express failure (can't parse, empty list) as a *value*, so the caller can safely handle both cases with case
+      - Because Result uses less memory than Int
+      - Because Gleam functions can only ever return Result
+      - To make debugging output prettier
+    feedback:
+      correct: Right! Returning failure as a `Result` value instead of throwing an exception lets the compiler force "did you handle the failure too?" and prevent missed handling — that's the heart of this unit.
+      choices:
+        "1": It has nothing to do with saving memory — the reason is to *express failure safely*.
+        "2": A function can return any type — `Result` is the choice when there's a possibility of failure.
+        "3": It's not about debug display, but about surfacing failure in the type so the caller handles it.

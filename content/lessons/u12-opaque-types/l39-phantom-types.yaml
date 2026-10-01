@@ -1,0 +1,77 @@
+title: phantom types 맛보기
+tags:
+  - concept:phantom-types
+blocks:
+  - prose: intro
+    markdown: |-
+      마지막은 **고급 맛보기**입니다(부담 없이 구경만 하세요). 
+
+      타입 파라미터가 *값에는 전혀 등장하지 않고* 타입 단계에서 **구분자**로만 쓰일 수 있습니다. 이를 **phantom type**(유령 타입)이라 합니다.
+
+      ```
+      pub type Meters
+
+      pub type Feet
+
+      pub type Length(unit) {
+        Length(amount: Float)
+      }
+
+      pub fn add_lengths(a: Length(unit), b: Length(unit)) -> Length(unit) {
+        Length(a.amount +. b.amount)
+      }
+      ```
+
+      `unit` 파라미터는 `Length`의 필드 어디에도 안 쓰입니다 — 오로지 "이건 미터, 저건 피트"를 *타입으로* 구분하기 위한 표식이에요.
+  - exercise: add-meters
+    type: predict
+    prompt: 같은 단위끼리 더할 때, 이 코드의 출력은?
+    code: |-
+      let a: Length(Meters) = Length(3.0)
+      let b: Length(Meters) = Length(2.0)
+      let total = add_lengths(a, b)
+      io.println(float.to_string(total.amount))
+    choices:
+      - "`5.0`"
+      - "`6.0`"
+      - "`5`"
+      - "`Length(5.0)`"
+    answer: 0
+    feedback:
+      correct: 맞아요! 둘 다 `Meters`라 타입이 맞고, `3.0 +. 2.0 = 5.0`이 출력됩니다.
+      choices:
+        "1": 더하기예요 — 곱(3.0 *. 2.0 = 6.0)이 아니라 3.0 +. 2.0 = 5.0입니다.
+        "2": "`Float`라 `5`가 아니라 `5.0`으로 출력됩니다."
+        "3": "`total.amount`로 안의 `Float`만 꺼내 출력해요 — 레코드 전체가 아니라 5.0."
+  - prose: type-guard
+    markdown: 그럼 `unit`이 왜 유용할까요? `add_lengths`의 시그니처는 `a`와 `b`가 **같은 `unit`**이어야 한다고 못 박습니다. 그래서 미터와 피트를 섞으면 컴파일러가 막아 줍니다 — 단위 혼동을 *컴파일 에러*로 잡는 거죠. 값에는 전혀 비용이 없고요(런타임엔 `unit`이 사라집니다).
+  - exercise: mix-units
+    type: choice
+    prompt: "`Length(Meters)` 하나와 `Length(Feet)` 하나를 `add_lengths`에 넘기면?"
+    choices:
+      - 둘을 더한 `Length`가 나온다
+      - 런타임에 단위 변환이 일어난다
+      - 타입 불일치(type mismatch) 컴파일 에러 — `unit`이 서로 달라서
+      - 첫 인자의 단위로 자동 통일된다
+    answer: 2
+    feedback:
+      correct: 맞아요! 시그니처가 `a`와 `b`의 `unit`을 같게 요구하므로, `Meters`와 `Feet`를 섞으면 컴파일 단계에서 거부됩니다.
+      choices:
+        "0": 서로 다른 `unit`이라 애초에 컴파일이 안 돼요 — 결과 `Length`도 안 생깁니다.
+        "1": phantom type엔 런타임 동작이 없어요. 변환 로직은 어디에도 없습니다.
+        "3": 자동 통일 같은 마법은 없어요 — 그냥 컴파일 에러로 막습니다.
+  - exercise: phantom-runtime
+    type: choice
+    prompt: phantom type의 파라미터(`Meters`, `Feet`)에 대해 옳은 설명은?
+    choices:
+      - 런타임에 값으로 저장돼 메모리를 차지한다
+      - 값에는 등장하지 않고 컴파일 타임 구분에만 쓰여 런타임 비용이 없다
+      - 반드시 어떤 필드의 타입으로 사용되어야 한다
+      - "`opaque` 타입에서만 쓸 수 있다"
+    answer: 1
+    feedback:
+      correct: 정확해요! 그래서 "유령(phantom)"입니다 — 타입 검사에만 존재하고 런타임엔 흔적이 없죠.
+      choices:
+        "0": 값에 안 들어가니 런타임 비용이 없습니다 — 그게 유령인 이유예요.
+        "2": 오히려 필드에 *안 쓰여서* phantom입니다 — 필드에 쓰이면 평범한 제네릭이죠.
+        "3": "`opaque`와 독립적인 기법입니다 — 어떤 타입에서도 phantom 파라미터를 둘 수 있어요."

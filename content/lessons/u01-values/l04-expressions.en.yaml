@@ -1,0 +1,48 @@
+title: Everything is an expression
+blocks:
+  intro:
+    markdown: |-
+      Gleam has no "statements." `case`, brace blocks `{ ... }`, conditional branches — they're all **expressions that produce a value**.
+
+      So, unlike other languages, you don't "assign to a variable inside an if." Instead, you **bind the whole result of an expression with `let`**.
+  block-value:
+    prompt: A brace block is an expression too — the value of its last line is the value of the whole block. What is `y`?
+    choices:
+      - "`5`"
+      - "`2`"
+      - "`3`"
+      - "`Nil`"
+    feedback:
+      correct: Exactly! The block's last expression `a + 3` (=5) is the value of the whole block, and that's bound to `y`.
+      choices:
+        "1": "`a` (2) is an intermediate value in the block. The block's value is its **last expression**."
+        "2": "`3` is just a literal; `a + 3` is computed and becomes 5."
+        "3": A block returns the value of its last expression — 5, not `Nil`.
+  case-is-expression:
+    markdown: "`case` is also an expression that yields a value, so you can bind its result directly with `let`. Branches with a guard (`if ...`) are checked **top to bottom**, and the first one that is true is chosen."
+  grade-85:
+    prompt: In the `grade` function below, what is the value of `grade(85)`?
+    choices:
+      - '`"A"`'
+      - '`"B"`'
+      - '`"F"`'
+      - "`85`"
+    feedback:
+      correct: Correct! Guards are checked from the top. `85 >= 90` is false so it's skipped, and `85 >= 80` is true, so "B" is chosen.
+      choices:
+        "0": "`85 >= 90` is false, so the first branch is skipped — it falls through to the next one."
+        "2": It never reaches the `_` branch. `85 >= 80` is true, so it stops above that.
+        "3": '`case` returns the **result** of the chosen branch, not the matched input — "B", not 85.'
+  grade-95:
+    prompt: In the same `grade` function, what is the value of `grade(95)`?
+    choices:
+      - '`"A"`'
+      - '`"B"`'
+      - '`"F"`'
+      - Compile error
+    feedback:
+      correct: Exactly! `95 >= 90` is true, so the first branch is chosen and the result is "A".
+      choices:
+        "1": The first branch `s if s >= 90` is already true, so it stops there — it never reaches "B".
+        "2": "`_` is the bottom branch. Since something already matched above, it's never reached."
+        "3": It compiles fine — the `_` branch catches all remaining cases, covering everything exhaustively.

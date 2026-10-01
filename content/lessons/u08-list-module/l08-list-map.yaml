@@ -1,0 +1,94 @@
+title: 당신이 쓴 재귀에는 이름이 있다 — map
+tags:
+  - concept:lists
+blocks:
+  - prose: intro
+    markdown: |-
+      U5~U6에서 손으로 쓴 재귀를 떠올려 보세요. 리스트의 머리를 처리하고 꼬리에 대해 자신을 다시 부르는 그 패턴 — 사실 **이미 이름이 붙어 있습니다**.
+
+      각 원소를 **1:1로 변환**해 같은 길이의 새 리스트를 만드는 재귀, 그게 바로 `list.map`입니다.
+
+      ```gleam
+      import gleam/list
+
+      list.map([1, 2, 3], fn(x) { x * 2 })
+      // == [2, 4, 6]
+      ```
+
+      `list.map(리스트, 변환함수)` — 변환함수는 원소 하나를 받아 새 원소 하나를 돌려줍니다. 원소 개수는 그대로예요.
+  - exercise: map-double
+    type: predict
+    prompt: 이 `list.map`의 결과는?
+    code: list.map([1, 2, 3], fn(x) { x * 2 })
+    choices:
+      - "`[2, 4, 6]`"
+      - "`[1, 2, 3]`"
+      - "`12`"
+      - "`[1, 4, 9]`"
+    answer: 0
+    feedback:
+      correct: 맞아요! 각 원소에 변환함수 `x * 2`가 1:1로 적용돼 `[2, 4, 6]`이 됩니다.
+      choices:
+        "1": 변환함수가 모든 원소에 적용됩니다 — 원본 그대로가 아니라 두 배가 돼요.
+        "2": map은 리스트를 합치지 않아요. 길이가 같은 **리스트**를 돌려줍니다 — 값 하나가 아니에요.
+        "3": "`x * 2`는 제곱이 아니라 두 배예요. `[1, 4, 9]`는 `x * x`의 결과입니다."
+  - prose: shape-changes
+    markdown: |-
+      map은 원소의 **타입을 바꿀 수도** 있습니다. 변환함수의 반환 타입이 곧 새 리스트의 원소 타입이 돼요. `List(Int)`에 `int.to_string`을 map하면 `List(String)`이 됩니다 — 길이는 그대로, 모양만 바뀝니다.
+
+      ```gleam
+      import gleam/int
+      import gleam/list
+
+      list.map([1, 2, 3], int.to_string)
+      // == ["1", "2", "3"]
+      ```
+
+      U7에서 배운 함수 값을 그대로 넘길 수 있다는 점에 주목하세요 — `int.to_string`은 익명 함수로 감싸지 않아도 됩니다.
+  - exercise: map-to-string
+    type: predict
+    prompt: 이 `list.map`의 결과는?
+    code: list.map([1, 2, 3], int.to_string)
+    choices:
+      - '`["1", "2", "3"]`'
+      - "`[1, 2, 3]`"
+      - '`"123"`'
+      - '`["123"]`'
+    answer: 0
+    feedback:
+      correct: 정확해요! 각 `Int`가 `int.to_string`으로 변환돼 `List(String)`인 `["1", "2", "3"]`이 됩니다.
+      choices:
+        "1": 타입이 바뀝니다 — `Int`가 아니라 `String`이 됩니다. 보기의 따옴표 유무를 보세요.
+        "2": map은 원소를 이어붙이지 않아요 — 각 원소를 따로 변환한 **리스트**를 돌려줍니다.
+        "3": 원소가 하나로 합쳐지지 않아요 — 원소 3개가 각각 변환돼 3개로 남습니다.
+  - exercise: map-uppercase
+    type: predict
+    prompt: 함수 값을 그대로 넘기는 `list.map`입니다. 결과는?
+    code: list.map(["a", "b", "c"], string.uppercase)
+    choices:
+      - '`["A", "B", "C"]`'
+      - '`["a", "b", "c"]`'
+      - '`"ABC"`'
+      - '`["abc"]`'
+    answer: 0
+    feedback:
+      correct: 맞아요! 각 문자열에 `string.uppercase`가 적용돼 `["A", "B", "C"]`가 됩니다 — 익명 함수로 감쌀 필요 없이 함수 값을 바로 넘겼어요.
+      choices:
+        "1": 변환이 적용됩니다 — 소문자 그대로가 아니라 대문자가 돼요.
+        "2": map은 원소를 합치지 않아요. 같은 길이의 리스트를 돌려줍니다.
+        "3": 원소 3개가 각각 변환돼 3개로 남습니다 — 하나로 합쳐지지 않아요.
+  - exercise: map-meaning
+    type: choice
+    prompt: "`list.map`을 한 문장으로 가장 잘 설명한 것은?"
+    choices:
+      - 각 원소를 1:1로 변환해 **같은 길이**의 새 리스트를 만든다
+      - 조건에 맞는 원소만 골라 **더 짧은** 리스트를 만든다
+      - 리스트를 접어 **값 하나**로 만든다
+      - 리스트의 원소 순서를 뒤집는다
+    answer: 0
+    feedback:
+      correct: 맞아요! map의 핵심은 '1:1 변환, 길이 보존'입니다. 거르기(filter)나 접기(fold)와는 역할이 다릅니다.
+      choices:
+        "1": 그건 `filter`예요. map은 원소를 거르지 않고 모두 변환합니다 — 길이가 그대로예요.
+        "2": 그건 `fold`예요. map의 결과는 값 하나가 아니라 **리스트**입니다.
+        "3": 순서 뒤집기는 `list.reverse`입니다 — map은 순서를 유지해요.

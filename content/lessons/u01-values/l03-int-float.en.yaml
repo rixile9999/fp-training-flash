@@ -1,0 +1,61 @@
+title: Int and Float are strangers
+blocks:
+  intro:
+    markdown: |-
+      Gleam strictly distinguishes integers (`Int`) from floats (`Float`). There is **no implicit conversion** between them.
+
+      That's why the Float operators carry a dot: `+.`  `-.`  `*.`  `/.`  Integers use plain `+ - * /`.
+  int-div:
+    prompt: What is the result of this integer division? (Gleam's `/` between two integers keeps only the quotient)
+    choices:
+      - "`3.333`"
+      - "`3`"
+      - "`4`"
+      - "`3.0`"
+    feedback:
+      correct: Correct! Integer division keeps only the quotient — 10 / 3 = 3.
+      choices:
+        "0": That's the result of float division. `/` between integers gives only the quotient.
+        "2": It rounds down, not up. The quotient of 10 / 3 is 3.
+        "3": The result is the `Int` value 3, not the `Float` 3.0. They're different types.
+  float-div:
+    prompt: What is the result of this float division?
+    choices:
+      - "`2`"
+      - "`2.5`"
+      - "`2.0`"
+      - Compile error
+    feedback:
+      correct: Exactly! `/.` is Float division, so it gives 2.5.
+      choices:
+        "0": The result is a `Float` — `2.5`, not `2` (an Int).
+        "2": 10.0 /. 4.0 = 2.5. It's not 2.0.
+        "3": "`/.` is the correct Float operator, so it compiles fine."
+  no-mixing:
+    markdown: "**Mixing** an integer and a float in one operation **won't compile**. Gleam doesn't convert silently — if you need a conversion you must make it explicit with a function like `int.to_float`."
+  mixed-arith:
+    prompt: How does Gleam handle the expression `1 + 2.0`?
+    choices:
+      - "`3.0`"
+      - "`3`"
+      - Compile error (type mismatch)
+      - Rounds to `2.0`
+    feedback:
+      correct: Correct! `Int` and `Float` cannot be mixed. The compiler stops it with a Type mismatch error.
+      choices:
+        "0": There's no implicit conversion, so it doesn't become 3.0 — it doesn't compile at all.
+        "1": It isn't converted to an Int either. A type mismatch is a compile error.
+        "3": Gleam doesn't convert silently — you must write `int.to_float(1)` yourself.
+  fix-float-op:
+    prompt: A function body `x + 0.5` (taking a `Float` and adding 0.5) gives a compile error ("Use +. instead"). What's the correct fix?
+    choices:
+      - "`x +. 0.5`"
+      - "`x + 0.5.0`"
+      - "`x .+ 0.5`"
+      - "`x + int.to_float(0.5)`"
+    feedback:
+      correct: Correct! The Float addition operator is the dotted `+.`. Fixing it to `x +. 0.5` works.
+      choices:
+        "1": There's no number notation like `0.5.0` — you need to change the operator to `+.`.
+        "2": "The dot goes **after** the operator: `+.` `-.` `*.` `/.` — `.+` isn't valid syntax."
+        "3": "`0.5` is already a `Float`, so no conversion is needed; the problem is the operator (`+` → `+.`)."

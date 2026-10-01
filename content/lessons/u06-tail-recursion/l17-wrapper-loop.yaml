@@ -1,0 +1,89 @@
+title: wrapper + private loop 관용구
+tags:
+  - concept:tail-call-optimisation
+blocks:
+  - prose: intro
+    markdown: |-
+      누산기 버전에는 작은 불편이 있습니다. 부르는 쪽이 매번 시작값 `0`을 넘겨야 해요 — `sum_loop(numbers, 0)`. 시작값을 잊으면 곤란하고, 애초에 "내부 사정"인 acc를 바깥에 노출하는 것도 어색합니다.
+
+      그래서 Gleam의 관용구는 **얇은 public wrapper + private `_loop`**입니다. public 함수는 시작값을 채워 넣어 한 번 호출하고, 진짜 재귀는 숨겨진 private 함수가 담당합니다.
+
+      ```gleam
+      pub fn sum(numbers: List(Int)) -> Int {
+        sum_loop(numbers, 0)
+      }
+
+      fn sum_loop(numbers: List(Int), acc: Int) -> Int {
+        case numbers {
+          [] -> acc
+          [first, ..rest] -> sum_loop(rest, acc + first)
+        }
+      }
+      ```
+  - exercise: wrapper-value
+    type: predict
+    prompt: "`sum([2, 3, 5])`의 값은? (wrapper가 시작 acc 0을 채워 줍니다)"
+    code: |-
+      pub fn sum(numbers: List(Int)) -> Int {
+        sum_loop(numbers, 0)
+      }
+
+      fn sum_loop(numbers: List(Int), acc: Int) -> Int {
+        case numbers {
+          [] -> acc
+          [first, ..rest] -> sum_loop(rest, acc + first)
+        }
+      }
+
+      // sum([2, 3, 5]) 은?
+    choices:
+      - "`10`"
+      - "`0`"
+      - "`2`"
+      - "`235`"
+    answer: 0
+    feedback:
+      correct: 맞아요! wrapper가 `sum_loop([2, 3, 5], 0)`을 불러 acc가 0→2→5→10이 됩니다.
+      choices:
+        "1": 0은 wrapper가 넣어 주는 시작 acc예요 — 원소를 더하면 10.
+        "2": 첫 원소 2만이 아니라 3과 5도 누적됩니다 — 합은 10.
+        "3": 숫자를 이어붙이는 게 아니라 더합니다 — 2+3+5 = 10.
+  - prose: why-wrapper
+    markdown: |-
+      이 관용구의 좋은 점:
+
+      - 부르는 쪽은 `sum(xs)`만 알면 됩니다 — 시작값 0은 wrapper가 알아서 채웁니다.
+      - acc는 구현 세부사항이라 `pub`을 붙이지 않아 **모듈 밖에서 보이지 않습니다**.
+      - public 함수의 타입은 깔끔하게 `List(Int) -> Int` — 누산기 인자가 새어 나가지 않아요.
+
+      관례상 private 재귀 함수에는 `_loop`(또는 `do_`, `go`) 같은 이름을 붙입니다.
+  - exercise: wrapper-purpose
+    type: choice
+    prompt: wrapper(public `sum`)가 하는 일은 무엇인가요?
+    choices:
+      - 실제 재귀를 직접 수행한다
+      - 시작 누산기(0)를 채워 private `_loop`을 한 번 호출한다
+      - 결과를 한 번 더 뒤집는다
+      - 리스트를 정렬한다
+    answer: 1
+    feedback:
+      correct: 맞아요! wrapper는 시작값을 채워 넣어 private loop을 시동하는 얇은 한 줄이에요 — 재귀 자체는 `_loop`이 합니다.
+      choices:
+        "0": 재귀는 private `_loop`이 담당해요 — wrapper는 시작값만 채워 한 번 부릅니다.
+        "2": 여기엔 뒤집기가 없어요 — 그건 리스트를 prepend로 쌓을 때 나오는 다른 패턴입니다.
+        "3": 정렬과는 무관해요 — wrapper의 역할은 시작 acc를 채워 주는 것뿐입니다.
+  - exercise: why-private
+    type: choice
+    prompt: private `sum_loop`을 `pub`으로 노출하지 않는 이유로 가장 알맞은 것은?
+    choices:
+      - private 함수가 더 빠르게 실행되므로
+      - acc는 내부 구현 세부사항이라 바깥 API를 `List(Int) -> Int`로 깔끔하게 유지하려고
+      - private 함수만 재귀할 수 있으므로
+      - "`pub`을 붙이면 컴파일 에러가 나므로"
+    answer: 1
+    feedback:
+      correct: 맞아요! 부르는 쪽엔 누산기가 필요 없어요. 감춰 두면 API가 깔끔하고, 시작값을 잘못 넘길 일도 없습니다.
+      choices:
+        "0": "`pub` 여부는 실행 속도와 무관해요 — 차이는 *외부 노출* 여부입니다."
+        "2": 재귀에 `pub`/private은 상관없어요 — public 함수도 재귀할 수 있습니다.
+        "3": "`pub`을 붙여도 컴파일은 됩니다 — 다만 acc가 새어 나가 API가 지저분해질 뿐이에요."

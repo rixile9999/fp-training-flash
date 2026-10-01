@@ -1,0 +1,90 @@
+title: guard와 _, 대안 패턴
+tags:
+  - concept:case-expressions
+  - tricky:branch-order
+blocks:
+  - prose: guards
+    markdown: |-
+      패턴만으로는 "90 이상" 같은 조건을 표현할 수 없습니다. 이때 **guard**를 씁니다: 패턴 뒤에 `if 조건`을 붙이면, 패턴이 맞고 그 조건도 참일 때만 가지가 선택됩니다.
+
+      ```
+      case score {
+        s if s >= 90 -> "A"
+        s if s >= 80 -> "B"
+        _ -> "F"
+      }
+      ```
+
+      가지는 **위에서 아래로** 순서대로 검사되고, 처음으로 통과한 가지가 이깁니다.
+  - exercise: grade-guard
+    type: predict
+    prompt: "`grade(85)`의 값은?"
+    code: |-
+      fn grade(score: Int) -> String {
+        case score {
+          s if s >= 90 -> "A"
+          s if s >= 80 -> "B"
+          _ -> "F"
+        }
+      }
+    choices:
+      - '"A"'
+      - '"B"'
+      - '"F"'
+      - "85"
+    answer: 1
+    feedback:
+      correct: 맞아요! 85는 90 미만이라 첫 가지를 통과 못 하고, 80 이상이라 "B"에서 멈춥니다.
+      choices:
+        "0": guard는 위에서부터 검사해요. `85 >= 90`은 거짓이라 다음 가지로 내려갑니다.
+        "2": '"F"까지 가려면 두 guard를 모두 통과 못 해야 해요. 85는 80 이상입니다.'
+        "3": case는 검사한 숫자가 아니라 가지의 결과("B")를 돌려줍니다.
+  - prose: alternates
+    markdown: 여러 리터럴이 같은 결과로 가야 한다면, `1 | 2 | 3 ->`처럼 **대안 패턴**으로 한 가지에 묶을 수 있습니다. `|`는 "또는"으로 읽으세요 — 셋 중 어느 것이든 맞으면 그 가지가 선택됩니다.
+  - exercise: alternate-pattern
+    type: predict
+    prompt: "`size(2)`의 값은?"
+    code: |-
+      fn size(n: Int) -> String {
+        case n {
+          1 | 2 | 3 -> "작음"
+          _ -> "큼"
+        }
+      }
+    choices:
+      - '"작음"'
+      - '"큼"'
+      - "2"
+      - '"1 | 2 | 3"'
+    answer: 0
+    feedback:
+      correct: 맞아요! 2는 `1 | 2 | 3` 중 하나라 "작음" 가지에 묶입니다.
+      choices:
+        "1": '"큼"은 1·2·3 어디에도 안 맞을 때예요. 2는 거기 포함됩니다.'
+        "2": case는 검사한 값이 아니라 맞은 가지의 결과를 돌려줘요 — "작음".
+        "3": "`1 | 2 | 3`은 패턴이지 출력 문자열이 아니에요."
+  - prose: order-trap
+    markdown: 가지 순서는 **의미를 가집니다**. `_`는 모든 값과 맞으므로, 만약 `_`를 맨 위에 두면 그 아래 가지들은 절대 도달하지 못합니다(죽은 코드). 이런 경우 Gleam 컴파일러는 "Unreachable pattern" 경고를 냅니다 — 경고도 읽는 습관을 들이세요.
+  - exercise: reversed-guard-order
+    type: predict
+    prompt: 가지 순서를 뒤집어 `_ -> "F"`를 맨 위에 둔 코드입니다. `grade(95)`의 값은?
+    code: |-
+      fn grade(score: Int) -> String {
+        case score {
+          _ -> "F"
+          s if s >= 90 -> "A"
+          s if s >= 80 -> "B"
+        }
+      }
+    choices:
+      - '"A"'
+      - '"B"'
+      - '"F"'
+      - 컴파일 에러
+    answer: 2
+    feedback:
+      correct: 맞아요! `_`가 맨 위라 95를 포함한 모든 값이 첫 가지에서 "F"로 끝납니다. 아래 두 가지는 죽은 코드(경고 발생).
+      choices:
+        "0": 95가 90 이상이긴 하지만, 그 가지에 닿기 전에 `_`가 먼저 다 잡아요.
+        "1": '"B" 가지에도 닿지 못해요 — `_`가 위에서 모든 값을 가져갑니다.'
+        "3": 도달 불가 가지는 *경고*일 뿐 에러가 아니에요 — 컴파일은 되고 항상 "F"가 나옵니다.

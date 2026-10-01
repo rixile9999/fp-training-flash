@@ -1,0 +1,16 @@
+title: Gleam에 없는 것들 — 사고 전환 II
+order: 14
+level: 4
+skill: gleam-basics
+prerequisites:
+  - u10-result-use
+  - u11-generics
+lessons:
+  - l14-no-typeclass
+  - l14-no-currying
+  - l14-eager
+  - l14-no-exceptions
+source:
+  kind: original
+  upstream: fpdojo (~/workspace/fp-training, same author), gleam 1.17 JS;
+    re-verified on gleam 1.18.1 Erlang

@@ -1,0 +1,50 @@
+title: Immutability and shadowing
+blocks:
+  intro:
+    markdown: |-
+      Gleam has no way to "modify" a variable. Once a value is bound with `let`, it never changes — everything is **immutable**.
+
+      So what about "when you want to change a value"? Instead of changing it, you write **`let` again with the same name**. From that point on, a new binding pointing at the new value shadows the previous one — this is called **shadowing**. The value didn't change; the name simply points at something new.
+  shadowing-value:
+    prompt: What is the value of `x` when the code below finishes?
+    choices:
+      - "`2`"
+      - "`11`"
+      - "`20`"
+      - "`1`"
+    feedback:
+      correct: Exactly! 1 → (1+1)=2 → (2*10)=20. Each line's `let` computes using the `x` of that moment and creates a new binding.
+      choices:
+        "0": You only went as far as the second line. The third line `x * 10` applies too.
+        "1": It's not `x + 1 * 10`. A new `x` is bound line by line in order — it becomes 2, then is multiplied by 10.
+        "3": "`x` refers to the result of the last `let` — 20, not 1."
+  no-mutation:
+    markdown: "Note: shadowing is different from **reassignment**. Writing a fresh `let` each time, like `let x = ...`, is legal, but reassigning without `let`, like `x = x + 1`, is syntax that simply doesn't exist in Gleam, so it won't compile."
+  reassign-illegal:
+    prompt: After binding `let total = 0`, what happens if the next line is `total = total + 100`?
+    choices:
+      - "`total` becomes 100"
+      - Compile error — Gleam has no reassignment without `let`
+      - A new `total` binding is created
+      - It errors at runtime
+    feedback:
+      correct: Correct! Gleam has no reassignment operator. To "update" a value, shadow the old name with a new `let`, like `let total = total + 100`.
+      choices:
+        "0": Changing a value in place doesn't exist in Gleam — that line won't even compile.
+        "2": To create a new binding you need `let` in front. A line without `let` isn't valid syntax.
+        "3": It's stopped at **compile time**, not at runtime — it never even runs.
+  capture:
+    markdown: The real power of immutability shows up here. When a name is **captured** inside a function, later shadowing of that same name has no effect on the already-captured value — because values never change.
+  shadow-capture:
+    prompt: In the code below, what do the two lines print, in order? (`f` remembers the `x` from when it was created)
+    choices:
+      - "`11` and `11`"
+      - "`11` and `1`"
+      - "`1` and `1`"
+      - Compile error
+    feedback:
+      correct: Exactly! `f` captured the first `x` (=1). The `let x` on the third line is just a **new binding** and can't change the value `f` saw. So it's 11 and 1.
+      choices:
+        "0": Shadowing is not mutation. `f` still sees the 1 it captured first — the second output is 1.
+        "2": The first output `x` is the 11 that the last `let` points to — not 1.
+        "3": Re-`let`ting the same name (shadowing) is legal. What's forbidden is reassignment without `let`.

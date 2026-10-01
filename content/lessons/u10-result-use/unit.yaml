@@ -1,0 +1,16 @@
+title: Result 체이닝과 use
+order: 10
+level: 3
+skill: explicit-failure
+prerequisites:
+  - u08-list-module
+  - u09-option-result
+lessons:
+  - l30-case-stairs
+  - l31-map-try
+  - l32-use-sugar
+  - l33-use-desugar
+source:
+  kind: original
+  upstream: fpdojo (~/workspace/fp-training, same author), gleam 1.17 JS;
+    re-verified on gleam 1.18.1 Erlang

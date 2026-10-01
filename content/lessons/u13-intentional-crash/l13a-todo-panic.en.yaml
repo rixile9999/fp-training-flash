@@ -1,0 +1,67 @@
+title: todo and panic — not yet vs never
+blocks:
+  intro:
+    markdown: |-
+      So far we've treated failure as **data** — `Option`, `Result`. But sometimes the right answer is "we should never get here." The tools for that are `todo` and `panic`.
+
+      `todo` is a marker for "not built yet." It lets compilation succeed, but if you **run the program and reach that spot**, it crashes. `panic` is an assertion that says "this place must never be reached."
+  todo-fills:
+    markdown: |-
+      The nice thing about `todo` is that it **satisfies the types while deferring the implementation**. You can sketch a function's skeleton first and fill the body with `todo`, and the whole program still compiles. Later you just replace that spot with real code.
+
+      The `area` below started out as `todo` and now has its body filled in. Let's actually call it.
+  area-filled:
+    prompt: We called `area` now that its body is filled in. What is the value of `area(4, 5)`?
+    choices:
+      - "`9`"
+      - "`20`"
+      - "`45`"
+      - runtime crash (todo)
+    feedback:
+      correct: Right! The `todo` is gone and the body is `w * h`, so it prints 4 * 5 = 20.
+      choices:
+        "0": It's `*`, not `+` — 4 * 5, not 4 + 5.
+        "2": That's `4` and `5` multiplied, not concatenated. It's 20.
+        "3": The `todo` has already been replaced with real code. You'll never land on that spot.
+  panic-here:
+    markdown: |-
+      `panic` is different — it means **"impossible"**, not "unfinished." Once you've handled every meaningful branch of a `case`, you can put `panic as "..."` on a branch that logically can never occur; if it somehow is reached, the program stops immediately with that message.
+
+      The key point: **if it's never reached, nothing happens**. On the normal path it just returns a value as usual.
+  panic-not-reached:
+    prompt: If `b` isn't 0, the `panic` branch isn't reached. What is the value of `safe_div(20, 4)`?
+    choices:
+      - "`5`"
+      - "`0`"
+      - runtime crash (panic)
+      - "`24`"
+    feedback:
+      correct: Exactly! 4 isn't 0, so it takes the `_` branch and computes 20 / 4 = 5. The `panic` wasn't reached.
+      choices:
+        "1": It only stops when `b` is 0. Here it's 4, so it divides normally.
+        "2": It took the normal path (`b` isn't 0), so it doesn't crash. It returns 5.
+        "3": "`/` is division — 20 / 4 = 5, not 20 + 4."
+    code: |-
+      pub fn safe_div(a: Int, b: Int) -> Int {
+        case b {
+          0 -> panic as "cannot divide by zero"
+          _ -> a / b
+        }
+      }
+
+      pub fn main() {
+        io.println(int.to_string(safe_div(20, 4)))
+      }
+  todo-vs-panic:
+    prompt: Which statement most accurately describes the difference between `todo` and `panic`?
+    choices:
+      - Both produce a compile error
+      - '`todo` means "not implemented yet", `panic` means "this must never be reached"'
+      - "`todo` doesn't crash, only `panic` does"
+      - "`panic` can't take a message"
+    feedback:
+      correct: Right! `todo` = a marker for unfinished work, `panic` = an assertion of impossibility. The intent differs.
+      choices:
+        "0": Both compile fine — they crash when you run the program and reach that spot.
+        "2": "`todo` also crashes if you reach that spot at runtime. The difference is the intent."
+        "3": Both can attach an explanation with `as "message"`.

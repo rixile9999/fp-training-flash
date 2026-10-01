@@ -1,0 +1,65 @@
+title: Function Definitions and Type Annotations
+blocks:
+  intro:
+    markdown: |-
+      A function is defined in the shape `pub fn name(arg: Type) -> ReturnType { body }`.
+
+      Example: `pub fn double(x: Int) -> Int { x * 2 }`
+
+      You write a type for each argument, and the return type after `->`. The compiler can often infer types for you, but since annotations act as the function's 'contract', the convention is to always add them to top-level functions.
+  return-type:
+    prompt: "In `pub fn double(x: Int) -> ??? { x * 2 }`, what return type belongs in place of `???`?"
+    choices:
+      - "`Int`"
+      - "`Float`"
+      - "`String`"
+      - "`Bool`"
+    feedback:
+      correct: Correct! `*` is the Int operator, and Int * Int yields an Int.
+      choices:
+        "1": "`*` is the Int operator. For Floats you'd need `*.` and `2.0`."
+        "2": A numeric multiplication can't produce a string.
+        "3": The result of multiplication is a number, not true/false.
+  no-return:
+    markdown: |-
+      Gleam has **no** `return` keyword. The **last expression** in a function body is its return value.
+
+      ```gleam
+      pub fn double(x: Int) -> Int {
+        x * 2
+      }
+      ```
+
+      Since `x * 2` is the last expression, it is returned as-is. There's also no early return that bails out partway through — this foreshadows the case-branch mindset you'll meet in a later unit.
+  last-expr:
+    prompt: "What is the value of `double(21)`? (`fn double(x: Int) -> Int { x * 2 }`)"
+    choices:
+      - "`42`"
+      - "`21`"
+      - "`23`"
+      - "`2`"
+    feedback:
+      correct: Exactly! The last expression `x * 2` = 21 * 2 = 42 is returned as-is.
+      choices:
+        "1": It returns `x * 2`, not the input unchanged — 21 * 2 = 42.
+        "2": "`x * 2` is multiplication, not addition. 21 * 2 = 42."
+        "3": "`2` is just the multiplier; the return value is `x * 2` = 42."
+    code: |-
+      pub fn double(x: Int) -> Int {
+        x * 2
+      }
+
+      // double(21) is?
+  return-keyword:
+    prompt: Which is the correct way a Gleam function returns a value?
+    choices:
+      - You use a return keyword, like `return x`
+      - The last expression in the body automatically becomes the return value
+      - You return with `yield x`
+      - You assign the value to the function's name
+    feedback:
+      correct: Correct! Gleam has no return; the last expression is the return value.
+      choices:
+        "0": Gleam has no `return` keyword at all.
+        "2": "`yield` is not Gleam syntax."
+        "3": Assigning to the function name doesn't exist in Gleam — the last expression is the return value.

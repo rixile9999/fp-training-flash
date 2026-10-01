@@ -1,0 +1,105 @@
+title: 종료 조건 — 재귀의 생명줄
+tags:
+  - concept:recursion
+  - tricky:empty-list-base-case
+blocks:
+  - prose: intro
+    markdown: |-
+      재귀가 끝나려면 **매 호출마다 문제가 작아져서** 결국 종료 조건에 닿아야 합니다. 무한 재귀의 3대 원인은:
+      1. **빈 리스트 케이스 누락** — `[]` 가지가 없다
+      2. **같은 인자로 재호출** — `f(xs)`가 또 `f(xs)`를 부른다(작아지지 않음)
+      3. **줄어들지 않는 인자** — `n` 대신 `n`을 넘긴다(`n - 1`이어야)
+
+      다행히 (1)은 컴파일러가 막아줍니다 — `[]` 패턴이 없으면 Inexhaustive 에러가 나서, 컴파일러가 종료 조건을 **강제로 생각하게** 만들어요.
+  - prose: countdown-example
+    markdown: |-
+      리스트가 아니라 숫자로도 재귀할 수 있습니다. `countdown`은 n부터 1까지 담은 리스트를 만들어요:
+
+      ```gleam
+      pub fn countdown(n: Int) -> List(Int) {
+        case n {
+          0 -> []
+          _ -> [n, ..countdown(n - 1)]
+        }
+      }
+      ```
+
+      종료 조건은 `0 -> []`. 재귀 단계는 `n`을 앞에 붙이고 **`n - 1`**(작아진 값)으로 자신을 부릅니다. 매 호출마다 n이 1씩 줄어 결국 0에 닿아 멈춰요.
+  - exercise: countdown-3
+    type: predict
+    prompt: 위 `countdown` 함수에서 `countdown(3)`의 값은?
+    code: |-
+      pub fn countdown(n: Int) -> List(Int) {
+        case n {
+          0 -> []
+          _ -> [n, ..countdown(n - 1)]
+        }
+      }
+
+      // countdown(3) 은?
+    choices:
+      - "`[3, 2, 1]`"
+      - "`[1, 2, 3]`"
+      - "`[3, 2, 1, 0]`"
+      - "`[]`"
+    answer: 0
+    feedback:
+      correct: 맞아요! 3을 앞에 붙이고 `countdown(2)`, 거기에 2를 붙이고... `0 -> []`에서 멈춰 `[3, 2, 1]`이 됩니다.
+      choices:
+        "1": prepend라 큰 수가 **앞**에 붙어요 — `[3, 2, 1]` 순서입니다.
+        "2": 종료 조건 `0 -> []`은 0을 **담지 않고** 빈 리스트를 돌려줘요 — 0은 포함되지 않습니다.
+        "3": "`[]`는 `countdown(0)`일 때예요 — `countdown(3)`은 원소 3개를 담습니다."
+  - exercise: same-arg-infinite
+    type: choice
+    prompt: 리스트 합 함수에서 재귀 가지를 `first + total(rest)` 대신 `first + total(xs)`로 썼습니다. 무슨 일이 벌어질까요?
+    choices:
+      - "`total(xs)`가 **같은** 리스트로 자신을 계속 불러 끝나지 않는다(무한 재귀)"
+      - 정상 동작하며 같은 합을 돌려준다
+      - 컴파일 에러가 난다
+      - 합이 2배로 계산된다
+    answer: 0
+    feedback:
+      correct: 맞아요! `xs`는 줄어들지 않아 종료 조건(`[]`)에 영영 닿지 못합니다. 실행하면 끝나지 않아 시간 제한에 걸려요. `rest`를 넘겨 문제를 작게 만드세요.
+      choices:
+        "1": 정상 동작하지 않아요 — `xs`가 안 줄어들어 `[]`에 닿지 못하고 무한히 반복됩니다.
+        "2": 문법은 맞아서 **컴파일은 됩니다** — 문제는 실행 중에 끝나지 않는 것(런타임 무한 루프)이에요.
+        "3": 값이 나오기 전에 멈추질 않아요 — 2배가 아니라 결과 자체가 안 나옵니다.
+  - exercise: missing-base-case
+    type: choice
+    prompt: 재귀 함수에서 `[] -> ...` 종료 조건 가지를 빠뜨리면 Gleam은 어떻게 반응할까요?
+    choices:
+      - 컴파일 에러 (Inexhaustive patterns) — `[]` 경우가 빠졌다고 알려준다
+      - 조용히 컴파일되고 실행 시 무한 재귀에 빠진다
+      - 빈 리스트를 만나면 자동으로 0을 돌려준다
+      - 경고만 내고 정상 컴파일된다
+    answer: 0
+    feedback:
+      correct: 정확해요! `case`는 모든 경우를 덮어야 하므로, `[]` 가지가 없으면 컴파일러가 Inexhaustive patterns 에러로 막습니다 — 종료 조건을 강제로 생각하게 만들어요.
+      choices:
+        "1": 조용히 넘어가지 않아요 — `[]`가 빠지면 **컴파일 단계**에서 바로 걸립니다.
+        "2": Gleam은 기본값을 끼워주지 않아요 — 빠진 패턴은 컴파일 에러입니다.
+        "3": 단순 경고가 아니라 **에러**예요 — 빠진 패턴이 있으면 컴파일 자체가 실패합니다.
+  - exercise: sum-to-good
+    type: predict
+    prompt: 인자가 매 호출마다 줄어드는 올바른 재귀입니다. `sum_to(4)`의 값은?
+    code: |-
+      pub fn sum_to(n: Int) -> Int {
+        case n {
+          0 -> 0
+          _ -> n + sum_to(n - 1)
+        }
+      }
+
+      // sum_to(4) 은?
+    choices:
+      - "`10`"
+      - "`4`"
+      - "`0`"
+      - 끝나지 않음 (무한 재귀)
+    answer: 0
+    feedback:
+      correct: 맞아요! 4 + 3 + 2 + 1 + 0 = 10. 매 호출마다 `n - 1`로 줄어 0에 닿아 안전하게 멈춥니다.
+      choices:
+        "1": 입력 그대로(4)가 아니라 4부터 1까지의 합이에요 — 10입니다.
+        "2": 0은 종료값일 뿐이고, 내려가며 더한 합이 결과예요 — 10입니다.
+        "3": "`n - 1`로 매번 줄어드니 끝납니다 — 무한 재귀는 `sum_to(n)`처럼 안 줄일 때예요."

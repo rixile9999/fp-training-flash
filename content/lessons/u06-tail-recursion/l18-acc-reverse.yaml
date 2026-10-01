@@ -1,0 +1,111 @@
+title: "누산의 부작용: 뒤집힌 결과"
+tags:
+  - tricky:accumulator-reverse
+blocks:
+  - prose: intro
+    markdown: |-
+      누산기로 *리스트*를 만들 땐 한 가지 부작용이 생깁니다. 새 원소를 누산기 **앞에 prepend**(`[x, ..acc]`)로 쌓는데, prepend가 O(1)이라 이렇게 쌓는 게 옳습니다. 그런데 그 대가로 **결과가 뒤집힙니다**.
+
+      ```gleam
+      fn double_loop(xs: List(Int), acc: List(Int)) -> List(Int) {
+        case xs {
+          [] -> acc
+          [first, ..rest] -> double_loop(rest, [first * 2, ..acc])
+        }
+      }
+      ```
+
+      첫 원소가 *가장 먼저* 들어가 *가장 깊이* 깔리고, 마지막 원소가 맨 앞에 옵니다.
+  - exercise: double-loop-reversed
+    type: predict
+    prompt: "`double_loop([1, 2, 3], [])`의 값은?"
+    code: |-
+      fn double_loop(xs: List(Int), acc: List(Int)) -> List(Int) {
+        case xs {
+          [] -> acc
+          [first, ..rest] -> double_loop(rest, [first * 2, ..acc])
+        }
+      }
+
+      // double_loop([1, 2, 3], []) 은?
+    choices:
+      - "`[2, 4, 6]`"
+      - "`[6, 4, 2]`"
+      - "`[1, 2, 3]`"
+      - "`[6]`"
+    answer: 1
+    feedback:
+      correct: 맞아요! 2를 []앞에→[2], 4를 앞에→[4, 2], 6을 앞에→[6, 4, 2]. prepend 누산은 순서를 뒤집습니다.
+      choices:
+        "0": 각 값을 두 배 한 건 맞지만 *순서가 뒤집힙니다* — 1이 먼저 들어가 가장 깊이 깔려 [6, 4, 2]예요.
+        "2": 값이 두 배가 됩니다 — 1,2,3이 아니라 2,4,6이고, 게다가 순서도 뒤집혀 [6, 4, 2].
+        "3": 모든 원소가 쌓입니다 — 마지막 [6]만 남지 않고 [6, 4, 2]예요.
+  - prose: accumulate-then-reverse
+    markdown: |-
+      이 뒤집힘은 **버그가 아니라 패턴**입니다. 순서를 보존하고 싶으면 wrapper에서 마지막에 `list.reverse`를 한 번 거치면 됩니다. 이것을 **accumulate-then-reverse**(쌓고 마지막에 뒤집기) 관용구라고 합니다.
+
+      ```gleam
+      pub fn double_all(xs: List(Int)) -> List(Int) {
+        list.reverse(double_loop(xs, []))
+      }
+      ```
+
+      prepend로 빠르게(O(1)) 쌓아 두고, 끝에 딱 한 번 뒤집어 원래 순서로 되돌립니다.
+  - exercise: double-all-restored
+    type: predict
+    prompt: "`double_all([1, 2, 3])`의 값은? (wrapper가 마지막에 `list.reverse`를 적용)"
+    code: |-
+      fn double_loop(xs: List(Int), acc: List(Int)) -> List(Int) {
+        case xs {
+          [] -> acc
+          [first, ..rest] -> double_loop(rest, [first * 2, ..acc])
+        }
+      }
+
+      pub fn double_all(xs: List(Int)) -> List(Int) {
+        list.reverse(double_loop(xs, []))
+      }
+
+      // double_all([1, 2, 3]) 은?
+    choices:
+      - "`[6, 4, 2]`"
+      - "`[2, 4, 6]`"
+      - "`[1, 2, 3]`"
+      - "`[3, 2, 1]`"
+    answer: 1
+    feedback:
+      correct: 정확해요! loop이 [6, 4, 2]를 만들고, `list.reverse`가 그걸 [2, 4, 6]으로 되돌려 원래 순서를 회복합니다.
+      choices:
+        "0": 그건 reverse *전*의 값이에요 — wrapper가 한 번 뒤집어 [2, 4, 6]으로 만듭니다.
+        "2": 값이 두 배가 됩니다 — 원소가 그대로가 아니라 2,4,6이에요.
+        "3": 값을 두 배 해야 합니다 — 1,2,3이 아니라 2,4,6입니다.
+  - exercise: why-prepend
+    type: choice
+    prompt: 리스트 누산에서 append(`acc <> [x]`) 대신 prepend(`[x, ..acc]`)를 쓰고 끝에 reverse하는 이유는?
+    choices:
+      - append가 불가능하므로
+      - prepend는 O(1)이라 빠르고, 뒤집힘은 끝에 reverse 한 번으로 해결되므로
+      - reverse가 결과 값을 바꿔 주므로
+      - prepend는 순서를 보존하므로
+    answer: 1
+    feedback:
+      correct: 맞아요! prepend는 항상 O(1)이라 매 단계가 빠릅니다. 뒤집히는 건 마지막에 reverse 한 번(O(n))으로 깔끔히 되돌리면 돼요.
+      choices:
+        "0": append도 가능은 해요 — 다만 매번 리스트 끝까지 훑어 O(n)이라 느립니다.
+        "2": reverse는 *순서*만 바꿉니다 — 값 자체(두 배 한 결과)는 그대로예요.
+        "3": prepend는 순서를 *뒤집습니다* — 그래서 끝에 reverse가 필요한 거예요.
+  - exercise: reverse-is-pattern
+    type: choice
+    prompt: 누산기로 만든 리스트가 뒤집혀 나온 것을 보고 가장 알맞은 판단은?
+    choices:
+      - 버그다 — 재귀를 잘못 짰다
+      - 정상이다 — prepend 누산의 자연스러운 결과이고, 필요하면 끝에 `list.reverse`로 되돌린다
+      - 종료 조건이 틀렸다
+      - acc 시작값을 `[]`가 아니라 `[0]`으로 줘야 한다
+    answer: 1
+    feedback:
+      correct: 맞아요! prepend로 쌓으면 뒤집히는 게 정상입니다 — 버그가 아니라 패턴이에요. 순서가 중요하면 wrapper에서 reverse 한 번 하면 됩니다.
+      choices:
+        "0": 버그가 아니에요 — prepend 누산은 원래 뒤집힌 결과를 냅니다. reverse로 마무리할 뿐이죠.
+        "2": 종료 조건 `[] -> acc`는 맞아요 — 뒤집힘은 종료가 아니라 prepend 때문입니다.
+        "3": 시작값은 빈 리스트 `[]`가 맞아요 — `[0]`을 주면 없던 0이 결과에 섞입니다.

@@ -1,0 +1,83 @@
+title: Records and labelled fields
+blocks:
+  intro:
+    markdown: |-
+      A variant can also **hold** data. If you write **fields** of the form `name: type` inside parentheses, you get a **record** that bundles several values into one.
+
+      ```gleam
+      pub type Player {
+        Player(name: String, score: Int, level: Int)
+      }
+      ```
+
+      `Player`, which has the same name as the type, is the constructor that makes values. To make one you write it with **labels**, like `Player(name: "lucy", score: 10, level: 1)`. To pull out a single field afterward, access it with a dot, like `p.score`.
+  field-access:
+    prompt: In the code below, what is the value of `p.score`?
+    choices:
+      - "`10`"
+      - "`1`"
+      - '`"lucy"`'
+      - "`Player`"
+    feedback:
+      correct: Right! `p.score` pulls out the value of the `score` field, 10, directly.
+      choices:
+        "1": "`1` is the `level` field. `.score` looks at the score position."
+        "2": '"lucy" is the `name` field. What `.score` points to is 10.'
+        "3": "`p.score` pulls out a single field (10), not the whole record."
+    code: |-
+      pub type Player {
+        Player(name: String, score: Int, level: Int)
+      }
+
+      let p = Player(name: "lucy", score: 10, level: 1)
+      // p.score is?
+  labelled-order:
+    markdown: 'When fields have **labels**, you can write them in a different order when constructing — because the label says which field it is. `Player(level: 1, name: "lucy", score: 10)` makes exactly the same value as writing them in definition order. Labels banish the confusion of "wait, what was the third argument again?"'
+  labelled-reorder:
+    prompt: Here's code that writes the labels in a different order. What is the value of `p.name`?
+    choices:
+      - '`"lucy"`'
+      - "`1`"
+      - "`10`"
+      - Compile error
+    feedback:
+      correct: Exactly! Since they're written with labels the order doesn't matter — `name` is still "lucy".
+      choices:
+        "1": '`1` is the `level` value. What the label `name:` points to is "lucy".'
+        "2": '`10` is the `score` value. `.name` looks at "lucy".'
+        "3": When you attach labels, reordering still compiles fine — the label tells it the position.
+    code: |-
+      pub type Player {
+        Player(name: String, score: Int, level: Int)
+      }
+
+      let p = Player(level: 1, name: "lucy", score: 10)
+      // p.name is?
+  destructure:
+    markdown: "A record can also be **destructured** in a `case` or `let`. Writing something like `Point(x: x, y: y)` in the pattern position binds each field to a name all at once. Drop fields you don't need with `_`."
+  destructure-x:
+    prompt: Here's code that destructures a record. What's the output?
+    choices:
+      - "`3`"
+      - "`7`"
+      - "`10`"
+      - "`Point(3, 7)`"
+    feedback:
+      correct: "Right! `Point(x: x, y: _)` binds the `x` field (3) to the name `x`, and discards `y` with `_`."
+      choices:
+        "1": "`7` is the `y` field — but it was discarded with `_` and not used. What was bound is `x` (3)."
+        "2": You don't add the two fields — destructuring just binds each field separately to a name.
+        "3": A destructuring pattern binds the extracted field value (3) to a name, not the whole record.
+  labelled-why:
+    prompt: Which is the best benefit of using labelled fields (field labels) on a record?
+    choices:
+      - It makes performance faster
+      - When constructing or destructuring, each value's field becomes clear by name
+      - You can make an unlimited number of fields
+      - You can omit the type annotation
+    feedback:
+      correct: Right! Labels banish the "wait, what was that third 1 again?" of `Player("lucy", 10, 1)` — the meaning becomes clear from the names.
+      choices:
+        "0": Labels are for readability and have nothing to do with performance — they make the same value.
+        "2": The number of fields has nothing to do with labels. What labels do is attach a name to each position.
+        "3": Field type annotations are still required — labels don't stand in for types.

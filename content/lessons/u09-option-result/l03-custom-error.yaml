@@ -1,0 +1,119 @@
+title: 나만의 에러 타입
+tags:
+  - concept:custom-error-types
+  - concept:results
+blocks:
+  - prose: intro
+    markdown: |-
+      `Result(Int, Nil)`의 `Nil`은 "실패했다"만 말할 뿐, *왜* 실패했는지는 못 담습니다. 실패 이유가 여러 가지라면, 그 이유들을 **나만의 커스텀 타입**으로 만들어 `Error`의 자리에 넣습니다(U4의 variant 그대로).
+
+      ```gleam
+      pub type AgeError {
+        NotANumber
+        Negative
+      }
+      ```
+
+      이제 `Result(Int, AgeError)`는 "성공하면 `Int`, 실패하면 *이 두 이유 중 하나*"를 타입만 보고 알 수 있어요.
+  - prose: parse-age
+    markdown: |-
+      `int.parse(input)`은 문자열을 정수로 바꿔 시도하고 `Result(Int, Nil)`을 돌려줍니다(숫자가 아니면 `Error(Nil)`). 이걸 받아 우리 에러 타입으로 옮기고, 음수까지 거르는 `parse_age`를 만들어 봅시다:
+
+      ```gleam
+      import gleam/int
+
+      pub fn parse_age(input: String) -> Result(Int, AgeError) {
+        case int.parse(input) {
+          Error(Nil) -> Error(NotANumber)
+          Ok(n) ->
+            case n < 0 {
+              True -> Error(Negative)
+              False -> Ok(n)
+            }
+        }
+      }
+      ```
+
+      바깥 `case`는 파싱 성공/실패를, 안쪽 `case`는 음수 여부를 가립니다.
+  - exercise: parse-neg
+    type: predict
+    prompt: 위 `parse_age`에서 `parse_age("-3")`의 값은?
+    code: |-
+      // parse_age("-3") 은?
+      // (int.parse("-3") == Ok(-3), 그리고 -3 < 0)
+    choices:
+      - "`Error(Negative)`"
+      - "`-3`"
+      - "`Error(NotANumber)`"
+      - "`Ok(-3)`"
+    answer: 0
+    feedback:
+      correct: 맞아요! "-3"은 숫자로 파싱돼 `Ok(-3)`이 되지만, 안쪽 `case`에서 `-3 < 0`이 참이라 `Error(Negative)`로 걸러집니다.
+      choices:
+        "1": "`Result`에서 값은 절대 맨몸으로 나오지 않아요 — 실패는 `Error(...)`로 포장됩니다. 게다가 음수라 성공도 아니에요."
+        "2": '`NotANumber`는 *파싱 자체가* 실패할 때예요. "-3"은 숫자로 잘 파싱되지만 음수라서 막힙니다.'
+        "3": '"-3"은 파싱은 되지만 음수라 `Ok`가 아니에요 — `Error(Negative)`로 걸러집니다.'
+  - exercise: parse-abc
+    type: predict
+    prompt: 같은 함수에서 `parse_age("abc")`의 값은?
+    code: |-
+      // parse_age("abc") 은?
+      // (int.parse("abc") == Error(Nil))
+    choices:
+      - "`Error(NotANumber)`"
+      - "`Error(Negative)`"
+      - "`Error(Nil)`"
+      - "`Ok(0)`"
+    answer: 0
+    feedback:
+      correct: 정확해요! "abc"는 정수로 파싱되지 않아 `int.parse`가 `Error(Nil)`을 주고, 바깥 `case`가 이를 `Error(NotANumber)`로 옮깁니다.
+      choices:
+        "1": '`Negative`는 *파싱은 됐지만 음수*일 때예요. "abc"는 애초에 숫자로 파싱되지 않습니다.'
+        "2": "`int.parse`의 원래 `Error(Nil)`을 우리 함수가 의미 있는 `Error(NotANumber)`로 바꿔 돌려줘요."
+        "3": 파싱 실패는 성공값 0이 아니에요 — `Ok`가 아니라 `Error(NotANumber)`입니다.
+  - exercise: parse-8
+    type: predict
+    prompt: 같은 함수에서 `parse_age("8")`의 값은?
+    code: |-
+      // parse_age("8") 은?
+      // (int.parse("8") == Ok(8), 그리고 8 >= 0)
+    choices:
+      - "`Ok(8)`"
+      - "`8`"
+      - "`Error(NotANumber)`"
+      - "`Some(8)`"
+    answer: 0
+    feedback:
+      correct: 맞아요! "8"은 숫자로 파싱되고 음수도 아니라 `Ok(8)` — 성공값도 `Ok`로 포장되어 나옵니다.
+      choices:
+        "1": 값은 8이 맞지만 `Result`라 `Ok(8)`로 포장돼요 — 꺼내려면 패턴 매칭이 필요합니다.
+        "2": '"8"은 멀쩡한 숫자라 파싱에 성공해요 — `NotANumber`가 아니라 `Ok(8)`.'
+        "3": "`Some`은 `Option`의 생성자예요. `Result`의 성공은 `Ok`로 감쌉니다."
+  - prose: use-error-type
+    markdown: |-
+      커스텀 에러 타입의 진짜 이득은 **호출자 쪽**에서 드러납니다. `case`로 풀 때 각 실패 이유마다 다른 메시지를 줄 수 있고, 이유를 빠뜨리면 컴파일러가 잡아줍니다.
+
+      ```gleam
+      pub fn age_message(input: String) -> String {
+        case parse_age(input) {
+          Ok(n) -> "나이: " <> int.to_string(n)
+          Error(NotANumber) -> "숫자가 아니에요"
+          Error(Negative) -> "음수는 안 돼요"
+        }
+      }
+      ```
+  - exercise: message-negative
+    type: choice
+    prompt: 위 `age_message` 코드로 `age_message("-3")`를 부르면 어떤 문자열이 나올까요?
+    choices:
+      - '`"음수는 안 돼요"`'
+      - '`"숫자가 아니에요"`'
+      - '`"나이: -3"`'
+      - '`"나이: 0"`'
+    answer: 0
+    feedback:
+      correct: 맞아요! `parse_age("-3")`이 `Error(Negative)`라, `Error(Negative)` 가지의 "음수는 안 돼요"가 선택됩니다 — 이유별로 다른 메시지를 줄 수 있는 게 커스텀 에러의 힘이에요.
+      choices:
+        "1": '"숫자가 아니에요"는 `Error(NotANumber)` 가지예요. "-3"은 숫자로 파싱은 되지만 음수라 `Negative`로 갑니다.'
+        "2": '음수는 `Ok` 가지로 가지 않아요 — "나이: -3"은 나오지 않고 에러 메시지가 나옵니다.'
+        "3": 값을 0으로 보정하지 않아요 — 음수는 그대로 `Error(Negative)`로 거부됩니다.

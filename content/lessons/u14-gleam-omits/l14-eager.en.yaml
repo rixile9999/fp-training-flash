@@ -1,0 +1,74 @@
+title: No Laziness — Eager Evaluation
+blocks:
+  intro:
+    markdown: |-
+      Haskell is lazy — values are computed *when they're needed*. Gleam is the opposite: **eager**. Arguments passed to a function are all computed *before* the call begins.
+
+      So lazy structures like infinite sequences are the job of a library (`gleam_yielder`, not stdlib), not the language.
+  eager-arg:
+    markdown: |-
+      Why does this matter? Because the lazy-style expectation that "if the condition is false, the expensive computation will be skipped" doesn't hold in Gleam.
+
+      Look at `bool.guard(when:, return:, otherwise:)`. Even when `when` is `False` and the `return` value will be *discarded*, an expression written directly in the `return:` slot is **already computed before the call**.
+  eager-side-effect:
+    prompt: "Since `when: False`, the `return` value is discarded. But will `computed` be printed? (`expensive()` prints `computed` and returns a value.)"
+    choices:
+      - "`computed` is printed (eager)"
+      - nothing is printed (lazy)
+      - "`default` is printed"
+      - compile error
+    feedback:
+      correct: Right! Gleam is eager, so the `expensive()` in the `return:` slot already runs before the call — even though its value is discarded, the side effect (printing `computed`) still happens.
+      choices:
+        "1": That's the behavior of a lazy language. Gleam computes all arguments before the call — `computed` gets printed.
+        "2": '`expensive()` prints `computed`, not `default`. `"default"` is the value on the `otherwise` side.'
+        "3": You passed valid arguments to `bool.guard`, so it compiles fine — the issue is the timing of evaluation.
+    code: |-
+      fn expensive() {
+        io.println("computed")
+        "result"
+      }
+
+      bool.guard(when: False, return: expensive(), otherwise: fn() { "default" })
+  thunk:
+    markdown: |-
+      So when you really do need deferral? **Wrap it in an anonymous function and pass that** (the `fn() { ... }` from U7). A function *value* is merely created; it doesn't run until it's called — this is the manual substitute for laziness.
+
+      `bool.lazy_guard` takes both sides as `fn() -> a` thunks and only calls the one it actually selects.
+  thunk-defers:
+    prompt: "Now `expensive` is wrapped in `fn() { ... }` and passed to `lazy_guard`. With `when: False`, what is the value of this expression, and what is printed?"
+    choices:
+      - The value is `"default"` and nothing is printed (the expensive thunk is never called)
+      - "`computed` and then `default`"
+      - "`computed`"
+      - The value is `"result"` (the return thunk is called)
+    feedback:
+      correct: "Exactly! Wrapped in a thunk, the `return` side isn't called, and since `when: False`, `otherwise` is selected, so only `default` comes out."
+      choices:
+        "1": The `return` thunk is never even called, so `computed` isn't printed — only `default` comes out.
+        "2": Wrapped in `fn()`, `expensive` doesn't run — that's the whole point of deferral.
+        "3": 'With `when: False` the `otherwise` thunk is chosen. The `return` side is never called, so the value is `"default"`.'
+    code: |-
+      fn expensive() {
+        io.println("computed")
+        "result"
+      }
+
+      bool.lazy_guard(
+        when: False,
+        return: fn() { expensive() },
+        otherwise: fn() { "default" },
+      )
+  lazy-where:
+    prompt: Where do "lazy structures" like infinite sequences live in Gleam?
+    choices:
+      - built into the language
+      - the `gleam/lazy` module in stdlib
+      - a separate library `gleam_yielder` (not stdlib)
+      - a primitive type like `Int`
+    feedback:
+      correct: Right! Lazy sequences are the domain of the separate library `gleam_yielder`, not the language — they're not even in the standard library.
+      choices:
+        "0": The Gleam language itself is eager-only — laziness isn't built in.
+        "1": There's no stdlib module like `gleam/lazy`. Laziness comes from an external library.
+        "3": Lazy sequences aren't a primitive type but a data structure provided by a library.

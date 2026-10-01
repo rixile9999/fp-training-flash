@@ -1,0 +1,58 @@
+title: Anonymous Functions and Function Values
+blocks:
+  intro:
+    markdown: |-
+      So far we've defined functions by **giving them a name**, like `pub fn name(...) { ... }`. But in Gleam a function is itself a **value** — just like an integer or a string, you can store it in a variable and hand it off to other functions.
+
+      A function created on the spot without a name is called an **anonymous function**, written `fn(args) { body }`. It's exactly the same kind of function — the only difference is that there's just `fn` with no name.
+
+      ```gleam
+      let double = fn(x) { x * 2 }
+      double(21)  // 42
+      ```
+
+      We created the value `fn(x) { x * 2 }` and bound it to the name `double` with `let`. From then on we call it like any ordinary function, e.g. `double(21)`.
+  anon-bind-call:
+    prompt: In the code below, what is the value of `double(21)`?
+    choices:
+      - "`42`"
+      - "`21`"
+      - "`2`"
+      - Compile error
+    feedback:
+      correct: Exactly! `fn(x) { x * 2 }` is a function that doubles its input. `double(21)` is 21 * 2 = 42.
+      choices:
+        "1": It doesn't return the input unchanged — `x * 2` is applied, so 21 * 2 = 42.
+        "2": "`2` is just the multiplier; the return value is `x * 2` = 42."
+        "3": Binding an anonymous function with `let` and calling it is perfectly legal — functions are values, so they fit in variables.
+  anon-vs-named:
+    markdown: |-
+      A named function and an anonymous function are essentially the same thing. `pub fn double(x: Int) -> Int { x * 2 }` is fundamentally the same as binding `fn(x) { x * 2 }` to the name `double`.
+
+      You can also write argument and return types on an anonymous function (`fn(x: Int) -> Int { x * 2 }`), but for short cases people often leave them out and let the compiler's inference handle it.
+  anon-immediate:
+    prompt: You can also call an anonymous function the moment you create it. What is the value of this expression?
+    choices:
+      - "`7`"
+      - "`12`"
+      - "`34`"
+      - Compile error
+    feedback:
+      correct: Right! Create `fn(a, b) { a + b }` and immediately call it with `(3, 4)`, giving 3 + 4 = 7.
+      choices:
+        "1": "`+` is addition, not multiplication — 3 + 4 = 7."
+        "2": The two arguments are added, not concatenated as text — 3 + 4 = 7.
+        "3": Calling it immediately with `(3, 4)` is legal — it's just applying a function value right away.
+  anon-syntax:
+    prompt: What is the correct syntax for creating a nameless anonymous function?
+    choices:
+      - "`fn(x) { x * 2 }`"
+      - "`fn double(x) { x * 2 }`"
+      - "`lambda x: x * 2`"
+      - "`(x) => x * 2`"
+    feedback:
+      correct: Right! An anonymous function is `fn(args) { body }` — after `fn` come the parentheses directly, with no name.
+      choices:
+        "1": "`fn double(...)` is a named definition — an anonymous function has no name."
+        "2": "`lambda` isn't Gleam syntax. Anonymous functions also use the keyword `fn`."
+        "3": Gleam has no `=>` arrow syntax — the body is wrapped in `{ }`.

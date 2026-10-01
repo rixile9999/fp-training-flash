@@ -1,0 +1,78 @@
+title: make invalid states unrepresentable
+blocks:
+  intro:
+    markdown: |-
+      A principle that takes things one step further: **"make invalid states unrepresentable."**
+
+      It's good to *block* invalid values with validation, but it's even better to design the type itself so that "invalid combinations can't be built in the first place."
+
+      A common anti-pattern: `User(is_member: Bool, name: String, points: Int)` — it allows contradictory combinations, like a guest who has a `name` filled in, or a member whose `points` are empty. Instead, if you split it into a sum type, each state carries *only the data it actually needs*.
+  member-greeting:
+    prompt: Given the following type and function, what is the value of `greeting(Member("Sumin", 50))`?
+    choices:
+      - '`"Welcome, guest"`'
+      - '`"Sumin: 50p"`'
+      - '`"Sumin"`'
+      - '`"Member"`'
+    feedback:
+      correct: 'Correct! The `Member` branch matches, so it pulls out `name` and `points` to produce `"Sumin: 50p"`.'
+      choices:
+        "0": That's the result of the `Guest` branch. The input is `Member`.
+        "2": "`points` is appended to the string too — it's not just the name."
+        "3": "`case` returns the *result expression* of a branch, not the constructor name."
+    code: |-
+      pub type User {
+        Guest
+        Member(name: String, points: Int)
+      }
+
+      fn greeting(u: User) -> String {
+        case u {
+          Guest -> "Welcome, guest"
+          Member(name, points) -> name <> ": " <> int.to_string(points) <> "p"
+        }
+      }
+  data-per-state:
+    markdown: |-
+      The key is that `Guest` has *no* `name`/`points` fields at all. There's no way to build a "guest who has points" state. Since each state carries only its own data, contradictory combinations vanish at the type level.
+
+      Another benefit: when you handle it with `case`, the compiler checks whether you've "handled every state" (exhaustiveness).
+  connection-state:
+    prompt: What is the value of `describe(Connected("abc"))`?
+    choices:
+      - '`"offline"`'
+      - '`"online:abc"`'
+      - '`"online:"`'
+      - '`"abc"`'
+    feedback:
+      correct: Exactly! The `Connected` branch pulls out `session` ("abc") to produce `"online:" <> "abc"`.
+      choices:
+        "0": That's the `Disconnected` branch. The input is `Connected`.
+        "2": "`session` isn't empty — \"abc\" is appended after it."
+        "3": '`case` returns the whole result expression of the branch — including the prefix "online:".'
+  design-choice:
+    prompt: Which design best expresses "there's a session ID only when connected, and none when disconnected"?
+    choices:
+      - "`Connection(connected: Bool, session: String)` — use an empty string when disconnected"
+      - "`Connection(connected: Bool, session: Result(String, Nil))`"
+      - "A sum type with two variants: `Disconnected` / `Connected(session: String)`"
+      - 'Keep only `session: String` and use an agreed-upon value like `"NONE"` for disconnected'
+    feedback:
+      correct: Correct! Splitting it into a sum type makes the contradiction of "disconnected but has a session" unrepresentable — exactly make-invalid-states-unrepresentable.
+      choices:
+        "0": An empty string is still a value, so the "disconnected but has a session" state is still representable.
+        "1": A little better, but the contradictory combination of `connected:False` with `session:Ok(..)` is still possible.
+        "3": An agreed-upon magic value (`"NONE"`) is fragile, and the type can't block it for you.
+  exhaustiveness-benefit:
+    prompt: When you've eliminated invalid states via the type, what additional safety net do you get in `case`?
+    choices:
+      - The runtime gets faster
+      - The compiler checks whether all variants are handled (exhaustiveness), preventing omissions
+      - Field values are validated automatically
+      - You can skip pattern matching
+    feedback:
+      correct: Correct! Since the variants are stated explicitly, the compiler catches any branch you missed — and if you add a new state, every case that doesn't handle it surfaces as a compile error.
+      choices:
+        "0": Exhaustiveness is about *preventing omissions*, not about speed.
+        "2": Value validation is separate — that's the smart constructor's job.
+        "3": On the contrary, you must handle every variant — completeness is the point, not omission.

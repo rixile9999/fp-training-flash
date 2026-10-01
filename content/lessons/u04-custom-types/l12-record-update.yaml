@@ -1,0 +1,102 @@
+title: record update — '수정'의 정체
+tags:
+  - concept:custom-types
+  - tricky:record-update-copy
+blocks:
+  - prose: intro
+    markdown: |-
+      record의 한 필드만 바꾸고 싶을 때, Gleam은 `Player(..p, level: p.level + 1)`이라는 **record update** 문법을 줍니다. "`p`의 나머지 필드는 그대로 두고 `level`만 새 값으로"라는 뜻이에요.
+
+      ```gleam
+      pub type Player {
+        Player(name: String, score: Int, level: Int)
+      }
+
+      pub fn level_up(p: Player) -> Player {
+        Player(..p, level: p.level + 1)
+      }
+      ```
+
+      그런데 여기서 U1의 불변성이 다시 등장합니다: 이 문법은 `p`를 **바꾸지 않습니다**. 바뀐 값을 가진 **새 record**를 만들 뿐이에요(나머지는 구조를 공유해 저렴합니다).
+  - exercise: level-up-both
+    type: predict
+    prompt: 아래 코드에서 `p1.level`과 `p2.level`은 각각 무엇일까요?
+    code: |-
+      pub fn level_up(p: Player) -> Player {
+        Player(..p, level: p.level + 1)
+      }
+
+      let p1 = Player(name: "lucy", score: 10, level: 1)
+      let p2 = level_up(p1)
+      // p1.level 과 p2.level 은?
+    choices:
+      - "`1` 그리고 `2`"
+      - "`2` 그리고 `2`"
+      - "`1` 그리고 `1`"
+      - "`2` 그리고 `1`"
+    answer: 0
+    feedback:
+      correct: 정확해요! `level_up`은 새 record를 만들어 돌려줄 뿐, `p1`은 영원히 level 1입니다 — `p2`만 2예요.
+      choices:
+        "1": record update는 원본을 건드리지 않습니다. `p1`은 그대로 level 1 — '바꾼다'가 아니라 '바뀐 복사본을 만든다'로 읽으세요.
+        "2": "`p2`는 `level + 1`을 적용한 새 record라 2예요 — 둘 다 1은 아닙니다."
+        "3": 순서가 뒤바뀌었어요. 원본 `p1`이 1, 새로 만든 `p2`가 2입니다.
+  - exercise: update-semantics
+    type: choice
+    prompt: "`Player(..p, level: p.level + 1)` 표현식이 실제로 하는 일은?"
+    choices:
+      - "`p`의 `level` 필드를 제자리에서 1 증가시킨다"
+      - "`p`는 그대로 두고, `level`만 바뀐 새 `Player` record를 만든다"
+      - "`p`를 삭제하고 다시 만든다"
+      - "`level`을 0으로 초기화한다"
+    answer: 1
+    feedback:
+      correct: 맞아요! record update는 원본을 복사하듯 새 값을 만듭니다 — U1의 불변성이 데이터 구조로 확장된 거예요.
+      choices:
+        "0": Gleam엔 제자리 수정(mutation)이 없습니다 — `p`는 절대 안 바뀌고 새 record가 생겨요.
+        "2": 삭제·재생성이 아니라, `p`는 그대로 살아 있고 그 위에 새 복사본을 얹습니다.
+        "3": "`..p`는 나머지 필드를 `p`에서 그대로 가져와요 — 초기화가 아니라 보존입니다."
+  - exercise: update-name-untouched
+    type: predict
+    prompt: record update 후에도 원본의 다른 필드는 안전합니다. 출력은?
+    code: |-
+      let p1 = Player(name: "lucy", score: 10, level: 1)
+      let p2 = level_up(p1)
+      echo p1.name
+    choices:
+      - '`"lucy"`'
+      - '`""`'
+      - "`Nil`"
+      - 컴파일 에러
+    answer: 0
+    feedback:
+      correct: 맞아요! `level_up`은 `p1`을 전혀 건드리지 않으므로 `p1.name`은 여전히 "lucy"입니다.
+      choices:
+        "1": 필드가 지워지지 않아요 — 원본 `p1`은 만들어진 그대로 보존됩니다.
+        "2": '`p1.name`은 `String` 값("lucy")이에요 — `Nil`이 아닙니다.'
+        "3": 정상 컴파일·실행됩니다 — 원본 필드 접근은 아무 문제 없어요.
+  - prose: any-type
+    markdown: "record update는 어떤 record에도 쓸 수 있고, 한 번에 여러 필드를 바꿀 수도 있습니다. `Config(..base, width: 1920, height: 1080)`처럼요. 여기서도 규칙은 같습니다: `base`는 그대로, 명시한 필드만 새 값을 가진 **새 record**가 나옵니다."
+  - exercise: config-update
+    type: predict
+    prompt: 여러 필드를 한 번에 바꾸는 코드입니다. 출력은?
+    code: |-
+      pub type Config {
+        Config(width: Int, height: Int, fullscreen: Bool)
+      }
+
+      let base = Config(width: 800, height: 600, fullscreen: False)
+      let big = Config(..base, width: 1920, height: 1080)
+      echo int.to_string(big.width) <> " " <> int.to_string(base.width)
+    choices:
+      - '`"1920 800"`'
+      - '`"1920 1920"`'
+      - '`"800 1920"`'
+      - '`"800 800"`'
+    answer: 0
+    feedback:
+      correct: 정확해요! `big.width`는 새 값 1920, `base.width`는 건드리지 않아 그대로 800 — 원본은 안전합니다.
+      choices:
+        "1": "`base`는 record update의 영향을 받지 않아요 — `base.width`는 여전히 800입니다."
+        "2": 순서가 뒤바뀌었어요. 식은 `big.width`(1920)를 먼저, `base.width`(800)를 뒤에 출력합니다.
+        "3": "`big`은 `width: 1920`으로 바꾼 새 record예요 — `big.width`는 800이 아니라 1920입니다."

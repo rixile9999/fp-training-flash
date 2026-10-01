@@ -1,0 +1,83 @@
+title: type alias, and tuple vs custom type
+blocks:
+  intro:
+    markdown: |-
+      When writing out a long type every time is tedious, you can give it a short nickname with a **type alias**.
+
+      ```gleam
+      pub type Pair =
+        #(String, Int)
+      ```
+
+      Note: an alias *does not create a new type*. `Pair` is merely **another name** for `#(String, Int)`, so the two are fully interchangeable. This is different from a custom type (`pub type Box(a) { Box(...) }`), which *creates* a new type.
+  alias-use:
+    prompt: |-
+      `make` returns a `Pair` (i.e. `#(String, Int)`). What's the output below?
+
+      ```gleam
+      pub type Pair = #(String, Int)
+      pub fn make() -> Pair { #("score", 100) }
+      ```
+    choices:
+      - '`"score=100"`'
+      - '`"score"`'
+      - '`"100"`'
+      - compile error
+    feedback:
+      correct: Right! `Pair` is just `#(String, Int)`, so you access it like a tuple with `.0`/`.1` — "score" <> "=" <> "100".
+      choices:
+        "1": It doesn't use only `.0` — `.1` is concatenated too, so the result is "score=100".
+        "2": "`.0` (\"score\") is concatenated as well — you don't get just \"100\"."
+        "3": An alias isn't a new type but the tuple itself, so `.0`/`.1` access works normally.
+  tuple-access:
+    markdown: "You pull tuple elements out by position: the first is `.0`, the second is `.1`. They're distinguished by **order**, not by name. So tuples have a downside: \"they're lightweight, but the code doesn't say what each slot means.\""
+  tuple-index:
+    prompt: What do you get when you pull out a tuple's second element?
+    choices:
+      - "`30`"
+      - '`"lucy"`'
+      - '`#("lucy", 30)`'
+      - "`1`"
+    feedback:
+      correct: Exactly! `.1` is the **second** element (counting from 0), so it's 30.
+      choices:
+        "1": '`.0`, not `.1`, is the first ("lucy") — indices count from 0.'
+        "2": "`.1` pulls out *one slot*, not the whole tuple — it's 30."
+        "3": "`.1` is an index notation, not a return of that number itself — it gives the second element, 30."
+  custom-access:
+    markdown: |-
+      By contrast, a custom record gives each slot a **name**. The second slot of `User(name: "lucy", age: 30)` is pulled out with `.age`, not `.1`.
+
+      ```gleam
+      pub type User {
+        User(name: String, age: Int)
+      }
+      ```
+
+      If there are only two or three elements and their meaning is obvious, a tuple is enough; but once the slots grow or you start wondering "what does this slot mean?", the idiomatic move is to promote it to a **named custom type**.
+  record-field:
+    prompt: What do you get when you access by named field?
+    choices:
+      - '`"lucy"`'
+      - "`30`"
+      - '`"name"`'
+      - "`User(...)`"
+    feedback:
+      correct: Right! The `.name` field points to "lucy" — you pulled it out by *name*, not by position (`.0`).
+      choices:
+        "1": "`.age`, not `.name`, is 30 — you have to follow the field name."
+        "2": '`.name` returns the *value* of that field ("lucy"), not the field *name*.'
+        "3": It pulls out just the `name` slot, not the *whole record value* — "lucy".
+  tuple-vs-custom:
+    prompt: In which situation is a **custom type** (instead of a tuple) more appropriate?
+    choices:
+      - When there are 5 fields and you want to make each one's meaning clear in the code
+      - When you briefly bundle two values together and immediately destructure them
+      - When the two values are self-evident, like coordinates `#(x, y)`
+      - When a function needs a temporary bundle to return two values at once
+    feedback:
+      correct: Right! The more slots there are and the more their meaning matters, named fields (a custom type) make the code self-documenting.
+      choices:
+        "1": For a light bundle you tie together and untie right away, a tuple is handier.
+        "2": Self-evident pairs like `x, y` read perfectly fine as a tuple.
+        "3": A temporary return bundle is a textbook use of a tuple — there's little need to make a new type.

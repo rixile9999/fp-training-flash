@@ -1,0 +1,74 @@
+title: use — Sugar that Flattens the Staircase
+blocks:
+  intro:
+    markdown: |-
+      `result.try` solved the short-circuiting, but because each callback nests another `try`, the indentation still keeps creeping rightward. Gleam's `use` expression flattens this chain out **top-to-bottom**.
+
+      ```gleam
+      import gleam/result
+
+      pub fn add_ages(a: String, b: String) -> Result(Int, AgeError) {
+        use age_a <- result.try(parse_age(a))
+        use age_b <- result.try(parse_age(b))
+        Ok(age_a + age_b)
+      }
+      ```
+
+      The staircase is gone, and there's no more `Error(e) -> Error(e)` repetition. `use age_a <- ...` reads as "if this Result is Ok, bind its value to `age_a` and continue below; if Error, short-circuit straight away."
+  addages-ok:
+    prompt: In the `use` version of `add_ages` above, what is the value of `add_ages("8", "9")`?
+    choices:
+      - "`Ok(17)`"
+      - "`17`"
+      - "`Ok(8)`"
+      - "`Error(NotANumber)`"
+    feedback:
+      correct: Exactly! Both parses are Ok, so we descend with `age_a` = 8 and `age_b` = 9, and the final `Ok(8 + 9)` = `Ok(17)`.
+      choices:
+        "1": The function's return type is `Result`, so the last line is `Ok(...)` too — `Ok(17)`, not a bare `17`.
+        "2": After passing through both `use` lines, the two are added — `Ok(17)`, not `Ok(8)` which only considers `age_a`.
+        "3": Both inputs are valid numbers, so there's no short-circuit — it's `Ok(17)`, not `Error`.
+  shortcircuit:
+    markdown: |-
+      Here's the key intuition of this unit. When `result.try` on a `use` line receives an `Error`, **the lines below it don't run at all**, and the Error becomes the function's return value directly.
+
+      In U3 you learned that "Gleam has no early return." The short-circuiting of `use` + `result.try` performs exactly that early-return role — but **type-safely** (via the Result type).
+  addages-shortcircuit:
+    prompt: What is the value of `add_ages("3", "x")`? (the `use` version, `"x"` is not a number)
+    choices:
+      - "`Ok(3)`"
+      - "`Error(NotANumber)`"
+      - "`Ok(0)`"
+      - "`Error(Negative)`"
+    feedback:
+      correct: Correct! The first line is `Ok(3)`, so we descend with `age_a` = 3, but `parse_age("x")` on the second `use` line is `Error(NotANumber)`, so it short-circuits there — the `Ok(...)` below doesn't run and that Error is returned.
+      choices:
+        "0": When an Error comes out of a use line, the lines below don't run and the Error becomes the function's return value directly. So much for no early return — Result chaining performs that role type-safely — `Error(NotANumber)`, not `Ok(3)`.
+        "2": Short-circuiting doesn't create a default like `Ok(0)`. It returns the failing Error as-is — `Error(NotANumber)`.
+        "3": "`\"x\"` isn't negative — it isn't a number at all, so it's `NotANumber`, not `Negative`."
+  addages-negative:
+    prompt: What is the value of `add_ages("-3", "4")`? (`parse_age` returns `Error(Negative)` for negatives)
+    choices:
+      - "`Error(Negative)`"
+      - "`Error(NotANumber)`"
+      - "`Ok(1)`"
+      - "`Ok(-3)`"
+    feedback:
+      correct: Exactly! The first `parse_age("-3")` succeeds at number parsing but is negative, so it yields `Error(Negative)` — it short-circuits right on the first `use` line.
+      choices:
+        "1": "`\"-3\"` does succeed at integer parsing (sign included). It's just negative, so it's caught as `Negative` — not `NotANumber`."
+        "2": It already short-circuits on the first line, so it never reaches the addition — `Error(Negative)`, not `Ok(1)`.
+        "3": The short-circuited result is `Error`. On top of that, `parse_age` rejects negative input, so it can't be `Ok(-3)`.
+  forgot-ok:
+    prompt: After flattening everything with `use`, what happens if you write the last line as just `age_a + age_b` instead of `Ok(age_a + age_b)`?
+    choices:
+      - It works fine — Gleam automatically wraps it in Ok
+      - Type mismatch compile error — the function's return type is `Result` but the last expression is `Int`
+      - It errors at runtime
+      - It always returns `Error`
+    feedback:
+      correct: Correct! Even after flattening with use, the function's return type is still `Result`. Forgetting to wrap the final success value in `Ok` is the number-one classic mistake of the `use-expr` theme, and the compiler catches it as a Type mismatch.
+      choices:
+        "0": Gleam doesn't put `Ok` on automatically. If the return type is `Result(Int, _)` but the last expression is `Int`, the types don't line up and it's a compile error.
+        "2": It's blocked at compile time, not runtime — if the types don't match, it won't even run.
+        "3": It doesn't return `Error` — it simply won't compile, because of the type mismatch.

@@ -1,0 +1,107 @@
+title: 잘못된 값을 만들 수 없게 — opaque + smart constructor
+tags:
+  - concept:opaque-types
+blocks:
+  - prose: intro
+    markdown: |-
+      보통 `pub type`은 타입 이름과 **생성자**를 함께 공개합니다. 그래서 누구든 `Amount(-999)`처럼 값을 직접 만들 수 있죠 — 음수 금액 같은 잘못된 값까지요.
+
+      `pub opaque type`은 타입 **이름만** 공개하고, 생성자는 모듈 안에 가둡니다. 바깥에서는 값을 직접 만들 수 없고, 모듈이 제공하는 함수로만 만들 수 있어요.
+
+      ```
+      pub opaque type Amount {
+        Amount(cents: Int)
+      }
+
+      pub fn new(cents: Int) -> Result(Amount, String) {
+        case cents >= 0 {
+          True -> Ok(Amount(cents))
+          False -> Error("amount must not be negative")
+        }
+      }
+
+      pub fn cents(amount: Amount) -> Int {
+        amount.cents
+      }
+      ```
+
+      이렇게 "검증을 통과한 값만 존재할 수 있게" 만드는 `new`를 **smart constructor**라고 부릅니다.
+  - exercise: opaque-outside
+    type: choice
+    prompt: 다른 모듈에서 `bank.Amount(-999)`라고 직접 생성자를 호출하면 어떻게 될까요? (`Amount`는 위처럼 `opaque`)
+    choices:
+      - "`-999`센트짜리 `Amount`가 만들어진다"
+      - 런타임에 에러가 던져진다
+      - 컴파일 에러 — `opaque` 타입의 생성자는 모듈 밖에서 쓸 수 없다
+      - "`new`가 자동으로 호출되어 `Error`가 반환된다"
+    answer: 2
+    feedback:
+      correct: 맞아요! `opaque`의 핵심입니다. 생성자가 모듈에 봉인돼 음수 `Amount`는 *표현조차 불가능*합니다 — 런타임 검증이 아니라 컴파일 타임 봉인이에요.
+      choices:
+        "0": 그게 가능하면 `opaque`가 아니죠. 생성자는 모듈 밖으로 공개되지 않습니다.
+        "1": 런타임까지 가지도 않아요 — 애초에 컴파일이 거부됩니다.
+        "3": "`new`가 자동 호출되는 마법은 없어요. 그냥 컴파일 에러로 막힙니다."
+  - prose: smart-ctor
+    markdown: |-
+      그럼 바깥에서는 어떻게 `Amount`를 만들까요? 모듈이 공개한 `new`를 통해서만 만듭니다. `new`는 검증에 성공하면 `Ok(amount)`, 실패하면 `Error(...)`를 돌려주죠.
+
+      검증을 통과하지 못한 입력은 절대 `Amount`가 되지 못합니다.
+  - exercise: new-negative
+    type: predict
+    prompt: 이 호출의 결과는?
+    code: |-
+      new(-5)
+      // pub fn new(cents) {
+      //   case cents >= 0 {
+      //     True -> Ok(Amount(cents))
+      //     False -> Error("amount must not be negative")
+      //   }
+      // }
+    choices:
+      - "`Ok(Amount(-5))`"
+      - '`Error("amount must not be negative")`'
+      - "`-5`"
+      - 컴파일 에러
+    answer: 1
+    feedback:
+      correct: 정확해요! `-5 >= 0`은 거짓이라 `False` 가지를 타고 `Error(...)`가 나옵니다.
+      choices:
+        "0": 음수는 검증을 통과 못 해요 — `Ok`가 아니라 `Error`입니다.
+        "2": "`new`는 날값이 아니라 `Result`를 돌려줘요."
+        "3": 문법은 멀쩡합니다 — 컴파일은 되고, 값으로 `Error`가 나옵니다.
+  - exercise: new-then-cents
+    type: predict
+    prompt: 이 코드가 끝났을 때 `total`의 값은?
+    code: |-
+      let total = case new(150) {
+        Ok(a) -> cents(a)
+        Error(_) -> -1
+      }
+      // new는 검증 통과 시 Ok(Amount(150))
+    choices:
+      - "`150`"
+      - "`-1`"
+      - "`Ok(150)`"
+      - "`Amount(150)`"
+    answer: 0
+    feedback:
+      correct: 맞아요! `150 >= 0`이라 `Ok(a)` 가지를 타고, 접근자 `cents`가 안에 든 150을 꺼냅니다.
+      choices:
+        "1": "`-1`은 `Error` 가지의 값이에요. 150은 검증을 통과합니다."
+        "2": "`cents`는 `Result`가 아니라 `Int`를 돌려줘요 — 그냥 150."
+        "3": "`Amount`는 `opaque`라 그 내부가 그대로 노출되지 않아요. `cents`로 꺼낸 `Int` 150이 들어갑니다."
+  - exercise: opaque-vs-type
+    type: choice
+    prompt: "`pub type`과 `pub opaque type`의 차이로 옳은 것은?"
+    choices:
+      - "`opaque`는 타입을 아예 비공개로 만들어 다른 모듈에서 타입 이름조차 쓸 수 없다"
+      - "`opaque`는 타입 이름은 공개하되 생성자/필드 접근은 모듈 안으로 가둔다"
+      - "`opaque`는 런타임 성능을 위한 최적화일 뿐 의미 차이는 없다"
+      - "`opaque`는 필드를 자동으로 검증해 준다"
+    answer: 1
+    feedback:
+      correct: 맞아요! 타입 이름은 공개되어 함수 시그니처에 쓸 수 있지만, 만들고 뜯어보는 일은 모듈만 할 수 있습니다.
+      choices:
+        "0": 타입 이름은 여전히 공개돼요 — `bank.Amount`를 시그니처에 쓸 수 있습니다. 가려지는 건 생성자/필드예요.
+        "2": 성능 얘기가 아니라 **캡슐화**가 핵심입니다.
+        "3": 검증은 `opaque`가 아니라 당신이 짠 smart constructor(`new`)가 합니다.

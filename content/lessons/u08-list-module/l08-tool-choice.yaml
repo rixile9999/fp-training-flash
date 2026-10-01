@@ -1,0 +1,95 @@
+title: 도구 선택 — map인가 filter인가 fold인가
+tags:
+  - concept:lists
+  - tricky:tool-choice
+blocks:
+  - prose: intro
+    markdown: |-
+      이제 셋을 한자리에 놓고 **언제 무엇을 쓸지** 정리합니다. 판단 기준은 딱 하나, **결과의 모양**이에요.
+
+      - 각 원소가 **1:1로 변환**되고 길이가 그대로 → `list.map`
+      - **조건으로 골라내** 길이가 줄 수 있음 → `list.filter`
+      - 리스트가 **값 하나로(또는 다른 모양으로) 접힘** → `list.fold`
+
+      셋을 파이프로 이으면 작은 데이터 파이프라인이 됩니다.
+
+      ```gleam
+      import gleam/list
+
+      pub fn process(xs: List(Int)) -> Int {
+        xs
+        |> list.filter(fn(x) { x % 2 == 0 })
+        |> list.map(fn(x) { x * x })
+        |> list.fold(0, fn(acc, x) { acc + x })
+      }
+      // process([1, 2, 3, 4]) == 20
+      ```
+  - exercise: pipeline-process
+    type: predict
+    prompt: 위 `process` 파이프라인에서 `process([1, 2, 3, 4])`의 값은? (짝수만 → 제곱 → 합)
+    code: |-
+      xs
+      |> list.filter(fn(x) { x % 2 == 0 })  // [2, 4]
+      |> list.map(fn(x) { x * x })           // [4, 16]
+      |> list.fold(0, fn(acc, x) { acc + x }) // 20
+    choices:
+      - "`20`"
+      - "`30`"
+      - "`[4, 16]`"
+      - "`6`"
+    answer: 0
+    feedback:
+      correct: 맞아요! 짝수 [2, 4] → 제곱 [4, 16] → 합 20. filter·map·fold가 차례로 모양을 바꿔 갑니다.
+      choices:
+        "1": 30은 1~4 전체를 제곱해 더한 값(1+4+9+16)이에요. 먼저 **짝수만** 걸러야 합니다.
+        "2": 마지막 fold가 리스트를 값 하나로 접어요 — `[4, 16]`은 fold 직전 상태입니다.
+        "3": 6은 원본 [1,2,3,4]의 짝수 합(2+4)이에요. 그 사이 **제곱** 단계가 있습니다.
+  - prose: by-return-type
+    markdown: 막힐 때는 **결과 타입**을 먼저 떠올리세요. 결과가 `List`면 map이나 filter, 결과가 값 하나(`Int`, `String`, `Bool`)면 fold로 끝나야 합니다. "개수를 센다", "최댓값을 찾는다", "합을 구한다"는 모두 리스트를 **값 하나로** 접는 일 — fold(또는 그 특수형)예요.
+  - exercise: choose-count-evens
+    type: choice
+    prompt: '"리스트에서 짝수의 **개수**를 센다"에 가장 알맞은 접근은?'
+    choices:
+      - "`filter`로 짝수만 남긴 뒤 `length`로 센다 (또는 fold로 누적)"
+      - "`map`만으로 끝낼 수 있다"
+      - "`filter`만으로 개수가 나온다"
+      - 도구 없이 `<>`로 이어붙인다
+    answer: 0
+    feedback:
+      correct: 맞아요! 결과가 `Int` 하나이므로 마지막엔 접어야 합니다 — 짝수를 filter한 뒤 length로 세거나, fold로 직접 셀 수 있어요.
+      choices:
+        "1": map은 길이를 보존해 **리스트**를 돌려줘요. 개수라는 값 하나를 얻으려면 접는 단계가 필요합니다.
+        "2": filter는 걸러진 **리스트**를 줍니다 — 개수(`Int`)를 얻으려면 length나 fold가 한 단계 더 필요해요.
+        "3": "`<>`는 문자열 이어붙이기예요 — 개수 세기와는 무관합니다."
+  - exercise: choose-uppercase
+    type: predict
+    prompt: '"각 단어를 대문자화한다"에 알맞은 도구로 만든 결과입니다. 값은?'
+    code: list.map(["hi", "bye"], string.uppercase)
+    choices:
+      - '`["HI", "BYE"]`'
+      - '`"HIBYE"`'
+      - '`["hi", "bye"]`'
+      - "`2`"
+    answer: 0
+    feedback:
+      correct: 맞아요! 각 원소를 1:1로 변환하고 길이를 보존하니 map이 정답입니다 — 결과는 `["HI", "BYE"]`.
+      choices:
+        "1": map은 원소를 합치지 않아요 — 각각 변환한 **리스트**를 돌려줍니다. 합치려면 fold가 필요해요.
+        "2": 변환이 적용됩니다 — 소문자 그대로가 아니라 대문자가 돼요.
+        "3": 개수(값 하나)는 fold/length의 결과예요. "대문자화"는 1:1 변환이라 map → **리스트**가 나옵니다.
+  - exercise: choose-max
+    type: predict
+    prompt: '"리스트의 **최댓값**을 찾는다"를 fold로 구현했습니다. 결과는?'
+    code: list.fold([3, 7, 2, 9, 4], 0, fn(acc, x) { int.max(acc, x) })
+    choices:
+      - "`9`"
+      - "`[3, 7, 2, 9, 4]`"
+      - "`25`"
+      - "`3`"
+    answer: 0
+    feedback:
+      correct: 맞아요! 최댓값은 리스트를 값 하나로 접는 일이라 fold가 어울립니다 — 누산기에 더 큰 값을 계속 남겨 `9`가 됩니다.
+      choices:
+        "1": fold는 리스트를 값 하나로 접어요 — 리스트가 아니라 최댓값 `9`입니다.
+        "2": 25는 모든 원소를 더한 합(3+7+2+9+4)이에요. 하지만 콜백이 `int.max`라 더하지 않고 더 큰 쪽만 남겨 결과는 최댓값 `9`입니다.
+        "3": 3은 첫 원소예요. fold가 모든 원소를 훑어 가장 큰 9를 남깁니다.

@@ -1,0 +1,71 @@
+title: There Is No early return
+blocks:
+  intro:
+    markdown: |-
+      Gleam has no **early return** like `if (condition) return ...;` from other languages. There is no `return` keyword at all.
+
+      A function is **a single expression**, and every path converges to one value. So a branch that "bails out early" does not disappear — it becomes **one branch** of a `case`. Think of each `return` in pseudocode as moving into a case branch.
+  translate:
+    markdown: |-
+      For example, take this imperative pseudocode:
+
+      ```
+      if n < 0: return "negative"
+      if n == 0: return "zero"
+      return "positive"
+      ```
+
+      In Gleam it gathers into a single case:
+
+      ```
+      fn sign_label(n: Int) -> String {
+        case n {
+          _ if n < 0 -> "negative"
+          0 -> "zero"
+          _ -> "positive"
+        }
+      }
+      ```
+
+      Each `return` becomes one branch.
+  sign-negative:
+    prompt: What is the value of `sign_label(-5)`?
+    choices:
+      - '"negative"'
+      - '"zero"'
+      - '"positive"'
+      - "-5"
+    feedback:
+      correct: Correct! -5 passes the first guard `n < 0`, so it becomes "negative" — just like the first return in the imperative version.
+      choices:
+        "1": '"zero" is the `0` pattern branch. -5 is not 0.'
+        "2": '"positive" only appears if both branches above are missed. -5 is caught by the first branch.'
+        "3": A case returns the result of the matching branch, not the number that was inspected.
+  sign-zero:
+    prompt: In the same `sign_label`, what is the value of `sign_label(0)`?
+    choices:
+      - '"negative"'
+      - '"zero"'
+      - '"positive"'
+      - "0"
+    feedback:
+      correct: Exactly! For 0, `n < 0` is false so it skips the first branch, and it matches the `0` pattern precisely, yielding "zero".
+      choices:
+        "0": 0 is not negative — `0 < 0` is false, so it does not pass the first branch.
+        "2": 0 is caught by the `0` pattern before reaching the final `_`.
+        "3": A case returns the branch's result "zero", not the value that was inspected.
+  redundant-bool:
+    markdown: "As you eliminate early returns, another pitfall comes into view: code that **takes a value that is already a Bool and unpacks it again with a case to return `True -> True`, `False -> False`**. The condition expression is already the Bool value we want, so we can simply return it directly."
+  redundant-bool-spot:
+    prompt: Which of the following is the most unidiomatic (needlessly verbose) code?
+    choices:
+      - case n > 0 { True -> True False -> False }
+      - n > 0
+      - 0 < n
+      - n >= 1
+    feedback:
+      correct: Correct! `n > 0` is already a Bool. Unpacking it with a case to return `True -> True` is just cruft that rebuilds the same value the long way around.
+      choices:
+        "1": "`n > 0` is the most concise correct form — it is already a Bool, so just return it directly."
+        "2": "`0 < n` is just `n > 0` written the other way round. It is already a Bool and concise."
+        "3": For an integer input, `n >= 1` gives the same result as `n > 0`, so it is fairly concise.

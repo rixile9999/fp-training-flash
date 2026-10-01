@@ -1,0 +1,64 @@
+title: a taste of phantom types
+blocks:
+  intro:
+    markdown: |-
+      The last one is an **advanced taste** (feel free to just browse, no pressure). 
+
+      A type parameter can be used purely as a **discriminator** at the type level *without ever appearing in the value at all*. This is called a **phantom type**.
+
+      ```
+      pub type Meters
+
+      pub type Feet
+
+      pub type Length(unit) {
+        Length(amount: Float)
+      }
+
+      pub fn add_lengths(a: Length(unit), b: Length(unit)) -> Length(unit) {
+        Length(a.amount +. b.amount)
+      }
+      ```
+
+      The `unit` parameter is used in none of `Length`'s fields — it's purely a marker to distinguish "this is meters, that is feet" *by type*.
+  add-meters:
+    prompt: When adding values of the same unit, what does this code output?
+    choices:
+      - "`5.0`"
+      - "`6.0`"
+      - "`5`"
+      - "`Length(5.0)`"
+    feedback:
+      correct: Correct! Both are `Meters` so the types match, and `3.0 +. 2.0 = 5.0` is printed.
+      choices:
+        "1": It's addition — not the product (3.0 *. 2.0 = 6.0) but 3.0 +. 2.0 = 5.0.
+        "2": It's a `Float`, so it prints as `5.0`, not `5`.
+        "3": "`total.amount` pulls out only the inner `Float` and prints it — 5.0, not the whole record."
+  type-guard:
+    markdown: So why is `unit` useful? The signature of `add_lengths` pins down that `a` and `b` must have the **same `unit`**. So if you mix meters and feet, the compiler blocks it — it catches the unit confusion as a *compile error*. And there's no cost at all on the value (at runtime, `unit` disappears).
+  mix-units:
+    prompt: What happens if you pass one `Length(Meters)` and one `Length(Feet)` to `add_lengths`?
+    choices:
+      - You get a `Length` that adds the two
+      - A unit conversion happens at runtime
+      - A type mismatch compile error — because the `unit`s differ
+      - They're automatically unified to the first argument's unit
+    feedback:
+      correct: Correct! The signature requires `a` and `b` to share the same `unit`, so mixing `Meters` and `Feet` is rejected at compile time.
+      choices:
+        "0": Because the `unit`s differ, it won't compile in the first place — no resulting `Length` is produced either.
+        "1": A phantom type has no runtime behavior. There's no conversion logic anywhere.
+        "3": There's no magic auto-unification — it's simply blocked with a compile error.
+  phantom-runtime:
+    prompt: Which is a correct description of a phantom type's parameters (`Meters`, `Feet`)?
+    choices:
+      - They're stored as values at runtime and take up memory
+      - They don't appear in the value and are used only for compile-time distinction, so they have no runtime cost
+      - They must be used as the type of some field
+      - They can only be used with `opaque` types
+    feedback:
+      correct: Exactly! That's why it's a "phantom" — it exists only in type checking and leaves no trace at runtime.
+      choices:
+        "0": Since it doesn't go into the value, there's no runtime cost — that's exactly why it's a phantom.
+        "2": On the contrary, it's a phantom precisely *because* it's not used in a field — if it were used in a field, it would be an ordinary generic.
+        "3": It's a technique independent of `opaque` — you can put a phantom parameter on any type.

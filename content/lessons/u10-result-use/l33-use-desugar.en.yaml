@@ -1,0 +1,86 @@
+title: What use Really Is — Desugaring and Its Limits
+blocks:
+  intro:
+    markdown: |-
+      `use` isn't magic — it's **syntactic sugar**. Once you know what it really is, there's nothing to be confused about.
+
+      ```gleam
+      use x <- f(arg)
+      rest_of_the_code
+      ```
+
+      This single line expands to exactly the following (desugaring):
+
+      ```gleam
+      f(arg, fn(x) { rest_of_the_code })
+      ```
+
+      The key: **"the entire rest of the code" below the `use` line goes wholesale into the body of the final-argument callback `fn(x) { ... }`.** Not just part of it — all of it.
+  desugar-equiv:
+    prompt: The two snippets below are the same function (one uses use, the other is the desugared form). What is the value of `add("10", "5")`?
+    choices:
+      - "`Ok(15)`"
+      - "`15`"
+      - "`Ok(Ok(15))`"
+      - "`Error(Nil)`"
+    feedback:
+      correct: Exactly! The two forms are completely identical code. We descend with `x` = 10 and `y` = 5, and the final `Ok(10 + 5)` = `Ok(15)`.
+      choices:
+        "1": The last one is `Ok(x + y)`, so the result is wrapped — `Ok(15)`, not a bare `15`.
+        "2": "`try` uses the Result the callback returns as-is (no double wrapping) — `Ok(15)`, not `Ok(Ok(15))`."
+        "3": Both parses succeed, so there's no short-circuit — it's `Ok(15)`.
+    code: |-
+      // use version
+      //   use x <- result.try(int.parse(a))
+      //   use y <- result.try(int.parse(b))
+      //   Ok(x + y)
+      // desugared version:
+      result.try(int.parse("10"), fn(x) {
+        result.try(int.parse("5"), fn(y) {
+          Ok(x + y)
+        })
+      })
+  general-sugar:
+    markdown: |-
+      An important insight here: `use` is **not** exclusive to `result.try`. Since desugaring is "pass a callback as the last argument," it works with **any function whose last argument is a function** (e.g., `list.map` is syntactically possible too). That said, using it outside a short-circuiting flow tends to make things harder to read, so idiomatically it's used in "continue/short-circuit" contexts like `result.try`/`option`.
+
+      A word of caution against overuse: `use` only removes indentation — it doesn't change the meaning.
+  desugar-wrong-pairing:
+    prompt: Which of the following pairs `use` with its desugaring **incorrectly**?
+    choices:
+      - "`use x <- f(a)` ⟶ `f(a, fn(x) { rest })`"
+      - "`use x <- f(a)` ⟶ `f(fn(x) { rest }, a)`  (callback as first argument)"
+      - "`use a, b <- f(x)` ⟶ `f(x, fn(a, b) { rest })`"
+      - "`use <- f(x)` ⟶ `f(x, fn() { rest })`  (no value received)"
+    feedback:
+      correct: Correct! The callback always goes in as the **last** argument. (2), which puts it first, is the wrong pairing — the desugaring rule is "the rest of the code as the last-argument callback."
+      choices:
+        "0": This is a correct pairing. `use x <- f(a)` expands to exactly `f(a, fn(x) { rest })`.
+        "2": This is correct too. If you write multiple names to the left of the arrow, the callback takes that many arguments (`fn(a, b)`).
+        "3": This is a correct pairing as well. If the left of the arrow is empty, you get an argument-less callback `fn() { ... }`.
+  callback-scope:
+    prompt: There are three more lines of code below a `use` line. Which of them go into the body of the callback `fn(x) { ... }`?
+    choices:
+      - Only the very next line
+      - All three lines below the `use` line
+      - Only the last `Ok(...)` line
+      - No lines at all — use ends on that line
+    feedback:
+      correct: Correct! The crux of desugaring is that "the entire rest of the code" becomes the callback body — all three lines below go inside `fn(x) { ... }`.
+      choices:
+        "0": It's not just one line. Every line below use goes wholesale into the callback body.
+        "2": It's not just the last line — everything below use is the callback body, so the middle lines go in too.
+        "3": use doesn't end on that line — on the contrary, it wraps the entire code below into the callback to continue it.
+  use-single-line:
+    prompt: A single-step `use` follows the same rule. What is the value of `inc("41")`?
+    choices:
+      - "`Ok(42)`"
+      - "`42`"
+      - "`Ok(Ok(42))`"
+      - "`Error(Nil)`"
+    feedback:
+      correct: Exactly! `int.parse("41")` = `Ok(41)`, so `n` = 41, and the callback body `Ok(41 + 1)` = `Ok(42)`. Desugared, it's the same as `result.try(int.parse("41"), fn(n) { Ok(n + 1) })`.
+      choices:
+        "1": The function's return type is `Result`, so the last one is `Ok(...)` too — `Ok(42)`, not `42`.
+        "2": "`try` flattens, so there's only one layer of wrapping — `Ok(42)`, not `Ok(Ok(42))`."
+        "3": "`\"41\"` is a valid number, so the parse succeeds — no short-circuit, it's `Ok(42)`."

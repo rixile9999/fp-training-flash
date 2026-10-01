@@ -1,0 +1,124 @@
+title: Capstone 1 — A One-Line CSV Parser
+blocks:
+  intro:
+    markdown: |-
+      At last, the capstone. Let's weave together the tools you've learned so far into **one small program**.
+
+      Goal: a function that takes a single CSV line like `"lucy,8"`, parses it into `Player(name, age)`, and on failure returns **an error that carries the reason**. What we'll bring to bear — custom types (U4), `Result` and error types (U9), `string.split`/`case` patterns (U3·U5), and `use` for assembly (U10).
+
+      ```gleam
+      import gleam/int
+      import gleam/string
+
+      pub type ParseError {
+        WrongFieldCount
+        BadAge
+      }
+
+      pub type Player {
+        Player(name: String, age: Int)
+      }
+
+      fn parse_age(s: String) -> Result(Int, ParseError) {
+        case int.parse(s) {
+          Ok(n) -> Ok(n)
+          Error(_) -> Error(BadAge)
+        }
+      }
+
+      fn parse_line(line: String) -> Result(Player, ParseError) {
+        case string.split(line, ",") {
+          [name, age_str] ->
+            case parse_age(age_str) {
+              Ok(age) -> Ok(Player(name: name, age: age))
+              Error(e) -> Error(e)
+            }
+          _ -> Error(WrongFieldCount)
+        }
+      }
+      ```
+
+      The key is that we distinguish the two failure paths (wrong field count, age isn't a number) **by type**.
+  parse-happy:
+    prompt: A valid input. What is the value of `parse_line("lucy,8")`?
+    choices:
+      - '`Ok(Player(name: "lucy", age: 8))`'
+      - '`Player("lucy", 8)`'
+      - '`Ok(#("lucy", 8))`'
+      - "`Error(BadAge)`"
+    feedback:
+      correct: Exactly! `split` produces two fields `["lucy", "8"]`, and `parse_age("8")` is `Ok(8)`, so it gets wrapped as `Ok(Player(...))`.
+      choices:
+        "1": The success path always **wraps** its return in `Ok(...)` — the function's return type is `Result`.
+        "2": It builds the `Player` record we defined, not a tuple.
+        "3": "`\"8\"` parses fine as a number, so it's a success, not `BadAge`."
+  split-shape:
+    markdown: Why is the branch for `case string.split(line, ",")` written as `[name, age_str]`? Because `string.split` returns a **list**. `"lucy,8"` becomes `["lucy", "8"]` — exactly two elements. So the `[name, age_str]` pattern fits, and every other shape falls through to `_` and becomes `WrongFieldCount`.
+  split-result:
+    prompt: What is the result of this `string.split`?
+    choices:
+      - '`["lucy", "8"]`'
+      - '`#("lucy", "8")`'
+      - '`"lucy 8"`'
+      - '`["lucy,8"]`'
+    feedback:
+      correct: Right! `split` cuts on the separator and gives a **list of strings** — two elements, so it matches the `[name, age_str]` pattern.
+      choices:
+        "1": It's a list, not a tuple — that's why we match it with the `[...]` pattern.
+        "2": "`split` is a cutting function — it doesn't join."
+        "3": It's **split** on the separator `,`, so you get two elements — not one big piece.
+  parse-fewfields:
+    prompt: Not enough fields. What is the value of `parse_line("lucy")`?
+    choices:
+      - "`Error(WrongFieldCount)`"
+      - "`Error(BadAge)`"
+      - '`Ok(Player("lucy", 0))`'
+      - "`Error(Nil)`"
+    feedback:
+      correct: Exactly! `split("lucy", ",")` is `["lucy"]` — one element, so it doesn't match `[name, age_str]` and falls into the `_` branch.
+      choices:
+        "1": It never even reaches the age-parsing step — it's caught at the field count first.
+        "2": We don't fill in the missing value with 0 — a failure is reported as a failure.
+        "3": The key is that we distinguish the error as a **reasoned** `WrongFieldCount` rather than a vague `Nil`.
+  parse-badage:
+    prompt: The age isn't a number. What is the value of `parse_line("lucy,eight")`?
+    choices:
+      - "`Error(BadAge)`"
+      - "`Error(WrongFieldCount)`"
+      - '`Ok(Player("lucy", 0))`'
+      - '`Ok(Player("lucy", 8))`'
+    feedback:
+      correct: Right! There are 2 fields so that passes, but `int.parse("eight")` is `Error(_)` → `parse_age` returns `BadAge`.
+      choices:
+        "1": The field count is correct at 2 — where it gets stuck is the age-parsing step.
+        "2": We don't guess a number for `"eight"` and fill it in — we report the parse failure as is.
+        "3": "`\"eight\"` doesn't parse as an integer — there's no `8` value coming out."
+  use-assembly:
+    markdown: |-
+      The nested `case` bothering you? If you split the two steps into small functions that each return a `Result`, you can assemble them flatly with `use` (U10). If any step is an `Error`, it **short-circuits immediately** and that error is returned as is.
+
+      ```gleam
+      import gleam/result
+
+      fn parse_line(line: String) -> Result(Player, ParseError) {
+        use pair <- result.try(fields(line))
+        let #(name, age_str) = pair
+        use age <- result.try(parse_age(age_str))
+        Ok(Player(name: name, age: age))
+      }
+      ```
+
+      The behavior is **exactly the same** as the nested-`case` version — it just got easier to read.
+  use-shortcircuit:
+    prompt: In the `use` version above, if `fields(line)` returns `Error(WrongFieldCount)`, what happens to the following lines?
+    choices:
+      - They don't run, and `Error(WrongFieldCount)` is returned immediately
+      - Execution continues with `age` filled in as `0`
+      - A runtime crash occurs
+      - The final `Ok(Player(...))` is returned as is
+    feedback:
+      correct: Right! `result.try` short-circuits on the first `Error` — the later steps are skipped and that error becomes the function's result.
+      choices:
+        "1": It doesn't fill the gap with a default — `use` stops when it meets a failure.
+        "2": This is normal `Result` flow, so it's not a crash — it returns the error **as a value**.
+        "3": To reach the final `Ok`, every step must be `Ok` — if any one is `Error`, you can't get there.

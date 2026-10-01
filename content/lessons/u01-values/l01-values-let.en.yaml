@@ -1,0 +1,35 @@
+title: Values and let
+blocks:
+  intro:
+    markdown: |-
+      Programming is, in the end, all about working with **values**. `1`, `3.14`, `"hello"`, `True` — these are all values.
+
+      In Gleam you give a value a **name** with `let`. When you write `let pi = 3.14`, from that point on the name `pi` refers to `3.14`.
+  bind-syntax:
+    prompt: Inside a function body, what is the correct syntax for binding a value to a name?
+    choices:
+      - "`x = 5`"
+      - "`let x = 5`"
+      - "`var x = 5`"
+      - "`const x = 5`"
+    feedback:
+      correct: Correct! In Gleam you bind inside a function only with `let`. There is no `var`, and no reassignment either.
+      choices:
+        "0": "`=` on its own won't do it. A binding always needs `let`."
+        "2": Gleam has no `var` — there's no such thing as reassignment in the first place.
+        "3": "`const` is for module-level top-level constants. Bindings inside a function use `let`."
+  use-name:
+    markdown: Once you've named a value, you can pull it back out later by that name. Think of a name inside an expression as being substituted by its value.
+  let-use:
+    prompt: What is the value of `total` when the code below finishes?
+    choices:
+      - "`3`"
+      - "`100`"
+      - "`300`"
+      - "`103`"
+    feedback:
+      correct: Exactly! `price` is 100 and `count` is 3 — so `total` is 100 * 3 = 300.
+      choices:
+        "0": You only looked at `count` (3). `total` is computed as `price * count`.
+        "1": You only looked at `price` (100). You still need to multiply by `count`.
+        "3": "`*` is multiplication — not addition (100+3) but 100*3 = 300."

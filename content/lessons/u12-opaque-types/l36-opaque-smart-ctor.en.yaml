@@ -1,0 +1,89 @@
+title: Make invalid values impossible to build — opaque + smart constructor
+blocks:
+  intro:
+    markdown: |-
+      Normally `pub type` exposes both the type name and its **constructor**. So anyone can build a value directly, like `Amount(-999)` — even invalid values such as a negative amount.
+
+      `pub opaque type` exposes **only** the type name and locks the constructor inside the module. From the outside you can't build a value directly; you can only build one through the functions the module provides.
+
+      ```
+      pub opaque type Amount {
+        Amount(cents: Int)
+      }
+
+      pub fn new(cents: Int) -> Result(Amount, String) {
+        case cents >= 0 {
+          True -> Ok(Amount(cents))
+          False -> Error("amount must not be negative")
+        }
+      }
+
+      pub fn cents(amount: Amount) -> Int {
+        amount.cents
+      }
+      ```
+
+      A `new` like this — which ensures that "only values that pass validation can exist" — is called a **smart constructor**.
+  opaque-outside:
+    prompt: What happens if you call the constructor directly from another module, like `bank.Amount(-999)`? (`Amount` is `opaque`, as above.)
+    choices:
+      - An `Amount` worth `-999` cents is created
+      - An error is thrown at runtime
+      - Compile error — the constructor of an `opaque` type can't be used outside its module
+      - "`new` is called automatically and an `Error` is returned"
+    feedback:
+      correct: Correct! This is the heart of `opaque`. The constructor is sealed inside the module, so a negative `Amount` is *not even representable* — it's a compile-time seal, not a runtime check.
+      choices:
+        "0": If that were possible, it wouldn't be `opaque`. The constructor is never exposed outside the module.
+        "1": It never even reaches runtime — the compile is rejected up front.
+        "3": There's no magic that calls `new` automatically. It's simply blocked with a compile error.
+  smart-ctor:
+    markdown: |-
+      So how do you build an `Amount` from the outside? Only through the `new` the module exposes. `new` returns `Ok(amount)` if validation succeeds and `Error(...)` if it fails.
+
+      Input that doesn't pass validation can never become an `Amount`.
+  new-negative:
+    prompt: What is the result of this call?
+    choices:
+      - "`Ok(Amount(-5))`"
+      - '`Error("amount must not be negative")`'
+      - "`-5`"
+      - Compile error
+    feedback:
+      correct: Exactly! `-5 >= 0` is false, so it takes the `False` branch and `Error(...)` comes out.
+      choices:
+        "0": A negative value can't pass validation — it's `Error`, not `Ok`.
+        "2": "`new` returns a `Result`, not a raw value."
+        "3": The syntax is fine — it compiles, and the value that comes out is `Error`.
+  new-then-cents:
+    prompt: When this code finishes, what is the value of `total`?
+    choices:
+      - "`150`"
+      - "`-1`"
+      - "`Ok(150)`"
+      - "`Amount(150)`"
+    feedback:
+      correct: Correct! `150 >= 0`, so it takes the `Ok(a)` branch, and the accessor `cents` pulls out the 150 inside.
+      choices:
+        "1": "`-1` is the value of the `Error` branch. 150 passes validation."
+        "2": "`cents` returns an `Int`, not a `Result` — just 150."
+        "3": "`Amount` is `opaque`, so its internals aren't exposed as-is. The `Int` 150 pulled out by `cents` goes in."
+    code: |-
+      let total = case new(150) {
+        Ok(a) -> cents(a)
+        Error(_) -> -1
+      }
+      // new returns Ok(Amount(150)) when validation passes
+  opaque-vs-type:
+    prompt: Which is a correct statement about the difference between `pub type` and `pub opaque type`?
+    choices:
+      - "`opaque` makes the type entirely private, so other modules can't even use the type name"
+      - "`opaque` exposes the type name but locks constructor/field access inside the module"
+      - "`opaque` is just a runtime performance optimization with no difference in meaning"
+      - "`opaque` automatically validates the fields for you"
+    feedback:
+      correct: Correct! The type name is exposed so it can be used in function signatures, but only the module can build and dissect values.
+      choices:
+        "0": The type name is still exposed — you can use `bank.Amount` in a signature. What's hidden is the constructor/fields.
+        "2": It's not about performance — **encapsulation** is the point.
+        "3": The validation isn't done by `opaque` but by the smart constructor (`new`) you write.

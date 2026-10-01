@@ -1,0 +1,97 @@
+title: 불변식은 모듈 경계에서 지킨다
+tags:
+  - concept:opaque-types
+blocks:
+  - prose: intro
+    markdown: |-
+      **불변식(invariant)**이란 "이 타입의 값이라면 *항상* 참인 성질"입니다. 예: "`Amount`의 센트는 절대 음수가 아니다."
+
+      `opaque` + smart constructor를 쓰면 이 불변식을 **단 한 곳 — 모듈 경계 — 에서만** 지키면 됩니다. 값을 만드는 통로가 모듈 안의 함수뿐이니까요. 한 번 `Amount`가 되었다면, 그 안의 센트가 음수일 리 없다고 *나머지 코드 전부가 믿어도* 됩니다.
+  - exercise: subtract-ok
+    type: predict
+    prompt: 이 코드의 결과는? (`subtract`는 모듈 안에서 `new(cents(a) - cents(b))`를 호출)
+    code: |-
+      let out = case new(100), new(30) {
+        Ok(a), Ok(b) ->
+          case subtract(a, b) {
+            Ok(r) -> cents(r)
+            Error(_) -> -1
+          }
+        _, _ -> -1
+      }
+    choices:
+      - "`70`"
+      - "`130`"
+      - "`-1`"
+      - "`Ok(70)`"
+    answer: 0
+    feedback:
+      correct: 맞아요! 100 - 30 = 70이고 70 >= 0이라 `new`가 `Ok`를 돌려줍니다. `cents`로 꺼내면 70.
+      choices:
+        "1": 차감입니다 — 더하기(130)가 아니라 100 - 30 = 70이에요.
+        "2": "`-1`은 `Error` 가지의 값이에요. 70은 음수가 아니라 검증을 통과합니다."
+        "3": "`cents`로 한 번 꺼냈으니 `Result`가 아니라 `Int` 70이 들어갑니다."
+  - exercise: subtract-underflow
+    type: predict
+    prompt: 이번엔? (같은 `subtract`)
+    code: |-
+      case new(30), new(100) {
+        Ok(a), Ok(b) -> subtract(a, b)
+        _, _ -> Error("setup")
+      }
+    choices:
+      - "`Ok(Amount(-70))`"
+      - '`Error("amount must not be negative")`'
+      - "`-70`"
+      - '`Error("setup")`'
+    answer: 1
+    feedback:
+      correct: 정확해요! 30 - 100 = -70이고, `subtract`가 `new(-70)`을 호출하니 불변식 검증이 막아 `Error`가 됩니다.
+      choices:
+        "0": 음수 `Amount`는 만들어질 수 없어요 — 그게 불변식의 요점입니다.
+        "2": "`subtract`는 날값이 아니라 `Result`를 돌려줘요."
+        "3": '`new(30)`/`new(100)` 둘 다 성공하니 `"setup"` 가지엔 가지 않아요. 검증은 `new(-70)`에서 걸립니다.'
+  - prose: where
+    markdown: |-
+      여기서 핵심은 "음수 검사를 호출하는 쪽 모든 곳에 흩뿌리지 않는다"는 점입니다. 불변식은 모듈 안 `new`/`subtract`에서 한 번 지켜지고, 바깥 코드는 `Amount`를 받으면 "이미 올바른 값"이라 믿고 씁니다.
+
+      다른 도메인도 똑같습니다. `Email`이라면 "`@`를 포함한다"가 불변식이죠.
+  - exercise: email-invalid
+    type: predict
+    prompt: '`Email`의 smart constructor가 `string.contains(raw, "@")`로 검증할 때, `new("ab")`의 결과는?'
+    code: |-
+      pub fn new(raw: String) -> Result(Email, String) {
+        case string.contains(raw, "@") {
+          True -> Ok(Email(raw))
+          False -> Error("invalid email")
+        }
+      }
+
+      new("ab")
+    choices:
+      - '`Ok(Email("ab"))`'
+      - '`Error("invalid email")`'
+      - '`"ab"`'
+      - "`True`"
+    answer: 1
+    feedback:
+      correct: 맞아요! `"ab"`에는 `@`가 없어 `string.contains`가 `False` — `Error` 가지를 탑니다.
+      choices:
+        "0": "`@`가 없으면 `Ok`가 되지 않아요 — 불변식이 막습니다."
+        "2": "`new`는 날 문자열이 아니라 `Result`를 돌려줘요."
+        "3": "`string.contains`는 `case`의 검사값일 뿐, `new`의 결과는 `Result`입니다."
+  - exercise: boundary-benefit
+    type: choice
+    prompt: 불변식을 "모듈 경계에서만" 지키는 설계의 가장 큰 이점은?
+    choices:
+      - 검증 코드를 값을 쓰는 모든 호출부에 복붙해야 한다
+      - 한 번 만들어진 값은 어디서든 올바르다고 믿을 수 있어 방어 코드가 사라진다
+      - 런타임 검증이 더 자주 일어나 안전해진다
+      - 타입을 `opaque`로 만들면 검증이 자동 생성된다
+    answer: 1
+    feedback:
+      correct: 맞아요! 만드는 통로가 봉인돼 있으니, 받은 `Amount`는 이미 올바릅니다. 곳곳의 `if cents < 0` 방어 코드가 필요 없어져요.
+      choices:
+        "0": 그건 정반대예요 — 경계에서 한 번만 지키면 복붙이 사라집니다.
+        "2": 검증은 만들 때 한 번이면 충분합니다. 자주 하는 게 목적이 아니에요.
+        "3": "`opaque`는 통로를 봉인할 뿐, 검증 로직은 당신이 `new`에 직접 씁니다."

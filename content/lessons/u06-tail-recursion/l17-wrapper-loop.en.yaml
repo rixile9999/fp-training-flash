@@ -1,0 +1,81 @@
+title: The Wrapper + Private Loop Idiom
+blocks:
+  intro:
+    markdown: |-
+      The accumulator version has a small inconvenience. The caller has to pass the starting value `0` every time — `sum_loop(numbers, 0)`. Forgetting the starting value is troublesome, and exposing acc — an "internal detail" in the first place — to the outside is awkward too.
+
+      So the Gleam idiom is a **thin public wrapper + a private `_loop`**. The public function fills in the starting value and calls once, while the real recursion is handled by the hidden private function.
+
+      ```gleam
+      pub fn sum(numbers: List(Int)) -> Int {
+        sum_loop(numbers, 0)
+      }
+
+      fn sum_loop(numbers: List(Int), acc: Int) -> Int {
+        case numbers {
+          [] -> acc
+          [first, ..rest] -> sum_loop(rest, acc + first)
+        }
+      }
+      ```
+  wrapper-value:
+    prompt: What is `sum([2, 3, 5])`? (the wrapper fills in the starting acc 0 for you)
+    choices:
+      - "`10`"
+      - "`0`"
+      - "`2`"
+      - "`235`"
+    feedback:
+      correct: Right! The wrapper calls `sum_loop([2, 3, 5], 0)` and acc becomes 0→2→5→10.
+      choices:
+        "1": 0 is the starting acc that the wrapper puts in — add the elements and you get 10.
+        "2": It's not just the first element 2 — 3 and 5 are accumulated too, so the sum is 10.
+        "3": It doesn't concatenate the digits, it adds them — 2+3+5 = 10.
+    code: |-
+      pub fn sum(numbers: List(Int)) -> Int {
+        sum_loop(numbers, 0)
+      }
+
+      fn sum_loop(numbers: List(Int), acc: Int) -> Int {
+        case numbers {
+          [] -> acc
+          [first, ..rest] -> sum_loop(rest, acc + first)
+        }
+      }
+
+      // sum([2, 3, 5]) is?
+  why-wrapper:
+    markdown: |-
+      The nice things about this idiom:
+
+      - The caller only needs to know `sum(xs)` — the wrapper fills in the starting value 0 on its own.
+      - acc is an implementation detail, so it's not marked `pub` and is **invisible outside the module**.
+      - The public function's type is cleanly `List(Int) -> Int` — the accumulator argument doesn't leak out.
+
+      By convention, the private recursive function is given a name like `_loop` (or `do_`, `go`).
+  wrapper-purpose:
+    prompt: What does the wrapper (the public `sum`) do?
+    choices:
+      - It performs the actual recursion directly
+      - It fills in the starting accumulator (0) and calls the private `_loop` once
+      - It reverses the result one more time
+      - It sorts the list
+    feedback:
+      correct: Right! The wrapper is a thin one-liner that fills in the starting value and kicks off the private loop — the recursion itself is done by `_loop`.
+      choices:
+        "0": The recursion is handled by the private `_loop` — the wrapper just fills in the starting value and calls it once.
+        "2": There's no reversing here — that's a different pattern that shows up when you build a list with prepend.
+        "3": It has nothing to do with sorting — the wrapper's only job is to fill in the starting acc.
+  why-private:
+    prompt: What's the best reason for not exposing the private `sum_loop` as `pub`?
+    choices:
+      - Because private functions run faster
+      - Because acc is an internal implementation detail, and you want to keep the outward API cleanly as `List(Int) -> Int`
+      - Because only private functions can recurse
+      - Because adding `pub` causes a compile error
+    feedback:
+      correct: Right! The caller doesn't need the accumulator. Hiding it keeps the API clean and avoids passing a wrong starting value.
+      choices:
+        "0": Whether something is `pub` has nothing to do with run speed — the difference is *outward exposure*.
+        "2": "`pub`/private doesn't matter for recursion — public functions can recurse too."
+        "3": It compiles fine even with `pub` — it just leaks acc and makes the API messy.

@@ -1,0 +1,51 @@
+title: OTP and Actors — The Next World (Read-Only)
+blocks:
+  banner:
+    markdown: |-
+      ⚠️ **The code in this lesson is for reading only.** gleam_otp's actor is Erlang VM-only, and this platform's practice environment does not include gleam_otp. It can't run in the browser (the JS target) either. Because the Gleam compiler tracks per-target support at the expression level, code like this is rejected when compiled to JS.
+
+      So this lesson is a **read-and-understand** lesson — instead of predicting output, you solve concept questions only. It's a chance to take an early peek at what "the next world" looks like.
+  what-is-actor:
+    markdown: |-
+      Recall the state machine we just learned. `run` folded a list of events **all at once**. But a real server receives events spread over time, from many places at once.
+
+      An **actor** turns that state machine into a "living process." It holds its own state, receives messages one at a time and processes them, then holds the next state and waits for the next message. You can send it messages, but you **cannot touch its state directly** — concurrency bugs (shared-memory races) are blocked at the source. It's the immutability and transition functions we learned, scaled up unchanged.
+  actor-why-no-run:
+    prompt: Why is this actor code rejected when compiled to the JavaScript target (browser)?
+    choices:
+      - gleam_otp is Erlang VM-only, and the compiler tracks the JS target's lack of support at the expression level
+      - Because there's a syntax error in the actor code
+      - Because the code is too long and freezes the browser
+      - Because Gleam doesn't run in the browser at all
+    feedback:
+      correct: Right! Gleam compiles to two targets, Erlang and JavaScript, but OTP/actors are a feature of the Erlang VM, so they aren't supported on the JS target. The compiler tracks this per target.
+      choices:
+        "1": It's not a syntax issue — it's because of a **target (runtime) difference**. The code itself is correct.
+        "2": It's not a length issue — it's an Erlang-only feature, so it doesn't compile to JS.
+        "3": Gleam runs fine in the browser via the JS target. It's just OTP that's Erlang-only.
+  actor-vs-statemachine:
+    prompt: Compared to the `next`/`run` state machine we built in U15-②, what is the key difference of an actor?
+    choices:
+      - An actor lives holding state and receives messages one at a time asynchronously, whereas `run` folds a list of events all at once
+      - An actor can freely reassign mutable variables
+      - An actor has no concept of state
+      - An actor can't use `case`
+    feedback:
+      correct: Right! An actor turns a state machine into a "living process" — it receives messages one at a time over time and moves to the next state. The transition-function mindset is unchanged.
+      choices:
+        "1": An actor is still immutable — it doesn't reassign state, it **returns** the next state.
+        "2": Holding state is the very essence of an actor — it's not that it has no state.
+        "3": Message handling inside an actor usually branches with `case` too — exactly what we learned.
+  actor-shared-state:
+    prompt: Which is the best reason the actor model reduces concurrency bugs?
+    choices:
+      - Other processes can't touch an actor's state directly and communicate only via messages, so shared-memory races disappear
+      - Because an actor forces only one program to run at a time
+      - Because using actors automatically makes all functions faster
+      - Because actors never raise errors
+    feedback:
+      correct: Right! State is locked inside the actor and the outside only sends messages — the classic race condition of many processes touching the same memory at once structurally disappears. It's the power of immutability + message passing.
+      choices:
+        "1": It's actually the opposite — the advantage is that many actors run **concurrently** and yet stay safe.
+        "2": An actor is a concurrency model, not a speed-guarantee tool — there's no guarantee it gets faster.
+        "3": Actors can fail too — OTP's philosophy is rather "if it fails, a supervisor restarts it" (connected to the crash mindset of U13).

@@ -1,0 +1,110 @@
+title: Handling everything — exhaustiveness
+blocks:
+  intro:
+    markdown: |-
+      When you use `case` on a custom type, Gleam's real safety net switches on: **it only compiles if you handle every variant**. Miss even one and it won't compile at all.
+
+      ```gleam
+      pub type Shape {
+        Circle(radius: Float)
+        Rectangle(width: Float, height: Float)
+      }
+
+      pub fn area(shape: Shape) -> Float {
+        case shape {
+          Circle(radius: r) -> 3.14159 *. r *. r
+          Rectangle(width: w, height: h) -> w *. h
+        }
+      }
+      ```
+
+      Area is a Float computation, so we use `*.`. Inside the pattern, `radius: r` binds that field to the name `r` so you can use it in the result expression.
+  area-circle:
+    prompt: "In the `area` above, what is the value of `area(Circle(radius: 2.0))`?"
+    choices:
+      - "`12.56636`"
+      - "`6.28318`"
+      - "`4.0`"
+      - "`12`"
+    feedback:
+      correct: Right! 3.14159 *. 2.0 *. 2.0 = 12.56636. `r` is bound to 2.0, so you multiply pi by the radius squared.
+      choices:
+        "1": That's 3.14159 *. 2.0 (multiplied by the diameter). Area multiplies the radius **twice** — r *. r.
+        "2": 4.0 is just 2.0 *. 2.0 (r squared); you haven't multiplied by pi (3.14159) yet.
+        "3": The result is a `Float`, so it's `12.56636`, not `12` (an Int) — the type is different.
+    code: |-
+      pub type Shape {
+        Circle(radius: Float)
+        Rectangle(width: Float, height: Float)
+      }
+
+      pub fn area(shape: Shape) -> Float {
+        case shape {
+          Circle(radius: r) -> 3.14159 *. r *. r
+          Rectangle(width: w, height: h) -> w *. h
+        }
+      }
+
+      // area(Circle(radius: 2.0)) is?
+  inexhaustive:
+    markdown: |-
+      What happens if you delete the `Rectangle` branch? Gleam gives the following compile error:
+
+      ```
+      error: Inexhaustive patterns
+
+      This case expression does not have a pattern for all possible values.
+      The missing patterns are:
+
+          Rectangle(width:, height:)
+      ```
+
+      The compiler **points out exactly the missing variant**. This is the safety net: if you add `Triangle` later, the compiler tells you every place you need to fix, including this `case`.
+  missing-pattern:
+    prompt: Compiling an `area` with the `Rectangle` branch deleted gives an "Inexhaustive patterns" error. What's the most correct way to fix it?
+    choices:
+      - "Add the `Rectangle(width: w, height: h) -> w *. h` branch"
+      - Add a `_ -> 0.0` branch
+      - Change the `case` into an `if`
+      - Delete the `Rectangle` variant from the type definition
+    feedback:
+      correct: Right! Explicitly handling the missing variant is the answer — just add the `Rectangle` the compiler pointed out.
+      choices:
+        "1": It compiles, but it's a trap. `_` switches off the exhaustiveness check, so even if you add `Triangle` later the compiler stays silent — spell out the variant.
+        "2": Gleam has no separate `if` statement, and the problem isn't the branching tool but the missing branch — just add the `Rectangle` branch.
+        "3": Then you couldn't represent a rectangle anymore — the goal is to handle it, not to delete it from the type.
+  wildcard-trap:
+    prompt: Why is it dangerous to habitually tack a `_ -> ...` onto the end of every case just to satisfy exhaustiveness?
+    choices:
+      - Compilation gets slower
+      - "`_` quietly swallows even future new variants, switching off the compiler's \"places to fix\" warning"
+      - "`_` is a syntax error"
+      - Runtime gets slower
+    feedback:
+      correct: Exactly! The safety net where the compiler warns you when you add a variant stops working because of `_` — the new variant silently falls into `_`.
+      choices:
+        "0": It has nothing to do with compile speed. The problem is that you lose the future safety net.
+        "2": "`_` is valid syntax — what's dangerous isn't the syntax but that it 'swallows every future change'."
+        "3": It's not a runtime performance problem; the problem is that it disables the compile-time check.
+  area-rectangle:
+    prompt: "In the same `area`, what is the value of `area(Rectangle(width: 3.0, height: 4.0))`?"
+    choices:
+      - "`12.0`"
+      - "`7.0`"
+      - "`12`"
+      - "`14.0`"
+    feedback:
+      correct: Right! The `Rectangle` branch returns `w *. h` = 3.0 *. 4.0 = 12.0.
+      choices:
+        "1": 7.0 is 3.0 +. 4.0 (addition). Area is the product (`*.`), so it's 12.0.
+        "2": The result is a `Float`, so it's `12.0`, not `12` (an Int) — the type is different.
+        "3": 14.0 is something like half the perimeter. Area is w *. h = 12.0.
+    code: |-
+      pub fn area(shape: Shape) -> Float {
+        case shape {
+          Circle(radius: r) -> 3.14159 *. r *. r
+          Rectangle(width: w, height: h) -> w *. h
+        }
+      }
+
+      // area(Rectangle(width: 3.0, height: 4.0)) is?

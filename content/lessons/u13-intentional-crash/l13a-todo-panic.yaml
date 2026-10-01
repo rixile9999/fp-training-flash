@@ -1,0 +1,83 @@
+title: todo와 panic — 아직 vs 절대
+tags:
+  - concept:let-assertions
+blocks:
+  - prose: intro
+    markdown: |-
+      지금까지는 실패를 **데이터**로 다뤘습니다 — `Option`, `Result`. 하지만 가끔은 "여기 도달하면 안 된다"가 정답일 때가 있어요. 그때 쓰는 도구가 `todo`와 `panic`입니다.
+
+      `todo`는 "아직 안 만들었음"의 표시입니다. 컴파일은 통과시키되, **실행해서 그 자리에 닿으면** 크래시합니다. `panic`은 "여기는 절대 닿으면 안 되는 곳"이라는 단언이에요.
+  - prose: todo-fills
+    markdown: |-
+      `todo`의 장점은 **타입은 맞춰주면서 구현은 미룬다**는 점입니다. 함수 골격을 먼저 짜고 본문을 `todo`로 채워도 전체 프로그램은 컴파일됩니다. 나중에 그 자리를 진짜 코드로 바꾸면 되죠.
+
+      아래 `area`는 `todo`로 시작했다가 이제 본문을 채운 모습입니다. 실제로 호출해 봅시다.
+  - exercise: area-filled
+    type: predict
+    prompt: 본문을 채운 `area`를 호출했습니다. `area(4, 5)`의 값은?
+    code: |-
+      pub fn area(w: Int, h: Int) -> Int {
+        w * h
+      }
+
+      pub fn main() {
+        io.println(int.to_string(area(4, 5)))
+      }
+    choices:
+      - "`9`"
+      - "`20`"
+      - "`45`"
+      - 런타임 크래시(todo)
+    answer: 1
+    feedback:
+      correct: 맞아요! `todo`는 사라졌고 본문이 `w * h`이니 4 * 5 = 20을 출력합니다.
+      choices:
+        "0": "`+`가 아니라 `*`입니다 — 4 + 5가 아니라 4 * 5예요."
+        "2": "`4`와 `5`를 이어 붙인 게 아니라 곱한 값입니다. 20이에요."
+        "3": "`todo`는 이미 진짜 코드로 교체됐습니다. 그 자리에 닿을 일이 없어요."
+  - prose: panic-here
+    markdown: |-
+      `panic`은 다릅니다 — "미완성"이 아니라 **"불가능"** 을 뜻해요. `case`의 모든 의미 있는 가지를 처리한 뒤, 논리상 절대 오지 않을 가지에 `panic as "..."`을 두면, 만에 하나 닿았을 때 그 메시지와 함께 즉시 멈춥니다.
+
+      핵심은 **닿지 않으면 아무 일도 없다**는 것. 정상 경로를 타면 평범하게 값을 돌려줍니다.
+  - exercise: panic-not-reached
+    type: predict
+    prompt: "`b`가 0이 아니면 `panic` 가지는 닿지 않습니다. `safe_div(20, 4)`의 값은?"
+    code: |-
+      pub fn safe_div(a: Int, b: Int) -> Int {
+        case b {
+          0 -> panic as "0으로 나눌 수 없습니다"
+          _ -> a / b
+        }
+      }
+
+      pub fn main() {
+        io.println(int.to_string(safe_div(20, 4)))
+      }
+    choices:
+      - "`5`"
+      - "`0`"
+      - 런타임 크래시(panic)
+      - "`24`"
+    answer: 0
+    feedback:
+      correct: 정확해요! 4는 0이 아니므로 `_` 가지를 타고 20 / 4 = 5. `panic`은 닿지 않았습니다.
+      choices:
+        "1": "`b`가 0일 때만 멈춥니다. 여기선 4이므로 정상적으로 나눗셈을 해요."
+        "2": 정상 경로(`b`가 0이 아님)를 탔으니 크래시하지 않습니다. 5를 돌려줘요.
+        "3": "`/`는 나눗셈입니다 — 20 + 4가 아니라 20 / 4 = 5예요."
+  - exercise: todo-vs-panic
+    type: choice
+    prompt: "`todo`와 `panic`의 차이로 가장 정확한 설명은?"
+    choices:
+      - 둘 다 컴파일 에러를 낸다
+      - '`todo`는 "아직 구현 안 함", `panic`은 "여기 절대 닿으면 안 됨"을 뜻한다'
+      - "`todo`는 크래시하지 않고, `panic`만 크래시한다"
+      - "`panic`은 메시지를 붙일 수 없다"
+    answer: 1
+    feedback:
+      correct: 맞아요! `todo`=미완성 표시, `panic`=불가능 단언. 의도가 다릅니다.
+      choices:
+        "0": 둘 다 컴파일은 통과합니다 — 실행해서 그 자리에 닿을 때 크래시해요.
+        "2": "`todo`도 실행 중 그 자리에 닿으면 크래시합니다. 차이는 의도예요."
+        "3": 둘 다 `as "메시지"`로 설명을 붙일 수 있습니다.

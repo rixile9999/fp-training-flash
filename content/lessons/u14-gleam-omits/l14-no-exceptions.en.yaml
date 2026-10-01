@@ -1,0 +1,60 @@
+title: Exceptions, Mutation, Macros — The Consistency of Absence
+blocks:
+  intro:
+    markdown: "Finally, let's wrap it all up together. The remaining three things Gleam left out — **exceptions**, **mutation**, and **macros** — come from the same philosophy: \"remove hidden control flow and hidden state so you can trust the code exactly as you read it.\""
+  no-exceptions:
+    markdown: |-
+      **There are no exceptions.** Operations that can fail **return a Result** instead of throwing. Even dividing by zero is not a crash but an `Error`:
+
+      ```gleam
+      int.divide(10, 0)  // Error(Nil)
+      int.divide(10, 2)  // Ok(5)
+      ```
+
+      Since failure shows up in the type, the call site *must* handle it with `case` or `use` — you can't forget and skip past it.
+  div-zero-result:
+    prompt: Does dividing by zero throw an exception? What's the value of this expression?
+    choices:
+      - "`Error(Nil)`"
+      - runtime exception (crash)
+      - "`0`"
+      - "`Ok(0)`"
+    feedback:
+      correct: Right! Gleam has no exceptions, so dividing by zero returns `Error(Nil)` — it doesn't throw.
+      choices:
+        "1": There are no exceptions at all — failure is *returned* as an `Error` value, not thrown.
+        "2": It's not just `0` but `Error(Nil)` wrapped in a `Result` — failure shows up in the type.
+        "3": Dividing by zero is a failure, not a success, so it's `Error(Nil)`, not `Ok`.
+  no-mutation:
+    markdown: "**There's no mutation.** Values are never changed in place. Even when you \"add\" an element to a list, the original stays as-is and a *new* list is created — internally it's immutable data with **structural sharing**, so it isn't expensive."
+  append-no-mutate:
+    prompt: After creating `ys`, what do you get if you print the original `xs`?
+    choices:
+      - "`[1, 2, 3]`"
+      - "`[1, 2, 3, 4]`"
+      - "`[4, 1, 2, 3]`"
+      - "`[4]`"
+    feedback:
+      correct: Exactly! `append` only creates a *new* list (`ys`); the original `xs` is never changed — it's still [1, 2, 3].
+      choices:
+        "1": That's the newly created `ys`. With no mutation, the original `xs` stays as [1, 2, 3].
+        "2": "`append` attaches at the end, and on top of that it doesn't change the original — `xs` is [1, 2, 3]."
+        "3": No element disappears from `xs` — it's immutable, so it stays exactly as it started.
+  no-macros:
+    markdown: |-
+      **There are no macros (yet) either.** The FAQ isn't firmly closed to macros — but it says it's only open to them **when they don't hurt readability and compile speed**. It's the same principle of wanting code to be "exactly what it looks like."
+
+      In the end, the list of things left out — type classes, currying, laziness, exceptions, mutation, macros — isn't a grab-bag but **one consistent choice**.
+  consistency:
+    prompt: What is the one consistent motivation running through all the "omitted things" this unit covered?
+    choices:
+      - Remove hidden control flow, state, and dispatch so you can trust the code as you read it
+      - To match other languages' syntax exactly
+      - It was just deferred because the compiler is hard to implement
+      - Because it aims to be object-oriented rather than functional
+    feedback:
+      correct: Right! Type classes (hidden dispatch), exceptions (hidden control flow), and mutation (hidden state) were all left out to make the code behave exactly as it looks — a consistent choice.
+      choices:
+        "1": If anything, it deliberately *strips away* other languages' conventions — it's not trying to match them.
+        "2": It's a choice driven by design philosophy, not implementation difficulty — the FAQ states the reasons clearly.
+        "3": Gleam is a functional language — these choices *reinforce* the functional philosophy.

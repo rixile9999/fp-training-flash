@@ -1,0 +1,15 @@
+title: case와 분기
+order: 3
+level: 1
+skill: gleam-basics
+prerequisites:
+  - u02-functions-pipes
+lessons:
+  - l05-case-anatomy
+  - l06-guards-alternates
+  - l07-no-early-return
+  - l08-imperative-to-expr
+source:
+  kind: original
+  upstream: fpdojo (~/workspace/fp-training, same author), gleam 1.17 JS;
+    re-verified on gleam 1.18.1 Erlang

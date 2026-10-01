@@ -1,0 +1,67 @@
+title: assert와 테스트 — 크래시가 옳은 순간
+tags:
+  - concept:let-assertions
+  - tricky:crash-vs-result
+blocks:
+  - prose: intro
+    markdown: |-
+      `assert`(v1.11+)는 **Bool 표현식**을 단언합니다. 참이면 조용히 지나가고, 거짓이면 *양변의 값까지 담긴* 풍부한 메시지와 함께 크래시해요.
+
+      사실 한 가지 비밀을 알려드릴게요: 여러분이 이 플랫폼에서 푸는 모든 `write` 문제의 숨김 채점기가 정확히 이 `assert`로 만들어져 있습니다.
+  - exercise: assert-passes
+    type: predict
+    prompt: 두 `assert`가 모두 참이라 통과합니다. 마지막 줄까지 실행되면 무엇이 출력될까요?
+    code: |-
+      pub fn total(xs: List(Int)) -> Int {
+        list.fold(xs, 0, fn(acc, x) { acc + x })
+      }
+
+      pub fn main() {
+        assert total([1, 2, 3]) == 6
+        assert total([]) == 0
+        io.println(int.to_string(total([1, 2, 3])))
+      }
+    choices:
+      - "`6`"
+      - "`0`"
+      - 아무것도 출력 안 됨(크래시)
+      - "`True`"
+    answer: 0
+    feedback:
+      correct: 맞아요! 두 단언이 모두 참이라 막힘없이 지나가고, 마지막 줄이 `total([1, 2, 3])`=6을 출력합니다.
+      choices:
+        "1": 마지막 줄은 `total([])`이 아니라 `total([1, 2, 3])`을 출력합니다 — 6이에요.
+        "2": 두 단언이 모두 참이므로 크래시하지 않습니다 — 끝까지 실행돼요.
+        "3": 출력하는 건 비교 결과가 아니라 `total(...)`의 값입니다 — 6이에요.
+  - prose: assert-fails
+    markdown: 만약 `assert total([]) == 0`에서 `total([])`이 0이 아니었다면? `assert`는 **거짓**임을 발견하고, "좌변은 이 값, 우변은 저 값"이라는 메시지와 함께 크래시합니다. 그래서 테스트로 쓰기에 완벽해요 — 무엇이 틀렸는지 바로 보여주니까요.
+  - exercise: assert-on-false
+    type: choice
+    prompt: "`assert`의 표현식이 **거짓**으로 평가되면 어떻게 될까요?"
+    choices:
+      - "`False`를 돌려준다"
+      - 양변의 값이 담긴 메시지와 함께 크래시한다
+      - 다음 줄로 그냥 넘어간다
+      - 컴파일 에러가 난다
+    answer: 1
+    feedback:
+      correct: 맞아요! 거짓이면 좌변/우변 값이 담긴 풍부한 메시지로 즉시 크래시합니다.
+      choices:
+        "0": "`assert`는 값을 돌려주는 게 아니라, 거짓일 때 크래시하는 도구예요."
+        "2": 참일 때만 넘어갑니다 — 거짓이면 멈춰요.
+        "3": 컴파일은 통과합니다 — 거짓 판정은 실행 중에 일어나요.
+  - exercise: tool-choice
+    type: choice
+    prompt: 함수가 받은 값이 "실패할 수 있는 외부 입력"일 때, 올바른 도구는?
+    choices:
+      - "`let assert`로 강제로 꺼낸다"
+      - "`panic`으로 막는다"
+      - "`Result`로 실패를 데이터로 다룬다"
+      - "`todo`로 남겨 둔다"
+    answer: 2
+    feedback:
+      correct: 맞아요! 외부에서 온 값의 실패는 정상 범주의 **데이터**입니다 — `Result`로 다뤄야 해요. 이 구분이 이 유닛의 전부입니다.
+      choices:
+        "0": 다룰 수 있는 실패에 `let assert`를 쓰면, 정상적인 실패에도 프로그램이 죽습니다.
+        "1": '`panic`은 "불가능한 일"에 씁니다 — 외부 입력의 실패는 충분히 가능한 일이에요.'
+        "3": "`todo`는 미완성 표시일 뿐, 실패를 처리하는 도구가 아닙니다."
