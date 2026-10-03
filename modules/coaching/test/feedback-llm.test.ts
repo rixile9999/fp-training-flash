@@ -150,7 +150,7 @@ describe("feedback with an LLM", () => {
     h = await setup({ llm: claimsAllPassed, submissions: [failedSub] });
     const r3 = await h.service.feedback(failedSub.id, USER);
     expect(r3.ok && r3.value.source).toBe("rule_based");
-  });
+  }, 20_000); // three in-memory databases: slow when the whole suite runs in parallel
 
   it("drops a 'good' rubric note for a rubric id that grading flagged", async () => {
     const llm = fakeLlm([
