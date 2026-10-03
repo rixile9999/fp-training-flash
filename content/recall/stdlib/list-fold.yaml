@@ -1,5 +1,6 @@
 title: list.fold
 topic: gleam/list
+order: 2
 summary: 리스트를 왼쪽부터 하나씩 접어 값 하나로 만듭니다. 콜백은 누적값이 먼저, 원소가 나중입니다.
 example: |
   list.fold([1, 2, 3], 0, fn(acc, x) { acc + x })  // -> 6

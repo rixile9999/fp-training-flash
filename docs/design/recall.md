@@ -50,6 +50,7 @@ Card fields (Korean source):
 ```yaml
 title: list.fold                    # short label
 topic: gleam/list                   # module, or a syntax topic id
+order: 2                            # position in the deck (unique per deck; stdlib = rank in recall-targets.md)
 summary: 리스트를 왼쪽부터 접어 하나의 값으로 만듭니다.
 example: |                          # one expression, with `// -> value`; verified in the sandbox
   list.fold([1, 2, 3], 0, fn(acc, x) { acc + x })  // -> 6
