@@ -139,14 +139,17 @@ describe("applyAnswer", () => {
     expect(d.progress.firstSeenAt).toBe(T0.toISOString());
   });
 
-  it("mastered = stage produce and the latest produce answer correct", () => {
+  it("mastered = stage produce, the latest produce answer correct and stability >= 21 days", () => {
     let p = applyAnswer(null, fact("recognize", true, T0)).progress;
     p = applyAnswer(p, fact("cloze", true, T0)).progress;
     expect(p.stage).toBe(2);
     expect(isMastered(p)).toBe(false);
     p = applyAnswer(p, fact("produce", true, days(T0, 2))).progress;
+    expect(p.memory.stability).toBeLessThan(21);
+    expect(isMastered(p)).toBe(false); // one good session is not mastery
+    for (let i = 0; i < 10 && p.memory.stability < 21; i++) p = applyAnswer(p, fact("produce", true, new Date(p.dueAt))).progress;
     expect(isMastered(p)).toBe(true);
-    p = applyAnswer(p, fact("produce", false, days(T0, 5))).progress;
+    p = applyAnswer(p, fact("produce", false, new Date(p.dueAt))).progress;
     expect(isMastered(p)).toBe(false);
   });
 

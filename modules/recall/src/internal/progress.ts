@@ -98,6 +98,9 @@ export function stage1Form(progress: CardProgress | null, hasPredict: boolean): 
   return hasPredict && progress?.lastStage1Form === "cloze" ? "predict" : "cloze";
 }
 
+/** Days of FSRS stability before a card counts as mastered (so a card is not "mastered" after one session). */
+export const MASTERED_STABILITY_DAYS = 21;
+
 export function isMastered(p: CardProgress): boolean {
-  return p.stage === 2 && p.lastProduceCorrect === true;
+  return p.stage === 2 && p.lastProduceCorrect === true && p.memory.stability >= MASTERED_STABILITY_DAYS;
 }

@@ -167,7 +167,7 @@ describe("produce", () => {
       },
     ]);
     const overview = await h.service.overview(USER);
-    expect(overview.decks.find((d) => d.deckId === "stdlib")).toMatchObject({ seen: 1, mastered: 1 });
+    expect(overview.decks.find((d) => d.deckId === "stdlib")).toMatchObject({ seen: 1, mastered: 0 }); // mastered also needs 21 days of stability
   });
 
   it("the right value without the mustUse token (or only in a comment/string) is wrong", async () => {

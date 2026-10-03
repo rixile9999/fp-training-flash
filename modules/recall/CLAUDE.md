@@ -17,7 +17,7 @@ Publishes and consumes no events; does not touch Elo ratings. Contract: `src/con
   -> easy; else good. Thresholds (slow/fast): recognize 15s/4s, cloze & predict 25s/8s, produce 150s/45s.
 - Stages 0 recognize, 1 cloze|predict, 2 produce. Correct at form stage == current stage -> +1 (max 2); wrong at
   form stage >= current stage -> -1 (min 0); otherwise unchanged. Stage 1 alternates cloze/predict (via
-  `last_stage1_form`) when the card has predict. Mastered = stage 2 and the latest produce answer correct.
+  `last_stage1_form`) when the card has predict. Mastered = stage 2, the latest produce answer correct and stability >= 21 days.
 - Session (`session-builder.ts`, pure). Costs: review recognize 20s, new 40s (+30s for its mix item), cloze/predict
   30s, produce 120s; budget = minutes x 60 (default 10, 1..60; the first item is always allowed). Order:
   1. reviews: due cards, most overdue first, chosen within budget, then interleaved so no more than two cards of
@@ -26,8 +26,9 @@ Publishes and consumes no events; does not touch Elo ratings. Contract: `src/con
      today (UTC). A card counts as introduced at its first answer, so unanswered sessions do not use the cap.
   3. mix: up to 2 recently introduced cards (first seen within 7 days, not already in the session) in their
      stage-1 form, then a cloze item for each of this session's new cards.
-  4. finale: up to 2 produce items from stage-2 cards not in the session, earliest due first. 120s are reserved
-     for it when some stage-2 card is not due.
+  4. finale (writing is the core): `finaleTarget(budget)` produce items, 1 from 4 minutes, 2 from 10 minutes; their
+     time (120s each) is reserved before reviews and new cards are chosen. Candidates: stage-2 cards not in the
+     session (earliest due first), then this session's new cards, then reviewed stage-1 cards.
   Nothing due and no new cards -> practice: seen cards weakest first (stage, lapses desc, stability) as stage-1
   forms ("mix") then produce ("finale"); no seen cards -> empty session. Item ids: `<kind>:<form>:<cardId>`.
 - Sessions are stored (`recall.sessions.items` jsonb: itemId, kind, form, cardId); views carry cards in the

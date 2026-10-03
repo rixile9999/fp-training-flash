@@ -37,6 +37,7 @@ describe("buildSession (pure)", () => {
       ["review:produce:b", "review", "produce"],
       ["review:predict:c", "review", "predict"],
       ["review:recognize:a", "review", "recognize"],
+      ["finale:produce:c", "finale", "produce"], // writing finale: a reviewed stage-1 card
     ]);
   });
 
@@ -90,6 +91,7 @@ describe("buildSession (pure)", () => {
       "mix:cloze:n1",
       "mix:cloze:n2",
       "finale:produce:m2",
+      "finale:produce:n1", // 10 minutes -> two produce items; then today's new cards
     ]);
   });
 
@@ -125,7 +127,7 @@ describe("startSession (service)", () => {
     }
   }
 
-  it("a fresh user gets new cards in deck order then card order, each with a stage-1 mix item", async () => {
+  it("a fresh user gets new cards in deck order then card order, each with a stage-1 mix item, and a writing finale", async () => {
     h = await createHarness({ newCardsPerDay: 3 });
     const view = unwrap(await h.service.startSession(USER));
     expect(view.items.map((i) => i.itemId)).toEqual([
@@ -135,6 +137,8 @@ describe("startSession (service)", () => {
       "mix:cloze:l1",
       "mix:cloze:l2",
       "mix:cloze:l3",
+      "finale:produce:l1",
+      "finale:produce:l2",
     ]);
     expect(view.items[0]!.card.summary).toBe("요약");
     expect(view.startedAt).toBe("2026-09-30T09:00:00.000Z");
@@ -165,7 +169,10 @@ describe("startSession (service)", () => {
     const two = unwrap(await h.service.startSession(USER, { minutes: 2 }));
     expect(two.items.map((i) => i.itemId)).toEqual(["new:recognize:l1", "mix:cloze:l1"]);
     const ten = unwrap(await h.service.startSession(USER));
-    expect(ten.items.filter((i) => i.kind === "new")).toHaveLength(8); // 8 x (40 + 30) s <= 600 s
+    expect(ten.items.filter((i) => i.kind === "new")).toHaveLength(5); // 2 x 120 s reserved for produce, 5 x (40 + 30) s <= 360 s
+    expect(ten.items.filter((i) => i.form === "produce")).toHaveLength(2);
+    const five = unwrap(await h.service.startSession(USER, { minutes: 5 }));
+    expect(five.items.filter((i) => i.form === "produce")).toHaveLength(1);
     expect(unwrapErr(await h.service.startSession(USER, { minutes: 0 })).code).toBe("invalid_input");
     expect(unwrapErr(await h.service.startSession(USER, { minutes: Number.NaN })).code).toBe("invalid_input");
   });
@@ -216,6 +223,6 @@ describe("startSession (service)", () => {
     expect(unwrap(await h.service.answer(USER, view.sessionId, first.itemId, { kind: "choice", choice: 0 }, 3000))).toEqual(r1);
     await answerAll({ ...view, items: view.items.slice(1) });
     const summary = unwrap(await h.service.finish(USER, view.sessionId));
-    expect(summary).toMatchObject({ answered: 4, correct: 4, newLearned: 2 });
+    expect(summary).toMatchObject({ answered: 6, correct: 6, newLearned: 2 });
   });
 });

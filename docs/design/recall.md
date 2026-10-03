@@ -18,6 +18,9 @@ later review, a wrong answer drops it one stage.
 Writing a body checked on several inputs means a literal answer cannot pass, and `mustUse` makes a function card
 actually exercise that function.
 
+A card is mastered when it is at stage 2, its latest produce answer was correct and its FSRS stability is at least
+21 days.
+
 ## Scheduling
 
 Per (user, card): FSRS state (difficulty, stability, due, reps, lapses) plus the stage. The policy is a pure,
@@ -29,7 +32,8 @@ slow -> hard; correct -> good; correct and fast at stage >= 1 -> easy. New cards
 1. Due reviews, interleaved across decks (no more than two cards of the same module in a row).
 2. New cards: a one-line summary and an example, then the recognize question immediately.
 3. Mix: cloze items for today's new cards and a few older ones.
-4. Finale: one or two produce items.
+4. Finale: one produce item from 4 minutes, two from 10 minutes. Their time is reserved first, so even a new
+   learner's first session ends with writing code (today's new cards fill the finale when no card is at stage 2).
 5. Summary: answered, accuracy, cards learned, due tomorrow, mastery per deck.
 
 Recall does not change Elo ratings in this version (to avoid inflating skills by memorization); this may be added

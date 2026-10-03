@@ -11,6 +11,14 @@ export const ITEM_COST_SEC = { recognize: 20, new: 40, stage1: 30, produce: 120 
 export const MIX_RECENT_MAX = 2;
 export const RECENT_DAYS = 7;
 export const FINALE_MAX = 2;
+
+/**
+ * Writing code is the core of recall, so every session of 4 minutes or more ends with produce items: one below
+ * 10 minutes, FINALE_MAX from 10 minutes. Their time is reserved before reviews and new cards are chosen.
+ */
+export function finaleTarget(budgetSec: number): number {
+  return budgetSec >= 600 ? FINALE_MAX : budgetSec >= 240 ? 1 : 0;
+}
 export const MAX_SAME_TOPIC_RUN = 2;
 
 export interface StoredItem {
@@ -80,9 +88,8 @@ export function buildSession(input: BuildInput): StoredItem[] {
   const inSession = new Set<string>();
   const fits = (cost: number, limit: number, count: number) => used + cost <= limit || count === 0;
 
-  // Keep room for one finale item when some stage-2 card is not due (so it cannot be among the reviews).
-  const reserve = seen.some((c) => prog(c)?.stage === 2 && !due(c)) ? ITEM_COST_SEC.produce : 0;
-  const mainLimit = budgetSec - reserve;
+  const target = finaleTarget(budgetSec);
+  const mainLimit = budgetSec - target * ITEM_COST_SEC.produce;
 
   // 1. Due reviews: most overdue first, chosen within budget, then interleaved by topic.
   const dueCards = seen.filter(due).sort((a, b) => Date.parse(prog(a)!.dueAt) - Date.parse(prog(b)!.dueAt));
@@ -128,13 +135,16 @@ export function buildSession(input: BuildInput): StoredItem[] {
     inSession.add(c.id);
   }
 
-  // 4. Finale: one or two produce items from stage-2 cards not yet in the session (due first).
-  const finaleCands = seen
-    .filter((c) => !inSession.has(c.id) && prog(c)!.stage === 2)
-    .sort((a, b) => Date.parse(prog(a)!.dueAt) - Date.parse(prog(b)!.dueAt));
+  // 4. Finale: produce items from stage-2 cards not yet in the session (due first); then today's new cards (they
+  // reach stage 2 within the session when recognize and the mix item are right); then reviewed cards at stage 1.
+  const finaleCands = [
+    ...seen.filter((c) => !inSession.has(c.id) && prog(c)!.stage === 2).sort((a, b) => Date.parse(prog(a)!.dueAt) - Date.parse(prog(b)!.dueAt)),
+    ...newItems.map((i) => byId.get(i.cardId)!),
+    ...reviews.filter((i) => i.form !== "recognize" && i.form !== "produce").map((i) => byId.get(i.cardId)!),
+  ];
   const finale: StoredItem[] = [];
   for (const c of finaleCands) {
-    if (finale.length >= FINALE_MAX || used + ITEM_COST_SEC.produce > budgetSec) break;
+    if (finale.length >= target || used + ITEM_COST_SEC.produce > budgetSec) break;
     used += ITEM_COST_SEC.produce;
     finale.push(item("finale", "produce", c.id));
   }
