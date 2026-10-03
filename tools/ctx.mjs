@@ -13,7 +13,7 @@ const targets = args.filter((a) => !a.startsWith("--"));
 const pkgs = listPackages();
 const byName = new Map(pkgs.map((p) => [p.name, p]));
 const rootManifest = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
-const budget = rootManifest.fp?.contextBudgetTokens ?? 120000;
+const defaultBudget = rootManifest.fp?.contextBudgetTokens ?? 120000;
 const TEXT = /\.(ts|tsx|mjs|js|json|md|gleam|erl|toml|yaml|yml|css|html|sh|txt)$|Dockerfile$/;
 
 const GUIDES = ["CLAUDE.md", "docs/architecture.md"];
@@ -65,6 +65,8 @@ let over = 0;
 for (const pkg of selected) {
   const files = contextFor(pkg);
   const tokens = estimateTokens(files);
+  // A package may raise its own budget deliberately (package.json "fp.contextBudgetTokens"); see docs/backlog.md.
+  const budget = pkg.manifest.fp?.contextBudgetTokens ?? defaultBudget;
   if (tokens > budget) over++;
   if (flags.has("--tokens") || flags.has("--check") || flags.has("--all")) {
     console.log(`${pkg.name.padEnd(20)} files=${String(files.length).padStart(4)} ~tokens=${String(tokens).padStart(7)} ${tokens > budget ? `OVER BUDGET (${budget})` : ""}`);
@@ -77,6 +79,6 @@ for (const pkg of selected) {
   }
 }
 if (flags.has("--check") && over) {
-  console.error(`${over} package(s) exceed the context budget of ${budget} tokens`);
+  console.error(`${over} package(s) exceed their context budget`);
   process.exit(1);
 }

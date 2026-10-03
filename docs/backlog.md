@@ -18,7 +18,7 @@ learners use it, P2 = quality or maintainability, P3 = product extensions. Each 
 
 | # | area | issue | proposed fix |
 |---|---|---|---|
-| 7 | web | `@fp/web` is at ~119.9k of the 120k context budget; some UI extras were dropped to fit. | Split web into packages (shell, training, course, progress) or raise the budget deliberately. |
+| 7 | web | `@fp/web` outgrew the 120k context budget; its budget was raised to 160k (package.json fp.contextBudgetTokens) for the recall tab. | Split web into packages (shell, training, course, recall, progress) and drop the override. |
 | 8 | web | `src/api/generated/fake-lessons.ts` was produced by a one-off script outside the repo. | Add a tool (in tools/) that regenerates it from content/lessons. |
 | 9 | web, sessions, coaching | After a language switch, text already rendered stays in the old language: session item reasons (stored at session start), feedback on screen, quizzes in progress, stored evaluations (rendered at submit). | Store message keys + params instead of rendered text, or re-fetch on switch. |
 | 10 | content CI | Gleam code blocks in concept/theory notes and lesson prose are not compiled automatically (reviewers compiled them by hand). | Extract ```gleam blocks and compile them in content CI with the grader template. |

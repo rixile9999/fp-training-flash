@@ -11,7 +11,8 @@
   },
   "fp": {
     "kind": "app",
-    "description": "Web training UI (React + Vite + CodeMirror). Talks to the API only via @fp/api-contract."
+    "description": "Web training UI (React + Vite + CodeMirror). Talks to the API only via @fp/api-contract.",
+    "contextBudgetTokens": 160000
   },
   "dependencies": {
     "@codemirror/commands": "^6.11.1",
