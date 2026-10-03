@@ -198,7 +198,7 @@ export function createGradingService(deps: GradingServiceDeps): GradingServiceIn
       if (runner.language !== "gleam") return err(appError("unavailable", msg("service.noRunner", DEFAULT_LOCALE, { language: "gleam" })));
       const output = await runSafely(built.value.job);
       if (output.kind === "system_error") logger.error("grading system error (snippet)", { message: output.message });
-      return interpretSnippetOutput(output, token);
+      return interpretSnippetOutput(output, token, req.locale);
     },
 
     async recoverInterrupted() {

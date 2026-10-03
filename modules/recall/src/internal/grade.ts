@@ -177,7 +177,7 @@ type Sandbox = Result<SnippetResult, AppError>;
 
 async function runSnippet(grading: GradingService, imports: readonly string[], definitions: string | undefined, expression: string, locale: Locale): Promise<Sandbox> {
   try {
-    const r = await grading.evaluateSnippet({ imports, ...(definitions !== undefined ? { definitions } : {}), expression });
+    const r = await grading.evaluateSnippet({ imports, ...(definitions !== undefined ? { definitions } : {}), expression, locale });
     if (!r.ok && r.error.code === "unavailable") {
       return err(appError("unavailable", t(locale, "error.sandboxUnavailable"), { cause: r.error.message, ...r.error.details }));
     }

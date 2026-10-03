@@ -97,7 +97,7 @@ describe("cloze", () => {
     const r = unwrap(await h.service.answer(USER, (await fresh()).sessionId, "mix:cloze:l1", text("fold_right"), 10_000));
     expect(r).toMatchObject({ correct: true, rating: "good", actual: "6", expected: "fold" });
     expect(r.feedback).toBe("준비된 답과는 다르지만 같은 값(6)이 나와서 정답으로 인정해요. 대표 답: fold");
-    expect(h.calls).toEqual([{ imports: ["gleam/list"], expression: "list.fold_right([1, 2, 3], 0, fn(acc, x) { acc + x })" }]);
+    expect(h.calls).toEqual([{ imports: ["gleam/list"], expression: "list.fold_right([1, 2, 3], 0, fn(acc, x) { acc + x })", locale: "ko" }]);
   });
 
   it("a different value, a compile error or an empty fill is wrong", async () => {
@@ -164,6 +164,7 @@ describe("produce", () => {
         imports: ["gleam/list"],
         definitions: "\npub fn total(xs: List(Int)) -> Int {\n  list.fold(xs, 0, fn(acc, x) { acc + x })\n}",
         expression: CHECKS,
+        locale: "ko",
       },
     ]);
     const overview = await h.service.overview(USER);

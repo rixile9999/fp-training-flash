@@ -20,16 +20,16 @@
  * themselves are protected by the runner nonce, so snippet stdout cannot forge them. If the harness truncated
  * the message (MAX_MESSAGE 3000 bytes), the available prefix is returned followed by "…".
  * A panic/assert/todo in the snippet module is status "error" (runtime_error); timeout -> timeout.
- * Texts use the message catalog in DEFAULT_LOCALE (SnippetRequest carries no locale); `details` are English.
+ * Texts use the message catalog in the request's locale (default ko); `details` are English.
  */
 import { randomBytes } from "node:crypto";
 import { appError, DEFAULT_LOCALE, err, ok } from "@fp/kernel";
-import type { AppError, Result } from "@fp/kernel";
+import type { AppError, Locale, Result } from "@fp/kernel";
 import type { RunJob, RunOutput, SnippetRequest, SnippetResult } from "../contract/index.ts";
 import { msg } from "../messages.ts";
 import { sourceIssues } from "./static-checks.ts";
+import { renderTestMessage, type RawTestDetail } from "./failure.ts";
 
-const LOCALE = DEFAULT_LOCALE;
 
 export const SNIPPET_LIMITS = { timeMs: 5000, memoryMb: 128 } as const;
 export const MAX_SNIPPET_CHARS = 4000;
@@ -55,6 +55,7 @@ export type SnippetJob =
 
 /** Validates the request and builds the job. Size caps are invalid_input; malformed or forbidden code is rejected. */
 export function buildSnippetJob(req: SnippetRequest, token: string): Result<SnippetJob, AppError> {
+  const LOCALE = req.locale ?? DEFAULT_LOCALE;
   const definitions = req.definitions ?? "";
   if (typeof req.expression !== "string" || req.expression.trim() === "") {
     return err(appError("invalid_input", msg("snippet.emptyExpression", LOCALE)));
@@ -131,7 +132,8 @@ export function parseSnippetValue(message: string, token: string): string | null
 }
 
 /** Maps a runner result to a SnippetResult; runner system errors (and unexpected shapes) are `unavailable`. */
-export function interpretSnippetOutput(output: RunOutput, token: string): Result<SnippetResult, AppError> {
+export function interpretSnippetOutput(output: RunOutput, token: string, locale: Locale = DEFAULT_LOCALE): Result<SnippetResult, AppError> {
+  const LOCALE = locale;
   const unavailable = (message: string) =>
     err(appError("unavailable", msg("snippet.unavailable", LOCALE), { message }));
   switch (output.kind) {
@@ -151,7 +153,8 @@ export function interpretSnippetOutput(output: RunOutput, token: string): Result
         if (value !== null) return ok({ kind: "value", value });
       }
       if (test.status === "passed") return unavailable("value_test did not report a value");
-      return ok({ kind: "runtime_error", message: message || msg("snippet.runtimeError", LOCALE) });
+      const rendered = renderTestMessage(test as RawTestDetail, LOCALE) ?? message;
+      return ok({ kind: "runtime_error", message: rendered || msg("snippet.runtimeError", LOCALE) });
     }
   }
 }

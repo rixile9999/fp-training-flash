@@ -201,6 +201,8 @@ export interface SnippetRequest {
   /** Optional top-level definitions (functions, types) used by the expression. */
   readonly definitions?: string;
   readonly expression: string;
+  /** Language of rejection reasons and runtime error messages (default ko). Compiler diagnostics stay English. */
+  readonly locale?: Locale;
 }
 
 export type SnippetResult =

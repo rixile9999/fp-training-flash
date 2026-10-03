@@ -129,6 +129,23 @@ describe("parseSnippetValue / interpretSnippetOutput", () => {
       expect(!r.ok && r.error.code).toBe("unavailable");
     }
   });
+
+  it("renders runtime errors in the request locale", () => {
+    const todo: RunOutput = {
+      kind: "completed",
+      compileDiagnostics: [],
+      tests: [{ functionName: "value_test", status: "error", message: "ko text", failure: { kind: "todo", message: "not yet" } } as RunOutput extends { tests: readonly (infer T)[] } ? T : never],
+      performance: [],
+      runner: FAKE_INFO,
+      durationMs: 5,
+    };
+    const en = interpretSnippetOutput(todo, TOKEN, "en");
+    expect(en.ok && en.value.kind === "runtime_error" && en.value.message).toMatch(/^Reached code that is not implemented yet \(todo\): not yet/);
+    const ko = interpretSnippetOutput(todo, TOKEN);
+    expect(ko.ok && ko.value.kind === "runtime_error" && ko.value.message).toMatch(/^아직 구현되지 않은 코드/);
+    const zh = buildSnippetJob({ imports: [], expression: "", locale: "zh" }, TOKEN);
+    expect(!zh.ok && /[\u4e00-\u9fff]/.test(zh.error.message)).toBe(true);
+  });
 });
 
 describe("GradingService.evaluateSnippet", () => {
