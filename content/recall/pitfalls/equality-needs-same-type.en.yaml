@@ -1,0 +1,15 @@
+title: "== only compares values of the same type"
+summary: "`==` only compares values of the same type. `1 == 1.0` or `5 == \"5\"` isn't `False` but a compile error, so convert one side before comparing."
+recognize:
+  prompt: "What happens with `1 == 1.0`?"
+  choices: ["`True`", "`False`", A compile error (different types)]
+  feedback:
+    correct: "Right. `Int` and `Float` are different types, so the comparison itself is a type error."
+    choices:
+      0: "In Python or JavaScript it's `True`, but Gleam doesn't compare values of different types."
+      1: "It doesn't run and produce `False`; it's rejected at compile time."
+cloze:
+  prompt: Fill in the blank so the integer can be compared with the string.
+produce:
+  prompt: "Return `True` when the input string `input`, read as an integer, equals `code`."
+  hint: "`Result`s can be compared with `==` too."

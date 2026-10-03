@@ -1,0 +1,16 @@
+title: Naming a pattern with as
+summary: Add `as name` after a pattern to take it apart and, at the same time, bind the whole matched part to `name`.
+recognize:
+  prompt: In `[x, ..] as all`, what is bound to `all`?
+  choices: ["The first element", "Everything after the first element", "The whole matched list", "Nothing (`as` is a type cast)"]
+  feedback:
+    correct: Right. `as` names the whole value matched by the pattern before it.
+    choices:
+      0: The first element is bound to `x`.
+      1: To get the rest, write `[x, ..rest]`.
+      3: Gleam has no type casts with `as`. In a pattern `as` gives a name; in `import ... as` it renames a module.
+cloze:
+  prompt: Fill in the blank to bind the whole list to `all`.
+produce:
+  prompt: Return the first pair of the list as `Ok` if its number is positive, otherwise `Error(Nil)` (including for an empty list). Take the pair apart to check the number, and use `as` to name the whole pair too.
+  hint: Add the guard `if n > 0` to `[#(_, n) as pair, ..]`.

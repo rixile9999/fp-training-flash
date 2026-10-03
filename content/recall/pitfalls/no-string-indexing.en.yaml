@@ -1,0 +1,17 @@
+title: Strings have no s[0]
+summary: "Strings have no indexing like `s[0]` either. Get the first character with `string.first` (it returns a `Result`) and the i-th with `string.slice(s, i, 1)`; both count graphemes."
+recognize:
+  prompt: "Which expression gets the first character of the string `s`?"
+  choices: ["`s[0]`", "`string.first(s)`", "`s.charAt(0)`", "`string.get(s, 0)`"]
+  feedback:
+    correct: Right. The string may be empty, so it returns `Result(String, Nil)`.
+    choices:
+      0: "Gleam has no indexing syntax."
+      2: Gleam has no method calls.
+      3: "There's no `string.get`. Get the i-th character with `string.slice(s, i, 1)`."
+cloze:
+  prompt: Fill in the blank to get the character at position 2 (counting from 0).
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: "Return `True` if the word starts with a lowercase English vowel (a, e, i, o, u). An empty word gives `False`."

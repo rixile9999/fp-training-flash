@@ -1,0 +1,16 @@
+title: Importing a module and qualified calls
+summary: "After `import gleam/int`, you call the module's functions with the last part of the path in front, as in `int.to_string`."
+recognize:
+  prompt: "After `import gleam/int`, which call correctly turns an integer into a string?"
+  choices: ["`int.to_string(5)`", "`gleam/int.to_string(5)`", "`to_string(5)`", "`Int.to_string(5)`"]
+  feedback:
+    correct: Right. A module is qualified by the last part of its path (`int`).
+    choices:
+      1: You don't write the full path when calling; just the last part, `int`.
+      2: "`import gleam/int` alone doesn't bring the function name in unqualified. For that you'd import it as `import gleam/int.{to_string}`."
+      3: Module names are lowercase. `Int`, with a capital letter, is the type.
+cloze:
+  prompt: Fill in the module name to turn the integer into a string.
+produce:
+  prompt: "Write the body of a function that turns a weight in kg into a string like `\"3kg\"`, using a function from `gleam/int`."
+  hint: "Append the unit to `int.to_string(kg)` with `<>`."

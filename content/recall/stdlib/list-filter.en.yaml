@@ -1,0 +1,18 @@
+title: list.filter
+summary: Keeps only the elements for which the predicate returns `True`, in their original order. As the label `keeping:` says, you pick what to keep, not what to drop.
+recognize:
+  prompt: "In `list.filter(xs, f)`, what happens to the elements for which `f` returns `True`?"
+  choices: ["They stay in the result", "They are removed from the result", "Only the first of them stays", "They stay, wrapped in `Ok`"]
+  feedback:
+    correct: Right. Just like the label `keeping:` says, elements that give `True` are kept.
+    choices:
+      1: It's the other way round. To drop them, negate the condition and pass `fn(x) { !p(x) }`.
+      2: Finding the first matching element is `list.find`, and it returns a `Result`.
+      3: "Filtering and transforming with a callback that returns a `Result` is `list.filter_map`. `list.filter` keeps the elements as they are."
+cloze:
+  prompt: Fill in the blank to keep only the positive numbers.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Write the body of a function that keeps only the ages of 18 or over, using `list.filter`.
+  hint: Pass a condition that returns `True` for the elements you want to keep.

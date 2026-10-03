@@ -1,0 +1,18 @@
+title: dict.insert
+summary: 返回放入了键和值的新 dict。参数顺序是 `dict.insert(dict, 键, 值)`，键已存在时会覆盖原来的值。
+recognize:
+  prompt: "把键 `k`、值 `v` 放进 dict `d` 的调用是？"
+  choices: ["`dict.insert(d, k, v)`", "`dict.insert(k, v, d)`", "`dict.insert(d, #(k, v))`", "`dict.insert(d, v, k)`"]
+  feedback:
+    correct: 对。dict 在前，所以可以写成 `d |> dict.insert(k, v)` 这样的管道。
+    choices:
+      1: Elm 的 `Dict.insert` 把 dict 放在最后，但 Gleam 中 dict 是第一个参数。
+      2: 键和值分开传入。`#(键, 值)` 元组是传给 `dict.from_list` 的形式。
+      3: 和标签 `into:`、`for:`、`insert:` 的顺序一样，键在前，值在后。
+cloze:
+  prompt: 填空，在键 `"x"` 下放入 1。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: '用 `dict.insert` 写出函数体：根据登录记录 `#(用户, 时间)` 的列表，生成每个用户最后登录时间的 dict。记录按时间顺序排列。'
+  hint: "用 `list.fold` 依次放入，同一用户之前的时间就会被覆盖。"

@@ -1,0 +1,15 @@
+title: Result：Ok 与 Error
+summary: 可能失败的计算返回 `Result(值, 错误)`。成功是 `Ok(值)`，失败是 `Error(错误)`，调用方用 `case` 处理两种情况。
+recognize:
+  prompt: 哪些值可以是 `Result(Int, String)` 类型？
+  choices: ["`Some(1)` 和 `None`", "`Ok(1)` 和 `Error(\"bad\")`", "`1` 和 `\"bad\"`", "`Ok(1)` 和 `Nil`"]
+  feedback:
+    correct: 对。成功值用 `Ok` 包起来，错误值用 `Error` 包起来。
+    choices:
+      0: "`Some` 和 `None` 是 `Option` 的构造器。"
+      2: 没有包装的值不是 `Result`，必须用 `Ok` 或 `Error` 包起来。
+      3: 失败也必须用 `Error(...)` 包起来，单独的 `Nil` 类型不匹配。
+cloze:
+  prompt: 填空，处理解析失败的情况。
+produce:
+  prompt: 写出函数体：年龄在 0 到 150（含）之间时返回 `Ok(age)`，否则返回 `Error("invalid age")`。

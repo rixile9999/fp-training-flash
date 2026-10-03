@@ -1,0 +1,36 @@
+title: string.split
+topic: gleam/string
+order: 6
+summary: "문자열을 구분자로 잘라 `List(String)`을 돌려줍니다. 빈 조각도 버리지 않아서, 구분자가 끝에 있으면 `\"\"`가 원소로 남습니다."
+example: |
+  string.split("2026-10-03", "-")  // -> ["2026", "10", "03"]
+imports: [gleam/list, gleam/string]
+signature: "string.split(String, on: String) -> List(String)"
+frequency: 25
+recognize:
+  prompt: "`string.split(\"a,b,\", \",\")`의 값은?"
+  choices: ["`[\"a\", \"b\"]`", "`[\"a\", \"b\", \"\"]`", "`Ok([\"a\", \"b\"])`", "`#(\"a\", \"b,\")`"]
+  answer: 1
+  feedback:
+    correct: 맞아요. 마지막 쉼표 뒤의 빈 조각 `""`도 그대로 남습니다.
+    choices:
+      0: 빈 조각을 걸러 내지 않아요. 필요하면 `list.filter`로 `""`를 직접 지워야 합니다.
+      2: "`split`은 실패할 일이 없어서 `Result` 없이 리스트를 바로 돌려줘요."
+      3: 한 번만 잘라 튜플을 주는 것은 `string.split_once`이고, 그것도 `Result`로 감싸 돌려줍니다.
+cloze:
+  prompt: 빈칸을 채워 날짜를 연, 월, 일로 나누세요.
+  code: 'string.____("2026-10-03", "-")'
+  answers: [split]
+  expected: '["2026", "10", "03"]'
+predict:
+  prompt: 이 식의 값은?
+  code: 'string.split("", ",")'
+  expected: '[""]'
+produce:
+  prompt: 쉼표로 구분된 태그 문자열을 태그 리스트로 바꾸세요. 각 태그의 앞뒤 공백은 지웁니다.
+  header: "pub fn parse_tags(s: String) -> List(String)"
+  checks: '#(parse_tags("gleam, fp,erlang"), parse_tags("solo"), parse_tags(" a , b "))'
+  expected: '#(["gleam", "fp", "erlang"], ["solo"], ["a", "b"])'
+  mustUse: [string.split]
+  reference: 'string.split(s, ",") |> list.map(string.trim)'
+  hint: "`\",\"`로 자른 뒤 `list.map(string.trim)`으로 공백을 지우세요."

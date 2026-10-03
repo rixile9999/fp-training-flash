@@ -1,0 +1,16 @@
+title: Variants of a custom type
+summary: "A custom type lists its possible cases (variants). A variant without fields is a value on its own, so it works like an enum; names start with a capital letter."
+recognize:
+  prompt: "In `pub type Light { Red Yellow Green }`, what is `Red`?"
+  choices: ["A value (constructor) of type `Light`", "The string `\"Red\"`", "The integer 0", "A separate type called `Red`"]
+  feedback:
+    correct: "Right. `Red`, `Yellow` and `Green` are all values of type `Light`."
+    choices:
+      1: "It's not a string. It's a `Light` value, so it only fits where a `Light` is expected."
+      2: It doesn't turn into an integer like a C enum. Comparing it with an integer is a type error.
+      3: "There is one type, `Light`; `Red`, `Yellow` and `Green` are its variants (constructors)."
+cloze:
+  prompt: "Fill in a `Light` value so the result is 3."
+produce:
+  prompt: "Return the next traffic light: after red comes green, after green comes yellow, after yellow comes red."
+  hint: "Branch on each variant: `case light { Red -> ... Green -> ... Yellow -> ... }`."

@@ -1,0 +1,45 @@
+title: 사용자 정의 타입의 변형
+topic: custom-types
+order: 119
+summary: "사용자 정의 타입은 가능한 경우(변형)를 나열합니다. 필드 없는 변형은 그 자체로 값이라 열거형처럼 쓰고, 이름은 대문자로 시작해요."
+definitions: |
+  pub type Light {
+    Red
+    Yellow
+    Green
+  }
+example: |
+  case Red {
+    Red -> "stop"
+    Yellow -> "slow"
+    Green -> "go"
+  }  // -> "stop"
+imports: []
+recognize:
+  prompt: "`pub type Light { Red Yellow Green }`에서 `Red`는?"
+  choices: ["`Light` 타입의 값(생성자)", "문자열 `\"Red\"`", "정수 0", "`Red`라는 별도의 타입"]
+  answer: 0
+  feedback:
+    correct: "맞아요. `Red`, `Yellow`, `Green`은 모두 `Light` 타입의 값입니다."
+    choices:
+      1: "문자열이 아니에요. `Light` 타입의 값이라 `Light`를 받는 곳에만 넣을 수 있습니다."
+      2: C 열거형처럼 정수로 바뀌지 않아요. 정수와 비교하면 타입 오류입니다.
+      3: "타입은 `Light` 하나이고, `Red`, `Yellow`, `Green`은 그 타입의 변형(생성자)입니다."
+cloze:
+  prompt: "빈칸에 `Light` 값을 넣어 3이 나오게 하세요."
+  code: "case ____ { Red -> 1 Yellow -> 2 Green -> 3 }"
+  answers: [Green]
+  expected: "3"
+produce:
+  prompt: "신호등의 다음 신호를 돌려주세요. 빨강 다음은 초록, 초록 다음은 노랑, 노랑 다음은 빨강입니다."
+  header: "pub fn next(light: Light) -> Light"
+  checks: "[next(Red), next(Green), next(Yellow)]"
+  expected: "[Green, Yellow, Red]"
+  mustUse: [Red, Yellow, Green]
+  reference: |
+    case light {
+      Red -> Green
+      Green -> Yellow
+      Yellow -> Red
+    }
+  hint: "`case light { Red -> ... Green -> ... Yellow -> ... }`처럼 변형마다 분기하세요."

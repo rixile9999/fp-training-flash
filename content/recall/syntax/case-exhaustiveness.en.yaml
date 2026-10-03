@@ -1,0 +1,16 @@
+title: Exhaustive matching
+summary: A `case` must handle every possible value. If a case is missing you get a compile error ("Inexhaustive patterns"), and the compiler lists the missing patterns.
+recognize:
+  prompt: What happens if you match a `Result` with `case` but only write the branch `Ok(n) -> n`?
+  choices: ["It crashes at run time on an `Error`", "It returns `Nil` on an `Error`", "Only a warning; it still runs", "A compile error"]
+  feedback:
+    correct: Right. The compiler points out the missing `Error(_)` pattern, so you fix it before running.
+    choices:
+      0: "It never gets that far: missing cases are caught at compile time."
+      1: Gleam never fills in a placeholder value. You have to handle every case yourself.
+      2: It's an error, not a warning. Warnings are for branches that can never match.
+cloze:
+  prompt: Fill in the blank so the `case` covers every value.
+produce:
+  prompt: "Write the body of a function that returns the next traffic light colour: red goes to green, green to yellow, yellow to red. List every constructor, without `_`."
+  hint: One branch per constructor means nothing is left out.

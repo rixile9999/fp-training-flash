@@ -1,0 +1,17 @@
+title: A string is not a list of characters
+summary: "A string isn't a list of characters, so it can't match a `[c, ..rest]` pattern, and there's no `Char` type. Split off the first character with `string.pop_grapheme` (it returns a `Result`)."
+recognize:
+  prompt: "How do you split the string `s` into its first character and the rest?"
+  choices: ["`case s { [c, ..rest] -> ... }`", "`string.pop_grapheme(s)`", "`case s { c <> rest -> ... }`", "`let #(c, rest) = s`"]
+  feedback:
+    correct: "Right. A non-empty string gives `Ok(#(first, rest))`; an empty one gives `Error(Nil)`."
+    choices:
+      0: "List patterns only match lists. Treating a string as a list of characters, as in Haskell or Elixir, is a type error."
+      2: "The left side of a `<>` pattern must be a string literal such as `\"say \"`."
+      3: A string isn't a tuple, so it can't be taken apart like this.
+cloze:
+  prompt: Fill in the blank to split off the first character.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Make only the first letter of a word upper case. Return an empty string unchanged.

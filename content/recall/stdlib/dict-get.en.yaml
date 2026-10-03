@@ -1,0 +1,18 @@
+title: dict.get
+summary: Looks up a value by key and returns a `Result`. If the key is there you get `Ok(value)`; if not, `Error(Nil)`.
+recognize:
+  prompt: "What does `dict.get(ages, \"zoe\")` give when there's no `\"zoe\"` key?"
+  choices: ["It returns `Error(Nil)`", "It returns `None`", "It panics (throws)", "It returns `Nil`"]
+  feedback:
+    correct: Right. The return type is `Result(b, Nil)`, so a missing key gives `Error(Nil)`.
+    choices:
+      1: Rust's `HashMap::get` returns an `Option`, but Gleam's `dict.get` returns a `Result`.
+      2: Nothing is thrown, unlike Python's `KeyError`. Failure is returned as a value too.
+      3: "`Nil` is a type with only one value, `Nil`, so it can't carry the value you found. The result is always `Ok` or `Error`."
+cloze:
+  prompt: Fill in the blank to look up the value for the key `"x"`.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Write the body of a function that looks up an item's price in a price list, using `dict.get`. Items not in the price list cost 0.
+  hint: "Use `case` to handle `Ok(price)` and `Error(Nil)`."

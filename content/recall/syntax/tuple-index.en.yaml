@@ -1,0 +1,18 @@
+title: Tuples and .0 .1 access
+summary: "A tuple `#(a, b)` holds a fixed number of values, which may have different types. Elements are read by position from 0: `.0`, `.1`."
+recognize:
+  prompt: "Given `let pair = #(\"age\", 42)`, which expression gets `42`?"
+  choices: ["`pair.1`", "`pair[1]`", "`pair.2`", "`pair.second`"]
+  feedback:
+    correct: "Right. Positions start at 0, so the second element is `.1`."
+    choices:
+      1: "There's no index syntax. Tuples are read with a dot and a number, like `.1`."
+      2: "Positions start at 0. A two-element tuple has no `.2`, so this is a compile error."
+      3: Tuple elements have no names. If you need named fields, define a record.
+cloze:
+  prompt: Fill in the position to get `True`.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: "Sum the scores in a list of `#(name, score)` tuples. Read each score with `.1`."
+  hint: "In the `list.fold` callback, add `entry.1` to the accumulator."

@@ -1,0 +1,18 @@
+title: 字节限制用 string.byte_size
+summary: "`string.length` 数的是字符（字素），不是字节。像存储字段这样按字节规定的限制，要用统计 UTF-8 字节数的 `string.byte_size` 来检查。"
+recognize:
+  prompt: "`#(string.length(\"café\"), string.byte_size(\"café\"))` 的值是？"
+  choices: ["`#(4, 5)`", "`#(5, 5)`", "`#(4, 4)`", "`#(4, 8)`"]
+  feedback:
+    correct: 对。`é` 是一个字符，但在 UTF-8 中占 2 个字节，所以字节数多 1。
+    choices:
+      1: "`string.length` 数的是字符而不是字节，`é` 也只算一个字符。"
+      2: "`string.byte_size` 数的是 UTF-8 字节而不是字符，`é` 占 2 个字节。"
+      3: "这是按 UTF-16（Java、JavaScript）每个字符 2 个字节算出的值。Gleam 字符串是 UTF-8。"
+cloze:
+  prompt: 填空，求 UTF-8 字节数。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: "某个字段最多只能存 `limit` 个字节的 UTF-8 文本，`text` 能放进去时返回 `True`。"
+  hint: "用 `string.length` 计数时 `\"café\"` 是 4，会被误判为能放进 4 个字节。"

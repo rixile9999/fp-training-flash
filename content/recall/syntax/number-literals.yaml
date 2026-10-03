@@ -1,0 +1,34 @@
+title: 정수 리터럴 표기
+topic: numbers
+order: 109
+summary: "정수 리터럴은 `1_000_000`처럼 `_`로 자릿수를 나눌 수 있고, `0x`(16진), `0o`(8진), `0b`(2진) 접두사를 씁니다."
+example: |
+  1_000 + 0xFF  // -> 1255
+imports: []
+recognize:
+  prompt: "`0b1010`의 값은?"
+  choices: ["`10`", "`1010`", "`\"0b1010\"`", "컴파일 오류"]
+  answer: 0
+  feedback:
+    correct: "맞아요. `0b`는 2진수 접두사라 1010(2) = 10입니다."
+    choices:
+      1: "`0b`가 붙으면 10진수가 아니라 2진수로 읽어요."
+      2: 따옴표가 없으니 문자열이 아니라 정수 리터럴이에요.
+      3: "`0b`, `0o`, `0x`는 모두 올바른 정수 리터럴 접두사예요."
+cloze:
+  prompt: 빈칸에 자릿수 구분 기호를 넣어 1000을 쓰세요.
+  code: "1____000 * 3"
+  answers: ["_"]
+  expected: "3000"
+predict:
+  prompt: 이 식의 값은?
+  code: "0xFF - 0o17"
+  expected: "240"
+produce:
+  prompt: "초를 마이크로초로 바꾸세요(1초 = 1,000,000마이크로초). 큰 수는 `_`로 자릿수를 나눠 쓰세요."
+  header: "pub fn to_micros(seconds: Int) -> Int"
+  checks: "#(to_micros(2), to_micros(0), to_micros(-3))"
+  expected: "#(2000000, 0, -3000000)"
+  mustUse: ["1_000_000"]
+  reference: "seconds * 1_000_000"
+  hint: "`1_000_000`은 `1000000`과 같은 값이에요."

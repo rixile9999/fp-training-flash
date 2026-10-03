@@ -1,0 +1,18 @@
+title: result.map
+summary: "只对 `Ok` 里的值应用函数，`Error` 原样通过。回调返回普通值，而不是 `Result`。"
+recognize:
+  prompt: "要对 `Ok` 里的值做一个不会失败的计算（例如 `n * 2`），用哪个函数？"
+  choices: ["`result.map`", "`result.try`", "`result.unwrap`", "`list.map`"]
+  feedback:
+    correct: 对。`result.map` 只在 `Ok` 时调用回调，并把结果重新包进 `Ok`。
+    choices:
+      1: "`result.try` 用于回调返回 `Result` 的情况，也就是这一步本身也可能失败时。"
+      2: "`result.unwrap` 用默认值取出值，去掉 `Result`，并不应用计算。"
+      3: "`list.map` 用于列表。对 `Result` 要用 `result.map`。"
+cloze:
+  prompt: 填空，把解析出的值翻倍。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 解析以厘米为单位的字符串，并换算成毫米（× 10）。解析失败时原样返回错误。
+  hint: 回调只需像 `fn(n) { n * 10 }` 这样返回整数，重新包进 `Ok` 由 `result.map` 完成。

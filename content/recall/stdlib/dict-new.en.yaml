@@ -1,0 +1,16 @@
+title: dict.new
+summary: Creates an empty dict. It's a function with no arguments, so you call it with parentheses, `dict.new()`; it's often the starting value of a fold.
+recognize:
+  prompt: "Which expression creates an empty dict?"
+  choices: ["`dict.new()`", "`dict.new`", "`{}`", "`dict.empty()`"]
+  feedback:
+    correct: Right. You have to call it to get an empty `Dict`.
+    choices:
+      1: Without parentheses it's not a dict but the function `fn() -> Dict(a, b)` itself.
+      2: That's a JavaScript or Python literal. Gleam has no dict literal, and `{ }` is a block.
+      3: "There's no function called `dict.empty`. An empty dict is `dict.new()`."
+cloze:
+  prompt: Fill in the blank to start from an empty dict.
+produce:
+  prompt: Write the body of a function that builds a dict mapping each word to its length. Use `dict.new()` as the starting value of `list.fold`.
+  hint: In the callback, add each word with `dict.insert(acc, word, string.length(word))`.

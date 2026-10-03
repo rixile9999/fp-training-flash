@@ -1,0 +1,16 @@
+title: Guards take the first match from the top
+summary: "When you turn an `else if` chain into `case` guards, only the first branch that matches, from the top, runs. A broad condition placed first hides the branches below it, so put narrow conditions first."
+recognize:
+  prompt: "What is the value of `case 95 { s if s >= 70 -> \"B\"  s if s >= 90 -> \"A\"  _ -> \"C\" }`?"
+  choices: ['`"B"`', '`"A"`', A compile error (the conditions overlap)]
+  feedback:
+    correct: Right. 95 matches the first branch, `s >= 70`, so the result is `"B"`.
+    choices:
+      1: "It doesn't pick the best match; it takes the first one. Move `s >= 90` to the top."
+      2: Overlapping guards aren't an error, which is why ordering mistakes are easy to miss.
+cloze:
+  prompt: Fill in the keyword.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: "Return the state of water at a Celsius temperature: `\"solid\"` at 0 or below, `\"gas\"` at 100 or above, and `\"liquid\"` in between."

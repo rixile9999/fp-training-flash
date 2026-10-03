@@ -1,0 +1,17 @@
+title: result.try
+summary: "If the result is `Ok`, the value inside goes to the callback; if it is `Error`, the callback is skipped and that error comes back unchanged. The callback also returns a `Result`, so use it to chain steps that can fail."
+recognize:
+  prompt: "In `result.try(r, f)`, what must the callback `f` return?"
+  choices: ["A `Result` (`Ok(...)` or `Error(...)`)", "A plain, unwrapped value", "An `Option` (`Some(...)` or `None`)"]
+  feedback:
+    correct: Right. The callback can fail too, so it returns `Result(c, b)`, with the same error type `b` as the input.
+    choices:
+      1: A callback that returns a plain value belongs to `result.map`. Use `result.try` when the callback itself can fail.
+      2: "`Option` and `Result` are different types. The `result.try` callback must return a `Result`."
+cloze:
+  prompt: Fill in the blank to chain parsing and division.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Parse two strings as integers and return their sum in `Ok`. If either one fails to parse, return `Error(Nil)`. Use `result.try`.
+  hint: "Take the value out with `use x <- result.try(int.parse(a))`, then wrap the final answer as `Ok(x + y)`."

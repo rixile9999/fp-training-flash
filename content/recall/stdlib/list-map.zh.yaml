@@ -1,0 +1,18 @@
+title: list.map
+summary: 对列表的每个元素应用函数，得到长度相同的新列表。列表在前，函数在后。
+recognize:
+  prompt: "下面哪个是 `list.map` 的正确调用？"
+  choices: ["`list.map(fn(x) { x * 2 }, [1, 2, 3])`", "`list.map([1, 2, 3], fn(x) { x * 2 })`", "`[1, 2, 3].map(fn(x) { x * 2 })`", "`list.map([1, 2, 3], fn(x, i) { x * i })`"]
+  feedback:
+    correct: 对。Gleam 标准库把要处理的数据放在第一个参数，所以可以写成 `xs |> list.map(f)` 这样的管道。
+    choices:
+      0: Haskell 和 Elm 是函数在前，但 Gleam 的 `list.map` 是列表在前。
+      2: Gleam 没有方法调用，要用模块函数 `list.map(xs, f)`。
+      3: 同时接收索引的回调要传给 `list.index_map`。`list.map` 的回调只接收元素。
+cloze:
+  prompt: 填空，求每个元素的平方。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 用 `list.map` 写出函数体：在每个名字前加上 `"Hello, "`，返回问候语列表。
+  hint: 字符串用 `<>` 拼接。回调的形式是 `fn(name) { ... }`。

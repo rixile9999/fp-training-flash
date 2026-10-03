@@ -1,0 +1,16 @@
+title: list.append
+summary: 把第二个列表接到第一个列表后面。两个参数都是列表，耗时与第一个列表的长度成正比。
+recognize:
+  prompt: "下面哪个表达式把列表 `ys` 接到列表 `xs` 后面？"
+  choices: ["`xs <> ys`", "`list.append(xs, ys)`", "`xs + ys`", "`[xs, ..ys]`"]
+  feedback:
+    correct: 对。`list.append(xs, ys)` 把 `ys` 的元素放在 `xs` 的元素之后。
+    choices:
+      0: "`<>` 只用于字符串。"
+      2: "`+` 只用于 `Int`。不能像 Python 那样用 `+` 拼接列表。"
+      3: "`[xs, ..ys]` 是把整个 `xs` 作为一个元素放到 `ys` 前面，这里会产生类型错误。"
+cloze:
+  prompt: 填空，拼接两个列表。
+produce:
+  prompt: 用 `list.append` 写出函数体：在列表末尾添加一个元素。
+  hint: 单个元素也要像 `[x]` 这样包成列表再传入。

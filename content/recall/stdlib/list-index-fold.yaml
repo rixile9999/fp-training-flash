@@ -1,0 +1,42 @@
+title: list.index_fold
+topic: gleam/list
+order: 17
+summary: "`list.fold`와 같지만 콜백이 원소의 인덱스(0부터)도 받습니다. 콜백 인자는 `fn(누적값, 원소, 인덱스)` 순서입니다."
+example: |
+  list.index_fold(["a", "b", "c"], "", fn(acc, x, i) { acc <> int.to_string(i) <> x })  // -> "0a1b2c"
+imports: [gleam/list, gleam/int]
+signature: "list.index_fold(over: List(a), from: b, with: fn(b, a, Int) -> b) -> b"
+frequency: 12
+recognize:
+  prompt: "`list.index_fold` 콜백의 인자 순서는?"
+  choices: ["`fn(acc, x, i)`", "`fn(acc, i, x)`", "`fn(i, acc, x)`", "`fn(x, i)`"]
+  answer: 0
+  feedback:
+    correct: 맞아요. `list.fold`의 `fn(acc, x)` 뒤에 인덱스가 하나 더 붙습니다.
+    choices:
+      1: 인덱스는 원소 다음, 맨 마지막에 옵니다.
+      2: fold 계열은 누적값이 언제나 첫 인자입니다.
+      3: 누적값 없이 원소와 인덱스만 받는 것은 `list.index_map`의 콜백입니다.
+cloze:
+  prompt: 빈칸을 채워 각 원소에 인덱스를 곱한 값의 합을 구하세요.
+  code: "list.____([10, 20, 30], 0, fn(acc, x, i) { acc + x * i })"
+  answers: [index_fold]
+  expected: "80"
+predict:
+  prompt: 이 식의 값은?
+  code: "list.index_fold([5, 5, 5], 0, fn(acc, _, i) { acc + i })"
+  expected: "3"
+produce:
+  prompt: 인덱스가 짝수(0, 2, 4, ...)인 자리의 원소만 더하는 함수 본문을 `list.index_fold`로 쓰세요.
+  header: "pub fn sum_even_positions(xs: List(Int)) -> Int"
+  checks: "#(sum_even_positions([1, 2, 3, 4, 5]), sum_even_positions([]), sum_even_positions([7, 100]))"
+  expected: "#(9, 0, 7)"
+  mustUse: [list.index_fold]
+  reference: |
+    list.index_fold(xs, 0, fn(acc, x, i) {
+      case i % 2 == 0 {
+        True -> acc + x
+        False -> acc
+      }
+    })
+  hint: 콜백은 `fn(acc, x, i) { ... }` 모양이고, 인덱스가 홀수면 `acc`를 그대로 돌려줍니다.

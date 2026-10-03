@@ -1,0 +1,18 @@
+title: dict.upsert
+summary: Updates the value for a key, or inserts it if it's missing. The callback gets the existing value as an `Option` (`Some(value)` or `None`) and returns the new value.
+recognize:
+  prompt: "In `dict.upsert(d, key, f)`, what argument does the callback `f` receive?"
+  choices: ["The existing value `b` (panics if the key is missing)", "`Option(b)`: `Some(value)` if present, `None` if not", "`Result(b, Nil)`: `Ok(value)` if present, `Error(Nil)` if not", "The key and the existing value, `fn(key, value)`"]
+  feedback:
+    correct: Right. It's called even when the key is missing, and then it receives `None`.
+    choices:
+      0: A missing key doesn't panic. The callback receives `None` and decides the new value.
+      2: "`dict.get` is the one that returns a `Result`. The `upsert` callback receives an `Option`."
+      3: The callback receives only the existing value (as an `Option`). Taking both key and value is the `dict.map_values` callback.
+cloze:
+  prompt: Fill in the blank to increase the count for the key `"a"` by one.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Write the body of a function that adds a quantity to an item in a stock dict, using `dict.upsert`. If the item is new, insert it with that quantity.
+  hint: In the callback, use `case` to handle `Some(n)` and `None`.

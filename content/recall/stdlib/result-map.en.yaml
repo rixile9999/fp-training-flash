@@ -1,0 +1,18 @@
+title: result.map
+summary: "Applies a function only to the value inside `Ok` and passes `Error` through untouched. The callback returns a plain value, not a `Result`."
+recognize:
+  prompt: "Which function applies a computation that cannot fail (e.g. `n * 2`) to the value inside `Ok`?"
+  choices: ["`result.map`", "`result.try`", "`result.unwrap`", "`list.map`"]
+  feedback:
+    correct: Right. `result.map` calls the callback only on `Ok` and wraps the result back in `Ok`.
+    choices:
+      1: "`result.try` is for callbacks that return a `Result`, that is, when that step can fail too."
+      2: "`result.unwrap` takes the value out with a default and drops the `Result`. It does not apply a computation."
+      3: "`list.map` is for lists. For a `Result`, use `result.map`."
+cloze:
+  prompt: Fill in the blank to double the parsed value.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Parse a string in centimetres and convert it to millimetres (× 10). If parsing fails, return the error unchanged.
+  hint: The callback just returns an integer, like `fn(n) { n * 10 }`. `result.map` wraps it back in `Ok` for you.

@@ -1,0 +1,17 @@
+title: int.min
+summary: "Returns the smaller of two integers. It takes two integers, not a list, so for the minimum of a list you pass `int.min` to `list.fold`."
+recognize:
+  prompt: "What arguments does `int.min` take?"
+  choices: ["Two integers: `int.min(a, b)`", "A list of integers: `int.min([a, b, c])`", "Any number of them: `int.min(a, b, c)`"]
+  feedback:
+    correct: Right. It takes two integers and returns the smaller one.
+    choices:
+      1: This is not Python's `min(list)`. For the minimum of a list, fold it, as in `list.fold(rest, first, int.min)`.
+      2: Gleam functions have no variadic arguments; the number of arguments is fixed.
+cloze:
+  prompt: Fill in the blank to pick the smaller value.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Return the smallest value in a list of integers. For an empty list, return 0.
+  hint: "Start from the first element and fold the rest with `list.fold(rest, first, int.min)`."

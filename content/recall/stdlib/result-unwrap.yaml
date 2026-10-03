@@ -1,0 +1,32 @@
+title: result.unwrap
+topic: gleam/result
+order: 25
+summary: "`Ok`이면 안의 값을, `Error`면 `or:`로 준 기본값을 돌려줍니다. 오류 내용은 버려지므로 기본값으로 충분할 때만 씁니다."
+example: |
+  result.unwrap(int.parse("abc"), 0)  // -> 0
+imports: [gleam/int, gleam/result]
+signature: "result.unwrap(Result(a, b), or: a) -> a"
+frequency: 9
+recognize:
+  prompt: "`r: Result(Int, String)`일 때 `result.unwrap(r, or: 0)`의 타입은?"
+  choices: ["`Int`", "`Result(Int, String)`", "`Option(Int)`", "`String`"]
+  answer: 0
+  feedback:
+    correct: 맞아요. `Result`를 벗겨 `Ok` 안의 타입을 돌려주므로 기본값도 같은 `Int`여야 합니다.
+    choices:
+      1: "`unwrap`은 `Result`를 벗겨 냅니다. `Result`를 유지한 채 값을 바꾸려면 `result.map`을 쓰세요."
+      2: "`Result`를 `Option`으로 바꾸는 것은 `option.from_result`예요."
+      3: 오류 값 `String`은 버려져요. 결과는 `Ok` 쪽 타입인 `Int`입니다.
+cloze:
+  prompt: 빈칸을 채워 파싱에 실패하면 0이 되게 하세요.
+  code: 'int.parse("abc") |> result.____(0)'
+  answers: [unwrap]
+  expected: "0"
+produce:
+  prompt: URL의 페이지 번호 문자열을 정수로 바꾸세요. 숫자가 아니면 1페이지로 봅니다.
+  header: "pub fn page_number(s: String) -> Int"
+  checks: '#(page_number("3"), page_number(""), page_number("two"), page_number("10"))'
+  expected: "#(3, 1, 1, 10)"
+  mustUse: [result.unwrap]
+  reference: "int.parse(s) |> result.unwrap(1)"
+  hint: "`int.parse(s)`의 결과를 `result.unwrap`에 넘기고 기본값으로 1을 주세요."

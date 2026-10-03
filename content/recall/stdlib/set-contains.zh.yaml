@@ -1,0 +1,16 @@
+title: set.contains
+summary: "用 `Bool` 告诉你集合中是否有某个值。集合在前（`in:`），要找的值在后（`this:`），比用 `list.contains` 遍历列表更快。"
+recognize:
+  prompt: "检查集合 `roles: Set(String)` 中是否有 `\"admin\"` 的表达式是？"
+  choices: ["`set.contains(\"admin\", roles)`", "`set.contains(roles, \"admin\")`", "`list.contains(roles, \"admin\")`", "`set.get(roles, \"admin\")`"]
+  feedback:
+    correct: "对。集合在前，所以也可以写成管道：`roles |> set.contains(\"admin\")`。"
+    choices:
+      0: "反了。按照标签 `in:`、`this:` 的顺序，集合在前，要找的值在后。"
+      2: "`roles` 是 `Set` 而不是列表，传给 `list.contains` 会产生类型错误。"
+      3: "没有 `set.get`。只问值是否存在用 `set.contains`，它返回 `Bool`。"
+cloze:
+  prompt: 填空，检查 2 是否在集合中。
+produce:
+  prompt: "从单词列表中去掉出现在禁用词集合 `banned` 里的单词。"
+  hint: "在 `list.filter` 的条件里用 `!` 对 `set.contains` 的结果取反。"

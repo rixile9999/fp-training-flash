@@ -1,0 +1,51 @@
+title: 블록은 식
+topic: blocks
+order: 107
+summary: "블록 `{ }`은 값을 가진 식입니다. 안의 `let`들을 거쳐 마지막 식의 값이 블록의 값이 되고, 안에서 만든 이름은 밖에서 보이지 않아요."
+example: |
+  {
+    let a = 10
+    let b = 20
+    a + b
+  }  // -> 30
+imports: [gleam/int]
+recognize:
+  prompt: "`let y = { let a = 2  a * 10 }` 다음 `y`의 값은?"
+  choices: ["`20`", "`Nil`", "`2`", "컴파일 오류 (블록은 값이 아님)"]
+  answer: 0
+  feedback:
+    correct: 맞아요. 블록의 값은 마지막 식 `a * 10`의 값입니다.
+    choices:
+      1: 블록은 문장 묶음이 아니라 식이에요. 마지막 식의 값을 돌려줍니다.
+      2: 첫 바인딩이 아니라 마지막 식의 값이 블록의 값이에요.
+      3: "Gleam에서 블록은 값을 가진 식이라 `let`의 오른쪽에 둘 수 있어요."
+cloze:
+  prompt: 빈칸에 마지막 식을 넣어 총액이 블록의 값이 되게 하세요.
+  code: "{ let price = 1200  let qty = 3  ____ }"
+  answers: ["price * qty", "qty * price"]
+  expected: "3600"
+predict:
+  prompt: 이 식의 값은?
+  code: |
+    {
+      let x = 5
+      let y = {
+        let x = 100
+        x + 1
+      }
+      x + y
+    }
+  expected: "106"
+produce:
+  prompt: "영수증 한 줄 `\"pen: 2200\"`을 만드세요. 총액은 `let total = { ... }` 블록 안에서 소계(`qty * price`)를 바인딩한 뒤 10% 세금(정수 나눗셈)을 더해 구하세요."
+  header: "pub fn receipt_line(name: String, qty: Int, price: Int) -> String"
+  checks: '#(receipt_line("pen", 2, 1000), receipt_line("cup", 0, 500), receipt_line("tea", 3, 15))'
+  expected: '#("pen: 2200", "cup: 0", "tea: 49")'
+  mustUse: ["= {"]
+  reference: |
+    let total = {
+      let subtotal = qty * price
+      subtotal + subtotal / 10
+    }
+    name <> ": " <> int.to_string(total)
+  hint: "블록의 마지막 줄 `subtotal + subtotal / 10`이 `total`의 값이 됩니다."

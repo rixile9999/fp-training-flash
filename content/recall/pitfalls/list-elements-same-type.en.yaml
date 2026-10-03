@@ -1,0 +1,16 @@
+title: List elements all share one type
+summary: "Every element of a list must have the same type. `[\"ann\", 30]` is a type error, so to group values of different types use a tuple `#(\"ann\", 30)` or a record."
+recognize:
+  prompt: "Which expression groups a name (`String`) and an age (`Int`) into one value?"
+  choices: ['`["ann", 30]`', '`#("ann", 30)`', '`("ann", 30)`', '`{"ann", 30}`']
+  feedback:
+    correct: Right. A tuple groups a fixed number of values that can have different types.
+    choices:
+      0: "Unlike Python or JavaScript, a list can't mix `String` and `Int`, so this is a type error."
+      2: "That's Python's tuple syntax. In Gleam, parentheses don't make a tuple."
+      3: "That's Erlang or Elixir tuple syntax. In Gleam `{ }` is a block, so this is a syntax error."
+cloze:
+  prompt: Fill in the blank to make a tuple.
+produce:
+  prompt: "Turn each word into a tuple `#(word, length)` and return them as a list."
+  hint: "Grouping them as a list, `[w, string.length(w)]`, is a type error."

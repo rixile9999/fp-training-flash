@@ -1,0 +1,38 @@
+title: result.try
+topic: gleam/result
+order: 1
+summary: "`Ok`이면 안의 값을 콜백에 넘기고, `Error`면 콜백을 부르지 않고 그 오류를 그대로 돌려줍니다. 콜백도 `Result`를 돌려주므로 실패할 수 있는 단계를 이어 붙일 때 씁니다."
+example: |
+  result.try(int.parse("12"), fn(n) { int.divide(n, by: 4) })  // -> Ok(3)
+imports: [gleam/int, gleam/result]
+signature: "result.try(Result(a, b), apply: fn(a) -> Result(c, b)) -> Result(c, b)"
+frequency: 39
+recognize:
+  prompt: "`result.try(r, f)`에서 콜백 `f`가 돌려줘야 하는 것은?"
+  choices: ["`Result` 값 (`Ok(...)` 또는 `Error(...)`)", "감싸지 않은 그냥 값", "`Option` 값 (`Some(...)` 또는 `None`)"]
+  answer: 0
+  feedback:
+    correct: 맞아요. 콜백도 실패할 수 있어서 `Result(c, b)`를 돌려주고, 오류 타입 `b`는 처음 값과 같아야 합니다.
+    choices:
+      1: 그냥 값을 돌려주는 콜백은 `result.map`에 씁니다. `result.try`는 콜백이 실패할 수 있을 때 씁니다.
+      2: "`Option`과 `Result`는 다른 타입이에요. `result.try`의 콜백은 `Result`를 돌려줘야 합니다."
+cloze:
+  prompt: 빈칸을 채워 파싱과 나눗셈을 이어 붙이세요.
+  code: 'result.____(int.parse("12"), fn(n) { int.divide(n, by: 4) })'
+  answers: [try]
+  expected: "Ok(3)"
+predict:
+  prompt: 이 식의 값은?
+  code: 'result.try(Error("empty"), fn(n) { Ok(n + 1) })'
+  expected: 'Error("empty")'
+produce:
+  prompt: 두 문자열을 정수로 파싱해 합을 `Ok`로 돌려주세요. 하나라도 파싱에 실패하면 `Error(Nil)`을 돌려주세요. `result.try`를 쓰세요.
+  header: "pub fn add_strings(a: String, b: String) -> Result(Int, Nil)"
+  checks: '#(add_strings("2", "3"), add_strings("x", "3"), add_strings("2", ""), add_strings("-4", "4"))'
+  expected: "#(Ok(5), Error(Nil), Error(Nil), Ok(0))"
+  mustUse: [result.try]
+  reference: |
+    use x <- result.try(int.parse(a))
+    use y <- result.try(int.parse(b))
+    Ok(x + y)
+  hint: "`use x <- result.try(int.parse(a))`로 값을 꺼내고, 마지막에 `Ok(x + y)`로 감싸 돌려주세요."

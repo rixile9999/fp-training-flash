@@ -1,0 +1,37 @@
+title: dict.fold
+topic: gleam/dict
+order: 34
+summary: dict의 모든 항목을 값 하나로 접습니다. 콜백은 `fn(누적값, 키, 값)` 순서로 받고, 항목을 방문하는 순서는 정해져 있지 않습니다.
+example: |
+  dict.from_list([#("a", 1), #("b", 2)])
+  |> dict.fold(0, fn(acc, _key, value) { acc + value })  // -> 3
+imports: ["gleam/dict.{type Dict}"]
+signature: "dict.fold(over: Dict(a, b), from: c, with: fn(c, a, b) -> c) -> c"
+frequency: 6
+recognize:
+  prompt: "`dict.fold` 콜백의 인자 순서는?"
+  choices: ["`fn(acc, key, value)`", "`fn(key, value, acc)`", "`fn(acc, #(key, value))`", "`fn(acc, value)`"]
+  answer: 0
+  feedback:
+    correct: 맞아요. `list.fold`처럼 누적값이 먼저, 그다음 키와 값입니다.
+    choices:
+      1: Elm의 `Dict.foldl`은 누적값을 마지막에 받지만, Gleam은 누적값이 먼저입니다.
+      2: 키와 값은 튜플이 아니라 따로따로 들어옵니다.
+      3: 키도 함께 들어옵니다. 쓰지 않을 때는 `_key`처럼 밑줄로 무시하세요.
+cloze:
+  prompt: 빈칸을 채워 모든 값의 곱을 구하세요.
+  code: 'dict.from_list([#("a", 2), #("b", 3)]) |> dict.____(1, fn(acc, _, v) { acc * v })'
+  answers: [fold]
+  expected: "6"
+predict:
+  prompt: 이 식의 값은?
+  code: "dict.new() |> dict.fold(100, fn(acc, _, v) { acc + v })"
+  expected: "100"
+produce:
+  prompt: 상품별 재고 dict에서 전체 재고 수량을 구하는 함수 본문을 `dict.fold`로 쓰세요.
+  header: "pub fn total_stock(stock: Dict(String, Int)) -> Int"
+  checks: '#(total_stock(dict.from_list([#("pen", 3), #("ink", 4)])), total_stock(dict.new()), total_stock(dict.from_list([#("cap", 9)])))'
+  expected: "#(7, 0, 9)"
+  mustUse: [dict.fold]
+  reference: "dict.fold(stock, 0, fn(acc, _item, qty) { acc + qty })"
+  hint: 시작값은 0이고, 콜백은 `fn(acc, _item, qty) { ... }` 모양입니다.

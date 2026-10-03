@@ -1,0 +1,22 @@
+title: string.concat
+summary: "把字符串列表不加分隔符直接拼接起来。需要分隔符时用 `string.join`，只拼两个字符串时用 `<>`。"
+recognize:
+  prompt: "`string.concat` 和 `string.join` 的区别是？"
+  choices:
+    - "`concat` 接收两个字符串，`join` 接收列表"
+    - "`concat` 拼接列表，`join` 拼接字符串"
+    - "`concat` 不加分隔符直接拼接，`join` 还要接收分隔符"
+    - 只是名字不同，是同一个函数
+  feedback:
+    correct: "对。两者都接收 `List(String)`，只有 `join` 还要一个 `with:` 分隔符。"
+    choices:
+      0: "拼接两个字符串的是 `string.append`（或 `<>`）。`concat` 也接收列表。"
+      1: "拼接列表的是 `list.append` 和 `list.flatten`。`string.concat` 把 `List(String)` 变成一个 `String`。"
+      3: "`join` 多接收一个分隔符。`string.join(parts, \"\")` 等同于 `string.concat(parts)`。"
+cloze:
+  prompt: 填空，不加分隔符把各个片段拼起来。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: '用名字和年龄生成像 `"Ada (36)"` 这样的显示字符串。'
+  hint: "构造列表 `[name, \" (\", ..., \")\"]`，年龄用 `int.to_string` 转换。"

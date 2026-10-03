@@ -1,0 +1,37 @@
+title: float.parse는 소수점이 필요
+topic: float
+order: 5
+summary: "`float.parse`는 소수점이 있어야 성공합니다. `\"1\"`은 `Error(Nil)`이라, 정수 표기도 받으려면 `int.parse`로 한 번 더 시도합니다."
+example: |
+  float.parse("1")  // -> Error(Nil)
+imports: [gleam/float, gleam/int, gleam/result]
+recognize:
+  prompt: "`float.parse(\"2\")`의 값은?"
+  choices: ["`Ok(2.0)`", "`Error(Nil)`", "`2.0`"]
+  answer: 1
+  feedback:
+    correct: 맞아요. 소수점이 없으면 `Float`로 읽지 않습니다.
+    choices:
+      0: "다른 언어의 `parseFloat`과 달리 `\"2\"`는 실패해요. `\"2.0\"`이어야 합니다."
+      2: "실패할 수 있어서 `Result`로 감싸서 돌려줍니다."
+cloze:
+  prompt: 빈칸을 채워 파싱이 성공하게 하세요.
+  code: 'float.parse("2____")'
+  answers: [".0", ".00"]
+  expected: "Ok(2.0)"
+predict:
+  prompt: 이 식의 값은?
+  code: 'float.parse(".5")'
+  expected: "Error(Nil)"
+produce:
+  prompt: "`\"1.5\"`와 `\"2\"`를 모두 `Float`로 읽으세요. 숫자가 아니면 `Error(Nil)`입니다."
+  header: "pub fn parse_number(s: String) -> Result(Float, Nil)"
+  checks: '#(parse_number("1.5"), parse_number("2"), parse_number("x"))'
+  expected: "#(Ok(1.5), Ok(2.0), Error(Nil))"
+  mustUse: [float.parse, int.parse]
+  reference: |
+    case float.parse(s) {
+      Ok(f) -> Ok(f)
+      Error(_) -> result.map(int.parse(s), int.to_float)
+    }
+  hint: "`float.parse`가 실패하면 `int.parse` 결과를 `int.to_float`로 바꿉니다."

@@ -1,0 +1,18 @@
+title: int.max
+summary: "返回两个整数中较大的一个。`int.max(x, 0)` 是给值设下限（“负数就取 0”）的常见写法。"
+recognize:
+  prompt: "余额 `b` 为负时变成 0、否则保持不变，应该怎么写？"
+  choices: ["`int.max(b, 0)`", "`int.min(b, 0)`", "`int.absolute_value(b)`", "`int.max([b, 0])`"]
+  feedback:
+    correct: 对。在 `b` 和 0 中取较大者，负数变成 0，正数保持不变。
+    choices:
+      1: "`int.min(b, 0)` 正好相反，会把正数变成 0。"
+      2: 绝对值会把 -5 变成 5，而不是 0。
+      3: "`int.max` 接收两个整数而不是列表。列表可以用 `list.max(xs, int.compare)`，它返回 `Result`。"
+cloze:
+  prompt: 填空，选出较大的值。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 把分数限制在 0 到 100 之间并返回。请使用 `int.max`。
+  hint: "用 `int.min` 把上限截在 100，用 `int.max` 把下限截在 0。"

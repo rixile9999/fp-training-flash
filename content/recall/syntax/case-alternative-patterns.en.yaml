@@ -1,0 +1,16 @@
+title: Alternative patterns with |
+summary: List several patterns in one branch with `|`, and the branch runs if any one of them matches.
+recognize:
+  prompt: How do you write a branch that matches when the value is 1, 2 or 3?
+  choices: ["`1 || 2 || 3 ->`", "`1 | 2 | 3 ->`", "`1, 2, 3 ->`", "`[1, 2, 3] ->`"]
+  feedback:
+    correct: Right. With `|` between patterns, any one of them matching is enough.
+    choices:
+      0: "`||` is the Bool 'or' operator; it can't be used in a pattern."
+      2: Commas separate patterns when you match several values, as in `case a, b, c`.
+      3: That pattern matches a list whose elements are exactly 1, 2 and 3.
+cloze:
+  prompt: Fill in the blank to put Saturday and Sunday in one branch.
+produce:
+  prompt: 'Write the body of a function that sorts HTTP methods into kinds, using alternative patterns: `"GET"` and `"HEAD"` are `"read"`, `"POST"`, `"PUT"`, `"PATCH"` and `"DELETE"` are `"write"`, and anything else is `"unknown"`.'
+  hint: Three branches are enough. Matching is case-sensitive.

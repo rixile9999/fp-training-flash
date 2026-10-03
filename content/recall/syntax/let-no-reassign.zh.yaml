@@ -1,0 +1,16 @@
+title: 没有重新赋值
+summary: "Gleam 没有重新赋值。`x = x + 1` 是语法错误，新值总要用 `let` 绑定。"
+recognize:
+  prompt: "在 `let total = 0` 的下一行写 `total = total + 5`，结果是？"
+  choices: ["`total` 变成 5", "语法错误；要重新绑定得用 `let`", "`total` 仍是 0，只有一个警告", "会被当成比较式 `total == total + 5`"]
+  feedback:
+    correct: "对。没有赋值语句，所以是语法错误，编译器会提示你用 `let`。"
+    choices:
+      0: 它不像其他语言的赋值那样工作。Gleam 根本没有重新赋值的语法。
+      2: 不只是警告，编译会失败。
+      3: "`=` 只和 `let` 一起用来绑定，比较用 `==`。这一行就是语法错误。"
+cloze:
+  prompt: 填空，把 `total` 重新绑定为它加 5 的结果。
+produce:
+  prompt: "从余额中减去取款金额，再减去 1 的手续费，返回余额。每一步都用 `let balance = ...` 重新绑定。"
+  hint: "写 `let balance = balance - amount`，而不是 `balance = ...`。"

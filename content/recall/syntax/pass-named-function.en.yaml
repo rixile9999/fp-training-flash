@@ -1,0 +1,15 @@
+title: Passing a function by name
+summary: To pass an existing function as a value, just write its name. As in `list.map(xs, int.to_string)`, you need neither parentheses nor an anonymous function.
+recognize:
+  prompt: Which code correctly turns a list of integers `xs` into a list of strings?
+  choices: ["`list.map(xs, int.to_string())`", "`list.map(xs, &int.to_string)`", "`list.map(xs, int.to_string)`", "`list.map(xs, int.to_string(_, _))`"]
+  feedback:
+    correct: Right. A function's name is the function value.
+    choices:
+      0: Parentheses call the function with no arguments, which is a compile error ("Incorrect arity").
+      1: There's no `&` reference marker; the name alone is enough.
+      3: A capture allows only one hole, and `int.to_string` takes one argument anyway.
+cloze:
+  prompt: Put a named function in the blank to sum the list.
+produce:
+  prompt: Write the body of a function that returns the length of each word. Pass `string.length` directly instead of wrapping it in an anonymous function.

@@ -1,0 +1,16 @@
+title: todo
+summary: "`todo` marks a spot you haven't implemented yet. The code compiles with a warning, and crashes if that spot is ever run."
+recognize:
+  prompt: What happens when you build a project that still contains a `todo`?
+  choices: ["A compile error, so it can't run", "It compiles without warnings and that spot becomes `Nil`", "That branch is skipped and the next one runs", "It compiles with a warning, and crashes if that spot runs"]
+  feedback:
+    correct: Right. So you can run half-finished code, and the warnings tell you which `todo`s are left.
+    choices:
+      0: It's a warning ("Todo found"), not an error, so you can run code that's still in progress.
+      1: The compiler warns about every remaining `todo`, and no value is made up.
+      2: "Nothing is skipped: it crashes the moment it runs."
+cloze:
+  prompt: Fill in the blank to mark the triangle branch as not implemented yet.
+produce:
+  prompt: "Write the body of a function that computes a shape's perimeter: a circle is `2.0 *. 3.14 *. r`, a square is `4.0 *. side`, and the triangle isn't implemented yet, so leave it as `todo`."
+  hint: The Float operator is `*.`. Leave the remaining branch as `Triangle(..) -> todo`.

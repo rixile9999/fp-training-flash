@@ -1,0 +1,17 @@
+title: int.min
+summary: "返回两个整数中较小的一个。它接收两个整数而不是列表，所以求列表最小值要把 `int.min` 传给 `list.fold`。"
+recognize:
+  prompt: "`int.min` 接收什么参数？"
+  choices: ["两个整数：`int.min(a, b)`", "整数列表：`int.min([a, b, c])`", "任意个数：`int.min(a, b, c)`"]
+  feedback:
+    correct: 对。它接收两个整数，返回较小的那个。
+    choices:
+      1: 和 Python 的 `min(list)` 不同。列表的最小值要像 `list.fold(rest, first, int.min)` 这样折叠求得。
+      2: Gleam 函数没有可变参数，参数个数是固定的。
+cloze:
+  prompt: 填空，选出较小的值。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 返回整数列表中最小的值。空列表时返回 0。
+  hint: "以第一个元素为初始值，用 `list.fold(rest, first, int.min)` 折叠其余元素。"

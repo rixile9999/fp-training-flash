@@ -1,0 +1,15 @@
+title: Float 比较用 <. >.
+summary: "比较 `Float` 大小也要用带点的 `<.` `>.` `<=.` `>=.`。只有 `==` 和 `!=` 对所有类型通用。"
+recognize:
+  prompt: "判断 `Float` 值 `a` 是否小于 `b` 的表达式是？"
+  choices: ["`a < b`", "`a <. b`", "`float.less(a, b)`", "`a.lt(b)`"]
+  feedback:
+    correct: 对。`Float` 比较用 `<.`。
+    choices:
+      0: "`<` 只用于 `Int`，用在 `Float` 上会类型错误。"
+      2: "没有这个函数。需要 `Order` 时用 `float.compare(a, b)`。"
+      3: Gleam 没有方法调用。
+cloze:
+  prompt: 填入正确的比较运算符。
+produce:
+  prompt: 体温 `temp` 高于 37.5 时返回 `True`。

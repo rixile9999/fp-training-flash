@@ -1,0 +1,16 @@
+title: dict.from_list
+summary: "Builds a dict from a list of `#(key, value)` tuples. If a key appears more than once, the later value wins."
+recognize:
+  prompt: "What is the result of `dict.from_list([#(\"a\", 1), #(\"a\", 2)])`?"
+  choices: ["`dict.from_list([#(\"a\", 2)])`", "`dict.from_list([#(\"a\", 1)])`", "`Error(Nil)`", "`dict.from_list([#(\"a\", 1), #(\"a\", 2)])`"]
+  feedback:
+    correct: Right. The pairs are inserted from front to back, so the later value overwrites the earlier one.
+    choices:
+      1: It's not the first value that stays but the last one.
+      2: "`dict.from_list` can't fail. It returns a `Dict`, not a `Result`."
+      3: Each key appears only once in a dict. One key can't hold two values.
+cloze:
+  prompt: Fill in the blank to build a dict from a list of tuples.
+produce:
+  prompt: 'From a list of `#(name, score)`, write the body of a function that looks up a score by name, using `dict.from_list`. If a name appears again, the later score counts.'
+  hint: Build the dict, then look it up with `dict.get`.

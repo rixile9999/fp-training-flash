@@ -1,0 +1,18 @@
+title: string.compare
+summary: "按字符编码比较两个字符串，返回 `order.Order`（`Lt`、`Eq`、`Gt`）。大写字母排在小写字母前面，数字也按字符而不是按数值比较。"
+recognize:
+  prompt: "`string.compare(\"a\", \"B\")` 的值是？"
+  choices: ["`Lt`", "`Gt`", "`Eq`", "`True`"]
+  feedback:
+    correct: "对。大写字母的编码更小，所以 `\"B\"` 在前，`\"a\"` 更大。"
+    choices:
+      0: 它不会像词典那样忽略大小写。按字符编码，大写 `B` 排在小写 `a` 前面。
+      2: "只有两个字符串完全相同时才是 `Eq`。要忽略大小写，先用 `string.lowercase` 统一。"
+      3: "`compare` 返回 `Lt`、`Eq` 或 `Gt`，不是 `Bool`。"
+cloze:
+  prompt: 填空，按字典序排序字符串。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 不区分大小写，把单词列表按字典序排序。单词本身保持不变。
+  hint: "在比较函数里先用 `string.lowercase` 把两个单词转成小写，再比较。"

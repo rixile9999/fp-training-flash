@@ -1,0 +1,18 @@
+title: int.range
+summary: "从 `from` 到 `to` 之前（不含 `to`），对每个整数调用 `run` 并折叠累加器。它不生成列表，而是对整数区间的折叠（fold）。"
+recognize:
+  prompt: "`int.range(from: a, to: b, with: init, run: f)` 返回什么？"
+  choices: ["从 `a` 到 `b` 的整数列表 `List(Int)`", "从 `init` 开始、用 `f` 折叠得到的累加器", "`Nil`（只做循环）", "`Result(List(Int), Nil)`"]
+  feedback:
+    correct: 对。它对每个整数 `i` 调用 `f(acc, i)`，返回最后的累加器。
+    choices:
+      0: 和 Python 的 `range` 不同，它不生成列表。结果类型就是 `with:` 给出的累加器类型。
+      2: 它不是只产生副作用的循环，而是返回从 `with:` 开始的累加器。
+      3: 它不会失败，所以不用 `Result` 包装。
+cloze:
+  prompt: 填空，求 1 到 4 的和。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: "返回 `n!`（1 到 `n` 的乘积）。`n` 为 0 时返回 1。"
+  hint: "`to` 不包含在内，所以要循环到 `n + 1`；乘积的初始值是 1。"

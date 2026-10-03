@@ -1,0 +1,16 @@
+title: Early exit with use <- bool.guard
+summary: "`use <- bool.guard(when: condition, return: value)` returns that value immediately when the condition is true, and otherwise carries on with the code below. It replaces an early `return` from other languages."
+recognize:
+  prompt: 'With code following `use <- bool.guard(when: x < 0, return: "neg")`, what happens when `x` is 5?'
+  choices: ["It returns `\"neg\"`", "Compile error: no variable after `use`", "It carries on with the code below", "It returns `Nil`"]
+  feedback:
+    correct: Right. The condition is false, so the result is the value of the code below.
+    choices:
+      0: The `return` value is only returned when the condition is true.
+      1: When the callback takes no argument, you write `use <-` with no variable.
+      3: When the condition is false, the code below runs and its value is returned.
+cloze:
+  prompt: Fill in the label to stop before dividing by zero.
+produce:
+  prompt: Write the body of a function that returns the first letter of a name in uppercase. If the name is an empty string, return `"?"` first with `use <- bool.guard`.
+  hint: "You can take the first letter with `string.slice(name, at_index: 0, length: 1)`."

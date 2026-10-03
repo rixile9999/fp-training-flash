@@ -1,0 +1,36 @@
+title: list.index_map
+topic: gleam/list
+order: 20
+summary: "`list.map`과 같지만 콜백이 원소와 함께 0부터 시작하는 인덱스를 받습니다. 콜백 인자는 `fn(원소, 인덱스)` 순서입니다."
+example: |
+  list.index_map(["a", "b"], fn(x, i) { #(i, x) })  // -> [#(0, "a"), #(1, "b")]
+imports: [gleam/list, gleam/int]
+signature: "list.index_map(List(a), with: fn(a, Int) -> b) -> List(b)"
+frequency: 10
+recognize:
+  prompt: "`list.index_map` 콜백의 인자 순서와 인덱스 시작값은?"
+  choices: ["`fn(x, i)`, 0부터", "`fn(i, x)`, 0부터", "`fn(x, i)`, 1부터", "`fn(acc, x, i)`, 0부터"]
+  answer: 0
+  feedback:
+    correct: 맞아요. 원소가 먼저, 인덱스가 나중이고 인덱스는 0부터 셉니다.
+    choices:
+      1: Elm의 `List.indexedMap`은 인덱스가 먼저지만, Gleam은 원소가 먼저입니다.
+      2: 인덱스는 0부터 시작합니다. 1부터 번호를 매기려면 `i + 1`을 쓰세요.
+      3: 누적값까지 받는 것은 `list.index_fold`입니다.
+cloze:
+  prompt: 빈칸을 채워 각 원소에 인덱스를 더하세요.
+  code: "list.____([10, 20], fn(x, i) { x + i })"
+  answers: [index_map]
+  expected: "[10, 21]"
+predict:
+  prompt: 이 식의 값은?
+  code: 'list.index_map(["x", "y", "z"], fn(_, i) { i * i })'
+  expected: "[0, 1, 4]"
+produce:
+  prompt: '항목마다 1부터 번호를 붙여 `"1. milk"` 같은 줄을 만드는 함수 본문을 `list.index_map`으로 쓰세요.'
+  header: "pub fn numbered(items: List(String)) -> List(String)"
+  checks: '#(numbered(["milk", "eggs"]), numbered([]), numbered(["tea"]))'
+  expected: '#(["1. milk", "2. eggs"], [], ["1. tea"])'
+  mustUse: [list.index_map]
+  reference: 'list.index_map(items, fn(item, i) { int.to_string(i + 1) <> ". " <> item })'
+  hint: 인덱스는 0부터이므로 `int.to_string(i + 1)`을 씁니다.

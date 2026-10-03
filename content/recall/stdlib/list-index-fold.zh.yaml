@@ -1,0 +1,18 @@
+title: list.index_fold
+summary: "和 `list.fold` 一样，但回调还会收到元素的索引（从 0 开始）。回调参数的顺序是 `fn(累加器, 元素, 索引)`。"
+recognize:
+  prompt: "`list.index_fold` 的回调接收参数的顺序是？"
+  choices: ["`fn(acc, x, i)`", "`fn(acc, i, x)`", "`fn(i, acc, x)`", "`fn(x, i)`"]
+  feedback:
+    correct: 对。就是在 `list.fold` 的 `fn(acc, x)` 后面再加一个索引。
+    choices:
+      1: 索引在元素之后，排在最后。
+      2: fold 系列函数的第一个参数总是累加器。
+      3: 没有累加器、只接收元素和索引的是 `list.index_map` 的回调。
+cloze:
+  prompt: 填空，求每个元素乘以其索引后的总和。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 用 `list.index_fold` 写出函数体：只把索引为偶数（0、2、4……）位置上的元素加起来。
+  hint: 回调的形式是 `fn(acc, x, i) { ... }`；索引为奇数时原样返回 `acc`。

@@ -1,0 +1,16 @@
+title: 类型别名
+summary: "`pub type Cents = Int` 只是给已有类型起另一个名字。它不是新类型，可以和 `Int` 完全互换。"
+recognize:
+  prompt: "已知 `pub type UserId = Int` 和 `fn find(id: UserId)`，`find(7)` 会怎样？"
+  choices: ["能编译：`UserId` 是 `Int` 的另一个名字", "类型错误：必须写成 `UserId(7)`", "类型错误：必须把 `7` 转换成 `UserId`", "运行时检查"]
+  feedback:
+    correct: "对。别名不会创建新类型，所以可以直接传入 `Int` 值。"
+    choices:
+      1: "像 `UserId(7)` 这样包装，是带构造器的自定义类型。别名没有构造器。"
+      2: 别名不创建新类型，不需要转换。
+      3: "类型在编译时检查。别名被当作与 `Int` 相同的类型。"
+cloze:
+  prompt: "在空白处填入类型。别名 `Cents` 和 `Int` 都可以。"
+produce:
+  prompt: "给价格加上 10% 的税（整数除法）。绑定税额时写出别名类型，如 `let tax: Cents = ...`。"
+  hint: "`Cents` 就是 `Int`，`/` 和 `+` 照常可用。"

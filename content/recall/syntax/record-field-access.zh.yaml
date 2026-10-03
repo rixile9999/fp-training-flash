@@ -1,0 +1,16 @@
+title: 用 .label 访问字段
+summary: "记录的字段用 `.标签` 读取，如 `user.name`。对于有多个变体的类型的值，只有每个变体都在相同位置、以相同类型拥有该字段时，才能直接读取。"
+recognize:
+  prompt: "已知 `s: Shape`（变体为 `Circle` 和 `Rectangle`），哪个表达式能编译？"
+  choices: ["`s.name`", "`s.radius`", "`s[\"name\"]`", "`s->name`"]
+  feedback:
+    correct: "对。两个变体都有 `name`，所以可以直接读取。"
+    choices:
+      1: "只有 `Circle` 有 `radius`。`s` 也可能是 `Rectangle`，要先用 `case` 区分变体。"
+      2: 记录不是映射，不能用字符串键读取。
+      3: "`->` 用于返回类型和 `case` 分支。字段用 `.` 读取。"
+cloze:
+  prompt: 在空白处填入标签，读取图形的名字。
+produce:
+  prompt: 从图形列表中取出每个图形的名字并返回。
+  hint: "像 `list.map(shapes, fn(s) { s.name })` 这样读取字段。"

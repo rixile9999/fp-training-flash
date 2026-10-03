@@ -1,0 +1,15 @@
+title: Strings can't be compared with <
+summary: "`<` and `>` are for `Int` only, so `\"apple\" < \"banana\"` is a type error. Get the order of two strings with `string.compare`, which returns an `order.Order`: `Lt`, `Eq` or `Gt`."
+recognize:
+  prompt: "Which expression checks whether the string `a` comes before `b` alphabetically?"
+  choices: ["`a < b`", "`string.compare(a, b) == order.Lt`", "`a.localeCompare(b) < 0`", "`string.compare(a, b) < 0`"]
+  feedback:
+    correct: Right. Compare the `Order` from `string.compare` with `order.Lt`.
+    choices:
+      0: "`<` is for `Int` only, so using it on strings is a type error."
+      2: "That's a JavaScript method. Gleam has no method calls."
+      3: "`string.compare` doesn't return a number like C's `strcmp`; it returns `Lt`, `Eq` or `Gt`."
+cloze:
+  prompt: Fill in the `Order` value.
+produce:
+  prompt: Return whichever of the two words comes first alphabetically. If they're equal, either one is fine.

@@ -1,0 +1,17 @@
+title: 用管道传入其他位置
+summary: 要把管道值放到第一个以外的位置，就用捕获。`a |> f(b, _)` 就是 `f(b, a)`。
+recognize:
+  prompt: "`3 |> int.subtract(10, _)` 的值是？"
+  choices: ["`-7`", "`7`", "编译错误"]
+  feedback:
+    correct: 对。3 填进 `_` 的位置，得到 `int.subtract(10, 3)`，也就是 `10 - 3`。
+    choices:
+      0: 这是 `int.subtract(3, 10)` 的值。有捕获时，管道值放在 `_` 的位置。
+      2: 管道和捕获可以一起使用。
+cloze:
+  prompt: 填空，把管道值作为第二个参数传入。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 写出函数体：判断角色名是否在 `["admin", "editor"]` 中。用管道把 `role` 传到 `list.contains` 的第二个参数位置。
+  hint: 签名是 `list.contains(列表, 要找的值)`，所以把 `_` 放在要找的值的位置。

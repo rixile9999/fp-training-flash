@@ -1,0 +1,15 @@
+title: "== 只比较同类型的值"
+summary: "`==` 只能比较同一类型的值。`1 == 1.0` 或 `5 == \"5\"` 不是 `False`，而是编译错误，所以要先转换一边再比较。"
+recognize:
+  prompt: "`1 == 1.0` 会怎样？"
+  choices: ["`True`", "`False`", 编译错误（类型不同）]
+  feedback:
+    correct: "对。`Int` 和 `Float` 是不同类型，比较本身就是类型错误。"
+    choices:
+      0: "在 Python 或 JavaScript 中是 `True`，但 Gleam 不比较不同类型的值。"
+      1: "不是运行后得到 `False`，而是在编译阶段就被拒绝。"
+cloze:
+  prompt: 填空，让整数可以和字符串比较。
+produce:
+  prompt: "把输入字符串 `input` 解析为整数，与 `code` 相等时返回 `True`。"
+  hint: "`Result` 之间也可以用 `==` 比较。"

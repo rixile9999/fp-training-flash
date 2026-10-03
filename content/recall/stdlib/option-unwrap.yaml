@@ -1,0 +1,32 @@
+title: option.unwrap
+topic: gleam/option
+order: 26
+summary: "`Some`이면 안의 값을, `None`이면 `or:`로 준 기본값을 돌려줍니다."
+example: |
+  option.unwrap(None, "guest")  // -> "guest"
+imports: ["gleam/option.{type Option, None, Some}"]
+signature: "option.unwrap(Option(a), or: a) -> a"
+frequency: 9
+recognize:
+  prompt: "`opt: Option(Int)`에서 값을 꺼내되 `None`이면 0을 쓰는 코드는?"
+  choices: ["`option.unwrap(opt, 0)`", "`opt.unwrap_or(0)`", "`result.unwrap(opt, 0)`", "`opt ?? 0`"]
+  answer: 0
+  feedback:
+    correct: 맞아요. 모듈 함수에 `Option` 값을 첫 인자로, 기본값을 두 번째 인자로 넘깁니다.
+    choices:
+      1: Rust식 메서드 호출이에요. Gleam에는 메서드가 없어서 모듈 함수에 값을 첫 인자로 넘깁니다.
+      2: "`result.unwrap`은 `Result`용이라 `Option`을 넘기면 컴파일 오류예요."
+      3: Gleam에는 `??` 연산자가 없어요.
+cloze:
+  prompt: 빈칸을 채워 `None`일 때 기본값을 쓰세요.
+  code: 'option.____(None, "guest")'
+  answers: [unwrap]
+  expected: '"guest"'
+produce:
+  prompt: 화면에 보일 이름을 돌려주세요. 닉네임이 있으면 닉네임을, 없으면 실명을 씁니다.
+  header: "pub fn display_name(name: String, nickname: Option(String)) -> String"
+  checks: '#(display_name("Kim", Some("kk")), display_name("Lee", None), display_name("", None))'
+  expected: '#("kk", "Lee", "")'
+  mustUse: [option.unwrap]
+  reference: "option.unwrap(nickname, name)"
+  hint: 기본값 자리에 상수가 아니라 변수 `name`을 넘겨도 됩니다.

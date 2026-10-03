@@ -1,0 +1,22 @@
+title: string.concat
+summary: "Glues a list of strings together with no separator. Use `string.join` when you need a separator, and `<>` when there are only two strings."
+recognize:
+  prompt: "What is the difference between `string.concat` and `string.join`?"
+  choices:
+    - "`concat` takes two strings; `join` takes a list"
+    - "`concat` joins lists together; `join` joins strings"
+    - "`concat` glues with no separator; `join` also takes a separator"
+    - They are the same function under two names
+  feedback:
+    correct: "Right. Both take a `List(String)`; only `join` also takes a `with:` separator."
+    choices:
+      0: "Gluing two strings is `string.append` (or `<>`). `concat` takes a list too."
+      1: "Joining lists is `list.append` and `list.flatten`. `string.concat` turns a `List(String)` into a single `String`."
+      3: "`join` takes an extra separator. `string.join(parts, \"\")` is the same as `string.concat(parts)`."
+cloze:
+  prompt: Fill in the blank to glue the pieces together with no separator.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: 'Build a display string like `"Ada (36)"` from a name and an age.'
+  hint: "Make the list `[name, \" (\", ..., \")\"]` and convert the age with `int.to_string`."

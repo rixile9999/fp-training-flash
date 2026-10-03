@@ -1,0 +1,18 @@
+title: use 与 result.try
+summary: "`use x <- result.try(r)`：`r` 是 `Ok(x)` 时继续执行下一行，是 `Error` 时就地返回这个 `Error`。"
+recognize:
+  prompt: 在 `use x <- result.try(r)` 中，如果 `r` 是 `Error(e)` 会怎样？
+  choices: ["把 `Nil` 放进 `x` 后继续", "立即返回 `Error(e)`，下面的行不再执行", "进程崩溃", "返回 `Ok(Nil)`"]
+  feedback:
+    correct: 对。遇到第一个 `Error` 就停下，原样返回这个错误。
+    choices:
+      0: "`x` 只会收到 `Ok` 里的值。遇到 `Error` 时下面的代码不会执行。"
+      2: 会崩溃的是 `let assert`。`result.try` 把错误当作值返回。
+      3: 错误不会被丢掉，收到的 `Error(e)` 会原样返回。
+cloze:
+  prompt: 填空，把解析结果取出为 `a`。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 把上方的 `find_user` 和 `find_email` 串起来，用 `Ok` 返回用户 `id` 的联系方式，格式为 `"名字 <邮箱>"`。任何一步失败都原样返回那个 `Error`。请用 `use` 和 `result.try`。
+  hint: 最后一行要用 `Ok(...)` 包起来，因为回调也必须返回 `Result`。

@@ -1,0 +1,40 @@
+title: string.concat
+topic: gleam/string
+order: 33
+summary: "문자열 리스트를 구분자 없이 그대로 이어 붙입니다. 구분자가 필요하면 `string.join`, 두 개만 붙일 때는 `<>`를 씁니다."
+example: |
+  string.concat(["Hello", ", ", "Gleam"])  // -> "Hello, Gleam"
+imports: [gleam/int, gleam/string]
+signature: "string.concat(List(String)) -> String"
+frequency: 6
+recognize:
+  prompt: "`string.concat`과 `string.join`의 차이로 맞는 것은?"
+  choices:
+    - "`concat`은 문자열 두 개를 받고, `join`은 리스트를 받는다"
+    - "`concat`은 리스트끼리 이어 붙이고, `join`은 문자열을 이어 붙인다"
+    - "`concat`은 구분자 없이 붙이고, `join`은 구분자를 함께 받는다"
+    - 이름만 다르고 같은 함수다
+  answer: 2
+  feedback:
+    correct: "맞아요. 둘 다 `List(String)`을 받고, `join`만 `with:` 구분자를 더 받습니다."
+    choices:
+      0: "문자열 두 개를 붙이는 것은 `string.append`(또는 `<>`)예요. `concat`도 리스트를 받습니다."
+      1: "리스트끼리 잇는 것은 `list.append`와 `list.flatten`이에요. `string.concat`은 `List(String)`을 `String` 하나로 만듭니다."
+      3: "`join`은 구분자를 하나 더 받아요. `string.join(parts, \"\")`이 `string.concat(parts)`와 같습니다."
+cloze:
+  prompt: 빈칸을 채워 조각들을 구분자 없이 이으세요.
+  code: 'string.____(["2026", "-", "10"])'
+  answers: [concat]
+  expected: '"2026-10"'
+predict:
+  prompt: 이 식의 값은?
+  code: "string.concat([])"
+  expected: '""'
+produce:
+  prompt: '이름과 나이로 `"Ada (36)"` 같은 표시 문자열을 만드세요.'
+  header: "pub fn label(name: String, age: Int) -> String"
+  checks: '#(label("Ada", 36), label("Lee", 7), label("", 0))'
+  expected: '#("Ada (36)", "Lee (7)", " (0)")'
+  mustUse: [string.concat]
+  reference: 'string.concat([name, " (", int.to_string(age), ")"])'
+  hint: "`[name, \" (\", ..., \")\"]` 리스트를 만들고 나이는 `int.to_string`으로 바꾸세요."

@@ -1,0 +1,16 @@
+title: result.unwrap
+summary: "Returns the value inside `Ok`, or the default given as `or:` when it is an `Error`. The error itself is thrown away, so use it only when a default is good enough."
+recognize:
+  prompt: "Given `r: Result(Int, String)`, what is the type of `result.unwrap(r, or: 0)`?"
+  choices: ["`Int`", "`Result(Int, String)`", "`Option(Int)`", "`String`"]
+  feedback:
+    correct: Right. It strips the `Result` and returns the `Ok` type, so the default must be an `Int` too.
+    choices:
+      1: "`unwrap` strips the `Result`. To change the value while keeping the `Result`, use `result.map`."
+      2: "Converting a `Result` into an `Option` is `option.from_result`."
+      3: The `String` error is discarded. The result has the `Ok` type, `Int`.
+cloze:
+  prompt: Fill in the blank so a failed parse becomes 0.
+produce:
+  prompt: Turn the page-number string from a URL into an integer. If it is not a number, treat it as page 1.
+  hint: "Pass the result of `int.parse(s)` to `result.unwrap` with 1 as the default."

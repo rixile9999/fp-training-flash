@@ -1,0 +1,18 @@
+title: dict.map_values
+summary: 返回用回调转换了所有值的新 dict。键保持不变，回调接收的不只是值，而是 `fn(键, 值)`。
+recognize:
+  prompt: "下面哪个 `f` 可以正确传给 `dict.map_values(prices, f)`？"
+  choices: ["`fn(v) { v * 2 }`", "`fn(k, v) { v * 2 }`", "`fn(v, k) { v * 2 }`", "`fn(pair) { #(pair.0, pair.1 * 2) }`"]
+  feedback:
+    correct: 对。即使不用键，回调也要像 `fn(_k, v)` 这样接收两个参数。
+    choices:
+      0: 只接收值的回调会产生编译错误。键也会一起传进来。
+      2: 键在前，值在后。
+      3: 它不以元组接收，返回的也只是新值。键不能修改。
+cloze:
+  prompt: 填空，给每个值加 1。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 用 `dict.map_values` 写出函数体：返回所有价格打九折（整数除法）后的价目表。
+  hint: 折后价是 `price * 9 / 10`；不用的键用 `_item` 接收。

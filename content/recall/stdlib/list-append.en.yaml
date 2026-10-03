@@ -1,0 +1,16 @@
+title: list.append
+summary: Joins the second list onto the end of the first. Both arguments are lists, and it takes time proportional to the length of the first.
+recognize:
+  prompt: "Which expression joins list `ys` onto the end of list `xs`?"
+  choices: ["`xs <> ys`", "`list.append(xs, ys)`", "`xs + ys`", "`[xs, ..ys]`"]
+  feedback:
+    correct: Right. `list.append(xs, ys)` puts the elements of `ys` after those of `xs`.
+    choices:
+      0: "`<>` is for strings only."
+      2: "`+` is for `Int` only. Unlike Python, you can't join lists with `+`."
+      3: "`[xs, ..ys]` puts the whole of `xs` in front of `ys` as a single element, so here it's a type error."
+cloze:
+  prompt: Fill in the blank to join the two lists.
+produce:
+  prompt: Write the body of a function that adds one element to the end of a list, using `list.append`.
+  hint: Wrap the single element in a list too, as `[x]`.

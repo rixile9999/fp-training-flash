@@ -1,0 +1,15 @@
+title: 比较不能连写
+summary: "不能像 Python 那样连写 `1 <= x <= 9`。这样会把前一个比较的结果（`Bool`）再与 `Int` 比较，导致类型错误，所以要用 `&&` 拆开：`1 <= x && x <= 9`。"
+recognize:
+  prompt: "判断 `x` 是否在 1 到 9 之间（含两端）的表达式是？"
+  choices: ["`1 <= x <= 9`", "`1 <= x && x <= 9`", "`x in 1..9`", "`x.between(1, 9)`"]
+  feedback:
+    correct: 对。逐个比较，再用 `&&` 连接。
+    choices:
+      0: "这会把 `1 <= x` 得到的 `Bool` 再与 `9` 比较，是类型错误。Gleam 没有 Python 那样的连续比较。"
+      2: "没有 `in` 运算符，也没有 `1..9` 这样的范围语法。"
+      3: Gleam 没有方法调用。
+cloze:
+  prompt: 填入正确的运算符。
+produce:
+  prompt: 年龄在 13 到 19 岁之间（含两端）时返回 `True`。

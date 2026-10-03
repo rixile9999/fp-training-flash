@@ -1,0 +1,17 @@
+title: Dividing by 0.0 gives 0.0
+summary: "`x /. 0.0` is `0.0`: no exception and no `Infinity`. To tell division by zero apart, use `float.divide`, which returns a `Result`."
+recognize:
+  prompt: "What is the value of `1.0 /. 0.0`?"
+  choices: ["`Infinity`", "`0.0`", It crashes at runtime, "`NaN`"]
+  feedback:
+    correct: Right. Gleam returns `0.0` when you divide by zero.
+    choices:
+      0: "Unlike JavaScript, you don't get `Infinity`."
+      2: Nothing is thrown; you get the value `0.0`, which is why the mistake is easy to miss.
+      3: "You don't get `NaN` either. The result is `0.0`."
+cloze:
+  prompt: Fill in the blank so division by zero comes back as an `Error`.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: "Return the share of `part` in `whole`. If `whole` is 0, return `Error(Nil)`."

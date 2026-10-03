@@ -1,0 +1,45 @@
+title: 불투명 타입
+topic: opaque-types
+order: 127
+summary: "`pub opaque type`은 타입은 공개하지만 생성자와 필드 접근은 감춥니다. 다른 모듈은 정의한 모듈의 함수(스마트 생성자)로만 값을 만들고 읽어요."
+definitions: |
+  pub opaque type Percent {
+    Percent(value: Int)
+  }
+
+  pub fn percent(n: Int) -> Result(Percent, Nil) {
+    case n >= 0 && n <= 100 {
+      True -> Ok(Percent(n))
+      False -> Error(Nil)
+    }
+  }
+
+  pub fn to_int(p: Percent) -> Int {
+    p.value
+  }
+example: |
+  percent(150)  // -> Error(Nil)
+imports: []
+recognize:
+  prompt: "위의 `Percent`를 다른 모듈에서 `Percent(150)`으로 만들면?"
+  choices: ["`Percent(150)` 값이 만들어집니다", "컴파일 오류: 불투명 타입의 생성자는 정의한 모듈 밖에서 쓸 수 없습니다", "`Error(Nil)`이 됩니다", "실행 중에 실패합니다"]
+  answer: 1
+  feedback:
+    correct: "맞아요. 그래서 모든 `Percent` 값은 검사하는 `percent` 함수를 거쳐 만들어집니다."
+    choices:
+      0: "`opaque`는 생성자를 모듈 밖에서 감춰요. 검사를 건너뛴 값을 만들 수 없습니다."
+      2: "범위 검사는 `percent` 함수가 하는 일이에요. 생성자를 직접 부르는 것부터 막힙니다."
+      3: 모듈 밖에서의 사용은 컴파일할 때 막혀요.
+cloze:
+  prompt: "모듈 밖이라고 생각하고, 공개 함수로 `Percent` 안의 정수를 꺼내세요."
+  code: "{ let assert Ok(p) = percent(40)  ____(p) }"
+  answers: [to_int]
+  expected: "40"
+produce:
+  prompt: "두 `Percent`를 더하세요. 합이 100을 넘으면 `Error(Nil)`이어야 하므로 생성자 대신 검사하는 `percent`로 만드세요."
+  header: "pub fn add_percent(a: Percent, b: Percent) -> Result(Percent, Nil)"
+  checks: "{ let assert Ok(a) = percent(30)  let assert Ok(b) = percent(80)  let assert Ok(z) = percent(0)  #(add_percent(a, z), add_percent(a, b), add_percent(z, z)) }"
+  expected: "#(Ok(Percent(30)), Error(Nil), Ok(Percent(0)))"
+  mustUse: ["percent("]
+  reference: "percent(to_int(a) + to_int(b))"
+  hint: "`to_int`로 두 값을 꺼내 더한 뒤 `percent(...)`에 넘기세요."

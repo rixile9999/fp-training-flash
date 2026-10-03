@@ -1,0 +1,15 @@
+title: 匿名函数 fn
+summary: "`fn(x) { x + 1 }` 是没有名字的函数。它可以捕获外部变量（闭包），类型写作 `fn(Int) -> Int` 这样的形式。"
+recognize:
+  prompt: Gleam 的匿名函数语法是？
+  choices: ["`|x| x + 1`", "`fn(x) { x + 1 }`", "`x => x + 1`", "`lambda x: x + 1`"]
+  feedback:
+    correct: 对。和具名函数一样用 `fn` 加花括号函数体，只是没有名字。
+    choices:
+      0: 这是 Rust 的闭包语法。
+      2: 这是 JavaScript 的箭头函数。
+      3: 这是 Python 的 lambda。
+cloze:
+  prompt: 填空，把每个元素翻倍。
+produce:
+  prompt: 写出函数体：返回一个加上 `n` 的函数。返回的是捕获了 `n` 的匿名函数。

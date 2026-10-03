@@ -1,0 +1,33 @@
+title: 매개변수와 반환 타입 표기
+topic: functions
+order: 104
+summary: "매개변수 타입은 `name: Type`, 반환 타입은 `-> Type`으로 적습니다. 생략하면 추론되지만 최상위 함수에는 보통 적어요."
+example: |
+  {
+    let add = fn(a: Int, b: Int) -> Int { a + b }
+    add(2, 3)
+  }  // -> 5
+imports: [gleam/list]
+recognize:
+  prompt: 두 정수를 더하는 함수의 머리로 올바른 Gleam 코드는?
+  choices: ["`fn add(a: Int, b: Int) -> Int`", "`fn add(a: Int, b: Int): Int`", "`fn add(Int a, Int b) -> Int`", "`fn add(a, b) => Int`"]
+  answer: 0
+  feedback:
+    correct: "맞아요. 매개변수는 `a: Int`, 반환 타입은 `-> Int`입니다."
+    choices:
+      1: "반환 타입 앞에는 `:`가 아니라 `->`를 써요. `: Int`는 TypeScript 표기입니다."
+      2: "타입은 이름 뒤에 `a: Int`처럼 적어요. 타입을 앞에 쓰는 건 Java나 C 순서입니다."
+      3: "`=>`는 Gleam 문법이 아니에요. 반환 타입은 `-> Int`로 씁니다."
+cloze:
+  prompt: 빈칸에 반환 타입 앞에 오는 기호를 넣으세요.
+  code: "{ let half = fn(x: Int) ____ Int { x / 2 }  half(9) }"
+  answers: ["->"]
+  expected: "4"
+produce:
+  prompt: "모든 가격에 10% 할인을 적용하세요(정수 나눗셈). `list.map`에 넘기는 익명 함수에 매개변수 타입과 반환 타입을 모두 적으세요."
+  header: "pub fn discount_all(prices: List(Int)) -> List(Int)"
+  checks: "#(discount_all([100, 250]), discount_all([]), discount_all([5]))"
+  expected: "#([90, 225], [], [4])"
+  mustUse: ["-> Int"]
+  reference: "list.map(prices, fn(p: Int) -> Int { p * 9 / 10 })"
+  hint: "`fn(p: Int) -> Int { ... }` 모양입니다."

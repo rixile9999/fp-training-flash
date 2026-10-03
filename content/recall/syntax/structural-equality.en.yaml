@@ -1,0 +1,16 @@
+title: Structural equality
+summary: "`==` and `!=` compare two values of the same type by structure. Lists, tuples and records are compared all the way down."
+recognize:
+  prompt: "What is `#(1, [\"a\"]) == #(1, [\"a\"])`?"
+  choices: ["`True`", "`False` (they're different values)", "A compile error (tuples can't be compared)", "`Ok(True)`"]
+  feedback:
+    correct: Right. Every value inside is equal, so the structures are equal and the result is `True`.
+    choices:
+      1: Gleam compares structure, not references. If everything inside is equal, the result is `True`.
+      2: Tuples, lists and records of the same type can all be compared with `==`.
+      3: "`==` can't fail, so it returns a plain `Bool`."
+cloze:
+  prompt: Fill in the equality operator.
+produce:
+  prompt: "Decide whether a point is the origin. Don't check the fields one by one; compare the whole record with `Point(0, 0)`."
+  hint: You can compare records directly with `==`.

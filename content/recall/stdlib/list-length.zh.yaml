@@ -1,0 +1,18 @@
+title: list.length
+summary: 计算列表的元素个数。它要遍历整个列表，所以耗时与元素个数成正比。
+recognize:
+  prompt: "在 Gleam 中，怎样求列表 `xs` 的长度？"
+  choices: ["`xs.length`", "`len(xs)`", "`list.length(xs)`", "`list.size(xs)`"]
+  feedback:
+    correct: 对。是 `gleam/list` 的 `list.length(xs)`。
+    choices:
+      0: 这是 JavaScript 风格的属性访问。Gleam 的列表没有字段或方法。
+      1: 这是 Python 的内置函数。Gleam 没有全局的 `len`。
+      3: "`size` 是 `dict.size` 和 `set.size` 用的名字。列表用 `list.length`。"
+cloze:
+  prompt: 填空，求元素个数。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 写出函数体：统计整数列表中有多少个负数。个数用 `list.length` 来数。
+  hint: 先用 `list.filter` 只留下负数，再数个数。

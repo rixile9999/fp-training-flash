@@ -1,0 +1,16 @@
+title: string.inspect 会加引号
+summary: "`string.inspect` 按 Gleam 代码的样子显示值，所以字符串会带上引号。字符串直接拼接即可，`inspect` 用来显示列表这类有结构的值。"
+recognize:
+  prompt: "`io.println(string.inspect(\"ann\"))` 会打印什么？"
+  choices: ["`ann`", "`\"ann\"`", "`Ok(\"ann\")`"]
+  feedback:
+    correct: 对。和 Python 的 `repr` 一样，输出包含引号的代码形式。
+    choices:
+      0: "想不带引号输出，就不要用 `string.inspect`，直接传字符串：`io.println(\"ann\")`。"
+      2: "`string.inspect` 不会失败，直接返回 `String`。"
+cloze:
+  prompt: 填空，把列表显示为字符串。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: "用名字和标签列表生成 `ann: [\"x\"]` 这样的一行。名字不能带引号。"

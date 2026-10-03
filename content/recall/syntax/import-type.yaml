@@ -1,0 +1,37 @@
+title: 타입 가져오기
+topic: imports
+order: 102
+summary: "타입을 한정 없이 쓰려면 `.{type Option}`처럼 `type`을 붙여 가져옵니다. 생성자 `Some`, `None`은 `type` 없이 가져와요."
+example: |
+  {
+    let nickname: Option(String) = Some("ann")
+    nickname
+  }  // -> Some("ann")
+imports: ["gleam/option.{type Option, None, Some}"]
+recognize:
+  prompt: "`Option` 타입과 `Some`, `None` 생성자를 모두 한정 없이 쓰려면?"
+  choices: ["`import gleam/option.{Option, Some, None}`", "`import gleam/option.{type Option, Some, None}`", "`import gleam/option.{type Option, type Some, type None}`", "`import gleam/option.*`"]
+  answer: 1
+  feedback:
+    correct: 맞아요. 타입에는 `type`을 붙이고, 생성자는 값이라 그냥 적습니다.
+    choices:
+      0: "`type` 없이 적은 이름은 값(함수, 생성자)으로 찾아요. `Option`이라는 값은 없어서 컴파일 오류가 납니다."
+      2: "`Some`, `None`은 타입이 아니라 생성자(값)라서 `type` 없이 가져옵니다."
+      3: "Gleam에는 `*` 같은 전체 가져오기가 없어요. 필요한 이름을 나열합니다."
+cloze:
+  prompt: 빈칸에 타입을 넣어 값이 없는 중간 이름을 나타내세요.
+  code: "{ let middle_name: ____ = None  middle_name }"
+  answers: ["Option(String)", "option.Option(String)"]
+  expected: "None"
+produce:
+  prompt: "별명이 있으면 그대로, 없으면 `\"guest\"`를 돌려주세요. 한정 없이 가져온 `Some`, `None`으로 패턴 매칭하세요."
+  header: "pub fn display_name(nick: Option(String)) -> String"
+  checks: '#(display_name(Some("ann")), display_name(None), display_name(Some("")))'
+  expected: '#("ann", "guest", "")'
+  mustUse: [Some, None]
+  reference: |
+    case nick {
+      Some(name) -> name
+      None -> "guest"
+    }
+  hint: "`case nick { Some(name) -> ... None -> ... }` 모양입니다."

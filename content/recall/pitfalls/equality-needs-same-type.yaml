@@ -1,0 +1,29 @@
+title: "==는 같은 타입끼리만"
+topic: equality
+order: 13
+summary: "`==`는 같은 타입끼리만 비교할 수 있습니다. `1 == 1.0`이나 `5 == \"5\"`는 `False`가 아니라 컴파일 오류라서, 한쪽을 변환한 뒤 비교합니다."
+example: |
+  int.parse("42") == Ok(42)  // -> True
+imports: [gleam/int]
+recognize:
+  prompt: "`1 == 1.0`은?"
+  choices: ["`True`", "`False`", 컴파일 오류(타입이 다름)]
+  answer: 2
+  feedback:
+    correct: "맞아요. `Int`와 `Float`는 다른 타입이라 비교 자체가 타입 오류입니다."
+    choices:
+      0: "Python이나 JavaScript에서는 `True`지만, Gleam은 타입이 다른 값을 비교하지 않아요."
+      1: "실행해서 `False`가 나오는 게 아니라, 컴파일 단계에서 막힙니다."
+cloze:
+  prompt: 빈칸을 채워 정수와 문자열을 비교할 수 있게 하세요.
+  code: 'int.____(5) == "5"'
+  answers: [to_string]
+  expected: "True"
+produce:
+  prompt: "입력 문자열 `input`을 정수로 읽은 값이 `code`와 같으면 `True`를 돌려주세요."
+  header: "pub fn matches_code(input: String, code: Int) -> Bool"
+  checks: '#(matches_code("42", 42), matches_code("42", 7), matches_code("x", 0), matches_code("007", 7))'
+  expected: "#(True, False, False, True)"
+  mustUse: [int.parse, "=="]
+  reference: "int.parse(input) == Ok(code)"
+  hint: "`Result`끼리도 `==`로 비교할 수 있어요."

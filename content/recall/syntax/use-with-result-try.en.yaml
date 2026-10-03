@@ -1,0 +1,18 @@
+title: use with result.try
+summary: "`use x <- result.try(r)` carries on with the next line when `r` is `Ok(x)`, and returns that `Error` right there when it isn't."
+recognize:
+  prompt: In `use x <- result.try(r)`, what happens if `r` is `Error(e)`?
+  choices: ["`x` is set to `Nil` and it continues", "`Error(e)` is returned at once and the lines below don't run", "The process crashes", "It returns `Ok(Nil)`"]
+  feedback:
+    correct: Right. It stops at the first `Error` and returns that error unchanged.
+    choices:
+      0: "`x` only ever receives the value inside an `Ok`. On an `Error` the code below doesn't run."
+      2: Crashing is what `let assert` does. `result.try` returns the error as a value.
+      3: The error isn't thrown away; the `Error(e)` it got is returned as is.
+cloze:
+  prompt: Fill in the blank to take the parsed value out as `a`.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: 'Chain `find_user` and `find_email` above to return the contact of user `id` as `"name <email>"` in `Ok`. If any step fails, return its `Error` unchanged. Use `use` and `result.try`.'
+  hint: "Wrap the last line in `Ok(...)`: the callback has to return a `Result` too."

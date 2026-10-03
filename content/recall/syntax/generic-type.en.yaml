@@ -1,0 +1,16 @@
+title: Generic types and type variables
+summary: "Lowercase names in type definitions and function types are type variables. `Box(a)` can hold any type, and each use fixes it to one, such as `Box(Int)` or `Box(String)`."
+recognize:
+  prompt: "In `pub type Box(a) { Box(value: a) }`, what is `a`?"
+  choices: ["A type variable that can be any type", "A concrete type named `a`", "A dynamic type that mixes values of different types", "A default value for the constructor argument"]
+  feedback:
+    correct: "Right. With `Box(1)`, `a` is `Int`; with `Box(\"x\")`, it's `String`."
+    choices:
+      1: Type names start with a capital letter. Lowercase names are type variables.
+      2: "A type variable is fixed to one type at each use. You can't mix `Box(1)` and `Box(\"x\")` in one list."
+      3: Gleam has no default arguments. `a` is a placeholder for a type.
+cloze:
+  prompt: Fill in the type.
+produce:
+  prompt: "Return a new `Box` holding the result of applying `f` to the value inside. It must work for a `Box` of any type."
+  hint: "Take `box.value`, pass it to `f`, and wrap the result in `Box(...)` again."

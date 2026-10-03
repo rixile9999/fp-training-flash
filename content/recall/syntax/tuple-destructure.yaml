@@ -1,0 +1,35 @@
+title: let으로 튜플 풀기
+topic: tuples
+order: 118
+summary: "`let #(a, b) = pair`로 튜플을 한 번에 풀어 각 원소에 이름을 붙입니다. 패턴의 원소 수는 튜플과 같아야 하고, 쓰지 않는 원소는 `_`로 버려요."
+example: |
+  {
+    let #(name, _) = #("ann", 30)
+    name
+  }  // -> "ann"
+imports: [gleam/int]
+recognize:
+  prompt: "`let #(x, y) = #(1, 2, 3)`은?"
+  choices: ["`x`는 1, `y`는 2가 되고 3은 버려집니다", "컴파일 오류: 패턴과 튜플의 원소 수가 다릅니다", "`y`가 `#(2, 3)`이 됩니다", "실행 중에 실패합니다"]
+  answer: 1
+  feedback:
+    correct: "맞아요. 튜플의 크기는 타입의 일부라 원소 수가 맞아야 합니다."
+    choices:
+      0: "남는 원소를 조용히 버리지 않아요. 버릴 원소도 `_`로 자리를 채워야 합니다."
+      2: "튜플 패턴에는 리스트의 `..rest` 같은 나머지 문법이 없어요."
+      3: 크기가 다르면 타입이 달라서 컴파일할 때 바로 잡힙니다.
+cloze:
+  prompt: 빈칸에 패턴을 넣어 첫 원소를 `label`로 바인딩하세요.
+  code: '{ let ____ = #("x", 10)  label <> "!" }'
+  answers: ["#(label, _)", "#(label, _count)"]
+  expected: '"x!"'
+produce:
+  prompt: "`#(상품명, 수량)`을 받아 `\"apple x3\"` 형태로 만드세요. `let`으로 튜플을 풀어 쓰세요."
+  header: "pub fn describe(entry: #(String, Int)) -> String"
+  checks: '#(describe(#("apple", 3)), describe(#("pen", 0)), describe(#("", 12)))'
+  expected: '#("apple x3", "pen x0", " x12")'
+  mustUse: ["let #("]
+  reference: |
+    let #(name, qty) = entry
+    name <> " x" <> int.to_string(qty)
+  hint: "`let #(name, qty) = entry`로 시작하세요."

@@ -1,0 +1,18 @@
+title: Tail calls and accumulators
+summary: When the last thing a function does is call itself (a tail call), the stack doesn't grow. That's why tail recursion with an accumulator argument plays the role of a loop in Gleam.
+recognize:
+  prompt: In which branch is the recursive call a tail call?
+  choices: ["`[x, ..rest] -> x + sum(rest)`", "`[x, ..rest] -> sum_loop(rest, acc + x)`", "`[x, ..rest] -> [x * 2, ..double(rest)]`", "`[_, ..rest] -> 1 + length(rest)`"]
+  feedback:
+    correct: Right. The call's result is returned as is, and the pending work is passed ahead in the accumulator `acc + x`.
+    choices:
+      0: "`x +` still has to be computed after the recursive call returns, so it isn't a tail call."
+      2: Putting an element in front of the result is still left to do, so it isn't a tail call.
+      3: "`1 +` is left after the call. Adding an accumulator argument turns it into a tail call."
+cloze:
+  prompt: To compute a sum, what should the accumulator start at? Fill in the blank.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Write the body of a tail-recursive function that multiplies each element into the accumulator `acc`. When the list is empty, return `acc`.
+  hint: It has the same shape as `sum_loop` above, with `+` changed to `*`.

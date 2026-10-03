@@ -1,0 +1,33 @@
+title: 문자열은 <로 비교할 수 없음
+topic: strings
+order: 18
+summary: "`<`, `>`는 `Int` 전용이라 `\"apple\" < \"banana\"`는 타입 오류입니다. 문자열 순서는 `string.compare`로 구하고, 결과는 `order.Order` 값 `Lt`, `Eq`, `Gt`예요."
+example: |
+  string.compare("apple", "banana")  // -> Lt
+imports: [gleam/string, gleam/order]
+recognize:
+  prompt: "문자열 `a`가 사전순으로 `b`보다 앞인지 확인하는 식은?"
+  choices: ["`a < b`", "`string.compare(a, b) == order.Lt`", "`a.localeCompare(b) < 0`", "`string.compare(a, b) < 0`"]
+  answer: 1
+  feedback:
+    correct: 맞아요. `string.compare`가 돌려준 `Order`를 `order.Lt`와 비교합니다.
+    choices:
+      0: "`<`는 `Int` 전용이라 문자열에 쓰면 타입 오류예요."
+      2: "JavaScript 메서드예요. Gleam에는 메서드 호출이 없습니다."
+      3: "`string.compare`는 C의 `strcmp`처럼 숫자를 돌려주지 않고 `Lt`, `Eq`, `Gt`를 돌려줘요."
+cloze:
+  prompt: 빈칸에 알맞은 `Order` 값을 채우세요.
+  code: 'string.compare("b", "a") == order.____'
+  answers: [Gt]
+  expected: "True"
+produce:
+  prompt: 두 단어 중 사전순으로 앞서는 단어를 돌려주세요. 같으면 아무거나 돌려줘도 됩니다.
+  header: "pub fn earlier(a: String, b: String) -> String"
+  checks: '#(earlier("pear", "apple"), earlier("fig", "kiwi"), earlier("same", "same"))'
+  expected: '#("apple", "fig", "same")'
+  mustUse: [string.compare]
+  reference: |
+    case string.compare(a, b) {
+      order.Gt -> b
+      _ -> a
+    }

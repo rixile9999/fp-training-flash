@@ -1,0 +1,15 @@
+title: Labels and parameter names
+summary: "In `fn f(label name: Type)`, the first word, `label`, is what callers write, and the second, `name`, is what the function body uses."
+recognize:
+  prompt: Inside the body of the `replace` above, which name refers to the first argument?
+  choices: ["`in`", "`in.text`", "Both `in` and `text`", "`text`"]
+  feedback:
+    correct: Right. The body uses the internal name `text`.
+    choices:
+      0: "`in` is the label callers use; it isn't available in the body."
+      1: There's no such syntax.
+      2: "They're split: the label is for callers, the internal name is for the body."
+cloze:
+  prompt: Fill in the label to pass the original string.
+produce:
+  prompt: Write the body of a function that returns whether `x` is at least `low` and at most `high`. The body must use the internal names, not the labels (`from`, `to`).

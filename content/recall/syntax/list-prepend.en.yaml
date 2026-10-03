@@ -1,0 +1,18 @@
+title: Prepending to a list
+summary: "`[x, ..rest]` is a new list with `x` in front of `rest`. Prepending is O(1), and the original list is unchanged."
+recognize:
+  prompt: "Which Gleam expression puts 0 in front of the list `xs`?"
+  choices: ["`[0, ..xs]`", "`[..xs, 0]`", "`0 :: xs`", "`[0] + xs`"]
+  feedback:
+    correct: "Right. `..xs` always comes last in the list."
+    choices:
+      1: "`..xs` can only come last, so this is a syntax error. To add at the end, use `list.append(xs, [0])`."
+      2: "`::` is OCaml or F# notation."
+      3: "`+` is for Int only. To join lists, use `list.append`."
+cloze:
+  prompt: 'Fill in the blank to put `"a"` in front of the list.'
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: "Put the header `\"name,age\"` in front of a list of CSV rows."
+  hint: "It looks like `[new_element, ..rows]`."

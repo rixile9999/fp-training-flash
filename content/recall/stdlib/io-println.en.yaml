@@ -1,0 +1,15 @@
+title: io.println
+summary: "Writes one string to standard output followed by a newline. It takes only a `String` and returns `Nil`."
+recognize:
+  prompt: "What happens with `io.println(42)`?"
+  choices: ["It prints `42` and a newline", "It is a compile error", "It returns the string `\"42\"`"]
+  feedback:
+    correct: Right. `io.println` takes only a `String`, so convert first, as in `io.println(int.to_string(42))`.
+    choices:
+      0: There is no implicit conversion. Passing an `Int` is a type mismatch, so it does not compile.
+      2: "`io.println` only prints, and returns `Nil`."
+cloze:
+  prompt: Fill in the blank to write the greeting to standard output, followed by a newline.
+produce:
+  prompt: "Given a name and a score, print them on one line, like `ann: 90`."
+  hint: "Convert the score with `int.to_string`, then join with `<>`."

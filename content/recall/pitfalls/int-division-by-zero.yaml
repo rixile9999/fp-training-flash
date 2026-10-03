@@ -1,0 +1,33 @@
+title: 0으로 나누면 0
+topic: int
+order: 9
+summary: "`x / 0`은 오류 없이 `0`이고, `x % 0`도 `0`입니다. 0으로 나눈 경우를 구분하려면 `Result`를 돌려주는 `int.divide`를 씁니다."
+example: |
+  10 / 0  // -> 0
+imports: [gleam/int]
+recognize:
+  prompt: "`10 / 0`의 값은?"
+  choices: ["`0`", 런타임 오류로 멈춤, "`Error(Nil)`", "`Infinity`"]
+  answer: 0
+  feedback:
+    correct: 맞아요. Gleam의 `/`는 0으로 나누면 `0`을 돌려줍니다.
+    choices:
+      1: Python이나 Java와 달리 예외가 나지 않아요. 그래서 실수를 알아채기 어렵습니다.
+      2: "`/` 연산자는 `Int`를 바로 돌려줘요. `Result`가 필요하면 `int.divide`를 씁니다."
+      3: "`Int`에는 `Infinity`가 없습니다."
+cloze:
+  prompt: 빈칸을 채워 0으로 나누기를 `Error`로 받으세요.
+  code: "int.____(10, by: 0)"
+  answers: [divide]
+  expected: "Error(Nil)"
+predict:
+  prompt: 이 식의 값은?
+  code: "7 % 0"
+  expected: "0"
+produce:
+  prompt: "`total`을 `people`명이 똑같이 나눈 몫을 돌려주세요. 인원이 0이면 `Error(Nil)`입니다."
+  header: "pub fn per_person(total: Int, people: Int) -> Result(Int, Nil)"
+  checks: "#(per_person(10, 3), per_person(10, 0), per_person(0, 5))"
+  expected: "#(Ok(3), Error(Nil), Ok(0))"
+  mustUse: [int.divide]
+  reference: "int.divide(total, by: people)"

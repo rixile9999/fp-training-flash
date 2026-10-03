@@ -1,0 +1,18 @@
+title: string.to_graphemes
+summary: "把字符串拆成一个个字符（字素，grapheme），返回 `List(String)`。Gleam 没有 `Char` 类型，单个字符也是 `String`。"
+recognize:
+  prompt: "`string.to_graphemes(\"hi\")` 的值是？"
+  choices: ["`[\"h\", \"i\"]`", "`['h', 'i']`", "`[104, 105]`", "`Ok([\"h\", \"i\"])`"]
+  feedback:
+    correct: 对。每个元素都是只含一个字符的 `String`。
+    choices:
+      1: "Gleam 没有 `Char` 类型，也没有单引号字面量。单个字符也是像 `\"h\"` 这样的 `String`。"
+      2: 它不会把字符转成数字编码。每个元素就是字符本身，类型是 `String`。
+      3: 它不会失败，所以直接返回列表，不包在 `Result` 里。
+cloze:
+  prompt: 填空，把字符顺序反转。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 统计一个英文小写字符串里有多少个元音（a、e、i、o、u）。
+  hint: "先转成字符列表，用 `list.filter` 只留下元音，再用 `list.length` 计数。"

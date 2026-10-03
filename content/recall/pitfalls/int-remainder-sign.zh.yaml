@@ -1,0 +1,15 @@
+title: "% 的符号跟随左操作数"
+summary: "`%` 求的是余数（remainder），结果的符号跟随被除数。`-7 % 2` 是 `-1`；除数为正时，用 `int.modulo` 可以得到始终不小于 0 的结果。"
+recognize:
+  prompt: "`-7 % 2` 的值是？"
+  choices: ["`1`", "`-1`", "`Ok(-1)`"]
+  feedback:
+    correct: 对。余数的符号跟随左边的 `-7`。
+    choices:
+      0: "这是 Python `%`（向下取模）的结果。在 Gleam 中，`int.modulo(-7, by: 2)` 以 `Ok(1)` 的形式返回这个值。"
+      2: "`%` 运算符直接返回 `Int`。返回 `Result` 的是 `int.remainder` 和 `int.modulo`。"
+cloze:
+  prompt: 填空，求不小于 0 的余数。
+produce:
+  prompt: 判断整数 `n` 是否为奇数，负数也要处理正确。
+  hint: "`n % 2 == 1` 对负数不成立：`-3 % 2` 是 `-1`。"

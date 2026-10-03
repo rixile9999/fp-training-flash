@@ -1,0 +1,17 @@
+title: string.append
+summary: "把第二个字符串（`suffix:`）接到第一个字符串（`to:`）后面。等同于 `a <> b`，在管道中可以写成 `s |> string.append(\"!\")`。"
+recognize:
+  prompt: "`\"report\" |> string.append(\".txt\")` 的值是？"
+  choices: ["`\".txtreport\"`", "`\"report.txt\"`", "`[\"report\", \".txt\"]`"]
+  feedback:
+    correct: "对。管道把左边的值作为第一个参数 `to:` 传入，所以 `\".txt\"` 接在后面。"
+    choices:
+      0: "管道左边的值成为第一个参数 `to:`，所以 `\".txt\"` 接在后面，而不是前面。"
+      2: "它不会生成列表，而是返回拼接后的一个 `String`。"
+cloze:
+  prompt: 填空，加上感叹号。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: "如果文件名不以 `.gleam` 结尾，就加上 `.gleam`；已经是的话保持不变。"
+  hint: "先用 `string.ends_with` 检查是否已有扩展名。"

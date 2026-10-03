@@ -1,0 +1,16 @@
+title: Nil
+summary: "`Nil` is a type with exactly one value, also written `Nil`. Functions run only for side effects, like `io.println`, return `Nil`, and `Error(Nil)` means \"failed, no details\"."
+recognize:
+  prompt: "What does `io.println(\"hi\")` return?"
+  choices: ["`Nil`", "`\"hi\"`", "`Ok(Nil)`", "No value at all (`void`)"]
+  feedback:
+    correct: "Right. Printing is a side effect, and the returned value is `Nil`."
+    choices:
+      1: It doesn't return the printed string. It's a side-effect-only function, so it returns `Nil`.
+      2: "`io.println` can't fail, so it isn't wrapped in a `Result`."
+      3: "Every Gleam function returns a value. The value that means \"nothing\" is `Nil`."
+cloze:
+  prompt: Fill in the blank to match an error that carries no details.
+produce:
+  prompt: "Return `Ok(quantity)` if the order quantity is at least 1; otherwise fail with no details."
+  hint: "The failure case is `Error(Nil)`."

@@ -1,0 +1,37 @@
+title: Result(a, Nil)
+topic: result
+order: 221
+summary: "`list.first`, `int.parse`처럼 실패 이유가 하나뿐인 stdlib 함수는 `Result(a, Nil)`을 돌려줘요. 실패하면 `Error(Nil)`입니다."
+example: |
+  list.first([])  // -> Error(Nil)
+imports: [gleam/int, gleam/list]
+recognize:
+  prompt: "`list.first([])`의 값은?"
+  choices: ["`None`", "`Nil`", "실행 중 크래시", "`Error(Nil)`"]
+  answer: 3
+  feedback:
+    correct: 맞아요. 빈 리스트에는 첫 원소가 없으니 `Error(Nil)`입니다.
+    choices:
+      0: "`None`은 `Option`이에요. `list.first`는 `Result`를 돌려줍니다."
+      1: "`Nil`만 돌려주면 성공과 구분할 수 없어요."
+      2: stdlib 함수는 빈 리스트에서도 크래시하지 않고 `Error`를 돌려줘요.
+cloze:
+  prompt: 빈칸을 채워 비교가 `True`가 되게 하세요.
+  code: list.first([]) == ____
+  answers: ["Error(Nil)"]
+  expected: "True"
+predict:
+  prompt: 이 식의 값은?
+  code: int.parse("")
+  expected: Error(Nil)
+produce:
+  prompt: "`list.first`의 결과를 `case`의 `Ok`, `Error` 분기로 나눠, 첫 원소를 돌려주고 리스트가 비어 있으면 0을 돌려주는 함수 본문을 쓰세요."
+  header: "pub fn first_or_zero(xs: List(Int)) -> Int"
+  checks: "#(first_or_zero([7, 8]), first_or_zero([]), first_or_zero([-1]))"
+  expected: "#(7, 0, -1)"
+  mustUse: [list.first, "Error("]
+  reference: |-
+    case list.first(xs) {
+      Ok(x) -> x
+      Error(Nil) -> 0
+    }

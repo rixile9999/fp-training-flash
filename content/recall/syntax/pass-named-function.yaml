@@ -1,0 +1,29 @@
+title: 함수 이름을 그대로 넘기기
+topic: fn
+order: 215
+summary: 이미 있는 함수는 이름만 써서 값으로 넘겨요. `list.map(xs, int.to_string)`처럼 괄호도 익명 함수도 필요 없습니다.
+example: |
+  list.map([1, 2, 3], int.to_string)  // -> ["1", "2", "3"]
+imports: [gleam/int, gleam/list, gleam/string]
+recognize:
+  prompt: 정수 리스트 `xs`를 문자열 리스트로 바꾸는 올바른 코드는?
+  choices: ["`list.map(xs, int.to_string())`", "`list.map(xs, &int.to_string)`", "`list.map(xs, int.to_string)`", "`list.map(xs, int.to_string(_, _))`"]
+  answer: 2
+  feedback:
+    correct: 맞아요. 함수 이름이 곧 함수 값이에요.
+    choices:
+      0: 괄호를 붙이면 인자 없이 호출하는 것이라 컴파일 오류("Incorrect arity")예요.
+      1: "`&` 같은 참조 표시는 없어요. 이름만 쓰면 됩니다."
+      3: 캡처의 빈자리는 하나만 쓸 수 있고, `int.to_string`은 인자가 하나예요.
+cloze:
+  prompt: 빈칸에 이름 있는 함수를 넣어 리스트의 합을 구하세요.
+  code: list.fold([1, 2, 3], 0, ____)
+  answers: [int.add]
+  expected: "6"
+produce:
+  prompt: 단어마다 글자 수를 구하는 함수 본문을 쓰세요. 익명 함수로 감싸지 말고 `string.length`를 그대로 넘기세요.
+  header: "pub fn lengths(words: List(String)) -> List(Int)"
+  checks: '#(lengths(["ab", "c"]), lengths([]), lengths(["", "héllo"]))'
+  expected: "#([2, 1], [], [0, 5])"
+  mustUse: ["string.length)"]
+  reference: list.map(words, string.length)

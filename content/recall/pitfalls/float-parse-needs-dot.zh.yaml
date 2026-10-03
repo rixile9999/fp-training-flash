@@ -1,0 +1,17 @@
+title: float.parse 需要小数点
+summary: "`float.parse` 只有在带小数点时才会成功。`\"1\"` 会得到 `Error(Nil)`，想同时接受整数写法，就再用 `int.parse` 试一次。"
+recognize:
+  prompt: "`float.parse(\"2\")` 的值是？"
+  choices: ["`Ok(2.0)`", "`Error(Nil)`", "`2.0`"]
+  feedback:
+    correct: 对。没有小数点就不会被解析为 `Float`。
+    choices:
+      0: "和其他语言的 `parseFloat` 不同，`\"2\"` 会失败，必须写成 `\"2.0\"`。"
+      2: "解析可能失败，所以结果包在 `Result` 里。"
+cloze:
+  prompt: 填空，让解析成功。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: "把 `\"1.5\"` 和 `\"2\"` 都解析成 `Float`。不是数字时返回 `Error(Nil)`。"
+  hint: "`float.parse` 失败时，用 `int.to_float` 转换 `int.parse` 的结果。"

@@ -1,0 +1,31 @@
+title: io.println
+topic: gleam/io
+order: 42
+summary: "문자열 하나를 표준 출력에 쓰고 줄을 바꿉니다. `String`만 받고 `Nil`을 돌려줍니다."
+example: |
+  io.println("Hello, Gleam!")  // -> Nil
+imports: [gleam/int, gleam/io]
+signature: "io.println(String) -> Nil"
+frequency: 3
+recognize:
+  prompt: "`io.println(42)`는 어떻게 될까요?"
+  choices: ["`42`를 출력하고 줄을 바꾼다", "컴파일 오류가 난다", "문자열 `\"42\"`를 돌려준다"]
+  answer: 1
+  feedback:
+    correct: 맞아요. `io.println`은 `String`만 받으니 `io.println(int.to_string(42))`처럼 먼저 바꿔야 합니다.
+    choices:
+      0: 자동 형 변환이 없어요. `Int`를 넘기면 타입이 맞지 않아 컴파일되지 않습니다.
+      2: "`io.println`은 출력만 하고 `Nil`을 돌려줘요."
+cloze:
+  prompt: 빈칸을 채워 인사말을 표준 출력에 쓰고 줄을 바꾸세요.
+  code: 'io.____("Hello, Gleam!")'
+  answers: [println]
+  expected: "Nil"
+produce:
+  prompt: "이름과 점수를 받아 `ann: 90`처럼 한 줄로 출력하세요."
+  header: "pub fn report(name: String, score: Int) -> Nil"
+  checks: '#(report("ann", 90), report("bo", 0), report("", -5))'
+  expected: "#(Nil, Nil, Nil)"
+  mustUse: [io.println]
+  reference: 'io.println(name <> ": " <> int.to_string(score))'
+  hint: "점수는 `int.to_string`으로 바꾼 뒤 `<>`로 이어 붙이세요."

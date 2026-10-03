@@ -1,0 +1,36 @@
+title: int.compare
+topic: gleam/int
+order: 22
+summary: "두 정수를 비교해 `order.Order`(`Lt`, `Eq`, `Gt`)를 돌려줍니다. 모양이 `fn(Int, Int) -> Order`라서 `list.sort`의 비교 함수로 그대로 넘길 수 있습니다."
+example: |
+  list.sort([3, 1, 2], by: int.compare)  // -> [1, 2, 3]
+imports: [gleam/int, gleam/list]
+signature: "int.compare(Int, with: Int) -> order.Order"
+frequency: 9
+recognize:
+  prompt: "`int.compare(2, 5)`의 값은?"
+  choices: ["`-1`", "`Lt`", "`Gt`", "`True`"]
+  answer: 1
+  feedback:
+    correct: 맞아요. 첫 번째 인자 2가 5보다 작으므로 `Lt`입니다.
+    choices:
+      0: 다른 언어의 `compareTo`처럼 정수를 돌려주지 않고 `order.Order` 값을 돌려줘요.
+      2: 첫 번째 인자를 기준으로 봅니다. 2는 5보다 작으니 `Lt`예요.
+      3: "`Bool`이 필요하면 `2 < 5`를 쓰세요. `compare`는 작다, 같다, 크다를 구분합니다."
+cloze:
+  prompt: 빈칸을 채워 오름차순으로 정렬하세요.
+  code: "list.sort([3, 1, 2], by: int.____)"
+  answers: [compare]
+  expected: "[1, 2, 3]"
+predict:
+  prompt: 이 식의 값은?
+  code: "list.sort([3, 1, 2], fn(a, b) { int.compare(b, a) })"
+  expected: "[3, 2, 1]"
+produce:
+  prompt: "`#(이름, 개수)` 쌍의 리스트를 개수 오름차순으로 정렬하세요."
+  header: "pub fn by_count(pairs: List(#(String, Int))) -> List(#(String, Int))"
+  checks: '#(by_count([#("b", 3), #("a", 1), #("c", 2)]), by_count([]), by_count([#("x", -1), #("y", -5)]))'
+  expected: '#([#("a", 1), #("c", 2), #("b", 3)], [], [#("y", -5), #("x", -1)])'
+  mustUse: [int.compare]
+  reference: "list.sort(pairs, fn(a, b) { int.compare(a.1, b.1) })"
+  hint: "튜플의 두 번째 요소는 `a.1`로 꺼냅니다."

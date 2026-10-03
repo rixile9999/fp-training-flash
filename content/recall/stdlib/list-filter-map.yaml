@@ -1,0 +1,42 @@
+title: list.filter_map
+topic: gleam/list
+order: 24
+summary: 콜백이 `Ok(값)`을 돌려준 원소는 그 값으로 남기고, `Error`를 돌려준 원소는 조용히 버립니다. 거르기와 바꾸기를 한 번에 합니다.
+example: |
+  list.filter_map(["1", "x", "3"], int.parse)  // -> [1, 3]
+imports: [gleam/list, gleam/int, "gleam/dict.{type Dict}"]
+signature: "list.filter_map(List(a), with: fn(a) -> Result(b, c)) -> List(b)"
+frequency: 9
+recognize:
+  prompt: "`list.filter_map`의 콜백이 돌려줘야 하는 타입은?"
+  choices: ["`Bool`", "`Result(b, e)`", "`Option(b)`", "`List(b)`"]
+  answer: 1
+  feedback:
+    correct: 맞아요. `Ok(값)`이면 남기고 `Error(_)`이면 버립니다.
+    choices:
+      0: "`Bool`로 거르기만 하는 것은 `list.filter`입니다."
+      2: Rust의 `filter_map`이나 Elm의 `List.filterMap`은 `Option`/`Maybe`를 쓰지만, Gleam은 `Result`를 씁니다.
+      3: 원소마다 리스트를 돌려주고 이어 붙이는 것은 `list.flat_map`입니다.
+cloze:
+  prompt: 빈칸을 채워 정수로 읽히는 문자열만 정수로 남기세요.
+  code: 'list.____(["7", "", "8"], int.parse)'
+  answers: [filter_map]
+  expected: "[7, 8]"
+predict:
+  prompt: 이 식의 값은?
+  code: |
+    list.filter_map([1, 2, 3, 4], fn(x) {
+      case x % 2 {
+        0 -> Ok(x * 10)
+        _ -> Error(Nil)
+      }
+    })
+  expected: "[20, 40]"
+produce:
+  prompt: 이름 리스트에서 나이 dict에 있는 사람의 나이만 순서대로 모으는 함수 본문을 `list.filter_map`으로 쓰세요. 없는 이름은 건너뜁니다.
+  header: "pub fn known_ages(names: List(String), ages: Dict(String, Int)) -> List(Int)"
+  checks: '#(known_ages(["ann", "zed", "bo"], dict.from_list([#("ann", 30), #("bo", 25)])), known_ages([], dict.new()), known_ages(["x"], dict.new()))'
+  expected: "#([30, 25], [], [])"
+  mustUse: [list.filter_map]
+  reference: "list.filter_map(names, fn(name) { dict.get(ages, name) })"
+  hint: "`dict.get`이 이미 `Result(Int, Nil)`을 돌려줍니다."

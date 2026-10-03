@@ -1,0 +1,31 @@
+title: 비교를 이어 쓸 수 없음
+topic: operators
+order: 28
+summary: "Python처럼 `1 <= x <= 9`라고 이어 쓸 수 없습니다. 앞의 비교 결과(`Bool`)를 다시 `Int`와 비교하게 되어 타입 오류이니, `1 <= x && x <= 9`처럼 `&&`로 나눠 씁니다."
+example: |
+  {
+    let x = 5
+    0 < x && x < 10
+  }  // -> True
+recognize:
+  prompt: "`x`가 1 이상 9 이하인지 확인하는 식은?"
+  choices: ["`1 <= x <= 9`", "`1 <= x && x <= 9`", "`x in 1..9`", "`x.between(1, 9)`"]
+  answer: 1
+  feedback:
+    correct: 맞아요. 비교를 하나씩 하고 `&&`로 잇습니다.
+    choices:
+      0: "`1 <= x`의 결과인 `Bool`을 다시 `9`와 비교하게 되어 타입 오류예요. Python의 연쇄 비교는 없습니다."
+      2: "`in` 연산자나 `1..9` 같은 범위 문법은 없어요."
+      3: Gleam에는 메서드 호출이 없습니다.
+cloze:
+  prompt: 빈칸에 알맞은 연산자를 채우세요.
+  code: "{ let x = 5  0 < x ____ x < 10 }"
+  answers: ["&&"]
+  expected: "True"
+produce:
+  prompt: 나이가 13세 이상 19세 이하이면 `True`를 돌려주세요.
+  header: "pub fn is_teen(age: Int) -> Bool"
+  checks: "#(is_teen(12), is_teen(13), is_teen(19), is_teen(20))"
+  expected: "#(False, True, True, False)"
+  mustUse: ["&&"]
+  reference: "13 <= age && age <= 19"

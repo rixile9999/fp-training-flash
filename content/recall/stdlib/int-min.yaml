@@ -1,0 +1,39 @@
+title: int.min
+topic: gleam/int
+order: 29
+summary: "두 정수 중 작은 쪽을 돌려줍니다. 리스트가 아니라 정수 두 개를 받으므로, 리스트의 최솟값은 `list.fold`에 `int.min`을 넘겨 구합니다."
+example: |
+  int.min(7, 3)  // -> 3
+imports: [gleam/int, gleam/list]
+signature: "int.min(Int, Int) -> Int"
+frequency: 8
+recognize:
+  prompt: "`int.min`이 받는 인자는?"
+  choices: ["정수 두 개: `int.min(a, b)`", "정수 리스트: `int.min([a, b, c])`", "개수 제한 없이: `int.min(a, b, c)`"]
+  answer: 0
+  feedback:
+    correct: 맞아요. 정수 두 개를 받아 작은 쪽을 돌려줍니다.
+    choices:
+      1: Python의 `min(list)`와 달라요. 리스트의 최솟값은 `list.fold(rest, first, int.min)`처럼 접어서 구합니다.
+      2: Gleam 함수는 가변 인자를 받지 않아요. 인자 개수는 정해져 있습니다.
+cloze:
+  prompt: 빈칸을 채워 작은 값을 고르세요.
+  code: "int.____(7, 3)"
+  answers: [min]
+  expected: "3"
+predict:
+  prompt: 이 식의 값은?
+  code: "list.fold([4, 1, 7], 0, int.min)"
+  expected: "0"
+produce:
+  prompt: 정수 리스트에서 가장 작은 값을 돌려주세요. 빈 리스트면 0을 돌려주세요.
+  header: "pub fn smallest(xs: List(Int)) -> Int"
+  checks: "#(smallest([4, 1, 7]), smallest([]), smallest([-3]), smallest([2, -8, 5]))"
+  expected: "#(1, 0, -3, -8)"
+  mustUse: [int.min]
+  reference: |
+    case xs {
+      [] -> 0
+      [first, ..rest] -> list.fold(rest, first, int.min)
+    }
+  hint: "첫 원소를 시작값으로 삼아 나머지를 `list.fold(rest, first, int.min)`으로 접으세요."

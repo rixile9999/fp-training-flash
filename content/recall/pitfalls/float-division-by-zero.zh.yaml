@@ -1,0 +1,17 @@
+title: 除以 0.0 得 0.0
+summary: "`x /. 0.0` 的结果是 `0.0`，既不抛异常也不是 `Infinity`。要区分除以零的情况，用返回 `Result` 的 `float.divide`。"
+recognize:
+  prompt: "`1.0 /. 0.0` 的值是？"
+  choices: ["`Infinity`", "`0.0`", 运行时出错崩溃, "`NaN`"]
+  feedback:
+    correct: 对。Gleam 除以零时返回 `0.0`。
+    choices:
+      0: "和 JavaScript 不同，不会得到 `Infinity`。"
+      2: 不会抛出异常，而是返回值 `0.0`，所以这种错误很难察觉。
+      3: "也不会得到 `NaN`，结果是 `0.0`。"
+cloze:
+  prompt: 填空，让除以零的情况返回 `Error`。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: "返回 `part` 占 `whole` 的比例。`whole` 为 0 时返回 `Error(Nil)`。"

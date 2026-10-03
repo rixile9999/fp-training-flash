@@ -1,0 +1,41 @@
+title: 리스트 인덱스 접근 없음
+topic: lists
+order: 116
+summary: "리스트에는 `xs[0]` 같은 인덱스 접근이 없습니다. 첫 원소는 패턴 `[first, ..]`이나 `list.first`로 꺼내요."
+example: |
+  case [10, 20, 30] {
+    [] -> 0
+    [first, ..] -> first
+  }  // -> 10
+imports: [gleam/list]
+recognize:
+  prompt: "`xs: List(Int)`의 첫 원소를 얻는 방법으로 맞는 것은?"
+  choices: ["`xs[0]`", "`xs.0`", "`case xs { [first, ..] -> ... [] -> ... }`", "`xs.first`"]
+  answer: 2
+  feedback:
+    correct: "맞아요. 패턴 `[first, ..]`로 첫 원소를 꺼내고, 빈 리스트 `[]`도 처리합니다."
+    choices:
+      0: "인덱스 문법이 없어요. `xs[0]`은 `xs` 뒤에 리스트 `[0]`이 따로 오는 것으로 읽혀 엉뚱한 경고나 오류가 납니다."
+      1: "`.0`은 튜플 원소를 읽는 문법이에요. 리스트에는 쓸 수 없습니다."
+      3: "리스트에는 필드가 없어요. 함수 `list.first(xs)`가 있고, `Result`를 돌려줍니다."
+cloze:
+  prompt: 빈칸을 채워 나머지 원소를 무시하는 패턴을 완성하세요.
+  code: 'case ["a", "b"] { [] -> "" [first, ____] -> first }'
+  answers: ["..", "..rest", ".._rest"]
+  expected: '"a"'
+predict:
+  prompt: 이 식의 값은?
+  code: "list.first([])"
+  expected: "Error(Nil)"
+produce:
+  prompt: "`xs[1]` 대신 리스트 패턴으로 두 번째 원소를 꺼내세요. 원소가 두 개보다 적으면 `default`를 돌려줍니다."
+  header: "pub fn second_or(xs: List(Int), default: Int) -> Int"
+  checks: "#(second_or([3, 4, 5], 0), second_or([7], -1), second_or([], 0), second_or([1, 2], 0))"
+  expected: "#(4, -1, 0, 2)"
+  mustUse: [".."]
+  reference: |
+    case xs {
+      [_, second, ..] -> second
+      _ -> default
+    }
+  hint: "`[_, second, ..]`는 원소가 두 개 이상인 리스트와 맞아요."

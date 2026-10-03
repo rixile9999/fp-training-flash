@@ -1,0 +1,34 @@
+title: 레이블로 레코드 만들기
+topic: records
+order: 120
+summary: "레코드는 필드 레이블을 붙여 `User(name: \"ann\", age: 30, admin: False)`처럼 만들 수 있습니다. 필드에는 기본값이 없어서 레이블을 쓰든 안 쓰든 모든 필드를 넘겨야 해요."
+definitions: |
+  pub type User {
+    User(name: String, age: Int, admin: Bool)
+  }
+example: |
+  User(age: 30, admin: False, name: "ann")  // -> User("ann", 30, False)
+imports: []
+recognize:
+  prompt: "`User(name: String, age: Int, admin: Bool)`일 때 컴파일되지 않는 것은?"
+  choices: ["`User(\"ann\", 30, False)`", "`User(name: \"ann\", age: 30, admin: False)`", "`User(name: \"ann\", age: 30)`", "`User(admin: False, age: 30, name: \"ann\")`"]
+  answer: 2
+  feedback:
+    correct: "맞아요. 필드에 기본값이 없어서 `admin`을 빠뜨리면 컴파일 오류(\"Incorrect arity\")가 납니다."
+    choices:
+      0: 레이블이 있는 필드도 정의한 순서대로 위치 인자로 넘길 수 있어요.
+      1: 모든 필드를 레이블과 함께 넘긴 올바른 식이에요.
+      3: 레이블 인자는 순서를 바꿔 적어도 각 필드에 알맞게 들어가요.
+cloze:
+  prompt: 빈칸에 레이블을 넣어 사용자를 만드세요.
+  code: 'User(name: "bo", ____: 20, admin: True)'
+  answers: [age]
+  expected: 'User("bo", 20, True)'
+produce:
+  prompt: "이름만 받아 손님 사용자를 만드세요. 나이는 0, 관리자는 아닙니다. 모든 필드를 레이블 인자로 넘기세요."
+  header: "pub fn guest(name: String) -> User"
+  checks: '#(guest("ann"), guest(""), guest("bo"))'
+  expected: '#(User("ann", 0, False), User("", 0, False), User("bo", 0, False))'
+  mustUse: ["age:", "admin:"]
+  reference: "User(name: name, age: 0, admin: False)"
+  hint: "`User(name: ..., age: ..., admin: ...)` 모양입니다."

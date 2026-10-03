@@ -1,0 +1,18 @@
+title: list.try_fold
+summary: "Folds with a callback that returns a `Result`. If the callback returns an `Error`, it stops right there and that `Error` is the result; if it reaches the end, you get `Ok(accumulator)`."
+recognize:
+  prompt: "What happens when the `list.try_fold` callback returns `Error(e)` partway through?"
+  choices: ["It skips just that element and keeps folding", "It stops at once and `Error(e)` becomes the whole result", "It folds to the end and returns the last `Error`", "The program stops with a panic"]
+  feedback:
+    correct: Right. It stops at the first `Error` and never looks at the remaining elements.
+    choices:
+      0: Skipping failures is what functions like `list.filter_map` do. `try_fold` stops.
+      2: It doesn't go to the end. As soon as an `Error` appears, that value is the result.
+      3: The error is just returned as a value; it's not a panic.
+cloze:
+  prompt: Fill in the blank to do a fold that can fail.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Write the body of a function that subtracts withdrawals from a balance one by one, using `list.try_fold`. If a withdrawal is larger than what's left, return `Error(Nil)`.
+  hint: Start from `balance`; the callback returns `Ok(remaining balance)` or `Error(Nil)`.

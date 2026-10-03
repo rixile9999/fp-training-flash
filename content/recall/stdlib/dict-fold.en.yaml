@@ -1,0 +1,18 @@
+title: dict.fold
+summary: Folds every entry of a dict into a single value. The callback takes `fn(accumulator, key, value)`, and the order in which entries are visited is not specified.
+recognize:
+  prompt: "In which order does the `dict.fold` callback receive its arguments?"
+  choices: ["`fn(acc, key, value)`", "`fn(key, value, acc)`", "`fn(acc, #(key, value))`", "`fn(acc, value)`"]
+  feedback:
+    correct: Right. As with `list.fold`, the accumulator comes first, then the key and the value.
+    choices:
+      1: Elm's `Dict.foldl` takes the accumulator last, but in Gleam it comes first.
+      2: The key and the value arrive as separate arguments, not as a tuple.
+      3: The key is passed too. If you don't need it, ignore it with an underscore, as in `_key`.
+cloze:
+  prompt: Fill in the blank to multiply all the values together.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Write the body of a function that returns the total quantity in a stock dict (item to quantity), using `dict.fold`.
+  hint: Start from 0; the callback looks like `fn(acc, _item, qty) { ... }`.

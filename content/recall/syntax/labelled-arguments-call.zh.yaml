@@ -1,0 +1,15 @@
+title: 用带标签参数调用
+summary: "带标签参数写作 `label: 值`，顺序可以随意调换。但位置参数必须放在带标签参数之前。"
+recognize:
+  prompt: 下面调用上方 `clamp` 的代码中，哪一个无法编译？
+  choices: ["`clamp(5, min: 0, max: 10)`", "`clamp(5, max: 10, min: 0)`", "`clamp(5, 0, 10)`", "`clamp(min: 0, max: 10, 5)`"]
+  feedback:
+    correct: 对。位置参数 `5` 放在了带标签参数之后，会产生编译错误（"Unexpected positional argument"）。
+    choices:
+      0: 这是正常的调用。
+      1: 带标签参数之间可以调换顺序。
+      2: 带标签的参数也可以按位置传入，不过写上标签含义更清楚。
+cloze:
+  prompt: 填入标签，把下限设为 0。
+produce:
+  prompt: 写出函数体：用带标签参数调用上方的 `clamp`，把 `n` 限制在 0 到 100 之间。

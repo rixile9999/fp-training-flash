@@ -1,0 +1,15 @@
+title: Comparisons can't be chained
+summary: "You can't chain comparisons like Python's `1 <= x <= 9`. It would compare the first result (a `Bool`) with an `Int`, which is a type error, so split it with `&&`: `1 <= x && x <= 9`."
+recognize:
+  prompt: "Which expression checks whether `x` is between 1 and 9 inclusive?"
+  choices: ["`1 <= x <= 9`", "`1 <= x && x <= 9`", "`x in 1..9`", "`x.between(1, 9)`"]
+  feedback:
+    correct: Right. Do one comparison at a time and join them with `&&`.
+    choices:
+      0: "This compares the `Bool` from `1 <= x` with `9`, which is a type error. Gleam has no Python-style chained comparisons."
+      2: "There's no `in` operator and no range syntax like `1..9`."
+      3: Gleam has no method calls.
+cloze:
+  prompt: Fill in the operator.
+produce:
+  prompt: Return `True` when the age is between 13 and 19 inclusive.

@@ -1,0 +1,17 @@
+title: list.flatten
+summary: Joins a list of lists into a single list. It flattens one level only.
+recognize:
+  prompt: "What is the value of `list.flatten([[[1]], [[2, 3]]])`?"
+  choices: ["`[1, 2, 3]`", "`[[1], [2, 3]]`", "`[[1, 2, 3]]`", "A compile error"]
+  feedback:
+    correct: Right. It flattens just the outer level, joining the elements of `[[1]]` and `[[2, 3]]`.
+    choices:
+      0: It doesn't flatten all the way down, only one level.
+      2: It joins the elements of the outer list (`[[1]]` and `[[2, 3]]`), so `[1]` and `[2, 3]` stay as separate elements.
+      3: "`List(List(List(Int)))` is a `List(List(a))` with `a = List(Int)`, so it compiles fine."
+cloze:
+  prompt: Fill in the blank to join the list of lists into one.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Write the body of a function that gathers the item lists of all orders into one list of items, using `list.flatten`.

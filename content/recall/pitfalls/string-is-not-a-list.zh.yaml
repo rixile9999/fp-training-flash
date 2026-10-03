@@ -1,0 +1,17 @@
+title: 字符串不是字符列表
+summary: "字符串不是字符列表，不能用 `[c, ..rest]` 模式匹配，也没有 `Char` 类型。要拆出第一个字符和剩余部分，用 `string.pop_grapheme`（结果是 `Result`）。"
+recognize:
+  prompt: "把字符串 `s` 拆成第一个字符和剩余部分的方法是？"
+  choices: ["`case s { [c, ..rest] -> ... }`", "`string.pop_grapheme(s)`", "`case s { c <> rest -> ... }`", "`let #(c, rest) = s`"]
+  feedback:
+    correct: "对。非空时得到 `Ok(#(第一个字符, 剩余部分))`，为空时得到 `Error(Nil)`。"
+    choices:
+      0: "列表模式只能匹配列表。像 Haskell 或 Elixir 那样把字符串当作字符列表会导致类型错误。"
+      2: "`<>` 模式的左边必须是 `\"say \"` 这样的字符串字面量。"
+      3: 字符串不是元组，不能这样解构。
+cloze:
+  prompt: 填空，拆出第一个字符和剩余部分。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 只把单词的首字母转成大写。空字符串原样返回。

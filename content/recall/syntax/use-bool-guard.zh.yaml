@@ -1,0 +1,16 @@
+title: 用 use <- bool.guard 提前结束
+summary: "`use <- bool.guard(when: 条件, return: 值)` 在条件为真时立即返回该值，否则继续执行下面的代码。它代替其他语言里的提前 `return`。"
+recognize:
+  prompt: '`use <- bool.guard(when: x < 0, return: "neg")` 后面还有代码，`x` 为 5 时会怎样？'
+  choices: ["返回 `\"neg\"`", "编译错误：`use` 后面没有变量", "继续执行下面的代码", "返回 `Nil`"]
+  feedback:
+    correct: 对。条件为假，所以结果是下面代码的值。
+    choices:
+      0: 只有条件为真时才返回 `return` 的值。
+      1: 回调不接收参数时，就像 `use <-` 这样不写变量。
+      3: 条件为假时会执行下面的代码并返回它的值。
+cloze:
+  prompt: 填入标签，在除以零之前结束。
+produce:
+  prompt: 写出函数体：返回名字首字母的大写形式。名字是空字符串时，先用 `use <- bool.guard` 返回 `"?"`。
+  hint: "首字母可以用 `string.slice(name, at_index: 0, length: 1)` 取出。"

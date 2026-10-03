@@ -1,0 +1,18 @@
+title: 在列表前面添加元素
+summary: "`[x, ..rest]` 是把 `x` 放在 `rest` 前面得到的新列表。在前面添加是 O(1) 的，原列表保持不变。"
+recognize:
+  prompt: "哪个 Gleam 表达式能把 0 放到列表 `xs` 的前面？"
+  choices: ["`[0, ..xs]`", "`[..xs, 0]`", "`0 :: xs`", "`[0] + xs`"]
+  feedback:
+    correct: "对。`..xs` 总是放在列表的最后。"
+    choices:
+      1: "`..xs` 只能放在最后，所以这是语法错误。要加到末尾，用 `list.append(xs, [0])`。"
+      2: "`::` 是 OCaml 或 F# 的写法。"
+      3: "`+` 只用于 Int。拼接列表用 `list.append`。"
+cloze:
+  prompt: '填空，把 `"a"` 放到列表前面。'
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: "在 CSV 行列表的最前面加上表头 `\"name,age\"`。"
+  hint: "形式是 `[新元素, ..rows]`。"

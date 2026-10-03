@@ -1,0 +1,36 @@
+title: list.reverse
+topic: gleam/list
+order: 4
+summary: 리스트의 순서를 뒤집은 새 리스트를 돌려줍니다. `[x, ..acc]`로 앞에 붙여 모은 결과를 마지막에 한 번 뒤집을 때 자주 씁니다.
+example: |
+  list.reverse([1, 2, 3])  // -> [3, 2, 1]
+imports: [gleam/list]
+signature: "list.reverse(List(a)) -> List(a)"
+frequency: 32
+recognize:
+  prompt: "재귀에서 `[x, ..acc]`처럼 앞에 붙여 모은 `acc`를 넣은 순서대로 돌려주려면 마지막에 무엇을 하나요?"
+  choices: ["`list.reverse(acc)`", "`list.sort(acc, int.compare)`", "`string.reverse(acc)`", "아무것도 안 해도 넣은 순서가 유지된다"]
+  answer: 0
+  feedback:
+    correct: 맞아요. 앞에 붙이면 순서가 거꾸로 쌓이므로 끝에서 `list.reverse`로 한 번 뒤집습니다.
+    choices:
+      1: 정렬은 값의 크기로 순서를 정할 뿐, 넣은 순서를 되돌리지 않습니다.
+      2: "`string.reverse`는 `String`을 뒤집는 함수라 리스트에 쓰면 타입 오류입니다."
+      3: "`[x, ..acc]`는 새 원소를 맨 앞에 붙이므로 모은 순서가 거꾸로 됩니다."
+cloze:
+  prompt: 빈칸을 채워 리스트를 뒤집으세요.
+  code: 'list.____(["a", "b", "c"])'
+  answers: [reverse]
+  expected: '["c", "b", "a"]'
+predict:
+  prompt: 이 식의 값은?
+  code: "list.reverse([[1, 2], [3]])"
+  expected: "[[3], [1, 2]]"
+produce:
+  prompt: 앞에서 읽으나 뒤에서 읽으나 같은 리스트(회문)인지 판별하는 함수 본문을 `list.reverse`로 쓰세요.
+  header: "pub fn is_palindrome(xs: List(Int)) -> Bool"
+  checks: "#(is_palindrome([1, 2, 1]), is_palindrome([1, 2]), is_palindrome([]))"
+  expected: "#(True, False, True)"
+  mustUse: [list.reverse]
+  reference: "list.reverse(xs) == xs"
+  hint: 리스트도 `==`로 비교할 수 있습니다.

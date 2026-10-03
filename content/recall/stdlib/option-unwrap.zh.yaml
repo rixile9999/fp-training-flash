@@ -1,0 +1,16 @@
+title: option.unwrap
+summary: "是 `Some` 就返回里面的值，是 `None` 就返回 `or:` 给出的默认值。"
+recognize:
+  prompt: "要从 `opt: Option(Int)` 中取出值，`None` 时用 0，应该怎么写？"
+  choices: ["`option.unwrap(opt, 0)`", "`opt.unwrap_or(0)`", "`result.unwrap(opt, 0)`", "`opt ?? 0`"]
+  feedback:
+    correct: 对。把 `Option` 值作为模块函数的第一个参数，默认值作为第二个参数。
+    choices:
+      1: 这是 Rust 风格的方法调用。Gleam 没有方法，要把值作为第一个参数传给模块函数。
+      2: "`result.unwrap` 用于 `Result`，传入 `Option` 会产生编译错误。"
+      3: Gleam 没有 `??` 运算符。
+cloze:
+  prompt: 填空，在 `None` 时使用默认值。
+produce:
+  prompt: 返回要在界面上显示的名字。有昵称就用昵称，没有就用真实姓名。
+  hint: 默认值不一定是常量，也可以传入变量 `name`。

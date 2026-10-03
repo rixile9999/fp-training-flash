@@ -1,0 +1,36 @@
+title: string.join
+topic: gleam/string
+order: 16
+summary: "문자열 리스트를 `with:` 구분자로 이어 문자열 하나로 만듭니다. 리스트가 첫 번째 인자라서 `parts |> string.join(\", \")`처럼 파이프로 씁니다."
+example: |
+  string.join(["a", "b", "c"], with: ", ")  // -> "a, b, c"
+imports: [gleam/int, gleam/list, gleam/string]
+signature: "string.join(List(String), with: String) -> String"
+frequency: 13
+recognize:
+  prompt: "`parts: List(String)`을 `\", \"`로 이어 붙이는 식은?"
+  choices: ["`string.join(\", \", parts)`", "`string.concat(parts, \", \")`", "`string.join(parts, \", \")`", "`parts |> string.join`"]
+  answer: 2
+  feedback:
+    correct: 맞아요. 리스트가 먼저, 구분자가 나중입니다.
+    choices:
+      0: "파이썬의 `\", \".join(parts)`와 헷갈렸어요. Gleam은 리스트가 첫 번째 인자예요."
+      1: "`string.concat`은 리스트 하나만 받고 구분자 없이 붙입니다."
+      3: "구분자 `with:` 인자가 빠졌어요. `parts |> string.join(\", \")`처럼 써야 합니다."
+cloze:
+  prompt: 빈칸을 채워 연, 월, 일을 `-`로 이으세요.
+  code: '["2026", "10", "03"] |> string.____("-")'
+  answers: [join]
+  expected: '"2026-10-03"'
+predict:
+  prompt: 이 식의 값은?
+  code: 'string.join([], ", ")'
+  expected: '""'
+produce:
+  prompt: 정수 리스트를 쉼표로 구분한 CSV 한 줄로 만드세요.
+  header: "pub fn to_csv_row(xs: List(Int)) -> String"
+  checks: '#(to_csv_row([1, 2, 3]), to_csv_row([]), to_csv_row([-5]))'
+  expected: '#("1,2,3", "", "-5")'
+  mustUse: [string.join]
+  reference: 'xs |> list.map(int.to_string) |> string.join(",")'
+  hint: "먼저 `list.map(int.to_string)`으로 문자열 리스트를 만드세요."

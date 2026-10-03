@@ -1,0 +1,29 @@
+title: "[..rest, last] 패턴은 없음"
+topic: lists
+order: 23
+summary: "리스트 패턴은 앞에서부터만 맞춥니다. `[..rest, last]`는 문법 오류라, 마지막 원소는 `list.last`(결과는 `Result`)로 꺼냅니다."
+example: |
+  list.last([1, 2, 3])  // -> Ok(3)
+imports: [gleam/list, gleam/string]
+recognize:
+  prompt: "리스트 `xs`의 마지막 원소를 꺼내는 식은?"
+  choices: ['`case xs { [..rest, last] -> Ok(last)  [] -> Error(Nil) }`', "`list.last(xs)`", "`xs[-1]`"]
+  answer: 1
+  feedback:
+    correct: 맞아요. 비어 있으면 `Error(Nil)`, 아니면 `Ok(마지막 원소)`입니다.
+    choices:
+      0: "`..rest`는 패턴의 끝에만 올 수 있어요. `[..rest, last]`는 문법 오류입니다."
+      2: Python식 음수 인덱싱은 없습니다. 인덱싱 자체가 없어요.
+cloze:
+  prompt: 빈칸을 채워 마지막 원소를 꺼내세요.
+  code: "list.____([1, 2, 3])"
+  answers: [last]
+  expected: "Ok(3)"
+produce:
+  prompt: 공백으로 나눈 문장의 마지막 단어를 돌려주세요.
+  header: "pub fn last_word(text: String) -> Result(String, Nil)"
+  checks: '#(last_word("hello big world"), last_word("one"), last_word(""))'
+  expected: '#(Ok("world"), Ok("one"), Ok(""))'
+  mustUse: [list.last]
+  reference: 'string.split(text, " ") |> list.last'
+  hint: "`string.split(\"\", \" \")`은 `[\"\"]`라서 빈 문장은 `Ok(\"\")`가 됩니다."

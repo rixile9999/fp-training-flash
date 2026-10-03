@@ -1,0 +1,17 @@
+title: float.parse needs a decimal point
+summary: "`float.parse` only succeeds when there is a decimal point. `\"1\"` gives `Error(Nil)`, so to accept whole numbers too, try `int.parse` as well."
+recognize:
+  prompt: "What is the value of `float.parse(\"2\")`?"
+  choices: ["`Ok(2.0)`", "`Error(Nil)`", "`2.0`"]
+  feedback:
+    correct: Right. Without a decimal point it isn't read as a `Float`.
+    choices:
+      0: "Unlike `parseFloat` in other languages, `\"2\"` fails. It has to be `\"2.0\"`."
+      2: "Parsing can fail, so the result comes wrapped in a `Result`."
+cloze:
+  prompt: Fill in the blank so the parse succeeds.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: "Read both `\"1.5\"` and `\"2\"` as a `Float`. Anything that isn't a number gives `Error(Nil)`."
+  hint: "If `float.parse` fails, turn the `int.parse` result into a `Float` with `int.to_float`."

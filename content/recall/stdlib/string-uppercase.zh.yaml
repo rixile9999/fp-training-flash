@@ -1,0 +1,18 @@
+title: string.uppercase
+summary: "把字符串中的所有字母都转成大写。数字和符号保持不变。只把首字母转成大写（其余转成小写）用 `string.capitalise`。"
+recognize:
+  prompt: "`string.uppercase(\"hello world\")` 的值是？"
+  choices: ["`\"Hello world\"`", "`\"HELLO WORLD\"`", "`\"Hello World\"`", "`Ok(\"HELLO WORLD\")`"]
+  feedback:
+    correct: 对。不论在哪个单词里，所有字母都会变成大写。
+    choices:
+      0: "只把首字母变成大写（其余变成小写）的是 `string.capitalise`。"
+      2: "`uppercase` 会改变所有字母，而不只是每个单词的首字母。"
+      3: "它不会失败，所以直接返回 `String`。"
+cloze:
+  prompt: 填空，把所有字母转成大写。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: '整理用户输入的国家代码：去掉前后空格并转成大写（`" kr "` -> `"KR"`）。'
+  hint: "先用 `string.trim` 去掉空格，再用管道接下去。"

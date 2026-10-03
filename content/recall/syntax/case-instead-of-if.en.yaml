@@ -1,0 +1,15 @@
+title: case instead of if
+summary: Gleam has no `if`/`else`. To branch on a condition, write `case condition { True -> ... False -> ... }`.
+recognize:
+  prompt: How do you write "`"pos"` if x is greater than 0, otherwise `"neg"`" in Gleam?
+  choices: ["`if x > 0 { \"pos\" } else { \"neg\" }`", "`x > 0 ? \"pos\" : \"neg\"`", "`case x > 0 { True -> \"pos\" False -> \"neg\" }`", "`when x > 0 -> \"pos\" else -> \"neg\"`"]
+  feedback:
+    correct: Right. Matching a Bool with `case` is Gleam's if/else.
+    choices:
+      0: Gleam has no `if`/`else`; the compiler even suggests using `case`.
+      1: There's no ternary operator either.
+      3: "`when` isn't Gleam syntax."
+cloze:
+  prompt: Fill in the blank to branch on the condition.
+produce:
+  prompt: Write the body of a function that returns the difference between two integers (the larger minus the smaller), using `case` on a Bool condition.

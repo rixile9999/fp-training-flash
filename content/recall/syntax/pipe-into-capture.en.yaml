@@ -1,0 +1,17 @@
+title: Piping into another argument
+summary: To pipe a value into an argument other than the first, use a capture. `a |> f(b, _)` means `f(b, a)`.
+recognize:
+  prompt: What is the value of `3 |> int.subtract(10, _)`?
+  choices: ["`-7`", "`7`", "A compile error"]
+  feedback:
+    correct: Right. 3 fills the `_` slot, giving `int.subtract(10, 3)`, which is `10 - 3`.
+    choices:
+      0: That's `int.subtract(3, 10)`. With a capture, the piped value goes into the `_` slot.
+      2: Pipes and captures work together just fine.
+cloze:
+  prompt: Fill in the blank to pipe the value in as the second argument.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Write the body of a function that returns whether a role name is in `["admin", "editor"]`. Pipe `role` into the second argument of `list.contains`.
+  hint: It's `list.contains(list, value_to_find)`, so put `_` where the value to find goes.

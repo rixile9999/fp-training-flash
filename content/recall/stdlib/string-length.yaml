@@ -1,0 +1,34 @@
+title: string.length
+topic: gleam/string
+order: 36
+summary: "문자열의 글자(그래핌) 수를 돌려줍니다. 바이트 수가 아니라서 `\"café\"`는 4, 이모지 `\"👍🏽\"`는 1입니다."
+example: |
+  string.length("gleam")  // -> 5
+imports: [gleam/string]
+signature: "string.length(String) -> Int"
+frequency: 6
+recognize:
+  prompt: "`string.length(\"café\")`의 값은?"
+  choices: ["`5`", "`4`", "`Ok(4)`"]
+  answer: 1
+  feedback:
+    correct: 맞아요. 사람이 보는 글자 수를 셉니다.
+    choices:
+      0: "5는 UTF-8 바이트 수예요(`é`가 2바이트). 바이트 수가 필요하면 `string.byte_size`를 씁니다."
+      2: "실패할 일이 없어서 `Int`를 바로 돌려줘요."
+cloze:
+  prompt: 빈칸을 채워 글자 수를 구하세요.
+  code: 'string.____("hello")'
+  answers: [length]
+  expected: "5"
+predict:
+  prompt: 이 식의 값은?
+  code: 'string.length("👍🏽")'
+  expected: "1"
+produce:
+  prompt: 비밀번호가 8글자 이상인지 확인하세요.
+  header: "pub fn long_enough(password: String) -> Bool"
+  checks: '#(long_enough("abc"), long_enough("abcdefgh"), long_enough(""), long_enough("😀😀😀"))'
+  expected: "#(False, True, False, False)"
+  mustUse: [string.length]
+  reference: "string.length(password) >= 8"

@@ -1,0 +1,16 @@
+title: int.absolute_value
+summary: "Returns the absolute value of an integer. It is called `absolute_value`, not `abs`."
+recognize:
+  prompt: Which Gleam function returns the absolute value of an integer?
+  choices: ["`int.abs`", "`int.absolute_value`", "`math.abs`", "`float.absolute_value`"]
+  feedback:
+    correct: Right. Gleam uses the full name, `absolute_value`.
+    choices:
+      0: "`gleam/int` has no `abs`, the short name common in other languages."
+      2: gleam_stdlib has no `math` module. Integer functions live in `gleam/int`.
+      3: "`float.absolute_value` is for `Float`. Passing an `Int` is a compile error."
+cloze:
+  prompt: Fill in the blank to get the absolute value.
+produce:
+  prompt: Return the Manhattan distance between two points on a grid (absolute horizontal difference plus absolute vertical difference).
+  hint: "Take tuple elements with `a.0` and `a.1`."

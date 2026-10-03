@@ -1,0 +1,15 @@
+title: Option：Some 与 None
+summary: 可能有也可能没有的值用 `gleam/option` 的 `Option(a)` 表示：有值时是 `Some(值)`，没有时是 `None`。可能失败的操作则用 `Result`。
+recognize:
+  prompt: "`Option` 和 `Result` 分别在什么时候用？"
+  choices: ["`Option` 用于可能失败的操作，`Result` 用于可能不存在的值", "`Option` 用于可能不存在的值，`Result` 用于可能失败的操作", "它们是同一种类型，用哪个都行", "`Option` 是内置类型，不需要 import"]
+  feedback:
+    correct: 对。值为空属于正常情况时用 `Option`，要报告失败及其原因时用 `Result`。
+    choices:
+      0: 反了。`Result` 可以在 `Error` 里带上失败原因。
+      2: 它们是不同的类型，`Some`/`None` 和 `Ok`/`Error` 不能混用。
+      3: "`Result` 是内置的，但 `Option` 需要从 `gleam/option` 导入。"
+cloze:
+  prompt: 填空，处理没有昵称的情况。
+produce:
+  prompt: 写出函数体：有昵称时返回昵称，没有时返回名字。用 `case` 区分 `Some` 和 `None`。

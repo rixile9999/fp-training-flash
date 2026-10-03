@@ -1,0 +1,36 @@
+title: string.pad_end
+topic: gleam/string
+order: 41
+summary: "문자열의 길이가 `to:`가 될 때까지 뒤쪽을 `with:` 문자열로 채웁니다. 표처럼 열을 맞춰 출력할 때 씁니다."
+example: |
+  string.pad_end("ab", to: 5, with: ".")  // -> "ab..."
+imports: [gleam/int, gleam/string]
+signature: "string.pad_end(String, to: Int, with: String) -> String"
+frequency: 3
+recognize:
+  prompt: "`\"Ada\"` 뒤에 공백을 채워 길이 6인 `\"Ada   \"`를 만드는 식은?"
+  choices: ["`string.pad_start(\"Ada\", to: 6, with: \" \")`", "`string.pad_end(\"Ada\", to: 6, with: \" \")`", "`string.pad_end(\"Ada\", to: 3, with: \" \")`", "`string.pad_end(\"Ada\", \" \", 6)`"]
+  answer: 1
+  feedback:
+    correct: "맞아요. 뒤쪽을 채우는 것은 `pad_end`이고, `to:`는 목표 전체 길이입니다."
+    choices:
+      0: "`pad_start`는 앞쪽을 채워 `\"   Ada\"`가 됩니다."
+      2: "`to:`는 덧붙일 개수가 아니라 전체 길이예요. 이미 3글자라 `\"Ada\"` 그대로입니다."
+      3: "레이블 없이 쓰면 순서대로 문자열, 길이(`Int`), 채울 문자열이어야 해요. 이 순서는 타입 오류입니다."
+cloze:
+  prompt: 빈칸을 채워 뒤쪽을 `-`로 채우세요.
+  code: 'string.____("id", to: 4, with: "-")'
+  answers: [pad_end]
+  expected: '"id--"'
+predict:
+  prompt: 이 식의 값은?
+  code: 'string.pad_end("ab", to: 5, with: "xy")'
+  expected: '"abxyx"'
+produce:
+  prompt: 점수표의 한 줄을 만드세요. 이름 뒤를 공백으로 채워 8칸으로 맞추고 그 뒤에 점수를 붙입니다. 8글자보다 긴 이름은 자르지 않습니다.
+  header: "pub fn score_row(name: String, score: Int) -> String"
+  checks: '#(score_row("Ada", 90), score_row("", 0), score_row("Bartholomew", 7))'
+  expected: '#("Ada     90", "        0", "Bartholomew7")'
+  mustUse: [string.pad_end]
+  reference: 'string.pad_end(name, to: 8, with: " ") <> int.to_string(score)'
+  hint: "이름을 `to: 8`로 채운 뒤 `<>`로 점수 문자열을 붙이세요."

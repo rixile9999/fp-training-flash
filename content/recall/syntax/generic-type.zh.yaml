@@ -1,0 +1,16 @@
+title: 泛型类型与类型变量
+summary: "类型定义和函数类型中的小写名字是类型变量。`Box(a)` 可以装任何类型，每次使用时确定为一种，如 `Box(Int)`、`Box(String)`。"
+recognize:
+  prompt: "在 `pub type Box(a) { Box(value: a) }` 中，`a` 是什么？"
+  choices: ["可以是任何类型的类型变量", "名为 `a` 的具体类型", "能混装多种类型的动态类型", "构造器参数的默认值"]
+  feedback:
+    correct: "对。`Box(1)` 时 `a` 是 `Int`，`Box(\"x\")` 时是 `String`。"
+    choices:
+      1: 类型名以大写字母开头，小写名字是类型变量。
+      2: "类型变量在每次使用时确定为一种类型。同一个列表里不能混放 `Box(1)` 和 `Box(\"x\")`。"
+      3: Gleam 没有默认参数。`a` 是放类型的位置。
+cloze:
+  prompt: 在空白处填入类型。
+produce:
+  prompt: "把函数 `f` 应用到 `Box` 里的值上，返回新的 `Box`。它要对任何类型的 `Box` 都适用。"
+  hint: "取出 `box.value` 传给 `f`，再把结果用 `Box(...)` 包起来。"

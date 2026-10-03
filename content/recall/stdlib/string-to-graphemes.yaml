@@ -1,0 +1,39 @@
+title: string.to_graphemes
+topic: gleam/string
+order: 31
+summary: "문자열을 글자(그래핌) 하나하나로 쪼갠 `List(String)`을 돌려줍니다. Gleam에는 `Char` 타입이 없어서 글자 하나도 `String`입니다."
+example: |
+  string.to_graphemes("gleam")  // -> ["g", "l", "e", "a", "m"]
+imports: [gleam/list, gleam/string]
+signature: "string.to_graphemes(String) -> List(String)"
+frequency: 7
+recognize:
+  prompt: "`string.to_graphemes(\"hi\")`의 값은?"
+  choices: ["`[\"h\", \"i\"]`", "`['h', 'i']`", "`[104, 105]`", "`Ok([\"h\", \"i\"])`"]
+  answer: 0
+  feedback:
+    correct: 맞아요. 원소마다 글자 하나짜리 `String`입니다.
+    choices:
+      1: "Gleam에는 `Char` 타입도 작은따옴표 리터럴도 없어요. 글자 하나도 `\"h\"`처럼 `String`입니다."
+      2: 글자를 숫자 코드로 바꾸지 않아요. 원소는 글자 그대로의 `String`입니다.
+      3: 실패할 일이 없어서 `Result` 없이 리스트를 바로 돌려줘요.
+cloze:
+  prompt: 빈칸을 채워 글자 순서를 뒤집으세요.
+  code: 'string.____("abc") |> list.reverse'
+  answers: [to_graphemes]
+  expected: '["c", "b", "a"]'
+predict:
+  prompt: 이 식의 값은?
+  code: 'string.to_graphemes("")'
+  expected: "[]"
+produce:
+  prompt: 영어 소문자 문자열에서 모음(a, e, i, o, u)이 몇 개인지 세세요.
+  header: "pub fn count_vowels(s: String) -> Int"
+  checks: '#(count_vowels("gleam"), count_vowels(""), count_vowels("rhythm"), count_vowels("aaa"))'
+  expected: "#(2, 0, 0, 3)"
+  mustUse: [string.to_graphemes]
+  reference: |-
+    string.to_graphemes(s)
+    |> list.filter(fn(c) { list.contains(["a", "e", "i", "o", "u"], c) })
+    |> list.length
+  hint: "글자 리스트로 바꾼 뒤 `list.filter`로 모음만 남기고 `list.length`로 세세요."

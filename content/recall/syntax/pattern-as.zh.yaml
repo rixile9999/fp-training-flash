@@ -1,0 +1,16 @@
+title: 用 as 给模式命名
+summary: 在模式后面加上 `as name`，就能一边拆解它，一边把整个匹配到的部分绑定到 `name`。
+recognize:
+  prompt: 在 `[x, ..] as all` 中，`all` 绑定的是什么？
+  choices: ["第一个元素", "第一个元素之后的部分", "匹配到的整个列表", "什么也不绑定（`as` 是类型转换）"]
+  feedback:
+    correct: 对。`as` 给前面模式匹配到的整个值命名。
+    choices:
+      0: 第一个元素绑定到 `x`。
+      1: 要取得其余部分，写成 `[x, ..rest]`。
+      3: Gleam 没有用 `as` 做的类型转换。模式里的 `as` 用来命名，`import ... as` 用来给模块改名。
+cloze:
+  prompt: 填空，把整个列表绑定到 `all`。
+produce:
+  prompt: 如果列表第一个二元组里的数是正数，就用 `Ok` 返回这个二元组，否则（包括空列表）返回 `Error(Nil)`。拆开二元组检查数字的同时，用 `as` 给整个二元组命名。
+  hint: 给 `[#(_, n) as pair, ..]` 加上守卫 `if n > 0`。

@@ -1,0 +1,15 @@
+title: 直接传递函数名
+summary: 要把已有函数当作值传递，只写它的名字即可。像 `list.map(xs, int.to_string)` 这样，既不用括号，也不用匿名函数。
+recognize:
+  prompt: 把整数列表 `xs` 转成字符串列表，正确的写法是？
+  choices: ["`list.map(xs, int.to_string())`", "`list.map(xs, &int.to_string)`", "`list.map(xs, int.to_string)`", "`list.map(xs, int.to_string(_, _))`"]
+  feedback:
+    correct: 对。函数名本身就是函数值。
+    choices:
+      0: 加括号就是不带参数地调用它，会产生编译错误（"Incorrect arity"）。
+      1: 没有 `&` 这样的引用标记，只写名字就行。
+      3: 捕获只能有一个空位，而且 `int.to_string` 只有一个参数。
+cloze:
+  prompt: 在空白处填入一个具名函数，求列表之和。
+produce:
+  prompt: 写出函数体：求每个单词的字符数。不要用匿名函数包装，直接传入 `string.length`。

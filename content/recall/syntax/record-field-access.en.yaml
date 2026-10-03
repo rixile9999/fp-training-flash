@@ -1,0 +1,16 @@
+title: Field access with .label
+summary: "Read a record field with `.label`, as in `user.name`. On a value of a type with several variants, you can read a field directly only if every variant has it, at the same position and with the same type."
+recognize:
+  prompt: "Given `s: Shape` (variants `Circle` and `Rectangle`), which expression compiles?"
+  choices: ["`s.name`", "`s.radius`", "`s[\"name\"]`", "`s->name`"]
+  feedback:
+    correct: "Right. Both variants have `name`, so you can read it directly."
+    choices:
+      1: "Only `Circle` has `radius`. `s` might be a `Rectangle`, so you first have to tell the variants apart with `case`."
+      2: A record isn't a map, so you can't read it with a string key.
+      3: "`->` is for return types and `case` branches. Fields are read with `.`."
+cloze:
+  prompt: Fill in the label to read the shape's name.
+produce:
+  prompt: Return the names of all the shapes in a list.
+  hint: "Read the field like `list.map(shapes, fn(s) { s.name })`."

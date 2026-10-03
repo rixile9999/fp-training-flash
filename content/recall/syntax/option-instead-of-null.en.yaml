@@ -1,0 +1,15 @@
+title: Option instead of null
+summary: Gleam has no `null`, `nil` or `undefined`. If a value may be missing, say so in its type with `Option`, and the code using it has to handle `None`.
+recognize:
+  prompt: Which type fits a middle-name field that may be missing?
+  choices: ["`String` (`null` when missing)", "`String` (`Nil` when missing)", "`Option(String)`", "`String?`"]
+  feedback:
+    correct: Right. The type shows the value may be missing, so the compiler checks that `None` is handled.
+    choices:
+      0: Gleam has no `null`; writing it gives a compile error for an unknown name.
+      1: "`Nil` is the value of the `Nil` type, so it can't go where a `String` is expected."
+      3: Gleam has no nullable types with a question mark (as in Kotlin or Swift).
+cloze:
+  prompt: Fill in the type name.
+produce:
+  prompt: Write the body of a function that returns the middle part in `Some` if a name has exactly three parts, and `None` otherwise.

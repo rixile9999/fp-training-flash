@@ -1,0 +1,18 @@
+title: No string interpolation
+summary: "Gleam has no string interpolation. Turn values into strings with functions like `int.to_string`, then join them with `<>`."
+recognize:
+  prompt: "Given `score: Int`, which Gleam code builds a string like `\"Score: 10\"`?"
+  choices: ["`\"Score: ${score}\"`", "`\"Score: #{score}\"`", "`\"Score: \" <> int.to_string(score)`", "`\"Score: \" <> score`"]
+  feedback:
+    correct: "Right. Convert the integer with `int.to_string`, then join with `<>`."
+    choices:
+      0: "`${...}` is a JavaScript template string. Inside a Gleam string it stays as plain text."
+      1: "`#{...}` is Elixir or Ruby interpolation. Inside a Gleam string it stays as plain text."
+      3: "`<>` only joins Strings. Convert the Int with `int.to_string` first."
+cloze:
+  prompt: Fill in the blank to turn the integer into a string and append it.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: "From a name and a score, build a line like `\"ann: 10\"`."
+  hint: "Join like `name <> \": \" <> ...` and convert the score with `int.to_string`."

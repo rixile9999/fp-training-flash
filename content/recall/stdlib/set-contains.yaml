@@ -1,0 +1,32 @@
+title: set.contains
+topic: gleam/set
+order: 45
+summary: "집합에 값이 들어 있는지 `Bool`로 알려 줍니다. 집합이 먼저(`in:`), 찾는 값이 나중(`this:`)이고, 리스트를 훑는 `list.contains`보다 빠릅니다."
+example: |
+  set.from_list(["admin", "editor"]) |> set.contains("admin")  // -> True
+imports: [gleam/list, "gleam/set.{type Set}"]
+signature: "set.contains(in: Set(a), this: a) -> Bool"
+frequency: 3
+recognize:
+  prompt: "집합 `roles: Set(String)`에 `\"admin\"`이 있는지 확인하는 식은?"
+  choices: ["`set.contains(\"admin\", roles)`", "`set.contains(roles, \"admin\")`", "`list.contains(roles, \"admin\")`", "`set.get(roles, \"admin\")`"]
+  answer: 1
+  feedback:
+    correct: "맞아요. 집합이 먼저라서 `roles |> set.contains(\"admin\")`처럼 파이프로도 씁니다."
+    choices:
+      0: "반대예요. 레이블 `in:`, `this:` 순서대로 집합이 먼저, 찾는 값이 나중입니다."
+      2: "`roles`는 리스트가 아니라 `Set`이라 `list.contains`에 넘기면 타입 오류가 나요."
+      3: "`set`에는 `get`이 없어요. 들어 있는지만 묻는 것이 `set.contains`이고 `Bool`을 돌려줍니다."
+cloze:
+  prompt: 빈칸을 채워 2가 집합에 있는지 확인하세요.
+  code: "set.from_list([1, 2, 3]) |> set.____(2)"
+  answers: [contains]
+  expected: "True"
+produce:
+  prompt: "단어 리스트에서 금지어 집합 `banned`에 들어 있는 단어를 빼세요."
+  header: "pub fn allowed(words: List(String), banned: Set(String)) -> List(String)"
+  checks: '#(allowed(["hi", "spam", "ok", "spam"], set.from_list(["spam"])), allowed([], set.from_list(["x"])), allowed(["a", "b"], set.new()))'
+  expected: '#(["hi", "ok"], [], ["a", "b"])'
+  mustUse: [set.contains]
+  reference: "list.filter(words, fn(w) { !set.contains(banned, w) })"
+  hint: "`list.filter`의 조건에서 `set.contains`의 결과를 `!`로 뒤집으세요."

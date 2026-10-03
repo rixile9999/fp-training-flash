@@ -1,0 +1,18 @@
+title: There's no power operator
+summary: "There's no power operator like `**` or `^`. Use `int.power(base, of: exponent)` or `float.power`; the exponent is a `Float` and the result is a `Result(Float, Nil)`."
+recognize:
+  prompt: "What is the value of `int.power(2, of: 10.0)`?"
+  choices: ["`1024`", "`Ok(1024.0)`", "`1024.0`", "`Ok(1024)`"]
+  feedback:
+    correct: Right. The result is a `Float`, wrapped in a `Result` because it can fail.
+    choices:
+      0: "That's Python's `2 ** 10`. Gleam's `int.power` doesn't return an `Int`."
+      2: "Some cases can't be computed, such as a fractional power of a negative number, so it returns a `Result`."
+      3: "The result is a `Float`, not an `Int`."
+cloze:
+  prompt: Fill in the blank to square 3.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: "Return what the principal `amount` grows to after `years` years of compound growth at `rate` per year."
+  hint: "The exponent must be a `Float` too, so convert with `int.to_float(years)`, and unwrap the `Result` with `result.unwrap`."

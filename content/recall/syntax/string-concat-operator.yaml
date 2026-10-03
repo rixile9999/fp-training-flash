@@ -1,0 +1,30 @@
+title: 문자열 잇기는 <>
+topic: strings
+order: 113
+summary: "문자열은 `<>`로 이어 붙입니다. `+`는 Int 전용이라 문자열에 쓰면 타입 오류예요."
+example: |
+  "Hello, " <> "Joe" <> "!"  // -> "Hello, Joe!"
+imports: []
+recognize:
+  prompt: 두 문자열을 이어 붙이는 Gleam 식은?
+  choices: ["`\"a\" + \"b\"`", "`\"a\" <> \"b\"`", "`\"a\" ++ \"b\"`", "`\"a\" . \"b\"`"]
+  answer: 1
+  feedback:
+    correct: "맞아요. 문자열 잇기 연산자는 `<>`입니다."
+    choices:
+      0: "`+`는 Int 전용이라 문자열에 쓰면 타입 오류예요."
+      2: "`++`는 Haskell이나 Elm의 표기예요. Gleam은 `<>`를 씁니다."
+      3: "`.`은 PHP나 Perl의 표기예요. Gleam에서 `.`은 필드 접근과 모듈 한정에 씁니다."
+cloze:
+  prompt: 빈칸을 채워 두 문자열을 이어 붙이세요.
+  code: '"snake" ____ "_case"'
+  answers: ["<>"]
+  expected: '"snake_case"'
+produce:
+  prompt: "이름을 받아 `\"Hello, Joe!\"` 같은 인사말을 만드세요."
+  header: "pub fn greet(name: String) -> String"
+  checks: '#(greet("Joe"), greet(""), greet("Zoë"))'
+  expected: '#("Hello, Joe!", "Hello, !", "Hello, Zoë!")'
+  mustUse: ["<>"]
+  reference: '"Hello, " <> name <> "!"'
+  hint: "`<>`를 두 번 써서 앞뒤 문자열을 붙이세요."

@@ -1,0 +1,37 @@
+title: 제네릭 타입과 타입 변수
+topic: generics
+order: 125
+summary: "타입 정의와 함수 타입의 소문자 이름은 타입 변수입니다. `Box(a)`는 어떤 타입이든 담을 수 있고, 쓰는 곳마다 `Box(Int)`, `Box(String)`처럼 하나로 정해져요."
+definitions: |
+  pub type Box(a) {
+    Box(value: a)
+  }
+example: |
+  {
+    let b = Box("hi")
+    b.value
+  }  // -> "hi"
+imports: [gleam/string]
+recognize:
+  prompt: "`pub type Box(a) { Box(value: a) }`에서 `a`는?"
+  choices: ["어떤 타입이든 될 수 있는 타입 변수", "`a`라는 이름의 구체 타입", "여러 타입을 섞어 담는 동적 타입", "생성자 인자의 기본값"]
+  answer: 0
+  feedback:
+    correct: "맞아요. `Box(1)`이면 `a`는 `Int`, `Box(\"x\")`이면 `String`이 됩니다."
+    choices:
+      1: 타입 이름은 대문자로 시작해요. 소문자 이름은 타입 변수입니다.
+      2: "타입 변수는 쓰는 곳마다 한 타입으로 정해져요. 한 리스트에 `Box(1)`과 `Box(\"x\")`를 섞을 수 없습니다."
+      3: Gleam에는 기본 인자가 없어요. `a`는 타입이 들어갈 자리입니다.
+cloze:
+  prompt: 빈칸에 타입을 넣으세요.
+  code: "{ let b: Box(____) = Box(3.5)  b.value }"
+  answers: [Float]
+  expected: "3.5"
+produce:
+  prompt: "`Box` 안의 값에 함수 `f`를 적용한 새 `Box`를 돌려주세요. 어떤 타입의 `Box`에도 동작해야 합니다."
+  header: "pub fn map_box(box: Box(a), f: fn(a) -> b) -> Box(b)"
+  checks: '#(map_box(Box(2), fn(x) { x * 10 }), map_box(Box("hi"), string.length), map_box(Box(0), fn(x) { x == 0 }))'
+  expected: "#(Box(20), Box(2), Box(True))"
+  mustUse: ["Box("]
+  reference: "Box(f(box.value))"
+  hint: "`box.value`를 꺼내 `f`에 넘기고, 결과를 다시 `Box(...)`로 감싸세요."

@@ -1,0 +1,16 @@
+title: 给 Float 变量取负
+summary: "一元 `-` 只能给 Int 变量取负。Float 变量要用 `float.negate(x)`。像 `-1.5` 这样的字面量没问题。"
+recognize:
+  prompt: "`let x = 2.5` 时，`-x` 是？"
+  choices: ["`-2.5`", "类型错误：一元 `-` 只接受 Int", "`2.5`（符号被忽略）", "`-2`"]
+  feedback:
+    correct: "对。Float 变量用 `float.negate(x)` 或 `0.0 -. x`。"
+    choices:
+      0: "与其他语言不同，Float 变量不能用一元 `-`，会编译错误。"
+      2: 不会被忽略，编译会失败。
+      3: Gleam 不会悄悄把 Float 转成 Int，这是类型错误。
+cloze:
+  prompt: 填空，给 Float 取负。
+produce:
+  prompt: "把交易金额（Float）列表中每个值的符号都反过来。"
+  hint: "可以把 `float.negate` 直接传给 `list.map`。"

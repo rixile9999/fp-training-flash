@@ -1,0 +1,36 @@
+title: 레이블 인자로 호출하기
+topic: labels
+order: 218
+summary: "레이블 인자는 `label: 값`으로 넘기고 순서를 바꿔도 돼요. 단, 위치 인자는 레이블 인자보다 앞에 와야 합니다."
+example: |
+  clamp(150, max: 100, min: 0)  // -> 100
+definitions: |
+  pub fn clamp(value: Int, min low: Int, max high: Int) -> Int {
+    case value < low, value > high {
+      True, _ -> low
+      _, True -> high
+      _, _ -> value
+    }
+  }
+recognize:
+  prompt: 위 `clamp`를 부르는 코드 중 컴파일되지 않는 것은?
+  choices: ["`clamp(5, min: 0, max: 10)`", "`clamp(5, max: 10, min: 0)`", "`clamp(5, 0, 10)`", "`clamp(min: 0, max: 10, 5)`"]
+  answer: 3
+  feedback:
+    correct: 맞아요. 위치 인자 `5`가 레이블 인자 뒤에 와서 컴파일 오류("Unexpected positional argument")예요.
+    choices:
+      0: 정상적인 호출이에요.
+      1: 레이블 인자끼리는 순서를 바꿔도 됩니다.
+      2: 레이블 인자도 위치로 넘길 수 있어요. 다만 레이블을 쓰면 뜻이 더 분명해집니다.
+cloze:
+  prompt: 빈칸에 레이블을 채워 아래쪽 경계를 0으로 정하세요.
+  code: "clamp(-5, ____: 0, max: 10)"
+  answers: [min]
+  expected: "0"
+produce:
+  prompt: 위 `clamp`를 레이블 인자로 불러 `n`을 0부터 100 사이로 자르는 함수 본문을 쓰세요.
+  header: "pub fn percent(n: Int) -> Int"
+  checks: "#(percent(50), percent(-3), percent(120), percent(100))"
+  expected: "#(50, 0, 100, 100)"
+  mustUse: ["min:", "max:"]
+  reference: "clamp(n, min: 0, max: 100)"

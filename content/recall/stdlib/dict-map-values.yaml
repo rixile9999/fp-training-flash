@@ -1,0 +1,37 @@
+title: dict.map_values
+topic: gleam/dict
+order: 49
+summary: 모든 값을 콜백으로 바꾼 새 dict를 돌려줍니다. 키는 그대로이고, 콜백은 값만이 아니라 `fn(키, 값)`을 받습니다.
+example: |
+  dict.from_list([#("a", 1), #("b", 2)])
+  |> dict.map_values(fn(_key, v) { v * 10 })  // -> dict.from_list([#("a", 10), #("b", 20)])
+imports: [gleam/string, "gleam/dict.{type Dict}"]
+signature: "dict.map_values(in: Dict(a, b), with: fn(a, b) -> c) -> Dict(a, c)"
+frequency: 2
+recognize:
+  prompt: "`dict.map_values(prices, f)`에 넘길 `f`로 맞는 것은?"
+  choices: ["`fn(v) { v * 2 }`", "`fn(k, v) { v * 2 }`", "`fn(v, k) { v * 2 }`", "`fn(pair) { #(pair.0, pair.1 * 2) }`"]
+  answer: 1
+  feedback:
+    correct: 맞아요. 키를 쓰지 않아도 `fn(_k, v)`처럼 두 인자를 받습니다.
+    choices:
+      0: 값 하나만 받는 콜백은 컴파일 오류입니다. 키도 함께 들어옵니다.
+      2: 키가 먼저, 값이 나중입니다.
+      3: 튜플로 받지 않고, 돌려주는 것도 새 값 하나뿐입니다. 키는 바꿀 수 없습니다.
+cloze:
+  prompt: 빈칸을 채워 모든 값에 1을 더하세요.
+  code: 'dict.from_list([#("a", 1)]) |> dict.____(fn(_, v) { v + 1 })'
+  answers: [map_values]
+  expected: 'dict.from_list([#("a", 2)])'
+predict:
+  prompt: 이 식의 값은?
+  code: 'dict.from_list([#("ab", 0), #("c", 0)]) |> dict.map_values(fn(k, _) { string.length(k) })'
+  expected: 'dict.from_list([#("ab", 2), #("c", 1)])'
+produce:
+  prompt: 가격표의 모든 가격을 10% 할인(정수 나눗셈)한 가격표를 돌려주는 함수 본문을 `dict.map_values`로 쓰세요.
+  header: "pub fn discount(prices: Dict(String, Int)) -> Dict(String, Int)"
+  checks: '#(discount(dict.from_list([#("tea", 100), #("cake", 250)])), discount(dict.new()), discount(dict.from_list([#("gum", 5)])))'
+  expected: '#(dict.from_list([#("cake", 225), #("tea", 90)]), dict.from_list([]), dict.from_list([#("gum", 4)]))'
+  mustUse: [dict.map_values]
+  reference: "dict.map_values(prices, fn(_item, price) { price * 9 / 10 })"
+  hint: 할인가는 `price * 9 / 10`이고, 쓰지 않는 키는 `_item`으로 받습니다.

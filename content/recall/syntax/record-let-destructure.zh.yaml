@@ -1,0 +1,16 @@
+title: 用 let 解构记录
+summary: "只有一个变体的记录可以像 `let Point(x:, y:) = p` 这样直接用 `let` 拆开。不需要的其余字段用 `..` 跳过。"
+recognize:
+  prompt: "在模式 `let Point(x:, ..) = p` 中，`..` 是什么意思？"
+  choices: ["忽略其余字段", "把其余字段收集成列表", "这是记录更新", "这是语法错误"]
+  feedback:
+    correct: "对。只绑定 `x`，其余字段都跳过。"
+    choices:
+      1: "与列表模式里的 `..rest` 不同，构造器模式中的 `..` 不绑定任何东西。"
+      2: "记录更新 `Point(..p, x: 1)` 是表达式里的写法，而这里是模式。"
+      3: 这是在构造器模式中跳过其余字段的合法写法。
+cloze:
+  prompt: "填空，只取出 `x`，忽略其余字段。"
+produce:
+  prompt: "求点的曼哈顿距离 |x| + |y|。用 `let` 拆开记录。"
+  hint: "从 `let Point(x:, y:) = p` 开始，绝对值用 `int.absolute_value` 求。"

@@ -1,0 +1,41 @@
+title: if 대신 case
+topic: case
+order: 210
+summary: Gleam에는 `if`/`else`가 없어요. 조건에 따라 나눌 때는 `case 조건 { True -> ... False -> ... }`로 씁니다.
+example: |
+  let n = -4
+  case n >= 0 {
+    True -> "non-negative"
+    False -> "negative"
+  }  // -> "negative"
+recognize:
+  prompt: '"x가 0보다 크면 `"pos"`, 아니면 `"neg"`"를 Gleam으로 쓰면?'
+  choices: ["`if x > 0 { \"pos\" } else { \"neg\" }`", "`x > 0 ? \"pos\" : \"neg\"`", "`case x > 0 { True -> \"pos\" False -> \"neg\" }`", "`when x > 0 -> \"pos\" else -> \"neg\"`"]
+  answer: 2
+  feedback:
+    correct: 맞아요. Bool 값을 `case`로 맞추는 것이 Gleam의 if/else입니다.
+    choices:
+      0: Gleam에는 `if`/`else`가 없어요. 컴파일러도 `case`를 쓰라고 안내합니다.
+      1: 삼항 연산자도 없어요.
+      3: "`when`은 Gleam 문법이 아니에요."
+cloze:
+  prompt: 빈칸을 채워 조건에 따라 나누세요.
+  code: |-
+    let n = 7
+    ____ n >= 0 {
+      True -> "non-negative"
+      False -> "negative"
+    }
+  answers: [case]
+  expected: '"non-negative"'
+produce:
+  prompt: 두 정수의 차이(큰 수 빼기 작은 수)를 돌려주는 함수 본문을 `case`와 Bool 조건으로 쓰세요.
+  header: "pub fn abs_diff(a: Int, b: Int) -> Int"
+  checks: "#(abs_diff(5, 3), abs_diff(3, 5), abs_diff(4, 4), abs_diff(-2, 3))"
+  expected: "#(2, 2, 0, 5)"
+  mustUse: [case]
+  reference: |-
+    case a > b {
+      True -> a - b
+      False -> b - a
+    }

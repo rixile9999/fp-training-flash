@@ -1,0 +1,36 @@
+title: int.max
+topic: gleam/int
+order: 43
+summary: "두 정수 중 큰 쪽을 돌려줍니다. `int.max(x, 0)`은 \"음수면 0\"이라는 하한을 거는 흔한 모양입니다."
+example: |
+  int.max(-2, 0)  // -> 0
+imports: [gleam/int]
+signature: "int.max(Int, Int) -> Int"
+frequency: 3
+recognize:
+  prompt: "잔액 `b`가 음수면 0으로 바꾸고, 아니면 그대로 두는 코드는?"
+  choices: ["`int.max(b, 0)`", "`int.min(b, 0)`", "`int.absolute_value(b)`", "`int.max([b, 0])`"]
+  answer: 0
+  feedback:
+    correct: 맞아요. `b`와 0 중 큰 쪽을 고르면 음수는 0이 되고 양수는 그대로입니다.
+    choices:
+      1: "`int.min(b, 0)`은 반대로 양수를 0으로 만들어요."
+      2: 절댓값은 -5를 0이 아니라 5로 바꿔요.
+      3: "`int.max`는 리스트가 아니라 정수 두 개를 받아요. 리스트에는 `Result`를 돌려주는 `list.max(xs, int.compare)`가 있습니다."
+cloze:
+  prompt: 빈칸을 채워 큰 값을 고르세요.
+  code: "int.____(-2, 0)"
+  answers: [max]
+  expected: "0"
+predict:
+  prompt: 이 식의 값은?
+  code: "int.max(0, int.min(150, 100))"
+  expected: "100"
+produce:
+  prompt: 점수를 0 이상 100 이하로 잘라 돌려주세요. `int.max`를 쓰세요.
+  header: "pub fn clamp_score(score: Int) -> Int"
+  checks: "#(clamp_score(50), clamp_score(-10), clamp_score(130), clamp_score(100), clamp_score(0))"
+  expected: "#(50, 0, 100, 100, 0)"
+  mustUse: [int.max]
+  reference: "int.max(0, int.min(score, 100))"
+  hint: "`int.min`으로 위를 100에서 자르고, `int.max`로 아래를 0에서 자르세요."

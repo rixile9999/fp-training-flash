@@ -1,0 +1,40 @@
+title: "Result: Ok와 Error"
+topic: result
+order: 220
+summary: 실패할 수 있는 계산은 `Result(값, 오류)`를 돌려줘요. 성공은 `Ok(값)`, 실패는 `Error(오류)`이고, 쓰는 쪽에서 `case`로 둘 다 처리합니다.
+example: |
+  case int.parse("42") {
+    Ok(n) -> n * 2
+    Error(_) -> 0
+  }  // -> 84
+imports: [gleam/int]
+recognize:
+  prompt: "`Result(Int, String)` 타입의 값이 될 수 있는 것은?"
+  choices: ["`Some(1)`과 `None`", "`Ok(1)`과 `Error(\"bad\")`", "`1`과 `\"bad\"`", "`Ok(1)`과 `Nil`"]
+  answer: 1
+  feedback:
+    correct: 맞아요. 성공 값은 `Ok`로, 오류 값은 `Error`로 감쌉니다.
+    choices:
+      0: "`Some`과 `None`은 `Option`의 생성자예요."
+      2: 감싸지 않은 값은 `Result`가 아니에요. 반드시 `Ok`나 `Error`로 감쌉니다.
+      3: 실패도 `Error(...)`로 감싸야 해요. `Nil`만으로는 타입이 맞지 않습니다.
+cloze:
+  prompt: 빈칸을 채워 파싱에 실패한 경우를 처리하세요.
+  code: |-
+    case int.parse("x") {
+      Ok(n) -> n
+      ____(_) -> -1
+    }
+  answers: [Error]
+  expected: "-1"
+produce:
+  prompt: 나이가 0 이상 150 이하이면 `Ok(age)`, 아니면 `Error("invalid age")`를 돌려주는 함수 본문을 쓰세요.
+  header: "pub fn check_age(age: Int) -> Result(Int, String)"
+  checks: "#(check_age(30), check_age(-1), check_age(0), check_age(151))"
+  expected: '#(Ok(30), Error("invalid age"), Ok(0), Error("invalid age"))'
+  mustUse: ["Ok(", "Error("]
+  reference: |-
+    case age >= 0 && age <= 150 {
+      True -> Ok(age)
+      False -> Error("invalid age")
+    }

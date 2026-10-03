@@ -1,0 +1,16 @@
+title: Comparing Floats with == is risky
+summary: "`Float`s are binary approximations, so `0.1 +. 0.2 == 0.3` is `False`. Compare computed `Float`s with a tolerance using `float.loosely_equals`."
+recognize:
+  prompt: "What is the value of `0.1 +. 0.2 == 0.3`?"
+  choices: ["`True`", "`False`", "A compile error (`Float`s can't be compared with `==`)"]
+  feedback:
+    correct: "Right. `0.1 +. 0.2` is `0.30000000000000004`, so they aren't exactly equal."
+    choices:
+      0: Mathematically they're equal, but binary floating point introduces a small error. Most languages behave the same way.
+      2: "`==` works on `Float`s too; it's just `True` only when the values are exactly equal."
+cloze:
+  prompt: Fill in the blank to compare with a tolerance.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Return `True` when two measurements differ by at most 0.01.

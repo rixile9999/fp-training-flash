@@ -1,0 +1,16 @@
+title: string.length
+summary: "Returns the number of characters (graphemes) in a string. It does not count bytes, so `\"café\"` has length 4 and the emoji `\"👍🏽\"` has length 1."
+recognize:
+  prompt: "What is the value of `string.length(\"café\")`?"
+  choices: ["`5`", "`4`", "`Ok(4)`"]
+  feedback:
+    correct: Right. It counts the characters a reader sees.
+    choices:
+      0: "5 is the number of UTF-8 bytes (`é` takes 2). If you need bytes, use `string.byte_size`."
+      2: "It cannot fail, so it returns an `Int` directly."
+cloze:
+  prompt: Fill in the blank to get the number of characters.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Check whether a password is at least 8 characters long.

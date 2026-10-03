@@ -1,0 +1,37 @@
+title: 문자열은 글자 리스트가 아님
+topic: strings
+order: 17
+summary: "문자열은 글자 리스트가 아니라서 `[c, ..rest]` 패턴으로 맞출 수 없고, `Char` 타입도 없습니다. 첫 글자와 나머지는 `string.pop_grapheme`으로 나눕니다(결과는 `Result`)."
+example: |
+  string.pop_grapheme("gleam")  // -> Ok(#("g", "leam"))
+imports: [gleam/string]
+recognize:
+  prompt: "문자열 `s`를 첫 글자와 나머지로 나누는 방법은?"
+  choices: ["`case s { [c, ..rest] -> ... }`", "`string.pop_grapheme(s)`", "`case s { c <> rest -> ... }`", "`let #(c, rest) = s`"]
+  answer: 1
+  feedback:
+    correct: "맞아요. 비어 있지 않으면 `Ok(#(첫 글자, 나머지))`, 비어 있으면 `Error(Nil)`입니다."
+    choices:
+      0: "리스트 패턴은 리스트에만 맞아요. Haskell이나 Elixir처럼 문자열을 글자 리스트로 보면 타입 오류가 납니다."
+      2: "`<>` 패턴의 왼쪽은 `\"say \"` 같은 문자열 리터럴이어야 해요."
+      3: 문자열은 튜플이 아니라서 이렇게 분해할 수 없습니다.
+cloze:
+  prompt: 빈칸을 채워 첫 글자와 나머지로 나누세요.
+  code: 'string.____("hi")'
+  answers: [pop_grapheme]
+  expected: 'Ok(#("h", "i"))'
+predict:
+  prompt: 이 식의 값은?
+  code: 'string.pop_grapheme("")'
+  expected: "Error(Nil)"
+produce:
+  prompt: "단어의 첫 글자만 대문자로 바꾸세요. 빈 문자열은 그대로 돌려줍니다."
+  header: "pub fn capitalize(word: String) -> String"
+  checks: '#(capitalize("gleam"), capitalize(""), capitalize("élan"))'
+  expected: '#("Gleam", "", "Élan")'
+  mustUse: [string.pop_grapheme]
+  reference: |
+    case string.pop_grapheme(word) {
+      Ok(#(first, rest)) -> string.uppercase(first) <> rest
+      Error(Nil) -> ""
+    }

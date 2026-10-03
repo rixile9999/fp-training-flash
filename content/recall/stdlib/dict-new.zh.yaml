@@ -1,0 +1,16 @@
+title: dict.new
+summary: 创建一个空 dict。它是没有参数的函数，要加括号调用：`dict.new()`；常用作折叠的初始值。
+recognize:
+  prompt: "下面哪个表达式创建空 dict？"
+  choices: ["`dict.new()`", "`dict.new`", "`{}`", "`dict.empty()`"]
+  feedback:
+    correct: 对。要调用它才能得到空的 `Dict`。
+    choices:
+      1: 不加括号得到的不是 dict，而是函数 `fn() -> Dict(a, b)` 本身。
+      2: 这是 JavaScript 或 Python 的字面量。Gleam 没有 dict 字面量，`{ }` 是代码块。
+      3: "没有 `dict.empty` 这个函数。空 dict 是 `dict.new()`。"
+cloze:
+  prompt: 填空，从空 dict 开始。
+produce:
+  prompt: 写出函数体：生成把每个单词映射到其长度的 dict。用 `dict.new()` 作为 `list.fold` 的初始值。
+  hint: 在回调中用 `dict.insert(acc, word, string.length(word))` 逐个放入。

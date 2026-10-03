@@ -1,0 +1,15 @@
+title: 用 case 代替 if
+summary: Gleam 没有 `if`/`else`。按条件分支时写成 `case 条件 { True -> ... False -> ... }`。
+recognize:
+  prompt: “x 大于 0 时为 `"pos"`，否则为 `"neg"`”用 Gleam 怎么写？
+  choices: ["`if x > 0 { \"pos\" } else { \"neg\" }`", "`x > 0 ? \"pos\" : \"neg\"`", "`case x > 0 { True -> \"pos\" False -> \"neg\" }`", "`when x > 0 -> \"pos\" else -> \"neg\"`"]
+  feedback:
+    correct: 对。用 `case` 匹配 Bool 值就是 Gleam 的 if/else。
+    choices:
+      0: Gleam 没有 `if`/`else`，编译器也会提示改用 `case`。
+      1: 也没有三元运算符。
+      3: "`when` 不是 Gleam 语法。"
+cloze:
+  prompt: 填空，根据条件进行分支。
+produce:
+  prompt: 用 `case` 匹配 Bool 条件，写出返回两个整数之差（大数减小数）的函数体。

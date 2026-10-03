@@ -1,0 +1,38 @@
+title: 필드 접근 .label
+topic: records
+order: 122
+summary: "레코드 필드는 `user.name`처럼 `.레이블`로 읽습니다. 변형이 여럿인 타입의 값에서는 모든 변형에 같은 위치, 같은 타입으로 있는 필드만 바로 읽을 수 있어요."
+definitions: |
+  pub type Shape {
+    Circle(name: String, radius: Float)
+    Rectangle(name: String, width: Float, height: Float)
+  }
+example: |
+  {
+    let shape = Circle(name: "c1", radius: 2.0)
+    shape.name
+  }  // -> "c1"
+imports: [gleam/list]
+recognize:
+  prompt: "`s: Shape`일 때(변형은 `Circle`, `Rectangle`) 컴파일되는 식은?"
+  choices: ["`s.name`", "`s.radius`", "`s[\"name\"]`", "`s->name`"]
+  answer: 0
+  feedback:
+    correct: "맞아요. `name`은 두 변형에 모두 있어서 바로 읽을 수 있습니다."
+    choices:
+      1: "`radius`는 `Circle`에만 있어요. `s`가 `Rectangle`일 수도 있으니 먼저 `case`로 변형을 가려야 합니다."
+      2: 레코드는 맵이 아니라서 문자열 키로 읽을 수 없어요.
+      3: "`->`는 반환 타입과 `case` 분기에 쓰는 기호예요. 필드는 `.`으로 읽습니다."
+cloze:
+  prompt: 빈칸에 레이블을 넣어 도형의 이름을 읽으세요.
+  code: '{ let s = Rectangle(name: "r", width: 2.0, height: 3.0)  s.____ }'
+  answers: [name]
+  expected: '"r"'
+produce:
+  prompt: 도형 리스트에서 각 도형의 이름만 모아 돌려주세요.
+  header: "pub fn names(shapes: List(Shape)) -> List(String)"
+  checks: '#(names([Circle("a", 1.0), Rectangle("b", 1.0, 2.0)]), names([]), names([Circle("", 0.5)]))'
+  expected: '#(["a", "b"], [], [""])'
+  mustUse: [".name"]
+  reference: "list.map(shapes, fn(s) { s.name })"
+  hint: "`list.map(shapes, fn(s) { s.name })`처럼 필드를 읽으세요."

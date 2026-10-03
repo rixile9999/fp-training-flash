@@ -1,0 +1,40 @@
+title: 가드는 위에서부터 처음 맞는 가지
+topic: control-flow
+order: 21
+summary: "`else if` 사슬을 `case` 가드로 옮기면 위에서부터 처음 맞는 가지 하나만 실행됩니다. 넓은 조건을 위에 두면 아래 가지는 실행되지 않으니 좁은 조건부터 씁니다."
+example: |
+  case 95 {
+    s if s >= 90 -> "A"
+    s if s >= 70 -> "B"
+    _ -> "C"
+  }  // -> "A"
+recognize:
+  prompt: "`case 95 { s if s >= 70 -> \"B\"  s if s >= 90 -> \"A\"  _ -> \"C\" }`의 값은?"
+  choices: ['`"B"`', '`"A"`', 컴파일 오류(조건이 겹침)]
+  answer: 0
+  feedback:
+    correct: 맞아요. 95는 첫 가지 `s >= 70`에 먼저 맞아서 `"B"`가 됩니다.
+    choices:
+      1: "가장 잘 맞는 가지를 고르는 게 아니라 처음 맞는 가지를 씁니다. `s >= 90`을 위로 올려야 해요."
+      2: 가드끼리 겹쳐도 오류가 나지 않아요. 그래서 순서 실수를 알아채기 어렵습니다.
+cloze:
+  prompt: 빈칸에 알맞은 키워드를 채우세요.
+  code: 'case 75 { s ____ s >= 90 -> "A"  s if s >= 70 -> "B"  _ -> "C" }'
+  answers: [if]
+  expected: '"B"'
+predict:
+  prompt: 이 식의 값은?
+  code: 'case -5 { n if n < 10 -> "small"  n if n < 0 -> "negative"  _ -> "big" }'
+  expected: '"small"'
+produce:
+  prompt: "섭씨 온도로 물의 상태를 돌려주세요. 0 이하는 `\"solid\"`, 100 이상은 `\"gas\"`, 그 사이는 `\"liquid\"`입니다."
+  header: "pub fn water_state(celsius: Int) -> String"
+  checks: "#(water_state(-5), water_state(0), water_state(25), water_state(100))"
+  expected: '#("solid", "solid", "liquid", "gas")'
+  mustUse: ["case", "if"]
+  reference: |
+    case celsius {
+      c if c <= 0 -> "solid"
+      c if c >= 100 -> "gas"
+      _ -> "liquid"
+    }

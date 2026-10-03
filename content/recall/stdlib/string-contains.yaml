@@ -1,0 +1,36 @@
+title: string.contains
+topic: gleam/string
+order: 35
+summary: "첫 번째 문자열(`does:`) 안에 두 번째 문자열(`contain:`)이 들어 있는지 `Bool`로 알려 줍니다. 대소문자를 구분합니다."
+example: |
+  string.contains(does: "gleam is fun", contain: "fun")  // -> True
+imports: [gleam/list, gleam/string]
+signature: "string.contains(does: String, contain: String) -> Bool"
+frequency: 6
+recognize:
+  prompt: "로그 줄 `line`에 `\"error\"`가 들어 있는지 확인하는 식은?"
+  choices: ["`string.contains(\"error\", line)`", "`list.contains(line, \"error\")`", "`string.contains(line, \"error\")`", "`string.includes(line, \"error\")`"]
+  answer: 2
+  feedback:
+    correct: "맞아요. `does: line, contain: \"error\"`로 읽히듯이, 검사할 문자열이 먼저이고 찾는 조각이 나중입니다."
+    choices:
+      0: "반대예요. 이렇게 쓰면 `\"error\"` 안에 `line`이 있는지 묻게 됩니다."
+      1: "`list.contains`는 리스트에서 원소를 찾아요. `line`은 `String`이라 타입 오류가 납니다."
+      3: "`includes`는 JavaScript의 이름이에요. Gleam에는 `string.includes`가 없습니다."
+cloze:
+  prompt: 빈칸을 채워 문장에 `"fun"`이 있는지 확인하세요.
+  code: 'string.____("gleam is fun", "fun")'
+  answers: [contains]
+  expected: "True"
+predict:
+  prompt: 이 식의 값은?
+  code: 'string.contains("Gleam", "gleam")'
+  expected: "False"
+produce:
+  prompt: '로그 줄 리스트에서 `"ERROR"`가 들어 있는 줄만 남기세요.'
+  header: "pub fn error_lines(lines: List(String)) -> List(String)"
+  checks: '#(error_lines(["INFO start", "ERROR disk full", "WARN slow", "ERROR timeout"]), error_lines([]), error_lines(["error in lowercase"]))'
+  expected: '#(["ERROR disk full", "ERROR timeout"], [], [])'
+  mustUse: [string.contains]
+  reference: 'list.filter(lines, fn(line) { string.contains(line, "ERROR") })'
+  hint: "`list.filter`의 조건으로 `string.contains(line, \"ERROR\")`를 쓰세요."

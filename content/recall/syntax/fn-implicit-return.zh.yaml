@@ -1,0 +1,16 @@
+title: 最后一个表达式即返回值
+summary: "函数返回函数体中最后一个表达式的值。Gleam 没有 `return`。"
+recognize:
+  prompt: "下面哪一个可以作为 `fn double(x: Int) -> Int { ... }` 的函数体？"
+  choices: ["`return x * 2`", "`x * 2`", "`x * 2;`", "`double = x * 2`"]
+  feedback:
+    correct: 对。最后一个表达式 `x * 2` 的值就是返回值。
+    choices:
+      0: "Gleam 没有 `return`，会报找不到名字 `return` 的编译错误。"
+      2: Gleam 不用分号结束语句，写分号是语法错误。
+      3: 没有给函数名赋值来返回的写法。最后一个表达式就是返回值。
+cloze:
+  prompt: "填空，让代码块返回 `total` 的值。"
+produce:
+  prompt: "求矩形的周长。用 `let` 给宽与高之和起个名字，再用最后一个表达式返回结果。"
+  hint: "不用 `return`，最后一行只写值，比如 `half * 2`。"

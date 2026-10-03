@@ -1,0 +1,17 @@
+title: Fixed-length list patterns
+summary: A list pattern without `..` also matches the length. `[x]` only matches a list with exactly one element, `[a, b]` one with exactly two.
+recognize:
+  prompt: Which lists match the pattern `[x]`?
+  choices: ["Lists with one or more elements", "Lists with exactly one element", "Every list", "The empty list"]
+  feedback:
+    correct: Right. Without `..`, the number of elements has to match the pattern too.
+    choices:
+      0: For one or more, add `..`, as in `[x, ..]`.
+      2: What matches every value is `_` or a single variable.
+      3: The empty list matches `[]`.
+cloze:
+  prompt: Fill in the blank to multiply only when there are exactly two elements.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: 'Write the body of a function that describes a list by its length: empty gives `"empty"`, one element gives `"only "` followed by that element, two give `"pair"`, three or more give `"many"`.'

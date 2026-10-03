@@ -1,0 +1,49 @@
+title: 길이가 정해진 리스트 패턴
+topic: case
+order: 205
+summary: "`..`이 없는 리스트 패턴은 길이까지 맞춰요. `[x]`는 원소가 정확히 하나인 리스트, `[a, b]`는 정확히 둘인 리스트와만 맞습니다."
+example: |
+  case ["solo"] {
+    [only] -> only
+    _ -> "many"
+  }  // -> "solo"
+recognize:
+  prompt: "`[x]` 패턴과 맞는 리스트는?"
+  choices: ["원소가 하나 이상인 리스트", "원소가 정확히 하나인 리스트", "모든 리스트", "빈 리스트"]
+  answer: 1
+  feedback:
+    correct: 맞아요. `..`이 없으면 원소 개수도 패턴과 같아야 합니다.
+    choices:
+      0: 하나 이상이면 `[x, ..]`처럼 `..`을 붙여야 해요.
+      2: 모든 값과 맞는 것은 `_`나 변수 하나짜리 패턴이에요.
+      3: 빈 리스트는 `[]`와 맞습니다.
+cloze:
+  prompt: 빈칸을 채워 원소가 정확히 두 개일 때만 곱하세요.
+  code: |-
+    case [3, 4] {
+      ____ -> a * b
+      _ -> 0
+    }
+  answers: ["[a, b]", "[a,b]"]
+  expected: "12"
+predict:
+  prompt: 이 식의 값은?
+  code: |-
+    case [1, 2, 3] {
+      [a, b] -> a + b
+      _ -> 0
+    }
+  expected: "0"
+produce:
+  prompt: 리스트를 길이에 따라 설명하는 함수 본문을 쓰세요. 비면 `"empty"`, 하나면 `"only "`와 그 원소, 둘이면 `"pair"`, 셋 이상이면 `"many"`입니다.
+  header: "pub fn describe(xs: List(String)) -> String"
+  checks: '#(describe([]), describe(["a"]), describe(["a", "b"]), describe(["a", "b", "c"]))'
+  expected: '#("empty", "only a", "pair", "many")'
+  mustUse: [case]
+  reference: |-
+    case xs {
+      [] -> "empty"
+      [x] -> "only " <> x
+      [_, _] -> "pair"
+      _ -> "many"
+    }

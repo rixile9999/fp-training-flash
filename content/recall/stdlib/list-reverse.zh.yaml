@@ -1,0 +1,18 @@
+title: list.reverse
+summary: 返回元素顺序颠倒的新列表。常见用法是：先用 `[x, ..acc]` 往前面添加来收集结果，最后再整体反转一次。
+recognize:
+  prompt: "递归中用 `[x, ..acc]` 往前面添加收集了 `acc`。要按添加的顺序返回，最后该做什么？"
+  choices: ["`list.reverse(acc)`", "`list.sort(acc, int.compare)`", "`string.reverse(acc)`", "什么都不用做，添加顺序本来就保留着"]
+  feedback:
+    correct: 对。往前面添加会让顺序倒过来，所以最后用 `list.reverse` 反转一次。
+    choices:
+      1: 排序是按值的大小排列，不能恢复添加的顺序。
+      2: "`string.reverse` 用来反转 `String`，用在列表上会产生类型错误。"
+      3: "`[x, ..acc]` 把新元素放在最前面，所以收集到的顺序是反的。"
+cloze:
+  prompt: 填空，反转列表。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 用 `list.reverse` 写出函数体：判断列表正着读和反着读是否相同（回文）。
+  hint: 列表也可以用 `==` 比较。

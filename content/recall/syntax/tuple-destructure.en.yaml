@@ -1,0 +1,16 @@
+title: Destructuring a tuple with let
+summary: "`let #(a, b) = pair` unpacks a tuple in one go and names each element. The pattern must have as many elements as the tuple; discard the ones you don't need with `_`."
+recognize:
+  prompt: "What does `let #(x, y) = #(1, 2, 3)` do?"
+  choices: ["`x` becomes 1, `y` becomes 2, and 3 is dropped", "A compile error: the pattern and the tuple have different sizes", "`y` becomes `#(2, 3)`", "It fails at run time"]
+  feedback:
+    correct: "Right. A tuple's size is part of its type, so the number of elements must match."
+    choices:
+      0: "Extra elements aren't silently dropped. Even the ones you discard need a `_` in their place."
+      2: "Tuple patterns have no rest syntax like the list pattern `..rest`."
+      3: Different sizes mean different types, so it's caught at compile time.
+cloze:
+  prompt: Fill in the pattern that binds the first element to `label`.
+produce:
+  prompt: "Given `#(product, quantity)`, produce a string like `\"apple x3\"`. Unpack the tuple with `let`."
+  hint: "Start with `let #(name, qty) = entry`."

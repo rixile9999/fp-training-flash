@@ -1,0 +1,15 @@
+title: 常量 const
+summary: 模块顶层的值用 `const` 定义（没有顶层 `let`）。常量可以使用字面量（数字、字符串、列表、元组、记录）和其他常量，但不能调用函数。
+recognize:
+  prompt: 下面哪个可以写在模块顶层？
+  choices: ["`let limit = 10`", "`const limit = int.max(3, 10)`", "`var limit = 10`", "`const limits = [3, 10]`"]
+  feedback:
+    correct: 对。列表、元组、记录等字面量都可以作为常量。
+    choices:
+      0: 没有顶层 `let`。模块级的值用 `const`。
+      1: 常量里不能调用函数（"Functions can only be called within other functions"）。
+      2: Gleam 没有 `var`，所有值都是不可变的。
+cloze:
+  prompt: 在空白处写上常量名，求两支队伍的总人数。
+produce:
+  prompt: 写出函数体：用常量 `vat_percent` 返回加上增值税后的价格。使用整数除法。

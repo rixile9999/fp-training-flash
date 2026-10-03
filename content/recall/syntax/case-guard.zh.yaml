@@ -1,0 +1,16 @@
+title: 守卫 if
+summary: 在模式后面加上 `if 条件`，只有条件为真时这个分支才匹配。守卫里不能调用函数。
+recognize:
+  prompt: 下面哪个分支无法编译？
+  choices: ["`x if x > 0 ->`", "`x if x % 2 == 0 ->`", "`s if string.length(s) > 3 ->`", "`#(a, b) if a == b ->`"]
+  feedback:
+    correct: 对。守卫里不能调用函数。可以先用 `let` 算好，或者在分支里再写一个 `case`。
+    choices:
+      0: 守卫里可以使用比较运算。
+      1: 守卫里可以使用算术运算和比较。
+      3: 比较模式中绑定的变量也是可以的。
+cloze:
+  prompt: 填空，只让 18 岁及以上的结果为 `"adult"`。
+produce:
+  prompt: 写出从字符串读取订单数量的函数体：正整数返回 `Ok(数量)`，0 及以下返回 `Error("must be positive")`，不是整数则返回 `Error("not a number")`。用 `case` 匹配 `int.parse` 的结果，并使用守卫。
+  hint: 守卫为假时会继续尝试下一个分支。在 `Ok(n) if n > 0` 下面再放一个普通的 `Ok(_)` 分支。

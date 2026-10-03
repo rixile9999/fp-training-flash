@@ -1,0 +1,15 @@
+title: Callbacks can't change outer variables
+summary: "Writing `let count = count + 1` inside a callback doesn't change the outer `count`. To build up a value while looping, pass an accumulator with `list.fold`."
+recognize:
+  prompt: "What is the value of `{ let count = 0  list.each([1, 2, 3], fn(_) { let count = count + 1  count })  count }`?"
+  choices: ["`0`", "`3`", "`1`"]
+  feedback:
+    correct: Right. The `let count` inside the callback is just a new name, so the outer `count` stays 0.
+    choices:
+      1: "That assumes the outer variable is updated, as with JavaScript's `forEach`. Values in Gleam never change."
+      2: "Each call computes `0 + 1` inside the callback, but that value never leaves it. The outer `count` is still 0."
+cloze:
+  prompt: Fill in the blank to count the elements.
+produce:
+  prompt: "Count the positive numbers with `list.fold`."
+  hint: Whatever the callback returns becomes the accumulator for the next element.

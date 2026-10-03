@@ -1,0 +1,15 @@
+title: "Option: Some and None"
+summary: "A value that may or may not be there is an `Option(a)` from `gleam/option`: `Some(value)` when present, `None` when absent. For operations that can fail, use `Result`."
+recognize:
+  prompt: When do you use `Option` and when `Result`?
+  choices: ["`Option` for operations that can fail, `Result` for values that may be absent", "`Option` for values that may be absent, `Result` for operations that can fail", "They're the same type, so either works", "`Option` is built in, so it needs no import"]
+  feedback:
+    correct: Right. Use `Option` when an empty value is normal, and `Result` to report a failure and its reason.
+    choices:
+      0: It's the other way round. `Result` can carry the reason for failure in `Error`.
+      2: They're different types; you can't mix `Some`/`None` with `Ok`/`Error`.
+      3: "`Result` is built in, but `Option` has to be imported from `gleam/option`."
+cloze:
+  prompt: Fill in the blank to handle a missing nickname.
+produce:
+  prompt: Write the body of a function that returns the nickname if there is one, otherwise the name. Split `Some` and `None` with `case`.

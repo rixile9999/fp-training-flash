@@ -1,0 +1,17 @@
+title: string.append
+summary: "Attaches the second string (`suffix:`) to the end of the first (`to:`). It is the same as `a <> b`, and reads well in a pipeline: `s |> string.append(\"!\")`."
+recognize:
+  prompt: "What is the value of `\"report\" |> string.append(\".txt\")`?"
+  choices: ["`\".txtreport\"`", "`\"report.txt\"`", "`[\"report\", \".txt\"]`"]
+  feedback:
+    correct: "Right. The pipe passes the left value as the first argument, `to:`, so `\".txt\"` goes at the end."
+    choices:
+      0: "The value on the left of the pipe becomes the first argument, `to:`. So `\".txt\"` goes at the end, not the front."
+      2: "It does not build a list; it returns one joined `String`."
+cloze:
+  prompt: Fill in the blank to add an exclamation mark.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: "If a file name does not end in `.gleam`, add `.gleam`; if it already does, leave it as is."
+  hint: "First check with `string.ends_with` whether the extension is already there."

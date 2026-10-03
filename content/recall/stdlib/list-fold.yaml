@@ -5,7 +5,7 @@ summary: 리스트를 왼쪽부터 하나씩 접어 값 하나로 만듭니다. 
 example: |
   list.fold([1, 2, 3], 0, fn(acc, x) { acc + x })  // -> 6
 imports: [gleam/list]
-signature: "list.fold(List(a), from: b, with: fn(b, a) -> b) -> b"
+signature: "list.fold(over: List(a), from: b, with: fn(b, a) -> b) -> b"
 frequency: 39
 recognize:
   prompt: "`list.fold`의 콜백 `fn(?, ?)`에 들어오는 인자 순서는?"

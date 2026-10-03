@@ -1,0 +1,43 @@
+title: let 패턴은 항상 맞아야 한다
+topic: exhaustiveness
+order: 209
+summary: 그냥 `let`으로 분해할 수 있는 것은 언제나 맞는 패턴(튜플, 생성자가 하나인 레코드)뿐이에요. `let [x, ..] = xs`처럼 실패할 수 있는 패턴은 컴파일 오류이니 `case`나 `let assert`를 쓰세요.
+example: |
+  let #(name, scores) = #("ann", [90, 80])
+  case scores {
+    [first, ..] -> #(name, first)
+    [] -> #(name, 0)
+  }  // -> #("ann", 90)
+recognize:
+  prompt: 다음 중 컴파일되는 것은?
+  choices: ["`let [first, ..] = xs`", "`let #(a, b) = pair`", "`let Ok(n) = int.parse(s)`", "`let Some(x) = opt`"]
+  answer: 1
+  feedback:
+    correct: 맞아요. 튜플 패턴은 언제나 맞으므로 `let`으로 분해할 수 있어요.
+    choices:
+      0: 빈 리스트면 맞지 않으니 컴파일 오류("Inexhaustive pattern")예요. `case`나 `let assert`를 쓰세요.
+      2: "`Error`일 수 있어서 그냥 `let`으로는 안 돼요. 실패를 다루려면 `case`, 확실하다면 `let assert`입니다."
+      3: "`None`일 수 있어서 컴파일 오류예요."
+cloze:
+  prompt: 리스트 패턴은 실패할 수 있어요. 빈칸을 채워 빈 리스트까지 다루세요.
+  code: |-
+    let #(_, scores) = #("bo", [])
+    ____ scores {
+      [first, ..] -> first
+      [] -> 0
+    }
+  answers: [case]
+  expected: "0"
+produce:
+  prompt: "`#(이름, 점수 리스트)`에서 첫 점수를 돌려주는 함수 본문을 쓰세요. 점수가 없으면 0입니다. 튜플은 `let`으로 풀고, 실패할 수 있는 리스트 패턴은 `case`로 나누세요."
+  header: "pub fn first_score(entry: #(String, List(Int))) -> Int"
+  checks: '#(first_score(#("ann", [90, 80])), first_score(#("bo", [])), first_score(#("cy", [75])))'
+  expected: "#(90, 0, 75)"
+  mustUse: ["let #(", case]
+  reference: |-
+    let #(_, scores) = entry
+    case scores {
+      [first, ..] -> first
+      [] -> 0
+    }
+  hint: "`let [first, ..] = scores`는 빈 리스트와 맞지 않으므로 컴파일되지 않아요."

@@ -1,0 +1,48 @@
+title: use는 마지막 인자 콜백
+topic: use
+order: 224
+summary: "`use x <- f(a)`는 `f(a, fn(x) { 블록의 나머지 })`의 줄임말이에요. 마지막 매개변수가 함수인 함수라면 무엇과도 쓸 수 있습니다."
+example: |
+  {
+    use x <- list.map([1, 2, 3])
+    x * 10
+  }  // -> [10, 20, 30]
+imports: [gleam/list]
+recognize:
+  prompt: "`use x <- list.map(xs)` 아래에 이어지는 블록의 나머지는 어디로 가나요?"
+  choices: ["`list.map`의 첫 번째 인자", "`list.map`을 부른 뒤 한 번 따로 실행된다", "`list.map`의 마지막 인자인 `fn(x) { ... }`의 본문", "`x`에 `xs` 전체가 묶이고 그대로 실행된다"]
+  answer: 2
+  feedback:
+    correct: 맞아요. 나머지 코드가 콜백 본문이 되어 원소마다 실행됩니다.
+    choices:
+      0: 첫 번째 인자는 괄호 안의 `xs`이고, 콜백은 마지막 인자 자리에 들어가요.
+      1: 따로 실행되지 않아요. 콜백 본문이 되므로 `list.map`이 원소마다 부릅니다.
+      3: "`x`는 콜백의 인자라서 원소를 하나씩 받아요."
+cloze:
+  prompt: 빈칸을 채워 블록의 나머지를 콜백으로 넘기세요.
+  code: |-
+    {
+      ____ x <- list.map([1, 2, 3])
+      x * 10
+    }
+  answers: [use]
+  expected: "[10, 20, 30]"
+predict:
+  prompt: 이 식의 값은?
+  code: |-
+    {
+      use x <- list.filter([1, 2, 3, 4])
+      x % 2 == 0
+    }
+  expected: "[2, 4]"
+produce:
+  prompt: 두 리스트에서 하나씩 골라 만든 모든 쌍을 돌려주는 함수 본문을 쓰세요. `use`로 `list.flat_map`과 `list.map`을 이어 쓰세요.
+  header: "pub fn pairs(xs: List(Int), ys: List(String)) -> List(#(Int, String))"
+  checks: '#(pairs([1, 2], ["a"]), pairs([], ["a"]), pairs([1], ["a", "b"]))'
+  expected: '#([#(1, "a"), #(2, "a")], [], [#(1, "a"), #(1, "b")])'
+  mustUse: [use, list.flat_map]
+  reference: |-
+    use x <- list.flat_map(xs)
+    use y <- list.map(ys)
+    #(x, y)
+  hint: 바깥은 `list.flat_map`, 안쪽은 `list.map`입니다. 마지막 줄은 쌍 하나예요.

@@ -1,0 +1,17 @@
+title: Int division truncates toward zero
+summary: "`Int` division `/` truncates toward zero. `-7 / 2` is `-3`, not `-4` as in Python. If you need flooring, use `int.floor_divide`."
+recognize:
+  prompt: "What is the value of `-7 / 2`?"
+  choices: ["`-3`", "`-4`", "`-3.5`"]
+  feedback:
+    correct: Right. The fractional part is dropped, so you get `-3`, the value closer to zero.
+    choices:
+      1: "That's the floored result, like Python's `//`. Gleam's `/` truncates toward zero; flooring is `int.floor_divide`."
+      2: "Dividing two `Int`s gives an `Int`. For a fraction, convert with `int.to_float` and use `/.`."
+cloze:
+  prompt: Fill in the blank to get the quotient rounded toward negative infinity.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: "Given minutes counted from midnight (`minutes`), return which day it falls on: 0 to 1439 is 0, 1440 to 2879 is 1, and -1440 to -1 is -1 (the day before)."
+  hint: "`minutes / 1440` truncates -1 minute to day 0. `int.floor_divide` returns a `Result`, so unwrap it with `result.unwrap`."

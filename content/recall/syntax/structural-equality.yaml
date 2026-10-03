@@ -1,0 +1,34 @@
+title: 구조적 동등 비교
+topic: bool
+order: 112
+summary: "`==`와 `!=`는 같은 타입의 두 값을 구조로 비교합니다. 리스트, 튜플, 레코드도 안쪽 값까지 비교해요."
+definitions: |
+  pub type Point {
+    Point(x: Int, y: Int)
+  }
+example: |
+  [1, 2] == [1, 2]  // -> True
+imports: []
+recognize:
+  prompt: "`#(1, [\"a\"]) == #(1, [\"a\"])`의 값은?"
+  choices: ["`True`", "`False` (서로 다른 값이라서)", "컴파일 오류 (튜플은 비교할 수 없음)", "`Ok(True)`"]
+  answer: 0
+  feedback:
+    correct: 맞아요. 안의 값이 모두 같으면 구조가 같으므로 `True`입니다.
+    choices:
+      1: 참조(주소)가 아니라 구조를 비교해요. 안의 값이 모두 같으면 `True`입니다.
+      2: 같은 타입이면 튜플, 리스트, 레코드 모두 `==`로 비교할 수 있어요.
+      3: "`==`는 실패하지 않으므로 `Bool`을 그대로 돌려줍니다."
+cloze:
+  prompt: 빈칸에 같음을 비교하는 연산자를 넣으세요.
+  code: "Point(1, 2) ____ Point(1, 2)"
+  answers: ["=="]
+  expected: "True"
+produce:
+  prompt: "점이 원점인지 판단하세요. 필드를 하나씩 보지 말고 `Point(0, 0)`과 통째로 비교하세요."
+  header: "pub fn is_origin(p: Point) -> Bool"
+  checks: "#(is_origin(Point(0, 0)), is_origin(Point(0, 1)), is_origin(Point(-1, 0)))"
+  expected: "#(True, False, False)"
+  mustUse: ["=="]
+  reference: "p == Point(0, 0)"
+  hint: 레코드도 `==`로 바로 비교할 수 있어요.

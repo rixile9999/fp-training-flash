@@ -1,0 +1,16 @@
+title: Matching several values with case
+summary: List several values separated by commas, as in `case a, b { ... }`, and each branch matches them all at once with comma-separated patterns. No need to wrap them in a tuple.
+recognize:
+  prompt: How do you write a branch pattern for `case a, b { ... }`?
+  choices: ["`(0, 0) ->`", "`[0, 0] ->`", "`0, 0 ->`", "`0 && 0 ->`"]
+  feedback:
+    correct: Right. The patterns are listed with commas, in the same order as the values.
+    choices:
+      0: Parentheses don't group anything in Gleam. A tuple is `#(0, 0)`, and to match one the subject would have to be `#(a, b)`.
+      1: "`[0, 0]` is a pattern for a list of exactly two elements."
+      3: "`&&` is a Bool operator; it can't be used in a pattern."
+cloze:
+  prompt: Fill in the blank to match both remainders at once.
+produce:
+  prompt: 'Write the body of FizzBuzz using `case n % 3, n % 5`: multiples of 15 give `"FizzBuzz"`, multiples of 3 give `"Fizz"`, multiples of 5 give `"Buzz"`, and anything else gives the number as a string.'
+  hint: Put the `0, 0` branch first. Convert the number with `int.to_string`.

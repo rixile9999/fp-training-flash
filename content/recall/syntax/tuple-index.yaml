@@ -1,0 +1,41 @@
+title: 튜플과 .0 .1 접근
+topic: tuples
+order: 117
+summary: "튜플 `#(a, b)`는 타입이 서로 달라도 되는 고정 개수의 값입니다. 원소는 0부터 세어 `.0`, `.1`로 읽어요."
+example: |
+  {
+    let pair = #("age", 42)
+    pair.1
+  }  // -> 42
+imports: [gleam/list]
+recognize:
+  prompt: "`let pair = #(\"age\", 42)`에서 `42`를 꺼내는 식은?"
+  choices: ["`pair.1`", "`pair[1]`", "`pair.2`", "`pair.second`"]
+  answer: 0
+  feedback:
+    correct: "맞아요. 번호는 0부터라 두 번째 원소는 `.1`입니다."
+    choices:
+      1: "인덱스 문법은 없어요. 튜플은 `.1`처럼 점과 숫자로 읽습니다."
+      2: "번호는 0부터 시작해요. 원소가 둘인 튜플에는 `.2`가 없어 컴파일 오류입니다."
+      3: 튜플 원소에는 이름이 없어요. 이름 있는 필드가 필요하면 레코드를 만드세요.
+cloze:
+  prompt: 빈칸에 번호를 넣어 `True`를 꺼내세요.
+  code: '#("ann", 30, True).____'
+  answers: ["2"]
+  expected: "True"
+predict:
+  prompt: 이 식의 값은?
+  code: |
+    {
+      let t = #(1, #(2, 3))
+      t.1
+    }
+  expected: "#(2, 3)"
+produce:
+  prompt: "`#(이름, 점수)` 리스트에서 점수의 합을 구하세요. 점수는 `.1`로 읽으세요."
+  header: "pub fn total_score(entries: List(#(String, Int))) -> Int"
+  checks: '#(total_score([#("ann", 3), #("bo", 4)]), total_score([]), total_score([#("cy", -2)]))'
+  expected: "#(7, 0, -2)"
+  mustUse: [".1"]
+  reference: "list.fold(entries, 0, fn(acc, entry) { acc + entry.1 })"
+  hint: "`list.fold`의 콜백에서 `entry.1`을 누적값에 더하세요."

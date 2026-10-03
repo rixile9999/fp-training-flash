@@ -1,0 +1,15 @@
+title: Int 不会溢出
+summary: "在 Erlang 上 `Int` 没有大小限制，无论多大都不会溢出变成负数（JavaScript 目标不同）。"
+recognize:
+  prompt: "在 Erlang 目标上，`9_223_372_036_854_775_807 + 1` 的值是？"
+  choices: ["`-9223372036854775808`", "`9223372036854775808`", 运行时溢出错误崩溃]
+  feedback:
+    correct: 对。Erlang 的整数会按需增加位数。
+    choices:
+      0: 这是 Java 或 C 的 64 位整数溢出回绕后的值。Erlang 的 `Int` 不会溢出。
+      2: 没有大小限制，所以也没有溢出错误。
+cloze:
+  prompt: 填空，把三个数全部相乘。
+produce:
+  prompt: "返回 `n!`（从 1 到 `n` 的乘积）。`0!` 等于 1。"
+  hint: 不需要特别处理大数，直接相乘即可。

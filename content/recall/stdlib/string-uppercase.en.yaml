@@ -1,0 +1,18 @@
+title: string.uppercase
+summary: "Turns every letter in a string into uppercase. Digits and symbols stay as they are. To uppercase only the first letter (and lowercase the rest), use `string.capitalise`."
+recognize:
+  prompt: "What is the value of `string.uppercase(\"hello world\")`?"
+  choices: ["`\"Hello world\"`", "`\"HELLO WORLD\"`", "`\"Hello World\"`", "`Ok(\"HELLO WORLD\")`"]
+  feedback:
+    correct: Right. Every letter becomes uppercase, whatever word it is in.
+    choices:
+      0: "Uppercasing only the first letter (and lowercasing the rest) is `string.capitalise`."
+      2: "`uppercase` changes every letter, not just the first letter of each word."
+      3: "It cannot fail, so it returns a `String` directly."
+cloze:
+  prompt: Fill in the blank to make everything uppercase.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: 'Clean up a country code typed by a user: trim the spaces and make it uppercase (`" kr "` -> `"KR"`).'
+  hint: "Remove the spaces with `string.trim` first, then keep piping."

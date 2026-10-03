@@ -1,0 +1,22 @@
+title: set.from_list
+summary: "用列表创建集合 `Set`。相同的值会合并成一个，也不会记住放入的顺序。"
+recognize:
+  prompt: "关于 `set.from_list([\"a\", \"b\", \"a\"])`，哪种说法正确？"
+  choices:
+    - 因为有重复，结果是 `Error(Nil)`
+    - 结果是有 3 个元素的 `Set(String)`
+    - 结果是有 2 个元素的 `Set(String)`
+    - "用 `set.to_list` 取出时保证是原来的顺序 `[\"a\", \"b\"]`"
+  feedback:
+    correct: "对。出现两次的 `\"a\"` 合并成了一个。"
+    choices:
+      0: "重复不是错误。它们会被悄悄合并，直接返回 `Set`，不包在 `Result` 里。"
+      1: 集合不会重复保存同一个值，重复项会合并成一个。
+      3: "集合不记顺序。不要依赖 `set.to_list` 返回的顺序。"
+cloze:
+  prompt: 填空，求不同值的个数。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 检查列表中是否有某个值出现了两次及以上。
+  hint: 转成集合后重复项会消失。比较集合的大小和列表的长度。

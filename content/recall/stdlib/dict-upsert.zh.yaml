@@ -1,0 +1,18 @@
+title: dict.upsert
+summary: 更新某个键的值，键不存在时就新插入。回调以 `Option`（`Some(值)` 或 `None`）接收已有的值，并返回新值。
+recognize:
+  prompt: "在 `dict.upsert(d, key, f)` 中，回调 `f` 接收的参数是？"
+  choices: ["已有的值 `b`（键不存在时 panic）", "`Option(b)`：存在时是 `Some(值)`，不存在时是 `None`", "`Result(b, Nil)`：存在时是 `Ok(值)`，不存在时是 `Error(Nil)`", "键和已有的值 `fn(key, value)`"]
+  feedback:
+    correct: 对。键不存在时也会调用回调，这时它收到 `None`。
+    choices:
+      0: 键不存在也不会 panic。回调会收到 `None`，由它决定新值。
+      2: "返回 `Result` 的是 `dict.get`。`upsert` 的回调接收的是 `Option`。"
+      3: 回调只接收已有的值（`Option` 形式）。同时接收键和值的是 `dict.map_values` 的回调。
+cloze:
+  prompt: 填空，把键 `"a"` 的计数加一。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 用 `dict.upsert` 写出函数体：给库存 dict 中的商品增加数量。如果是新商品，就以该数量新插入。
+  hint: 在回调中用 `case` 分别处理 `Some(n)` 和 `None`。

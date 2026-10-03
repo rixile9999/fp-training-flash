@@ -1,0 +1,44 @@
+title: 꼬리 호출과 누적값
+topic: recursion
+order: 212
+summary: 함수가 마지막에 하는 일이 자기 호출이면(꼬리 호출) 스택이 자라지 않아요. 그래서 누적값을 인자로 넘기는 꼬리 재귀가 Gleam의 반복문 역할을 합니다.
+example: |
+  sum_loop([1, 2, 3], 0)  // -> 6
+definitions: |
+  pub fn sum_loop(xs: List(Int), acc: Int) -> Int {
+    case xs {
+      [] -> acc
+      [x, ..rest] -> sum_loop(rest, acc + x)
+    }
+  }
+recognize:
+  prompt: 다음 중 재귀 호출이 꼬리 호출인 분기는?
+  choices: ["`[x, ..rest] -> x + sum(rest)`", "`[x, ..rest] -> sum_loop(rest, acc + x)`", "`[x, ..rest] -> [x * 2, ..double(rest)]`", "`[_, ..rest] -> 1 + length(rest)`"]
+  answer: 1
+  feedback:
+    correct: 맞아요. 호출 결과를 그대로 돌려주고 남은 계산은 누적값 `acc + x`로 미리 넘깁니다.
+    choices:
+      0: 재귀 호출이 끝난 뒤에 `x +`를 계산해야 하므로 꼬리 호출이 아니에요.
+      2: 호출 결과 앞에 원소를 붙이는 일이 남아 있어 꼬리 호출이 아니에요.
+      3: 호출 뒤에 `1 +`가 남아 있어요. 누적값 인자를 두면 꼬리 호출로 바꿀 수 있습니다.
+cloze:
+  prompt: 합을 구하려면 누적값을 무엇에서 시작해야 할까요? 빈칸을 채우세요.
+  code: sum_loop([1, 2, 3], ____)
+  answers: ["0"]
+  expected: "6"
+predict:
+  prompt: 이 식의 값은?
+  code: sum_loop([4, 5], 10)
+  expected: "19"
+produce:
+  prompt: 누적값 `acc`에 원소를 차례로 곱해 가는 꼬리 재귀 함수 본문을 쓰세요. 리스트가 비면 `acc`를 돌려줍니다.
+  header: "pub fn product_loop(xs: List(Int), acc: Int) -> Int"
+  checks: "#(product_loop([2, 3, 4], 1), product_loop([], 1), product_loop([5], 2), product_loop([0, 7], 1))"
+  expected: "#(24, 1, 10, 0)"
+  mustUse: ["product_loop("]
+  reference: |-
+    case xs {
+      [] -> acc
+      [x, ..rest] -> product_loop(rest, acc * x)
+    }
+  hint: 위의 `sum_loop`와 같은 모양에서 `+`만 `*`로 바꾸면 됩니다.

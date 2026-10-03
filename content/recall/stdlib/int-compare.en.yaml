@@ -1,0 +1,18 @@
+title: int.compare
+summary: "Compares two integers and returns an `order.Order` (`Lt`, `Eq` or `Gt`). Its shape is `fn(Int, Int) -> Order`, so you can pass it straight to `list.sort` as the comparator."
+recognize:
+  prompt: "What is the value of `int.compare(2, 5)`?"
+  choices: ["`-1`", "`Lt`", "`Gt`", "`True`"]
+  feedback:
+    correct: Right. The first argument, 2, is less than 5, so it is `Lt`.
+    choices:
+      0: Unlike `compareTo` in other languages, it does not return a number; it returns an `order.Order`.
+      2: It is read from the first argument's point of view. 2 is less than 5, so it is `Lt`.
+      3: "If you need a `Bool`, write `2 < 5`. `compare` tells less, equal and greater apart."
+cloze:
+  prompt: Fill in the blank to sort in ascending order.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: "Sort a list of `#(name, count)` pairs by count, ascending."
+  hint: "Take the second element of a tuple with `a.1`."

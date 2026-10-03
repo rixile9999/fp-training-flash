@@ -1,0 +1,15 @@
+title: panic
+summary: "`panic` crashes unconditionally, right where it is. Add a reason with `as \"message\"`, and only use it for states that can't happen."
+recognize:
+  prompt: In a `case` that returns `String`, one branch is `_ -> panic as "bug"`. What is that branch's type?
+  choices: ["`Nil`, so the other branches must be `Nil` too", "Whatever the other branches are (here, `String`)", "`Result`, so the other branches must be `Result` too", "Always `String`, because the message is a string"]
+  feedback:
+    correct: Right. `panic` never returns a value, so it fits wherever any type is expected.
+    choices:
+      0: "`panic` doesn't return `Nil`. Since it never returns, it fits any type."
+      2: "`panic` doesn't build an `Error`; it really crashes."
+      3: The message after `as` is just an explanation and has nothing to do with the type. It works where an `Int` is expected too.
+cloze:
+  prompt: Fill in the blank to attach a message to `panic`.
+produce:
+  prompt: Write the body of a function that turns ranks 1, 2 and 3 into `"gold"`, `"silver"` and `"bronze"`. The caller guarantees only 1 to 3 are passed, so handle anything else with `panic`.

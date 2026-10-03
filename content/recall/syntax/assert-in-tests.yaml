@@ -1,0 +1,36 @@
+title: assert (테스트)
+topic: assert
+order: 229
+summary: "`assert 식`은 Bool 식이 `False`이면 크래시해요. 테스트에서 쓰며, gleeunit 테스트는 `test/` 아래에서 이름이 `_test`로 끝나는 `pub fn`입니다."
+example: |
+  let xs = [3, 1, 2]
+  assert list.sort(xs, int.compare) == [1, 2, 3]
+  "passed"  // -> "passed"
+imports: [gleam/int, gleam/list]
+recognize:
+  prompt: "`assert list.length([1]) == 2`를 실행하면?"
+  choices: ["`False`를 돌려준다", "컴파일 오류가 난다", "경고만 출력하고 계속한다", "크래시한다(테스트라면 실패로 보고된다)"]
+  answer: 3
+  feedback:
+    correct: 맞아요. 조건이 `False`이면 크래시하고, 테스트 도구는 그 테스트를 실패로 보고합니다.
+    choices:
+      0: "`assert`는 값을 돌려주는 식이 아니라 검사예요. 실패하면 멈춥니다."
+      1: Bool 식이므로 컴파일은 돼요. 실패는 실행할 때 드러납니다.
+      2: 경고가 아니라 크래시예요. 실패한 테스트를 놓치지 않게 하기 위해서입니다.
+cloze:
+  prompt: 빈칸을 채워 정렬 결과를 검사하세요.
+  code: |-
+    let xs = [3, 1, 2]
+    ____ list.sort(xs, int.compare) == [1, 2, 3]
+    "passed"
+  answers: [assert]
+  expected: '"passed"'
+produce:
+  prompt: 테스트 도우미를 쓰세요. `n`을 `int.to_string`으로 바꾼 뒤 `int.parse`로 되돌리면 `Ok(n)`이 되는지 `assert`로 검사하고, `n`을 돌려줍니다.
+  header: "pub fn check_round_trip(n: Int) -> Int"
+  checks: "#(check_round_trip(0), check_round_trip(-12), check_round_trip(345))"
+  expected: "#(0, -12, 345)"
+  mustUse: [assert, "=="]
+  reference: |-
+    assert int.parse(int.to_string(n)) == Ok(n)
+    n

@@ -1,0 +1,18 @@
+title: Integer literal notation
+summary: "Integer literals can split digits with `_`, as in `1_000_000`, and take the prefixes `0x` (hex), `0o` (octal) and `0b` (binary)."
+recognize:
+  prompt: "What is the value of `0b1010`?"
+  choices: ["`10`", "`1010`", "`\"0b1010\"`", "A compile error"]
+  feedback:
+    correct: "Right. `0b` is the binary prefix, so 1010 in base 2 is 10."
+    choices:
+      1: "With `0b` in front, the digits are read as binary, not decimal."
+      2: There are no quotes, so it's an integer literal, not a string.
+      3: "`0b`, `0o` and `0x` are all valid integer literal prefixes."
+cloze:
+  prompt: Fill in the digit separator to write 1000.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: "Convert seconds to microseconds (1 second = 1,000,000 microseconds). Write the big number with `_` separators."
+  hint: "`1_000_000` is the same value as `1000000`."

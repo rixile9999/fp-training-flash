@@ -1,0 +1,18 @@
+title: list.try_fold
+summary: "用返回 `Result` 的回调来折叠。回调一旦返回 `Error` 就当场停止，这个 `Error` 就是结果；走到最后则得到 `Ok(累加器)`。"
+recognize:
+  prompt: "`list.try_fold` 的回调中途返回 `Error(e)` 会怎样？"
+  choices: ["只跳过这个元素，继续折叠", "立即停止，`Error(e)` 成为整个结果", "折叠到最后，返回最后一个 `Error`", "程序因 panic 而停止"]
+  feedback:
+    correct: 对。它在第一个 `Error` 处停止，剩下的元素不再处理。
+    choices:
+      0: 跳过失败是 `list.filter_map` 这类函数的行为。`try_fold` 会停下来。
+      2: 不会走到最后。一出现 `Error`，这个值就是结果。
+      3: 错误只是作为值返回，并不是 panic。
+cloze:
+  prompt: 填空，进行可能失败的折叠。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 用 `list.try_fold` 写出函数体：从余额中依次扣除取款金额。如果某笔取款大于剩余余额，就返回 `Error(Nil)`。
+  hint: 初始值是 `balance`，回调返回 `Ok(剩余余额)` 或 `Error(Nil)`。

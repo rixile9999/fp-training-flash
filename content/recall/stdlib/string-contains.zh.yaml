@@ -1,0 +1,18 @@
+title: string.contains
+summary: "用 `Bool` 告诉你第一个字符串（`does:`）里是否包含第二个字符串（`contain:`）。区分大小写。"
+recognize:
+  prompt: "检查日志行 `line` 中是否包含 `\"error\"` 的表达式是？"
+  choices: ["`string.contains(\"error\", line)`", "`list.contains(line, \"error\")`", "`string.contains(line, \"error\")`", "`string.includes(line, \"error\")`"]
+  feedback:
+    correct: "对。可以读作 `does: line, contain: \"error\"`：被查找的文本在前，要找的片段在后。"
+    choices:
+      0: "反了。这样写是在问 `line` 是否出现在 `\"error\"` 里。"
+      1: "`list.contains` 在列表里查找元素。`line` 是 `String`，会产生类型错误。"
+      3: "`includes` 是 JavaScript 的名字。Gleam 没有 `string.includes`。"
+cloze:
+  prompt: '填空，检查句子里是否有 `"fun"`。'
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: '从日志行列表中只保留包含 `"ERROR"` 的行。'
+  hint: "把 `string.contains(line, \"ERROR\")` 作为 `list.filter` 的条件。"

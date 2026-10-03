@@ -1,0 +1,17 @@
+title: int.parse 只接受整数写法
+summary: "`int.parse` 只有在整个字符串都是整数写法时才会成功。`\"1.0\"`、前后带空格的 `\" 1\"`，以及在源代码中合法的 `\"1_000\"`，都会得到 `Error(Nil)`。"
+recognize:
+  prompt: "`int.parse(\"3.0\")` 的值是？"
+  choices: ["`Ok(3)`", "`Error(Nil)`", "`3`", "`Ok(3.0)`"]
+  feedback:
+    correct: 对。带小数点就不会被解析为整数。
+    choices:
+      0: "它不会像 JavaScript 的 `parseInt` 那样只读前缀就停下，整个字符串都必须是整数。"
+      2: "解析可能失败，所以结果包在 `Result` 里。"
+      3: "`int.parse` 只产生 `Int`。小数要用 `float.parse`。"
+cloze:
+  prompt: 填空，解析前后带空格的输入。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 把用户输入的年龄字符串忽略前后空格后解析为整数。

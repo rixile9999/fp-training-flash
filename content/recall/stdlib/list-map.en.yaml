@@ -1,0 +1,18 @@
+title: list.map
+summary: Applies a function to every element and returns a new list of the same length. The list comes first, the function second.
+recognize:
+  prompt: "Which call to `list.map` is correct?"
+  choices: ["`list.map(fn(x) { x * 2 }, [1, 2, 3])`", "`list.map([1, 2, 3], fn(x) { x * 2 })`", "`[1, 2, 3].map(fn(x) { x * 2 })`", "`list.map([1, 2, 3], fn(x, i) { x * i })`"]
+  feedback:
+    correct: Right. The Gleam standard library takes the data as the first argument, so it pipes nicely as `xs |> list.map(f)`.
+    choices:
+      0: Haskell and Elm take the function first, but Gleam's `list.map` takes the list first.
+      2: Gleam has no method calls. You use the module function `list.map(xs, f)`.
+      3: A callback that also takes an index goes to `list.index_map`. The `list.map` callback takes just the element.
+cloze:
+  prompt: Fill in the blank to square every element.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Write the body of a function that returns a greeting for each name by putting `"Hello, "` in front, using `list.map`.
+  hint: Join strings with `<>`. The callback looks like `fn(name) { ... }`.

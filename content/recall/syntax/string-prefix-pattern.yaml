@@ -1,0 +1,40 @@
+title: 문자열 접두사 패턴 <>
+topic: case
+order: 206
+summary: '`"접두사" <> rest` 패턴은 문자열이 그 접두사로 시작할 때 맞고, 나머지를 `rest`에 묶어요. 접미사(`rest <> ".txt"`)는 패턴으로 쓸 수 없습니다.'
+example: |
+  case "say hello" {
+    "say " <> rest -> rest
+    _ -> ""
+  }  // -> "hello"
+recognize:
+  prompt: 파일 이름이 `.txt`로 끝나는지 `case` 패턴으로 검사할 수 있나요?
+  choices: ["네, `name <> \".txt\" ->`로 씁니다", "네, `\"*.txt\" ->`로 씁니다", "아니요. 패턴은 접두사만 맞출 수 있으니 `string.ends_with`를 씁니다", "네, `_ <> \".txt\" ->`로 씁니다"]
+  answer: 2
+  feedback:
+    correct: 맞아요. `<>` 패턴의 왼쪽은 문자열 리터럴이어야 하므로 접두사만 맞출 수 있어요.
+    choices:
+      0: 컴파일 오류예요. `<>` 왼쪽에는 문자열 리터럴만 올 수 있습니다.
+      1: 패턴에 와일드카드 문자열은 없어요. `"*.txt"`는 그 글자 그대로인 문자열과만 맞습니다.
+      3: "`<>` 왼쪽에는 `_`도 올 수 없어요. 문자열 리터럴만 됩니다."
+cloze:
+  prompt: 빈칸을 채워 `"say "` 뒤의 나머지를 꺼내세요.
+  code: |-
+    case "say hello" {
+      "say " ____ rest -> rest
+      _ -> ""
+    }
+  answers: ["<>"]
+  expected: '"hello"'
+produce:
+  prompt: '`Authorization` 헤더 값이 `"Bearer "`로 시작하면 그 뒤의 토큰을 `Ok`로, 아니면 `Error(Nil)`을 돌려주는 함수 본문을 쓰세요.'
+  header: "pub fn bearer_token(header: String) -> Result(String, Nil)"
+  checks: '#(bearer_token("Bearer abc"), bearer_token("Basic xyz"), bearer_token("Bearer "), bearer_token("bearer abc"))'
+  expected: '#(Ok("abc"), Error(Nil), Ok(""), Error(Nil))'
+  mustUse: [case, "<>"]
+  reference: |-
+    case header {
+      "Bearer " <> token -> Ok(token)
+      _ -> Error(Nil)
+    }
+  hint: 접두사에는 공백까지 넣으세요. 대소문자는 구분합니다.

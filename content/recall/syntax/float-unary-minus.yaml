@@ -1,0 +1,30 @@
+title: Float 변수의 부호 바꾸기
+topic: numbers
+order: 110
+summary: "단항 `-`로 부호를 바꿀 수 있는 변수는 Int뿐입니다. Float 변수는 `float.negate(x)`를 쓰세요. `-1.5` 같은 리터럴은 괜찮아요."
+example: |
+  float.negate(2.5)  // -> -2.5
+imports: [gleam/float, gleam/list]
+recognize:
+  prompt: "`let x = 2.5`일 때 `-x`는?"
+  choices: ["`-2.5`", "타입 오류: 단항 `-`는 Int만 받습니다", "`2.5` (부호가 무시됨)", "`-2`"]
+  answer: 1
+  feedback:
+    correct: "맞아요. Float 변수에는 `float.negate(x)`나 `0.0 -. x`를 씁니다."
+    choices:
+      0: "다른 언어와 달리 Float 변수에는 단항 `-`를 쓸 수 없어요. 컴파일 오류가 납니다."
+      2: 무시되지 않고 컴파일이 실패해요.
+      3: Gleam은 Float를 Int로 몰래 바꾸지 않아요. 타입 오류입니다.
+cloze:
+  prompt: 빈칸을 채워 Float의 부호를 바꾸세요.
+  code: "float.____(4.0)"
+  answers: [negate]
+  expected: "-4.0"
+produce:
+  prompt: "거래 금액(Float) 리스트의 부호를 모두 뒤집으세요."
+  header: "pub fn flip_signs(amounts: List(Float)) -> List(Float)"
+  checks: "#(flip_signs([1.5, -2.0]), flip_signs([]), flip_signs([3.25]))"
+  expected: "#([-1.5, 2.0], [], [-3.25])"
+  mustUse: [float.negate]
+  reference: "list.map(amounts, float.negate)"
+  hint: "`float.negate`를 `list.map`에 그대로 넘길 수 있어요."

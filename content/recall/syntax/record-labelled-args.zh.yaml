@@ -1,0 +1,16 @@
+title: 用标签构造记录
+summary: "记录可以带上字段标签来构造，如 `User(name: \"ann\", age: 30, admin: False)`。字段没有默认值，所以不管带不带标签，都必须传入所有字段。"
+recognize:
+  prompt: "已知 `User(name: String, age: Int, admin: Bool)`，下面哪一个无法编译？"
+  choices: ["`User(\"ann\", 30, False)`", "`User(name: \"ann\", age: 30, admin: False)`", "`User(name: \"ann\", age: 30)`", "`User(admin: False, age: 30, name: \"ann\")`"]
+  feedback:
+    correct: "对。字段没有默认值，漏掉 `admin` 会编译错误（\"Incorrect arity\"）。"
+    choices:
+      0: 带标签的字段也可以按定义顺序用位置参数传入。
+      1: 所有字段都带标签传入了，没有问题。
+      3: 带标签参数可以任意调换顺序，每个值仍会进入对应的字段。
+cloze:
+  prompt: 在空白处填入标签，构造用户。
+produce:
+  prompt: "只接收名字，构造一个访客用户：年龄为 0，不是管理员。所有字段都用带标签参数传入。"
+  hint: "形式是 `User(name: ..., age: ..., admin: ...)`。"

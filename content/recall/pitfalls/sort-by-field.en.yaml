@@ -1,0 +1,16 @@
+title: Sorting by a field takes a compare function
+summary: "There's no `sort_by` that takes a key function. To sort by a field, pass `list.sort` a function that compares two values and returns an `Order`, such as `fn(a, b) { int.compare(a.age, b.age) }`."
+recognize:
+  prompt: "Which expression sorts `users: List(User)` by the `age` field (`Int`)?"
+  choices: ["`list.sort(users, by: fn(a, b) { int.compare(a.age, b.age) })`", "`list.sort_by(users, fn(u) { u.age })`", "`list.sort(users, by: fn(a, b) { a.age < b.age })`", "`list.sort(users, by: int.compare)`"]
+  feedback:
+    correct: Right. It compares the two users' `age` with `int.compare`.
+    choices:
+      1: "`gleam/list` has no `sort_by`. That's a habit from Python's `key=` or Elixir's `Enum.sort_by`."
+      2: "The compare function must return an `Order` (`Lt`, `Eq`, `Gt`), not a `Bool`."
+      3: "`int.compare` takes two `Int`s. Passing `User`s is a type error."
+cloze:
+  prompt: Fill in the blank to sort a list of Floats.
+produce:
+  prompt: Sort a list of products from cheapest to most expensive.
+  hint: "Prices are `Float`s, so compare them with `float.compare`."

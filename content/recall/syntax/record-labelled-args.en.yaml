@@ -1,0 +1,16 @@
+title: Building records with labels
+summary: "You can build a record with its field labels, as in `User(name: \"ann\", age: 30, admin: False)`. Fields have no default values, so you must pass every field, with or without labels."
+recognize:
+  prompt: "Given `User(name: String, age: Int, admin: Bool)`, which one does not compile?"
+  choices: ["`User(\"ann\", 30, False)`", "`User(name: \"ann\", age: 30, admin: False)`", "`User(name: \"ann\", age: 30)`", "`User(admin: False, age: 30, name: \"ann\")`"]
+  feedback:
+    correct: "Right. Fields have no default values, so leaving out `admin` is a compile error (\"Incorrect arity\")."
+    choices:
+      0: Labelled fields can also be passed positionally, in the order they are defined.
+      1: This passes every field with its label, so it's fine.
+      3: You can write labelled arguments in any order; each still goes to the right field.
+cloze:
+  prompt: Fill in the label to build the user.
+produce:
+  prompt: "Given only a name, build a guest user: age 0, not an admin. Pass every field as a labelled argument."
+  hint: "It looks like `User(name: ..., age: ..., admin: ...)`."

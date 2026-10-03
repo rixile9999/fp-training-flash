@@ -1,0 +1,18 @@
+title: dict.get
+summary: 按键查找值，并以 `Result` 返回。键存在时是 `Ok(值)`，不存在时是 `Error(Nil)`。
+recognize:
+  prompt: "`dict.get(ages, \"zoe\")` 中没有 `\"zoe\"` 这个键时会怎样？"
+  choices: ["返回 `Error(Nil)`", "返回 `None`", "发生 panic（抛出异常）", "返回 `Nil`"]
+  feedback:
+    correct: 对。返回类型是 `Result(b, Nil)`，所以不存在的键得到 `Error(Nil)`。
+    choices:
+      1: Rust 的 `HashMap::get` 返回 `Option`，而 Gleam 的 `dict.get` 返回 `Result`。
+      2: 不会像 Python 的 `KeyError` 那样抛出异常。失败也作为值返回。
+      3: "`Nil` 类型只有 `Nil` 这一个值，装不下找到的值。结果总是 `Ok` 或 `Error`。"
+cloze:
+  prompt: 填空，查找键 `"x"` 的值。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 用 `dict.get` 写出函数体：在价目表中查找商品价格。价目表里没有的商品价格为 0。
+  hint: "用 `case` 分别处理 `Ok(price)` 和 `Error(Nil)`。"

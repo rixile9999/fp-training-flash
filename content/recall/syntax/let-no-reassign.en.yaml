@@ -1,0 +1,16 @@
+title: No reassignment
+summary: "Gleam has no reassignment. `x = x + 1` is a syntax error; a new value always takes a `let`."
+recognize:
+  prompt: "What happens if the line after `let total = 0` is `total = total + 5`?"
+  choices: ["`total` becomes 5", "It's a syntax error; to rebind, use `let`", "`total` stays 0 and you only get a warning", "It's read as a comparison, like `total == total + 5`"]
+  feedback:
+    correct: "Right. There is no assignment statement, so it's a syntax error and the compiler tells you to use `let`."
+    choices:
+      0: It doesn't work like assignment in other languages. Gleam has no reassignment syntax at all.
+      2: It's not just a warning; compilation fails.
+      3: "`=` only binds, together with `let`; comparison is `==`. This line is simply a syntax error."
+cloze:
+  prompt: Fill in the blank to rebind `total` to itself plus 5.
+produce:
+  prompt: "Subtract the withdrawal from the balance, then subtract a fee of 1, and return the balance. Rebind with `let balance = ...` at each step."
+  hint: "Write `let balance = balance - amount`, not `balance = ...`."

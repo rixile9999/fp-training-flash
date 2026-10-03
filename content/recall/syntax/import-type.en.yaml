@@ -1,0 +1,16 @@
+title: Importing types
+summary: "To use a type unqualified, import it with `type` in front, as in `.{type Option}`. The constructors `Some` and `None` are imported without `type`."
+recognize:
+  prompt: "How do you import the `Option` type and the `Some` and `None` constructors so all three can be used unqualified?"
+  choices: ["`import gleam/option.{Option, Some, None}`", "`import gleam/option.{type Option, Some, None}`", "`import gleam/option.{type Option, type Some, type None}`", "`import gleam/option.*`"]
+  feedback:
+    correct: Right. Types get `type`; constructors are values, so they're listed as they are.
+    choices:
+      0: "A name without `type` is looked up as a value (function or constructor). There is no value called `Option`, so this is a compile error."
+      2: "`Some` and `None` are constructors (values), not types, so they're imported without `type`."
+      3: "Gleam has no wildcard import like `*`. You list the names you need."
+cloze:
+  prompt: Fill in the type to describe a middle name that is absent.
+produce:
+  prompt: "Return the nickname if there is one, otherwise `\"guest\"`. Pattern match with the unqualified `Some` and `None`."
+  hint: "It looks like `case nick { Some(name) -> ... None -> ... }`."

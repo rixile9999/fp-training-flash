@@ -1,0 +1,18 @@
+title: string.join
+summary: "Joins a list of strings into one string, with the `with:` separator in between. The list comes first, so you can pipe it: `parts |> string.join(\", \")`."
+recognize:
+  prompt: "Which expression joins `parts: List(String)` with `\", \"`?"
+  choices: ["`string.join(\", \", parts)`", "`string.concat(parts, \", \")`", "`string.join(parts, \", \")`", "`parts |> string.join`"]
+  feedback:
+    correct: Right. The list comes first, then the separator.
+    choices:
+      0: "That's Python's `\", \".join(parts)`. In Gleam the list is the first argument."
+      1: "`string.concat` takes only a list and joins it with no separator."
+      3: "The `with:` separator is missing. Write `parts |> string.join(\", \")`."
+cloze:
+  prompt: Fill in the blank to join year, month and day with `-`.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Turn a list of integers into one comma-separated CSV row.
+  hint: "First make a list of strings with `list.map(int.to_string)`."

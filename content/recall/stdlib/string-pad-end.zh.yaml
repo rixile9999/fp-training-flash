@@ -1,0 +1,18 @@
+title: string.pad_end
+summary: "在字符串末尾用 `with:` 字符串填充，直到长度达到 `to:`。像表格那样对齐列输出时很好用。"
+recognize:
+  prompt: "在 `\"Ada\"` 后面补空格，得到长度为 6 的 `\"Ada   \"`，应写哪个表达式？"
+  choices: ["`string.pad_start(\"Ada\", to: 6, with: \" \")`", "`string.pad_end(\"Ada\", to: 6, with: \" \")`", "`string.pad_end(\"Ada\", to: 3, with: \" \")`", "`string.pad_end(\"Ada\", \" \", 6)`"]
+  feedback:
+    correct: "对。在末尾填充的是 `pad_end`，`to:` 是目标总长度。"
+    choices:
+      0: "`pad_start` 在开头填充，结果是 `\"   Ada\"`。"
+      2: "`to:` 是总长度，不是要补多少。`\"Ada\"` 已经有 3 个字符，所以保持 `\"Ada\"` 不变。"
+      3: "不写标签时，顺序必须是字符串、长度（`Int`）、填充字符串。这个顺序会产生类型错误。"
+cloze:
+  prompt: 填空，在末尾用 `-` 填充。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 生成成绩表的一行：在名字后面补空格到 8 个字符，再接上分数。超过 8 个字符的名字不截断。
+  hint: "先用 `to: 8` 填充名字，再用 `<>` 接上分数字符串。"

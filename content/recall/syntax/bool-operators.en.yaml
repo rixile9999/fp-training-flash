@@ -1,0 +1,16 @@
+title: Boolean operators
+summary: "The boolean operators are `&&` (and), `||` (or) and `!` (not). `&&` and `||` skip the right side once the result is known."
+recognize:
+  prompt: "How do you write \"logged in and the cart is not empty\" in Gleam?"
+  choices: ["`logged_in and not empty`", "`logged_in && !empty`", "`logged_in & ~empty`", "`logged_in && not(empty)`"]
+  feedback:
+    correct: "Right. \"And\" is `&&` and \"not\" is `!`."
+    choices:
+      0: "`and` and `not` are Python spellings. Gleam uses `&&` and `!`."
+      2: "`&` and `~` aren't Gleam operators. Logical and is `&&`, not is `!`."
+      3: "There's no `not` function you can just call. Negation is the `!` operator."
+cloze:
+  prompt: "Fill in the \"or\" operator."
+produce:
+  prompt: "Checkout is allowed only when the user is logged in (`logged_in`) and the cart is not empty (not `cart_empty`)."
+  hint: "Join with `&&` and put `!` in front of `cart_empty`."

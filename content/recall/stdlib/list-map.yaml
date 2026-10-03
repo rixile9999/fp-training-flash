@@ -1,0 +1,36 @@
+title: list.map
+topic: gleam/list
+order: 3
+summary: 리스트의 각 원소에 함수를 적용해 같은 길이의 새 리스트를 만듭니다. 리스트가 먼저, 함수가 나중입니다.
+example: |
+  list.map([1, 2, 3], fn(x) { x * 10 })  // -> [10, 20, 30]
+imports: [gleam/list]
+signature: "list.map(List(a), with: fn(a) -> b) -> List(b)"
+frequency: 39
+recognize:
+  prompt: "`list.map`을 바르게 호출한 것은?"
+  choices: ["`list.map(fn(x) { x * 2 }, [1, 2, 3])`", "`list.map([1, 2, 3], fn(x) { x * 2 })`", "`[1, 2, 3].map(fn(x) { x * 2 })`", "`list.map([1, 2, 3], fn(x, i) { x * i })`"]
+  answer: 1
+  feedback:
+    correct: 맞아요. Gleam 표준 라이브러리는 다루는 데이터를 첫 인자로 받아서 `xs |> list.map(f)`처럼 파이프로 잇기 좋습니다.
+    choices:
+      0: Haskell이나 Elm은 함수를 먼저 받지만, Gleam의 `list.map`은 리스트가 먼저입니다.
+      2: Gleam에는 메서드 호출이 없습니다. 모듈 함수 `list.map(xs, f)`를 씁니다.
+      3: 인덱스까지 받는 콜백은 `list.index_map`에 넘깁니다. `list.map`의 콜백은 원소 하나만 받습니다.
+cloze:
+  prompt: 빈칸을 채워 각 원소를 제곱하세요.
+  code: "list.____([1, 2, 3], fn(x) { x * x })"
+  answers: [map]
+  expected: "[1, 4, 9]"
+predict:
+  prompt: 이 식의 값은?
+  code: "list.map([1, 2, 3], fn(x) { x > 1 })"
+  expected: "[False, True, True]"
+produce:
+  prompt: 이름마다 앞에 `"Hello, "`를 붙인 인사말 리스트를 돌려주는 함수 본문을 `list.map`으로 쓰세요.
+  header: "pub fn greet_all(names: List(String)) -> List(String)"
+  checks: '#(greet_all(["Ann", "Bo"]), greet_all([]), greet_all(["Kim"]))'
+  expected: '#(["Hello, Ann", "Hello, Bo"], [], ["Hello, Kim"])'
+  mustUse: [list.map]
+  reference: 'list.map(names, fn(name) { "Hello, " <> name })'
+  hint: 문자열은 `<>`로 잇습니다. 콜백은 `fn(name) { ... }` 모양입니다.

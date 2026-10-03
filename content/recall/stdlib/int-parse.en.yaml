@@ -1,0 +1,18 @@
+title: int.parse
+summary: "Parses a string as an integer and returns `Result(Int, Nil)`. The whole string must be an integer; any space or decimal point gives `Error(Nil)`."
+recognize:
+  prompt: "What is the value of `int.parse(\"12a\")`?"
+  choices: ["`12`", "`Ok(12)`", "`Error(Nil)`", "`0`"]
+  feedback:
+    correct: Right. If the whole string is not an integer, you get `Error(Nil)`.
+    choices:
+      0: "`int.parse` can fail, so it always wraps its result in a `Result`."
+      1: Unlike JavaScript's `parseInt`, it does not read just the leading digits. The whole string must be an integer.
+      3: It does not hide failure behind a default like 0; it reports it as `Error(Nil)`.
+cloze:
+  prompt: Fill in the blank to turn the string into an integer.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Return a `Bool` telling whether the input string reads as an integer.
+  hint: "Pattern match on the result, as in `case int.parse(s) { Ok(_) -> ... Error(_) -> ... }`."

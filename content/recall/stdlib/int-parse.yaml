@@ -1,0 +1,40 @@
+title: int.parse
+topic: gleam/int
+order: 11
+summary: "문자열을 정수로 파싱해 `Result(Int, Nil)`을 돌려줍니다. 문자열 전체가 정수여야 하며, 공백이나 소수점이 섞이면 `Error(Nil)`입니다."
+example: |
+  int.parse("42")  // -> Ok(42)
+imports: [gleam/int]
+signature: "int.parse(String) -> Result(Int, Nil)"
+frequency: 19
+recognize:
+  prompt: "`int.parse(\"12a\")`의 값은?"
+  choices: ["`12`", "`Ok(12)`", "`Error(Nil)`", "`0`"]
+  answer: 2
+  feedback:
+    correct: 맞아요. 문자열 전체가 정수가 아니면 `Error(Nil)`입니다.
+    choices:
+      0: "`int.parse`는 실패할 수 있어서 결과를 항상 `Result`로 감싸 돌려줍니다."
+      1: JavaScript의 `parseInt`처럼 앞부분만 읽지 않아요. 문자열 전체가 정수여야 합니다.
+      3: 실패를 0 같은 기본값으로 숨기지 않고 `Error(Nil)`로 알려 줍니다.
+cloze:
+  prompt: 빈칸을 채워 문자열을 정수로 바꾸세요.
+  code: 'int.____("42")'
+  answers: [parse]
+  expected: "Ok(42)"
+predict:
+  prompt: 이 식의 값은?
+  code: 'int.parse(" 42")'
+  expected: "Error(Nil)"
+produce:
+  prompt: 입력 문자열이 정수로 읽히는지 `Bool`로 알려 주세요.
+  header: "pub fn is_integer(s: String) -> Bool"
+  checks: '#(is_integer("42"), is_integer("-7"), is_integer("4.2"), is_integer(""), is_integer("12a"))'
+  expected: "#(True, True, False, False, False)"
+  mustUse: [int.parse]
+  reference: |
+    case int.parse(s) {
+      Ok(_) -> True
+      Error(_) -> False
+    }
+  hint: "`case int.parse(s) { Ok(_) -> ... Error(_) -> ... }`처럼 결과를 패턴 매칭하세요."

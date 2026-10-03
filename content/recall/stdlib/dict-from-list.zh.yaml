@@ -1,0 +1,16 @@
+title: dict.from_list
+summary: "用 `#(键, 值)` 元组列表创建 dict。同一个键出现多次时，保留后出现的值。"
+recognize:
+  prompt: "`dict.from_list([#(\"a\", 1), #(\"a\", 2)])` 的结果是？"
+  choices: ["`dict.from_list([#(\"a\", 2)])`", "`dict.from_list([#(\"a\", 1)])`", "`Error(Nil)`", "`dict.from_list([#(\"a\", 1), #(\"a\", 2)])`"]
+  feedback:
+    correct: 对。从前往后依次放入，所以后面的值会覆盖前面的值。
+    choices:
+      1: 留下的不是第一个值，而是最后一个值。
+      2: "`dict.from_list` 不会失败。它返回 `Dict`，而不是 `Result`。"
+      3: dict 中同一个键只会出现一次，不能对应两个值。
+cloze:
+  prompt: 填空，用元组列表创建 dict。
+produce:
+  prompt: '用 `dict.from_list` 写出函数体：在 `#(名字, 分数)` 列表中按名字查找分数。同一个名字再次出现时，以后面的分数为准。'
+  hint: 先创建 dict，再用 `dict.get` 查找。

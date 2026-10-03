@@ -1,0 +1,17 @@
+title: Result(a, Nil)
+summary: 像 `list.first`、`int.parse` 这样失败原因只有一种的 stdlib 函数返回 `Result(a, Nil)`。失败时的值是 `Error(Nil)`。
+recognize:
+  prompt: "`list.first([])` 的值是？"
+  choices: ["`None`", "`Nil`", "运行时崩溃", "`Error(Nil)`"]
+  feedback:
+    correct: 对。空列表没有第一个元素，所以是 `Error(Nil)`。
+    choices:
+      0: "`None` 属于 `Option`。`list.first` 返回的是 `Result`。"
+      1: 只返回 `Nil` 就无法和成功区分。
+      2: stdlib 函数遇到空列表不会崩溃，而是返回 `Error`。
+cloze:
+  prompt: 填空，让比较结果为 `True`。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 写出函数体：用 `case` 的 `Ok`、`Error` 分支匹配 `list.first` 的结果，返回第一个元素；列表为空时返回 0。

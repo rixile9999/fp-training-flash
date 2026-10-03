@@ -1,0 +1,16 @@
+title: Importing names unqualified
+summary: "A function imported with `.{...}`, as in `import gleam/list.{map}`, is called without the module name: `map(...)`. `list.map` still works too."
+recognize:
+  prompt: "After `import gleam/list.{map}`, which calls can you write?"
+  choices: ["Only `map(xs, f)`", "Only `list.map(xs, f)`", "Both `map(xs, f)` and `list.map(xs, f)`", "`List.map(xs, f)`"]
+  feedback:
+    correct: Right. `.{map}` just brings in one extra name; the module `list` is imported as well.
+    choices:
+      0: "Even with `.{map}`, the module itself is imported, so `list.map` works too."
+      1: "A name imported with `.{map}` can be called directly, without the module name."
+      3: The module name is lowercase `list`. Names starting with a capital letter are types or constructors.
+cloze:
+  prompt: "Fill in the blank to add 1 to each element. (`map` was imported unqualified.)"
+produce:
+  prompt: "Double every value in a list of prices, using the unqualified `map`."
+  hint: "Write `map(prices, fn(p) { ... })` without `list.`."

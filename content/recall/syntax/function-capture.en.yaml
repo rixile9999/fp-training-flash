@@ -1,0 +1,18 @@
+title: Function captures with _
+summary: "`f(a, _)` is shorthand for `fn(x) { f(a, x) }`. Only one `_` hole is allowed."
+recognize:
+  prompt: Which function is the same as `int.subtract(10, _)`?
+  choices: ["`fn(x) { x - 10 }`", "`fn(x, y) { x - y }`", "`int.subtract(10)`", "`fn(x) { 10 - x }`"]
+  feedback:
+    correct: Right. The argument fills the `_` slot, giving `int.subtract(10, x)`, which is `10 - x`.
+    choices:
+      0: "`_` is the second argument, so `x` is the one being subtracted. `int.subtract(_, 10)` would be `x - 10`."
+      1: A capture fills a single hole, so it makes a function of one argument.
+      2: Gleam functions aren't curried automatically. Missing arguments are a compile error.
+cloze:
+  prompt: Fill in the blank to put `"x"` in front of each string.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Write the body of a function that puts `prefix` in front of every word. Use a capture of `string.append` instead of an anonymous function.
+  hint: In `string.append(first, second)`, the word goes in the second slot.

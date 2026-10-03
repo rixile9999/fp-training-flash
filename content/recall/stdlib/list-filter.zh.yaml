@@ -1,0 +1,18 @@
+title: list.filter
+summary: 只保留条件函数返回 `True` 的元素，并保持原来的顺序。正如标签 `keeping:` 所示，你选的是要留下的，而不是要丢掉的。
+recognize:
+  prompt: "在 `list.filter(xs, f)` 中，`f` 返回 `True` 的元素会怎样？"
+  choices: ["留在结果中", "从结果中去掉", "只留下其中第一个", "被包进 `Ok` 后留下"]
+  feedback:
+    correct: 对。和标签 `keeping:` 的意思一样，返回 `True` 的元素会被保留。
+    choices:
+      1: 反了。想去掉它们，就把条件取反，传入 `fn(x) { !p(x) }`。
+      2: 查找第一个满足条件的元素是 `list.find`，结果是 `Result`。
+      3: "用返回 `Result` 的回调边过滤边转换的是 `list.filter_map`。`list.filter` 原样保留元素。"
+cloze:
+  prompt: 填空，只保留正数。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 用 `list.filter` 写出函数体：从年龄列表中只保留 18 岁及以上的。
+  hint: 传入一个对要保留的元素返回 `True` 的条件。

@@ -1,0 +1,15 @@
+title: assert (tests)
+summary: "`assert expression` crashes if the Bool expression is `False`. It's for tests; gleeunit tests are `pub fn`s under `test/` whose names end in `_test`."
+recognize:
+  prompt: What happens when `assert list.length([1]) == 2` runs?
+  choices: ["It returns `False`", "A compile error", "It prints a warning and carries on", "It crashes (in a test, it's reported as a failure)"]
+  feedback:
+    correct: Right. When the condition is `False` it crashes, and the test runner reports that test as failed.
+    choices:
+      0: "`assert` is a check, not an expression that returns a value. On failure it stops."
+      1: It's a Bool expression, so it compiles. The failure shows up when it runs.
+      2: It's a crash, not a warning, so a failing test can't slip by.
+cloze:
+  prompt: Fill in the blank to check the sorted result.
+produce:
+  prompt: Write a test helper. Use `assert` to check that converting `n` with `int.to_string` and back with `int.parse` gives `Ok(n)`, then return `n`.

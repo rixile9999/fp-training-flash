@@ -1,0 +1,18 @@
+title: Record update ..
+summary: "`Person(..p, age: 31)` builds a new record that copies `p` and changes only the fields you list. The original `p` stays the same."
+recognize:
+  prompt: "Given `p: Person`, which expression builds a record with only the age changed to 31?"
+  choices: ["`Person(..p, age: 31)`", "`p.age = 31`", "`{ ...p, age: 31 }`", "`Person(p, age: 31)`"]
+  feedback:
+    correct: "Right. Write the constructor name, then `..p`, then the fields to change."
+    choices:
+      1: There's no syntax for assigning to a field. Records are immutable, so you build a new one.
+      2: "`...` is JavaScript's spread. Gleam uses the constructor name and `..p`."
+      3: "Without `..`, `p` is passed as the `name` argument, which is a compile error."
+cloze:
+  prompt: Fill in the blank to build a new record with only the name changed.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: "Return the `Person` one year older. Use the record update `..`."
+  hint: "It looks like `Person(..p, age: ...)`, and the new age is `p.age + 1`."

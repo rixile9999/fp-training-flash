@@ -1,0 +1,34 @@
+title: 필드로 정렬할 때는 비교 함수
+topic: lists
+order: 26
+summary: "기준 값을 뽑는 함수를 넘기는 `sort_by`는 없습니다. 필드로 정렬하려면 `list.sort`에 `fn(a, b) { int.compare(a.age, b.age) }`처럼 두 값을 비교해 `Order`를 돌려주는 함수를 넘깁니다."
+example: |
+  list.sort([#("b", 2), #("a", 1)], by: fn(a, b) { int.compare(a.1, b.1) })  // -> [#("a", 1), #("b", 2)]
+imports: [gleam/int, gleam/float, gleam/list]
+definitions: |
+  pub type Product {
+    Product(name: String, price: Float)
+  }
+recognize:
+  prompt: "`users: List(User)`를 `age` 필드(`Int`) 순으로 정렬하는 식은?"
+  choices: ["`list.sort(users, by: fn(a, b) { int.compare(a.age, b.age) })`", "`list.sort_by(users, fn(u) { u.age })`", "`list.sort(users, by: fn(a, b) { a.age < b.age })`", "`list.sort(users, by: int.compare)`"]
+  answer: 0
+  feedback:
+    correct: 맞아요. 두 사용자의 `age`를 `int.compare`로 비교합니다.
+    choices:
+      1: "`gleam/list`에는 `sort_by`가 없어요. Python의 `key=`나 Elixir의 `Enum.sort_by` 습관입니다."
+      2: "비교 함수는 `Bool`이 아니라 `Order`(`Lt`, `Eq`, `Gt`)를 돌려줘야 해요."
+      3: "`int.compare`는 `Int` 두 개를 받아요. `User`를 넘기면 타입 오류입니다."
+cloze:
+  prompt: 빈칸을 채워 Float 리스트를 정렬하세요.
+  code: "list.sort([2.5, 1.0], by: float.____)"
+  answers: [compare]
+  expected: "[1.0, 2.5]"
+produce:
+  prompt: 상품 리스트를 가격이 싼 것부터 정렬하세요.
+  header: "pub fn cheapest_first(products: List(Product)) -> List(Product)"
+  checks: '#(cheapest_first([Product("tea", 3.5), Product("gum", 1.0), Product("cake", 5.0)]), cheapest_first([]), cheapest_first([Product("b", 2.0), Product("a", 0.5)]))'
+  expected: '#([Product("gum", 1.0), Product("tea", 3.5), Product("cake", 5.0)], [], [Product("a", 0.5), Product("b", 2.0)])'
+  mustUse: [list.sort, float.compare]
+  reference: "list.sort(products, by: fn(a, b) { float.compare(a.price, b.price) })"
+  hint: "가격은 `Float`이니 `float.compare`로 비교합니다."

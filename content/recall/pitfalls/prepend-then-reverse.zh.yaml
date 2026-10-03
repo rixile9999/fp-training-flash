@@ -1,0 +1,15 @@
+title: 先往前加，最后反转
+summary: "`list.append(acc, [x])` 每次都会复制整个列表（O(n)）。逐个累积元素时，用 `[x, ..acc]` 加到前面，最后调用一次 `list.reverse`。"
+recognize:
+  prompt: 在 fold 中逐个收集元素时推荐的做法是？
+  choices: ["`list.append(acc, [x])`", "用 `[x, ..acc]` 累积，最后 `list.reverse`", "`acc <> [x]`", "`[..acc, x]`"]
+  feedback:
+    correct: 对。加到前面是 O(1)，整体是 O(n)。
+    choices:
+      0: "结果正确，但每次都复制整个 `acc`，整体变成 O(n²)。"
+      2: "`<>` 只用于字符串，用在列表上是类型错误。"
+      3: "`..` 只能跟在列表前部元素之后，`[..acc, x]` 是语法错误。"
+cloze:
+  prompt: 填空，把 0 加到列表前面。
+produce:
+  prompt: "用 `list.fold` 按原顺序收集偶数。累积时加到前面，最后反转。"

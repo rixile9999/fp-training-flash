@@ -1,0 +1,16 @@
+title: Destructuring a record with let
+summary: "A record with a single variant can be unpacked directly with `let`, as in `let Point(x:, y:) = p`. Skip the remaining fields you don't need with `..`."
+recognize:
+  prompt: "In the pattern `let Point(x:, ..) = p`, what does `..` mean?"
+  choices: ["Ignore the remaining fields", "Collect the remaining fields into a list", "It's a record update", "It's a syntax error"]
+  feedback:
+    correct: "Right. Only `x` is bound; the other fields are skipped."
+    choices:
+      1: "Unlike `..rest` in a list pattern, `..` in a constructor pattern binds nothing."
+      2: "The record update `Point(..p, x: 1)` is expression syntax; this is a pattern."
+      3: It's valid syntax for skipping the remaining fields in a constructor pattern.
+cloze:
+  prompt: "Fill in the blank to take only `x` and ignore the other fields."
+produce:
+  prompt: "Compute the Manhattan distance |x| + |y| of a point. Unpack the record with `let`."
+  hint: "Start with `let Point(x:, y:) = p`, and get absolute values with `int.absolute_value`."

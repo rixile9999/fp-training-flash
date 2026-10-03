@@ -1,0 +1,17 @@
+title: 除以 0 得 0
+summary: "`x / 0` 不会报错，结果是 `0`，`x % 0` 也是 `0`。要区分除以零的情况，用返回 `Result` 的 `int.divide`。"
+recognize:
+  prompt: "`10 / 0` 的值是？"
+  choices: ["`0`", 运行时出错崩溃, "`Error(Nil)`", "`Infinity`"]
+  feedback:
+    correct: 对。Gleam 的 `/` 除以零时返回 `0`。
+    choices:
+      1: 和 Python、Java 不同，不会抛出异常，所以这种错误很难察觉。
+      2: "`/` 运算符直接返回 `Int`。需要 `Result` 时用 `int.divide`。"
+      3: "`Int` 没有 `Infinity`。"
+cloze:
+  prompt: 填空，让除以零的情况返回 `Error`。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: "返回 `total` 由 `people` 人平分后每人的份额。人数为 0 时返回 `Error(Nil)`。"

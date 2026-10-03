@@ -1,0 +1,18 @@
+title: 列表模式 [x, ..rest]
+summary: "`[x, ..rest]` 匹配非空列表，把第一个元素绑定到 `x`，剩下的列表绑定到 `rest`。空列表用单独的 `[]` 分支处理。"
+recognize:
+  prompt: "`[x, ..rest]` 匹配 `[7]` 时，`rest` 是什么？"
+  choices: ["`7`", "`[7]`", "不匹配", "`[]`"]
+  feedback:
+    correct: 对。第一个元素 7 给了 `x`，剩下的是空列表。
+    choices:
+      0: "`7` 绑定到 `x`。`rest` 永远是列表。"
+      1: 第一个元素已经给了 `x`，不会留在 `rest` 里。
+      2: 只有一个元素也能匹配。唯一不匹配 `[x, ..rest]` 的是空列表。
+cloze:
+  prompt: 填空，把列表拆成第一个元素和其余部分。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 用 `[x, ..rest]` 模式写出函数体：把排队名单最前面的人移到最后。空名单原样返回。
+  hint: "先用 `[first, ..rest]` 拆开，再用 `list.append(rest, [first])` 把他放到最后。"

@@ -1,0 +1,16 @@
+title: int.absolute_value
+summary: "返回整数的绝对值。函数名是 `absolute_value`，不是 `abs`。"
+recognize:
+  prompt: 求整数绝对值的 Gleam 函数是？
+  choices: ["`int.abs`", "`int.absolute_value`", "`math.abs`", "`float.absolute_value`"]
+  feedback:
+    correct: 对。Gleam 使用不缩写的全名 `absolute_value`。
+    choices:
+      0: "`gleam/int` 里没有其他语言常见的 `abs` 这个名字。"
+      2: gleam_stdlib 没有 `math` 模块，整数函数在 `gleam/int` 里。
+      3: "`float.absolute_value` 用于 `Float`，传入 `Int` 会产生编译错误。"
+cloze:
+  prompt: 填空，求绝对值。
+produce:
+  prompt: 返回网格上两点之间的曼哈顿距离（横向差的绝对值加纵向差的绝对值）。
+  hint: "用 `a.0`、`a.1` 取出元组的元素。"

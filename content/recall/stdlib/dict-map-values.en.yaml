@@ -1,0 +1,18 @@
+title: dict.map_values
+summary: Returns a new dict with every value transformed by the callback. The keys stay the same, and the callback takes `fn(key, value)`, not just the value.
+recognize:
+  prompt: "Which `f` is correct for `dict.map_values(prices, f)`?"
+  choices: ["`fn(v) { v * 2 }`", "`fn(k, v) { v * 2 }`", "`fn(v, k) { v * 2 }`", "`fn(pair) { #(pair.0, pair.1 * 2) }`"]
+  feedback:
+    correct: Right. Even if you don't use the key, the callback takes two arguments, as in `fn(_k, v)`.
+    choices:
+      0: A callback that takes only the value is a compile error. The key is passed too.
+      2: The key comes first, then the value.
+      3: It doesn't receive a tuple, and it returns only the new value. You can't change the keys.
+cloze:
+  prompt: Fill in the blank to add 1 to every value.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Write the body of a function that returns the price list with every price 10% off (integer division), using `dict.map_values`.
+  hint: The discounted price is `price * 9 / 10`; take the unused key as `_item`.

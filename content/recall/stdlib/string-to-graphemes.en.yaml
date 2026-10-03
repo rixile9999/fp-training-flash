@@ -1,0 +1,18 @@
+title: string.to_graphemes
+summary: "Splits a string into its individual characters (graphemes) and returns a `List(String)`. Gleam has no `Char` type, so a single character is a `String` too."
+recognize:
+  prompt: "What is the value of `string.to_graphemes(\"hi\")`?"
+  choices: ["`[\"h\", \"i\"]`", "`['h', 'i']`", "`[104, 105]`", "`Ok([\"h\", \"i\"])`"]
+  feedback:
+    correct: Right. Each element is a one-character `String`.
+    choices:
+      1: "Gleam has no `Char` type and no single-quoted literals. One character is still a `String`, like `\"h\"`."
+      2: It does not turn characters into numeric codes. Each element is the character itself, as a `String`.
+      3: It cannot fail, so it returns the list directly, with no `Result`.
+cloze:
+  prompt: Fill in the blank to reverse the order of the characters.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Count the vowels (a, e, i, o, u) in a lowercase English string.
+  hint: "Turn it into a list of characters, keep only the vowels with `list.filter`, then count them with `list.length`."

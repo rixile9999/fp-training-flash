@@ -1,0 +1,18 @@
+title: string.split_once
+summary: "Splits a string once, at the first separator, and returns `Ok(#(before, after))`. If the separator is not there, you get `Error(Nil)`."
+recognize:
+  prompt: "What is the value of `string.split_once(\"a:b:c\", \":\")`?"
+  choices: ["`#(\"a\", \"b:c\")`", "`[\"a\", \"b:c\"]`", "`Ok(#(\"a:b\", \"c\"))`", "`Ok(#(\"a\", \"b:c\"))`"]
+  feedback:
+    correct: Right. It splits at the first `:` and leaves the rest untouched in the second piece.
+    choices:
+      0: "The separator might be missing, so the tuple comes wrapped in a `Result`."
+      1: "It is a tuple of two pieces, not a list. Cutting at every separator into a list is `string.split`."
+      2: "It splits at the first separator, not the last."
+cloze:
+  prompt: Fill in the blank to split the field name from its value.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: "Split a `key = value` setting line into a key and a value. Trim both sides, and split only at the first `=` even if the value contains another one. Without an `=`, return `Error(Nil)`."
+  hint: "Match on the result with `case`; for `Ok(#(key, value))`, apply `string.trim` to both sides."

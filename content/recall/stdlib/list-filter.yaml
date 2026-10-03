@@ -1,0 +1,36 @@
+title: list.filter
+topic: gleam/list
+order: 5
+summary: 조건 함수가 `True`를 돌려준 원소만 원래 순서대로 남깁니다. 레이블이 `keeping:`인 것처럼, 버릴 것이 아니라 남길 것을 고릅니다.
+example: |
+  list.filter([1, 2, 3, 4], fn(x) { x % 2 == 0 })  // -> [2, 4]
+imports: [gleam/list]
+signature: "list.filter(List(a), keeping: fn(a) -> Bool) -> List(a)"
+frequency: 25
+recognize:
+  prompt: "`list.filter(xs, f)`에서 `f`가 `True`를 돌려준 원소는 어떻게 되나요?"
+  choices: ["결과에 남는다", "결과에서 빠진다", "그중 첫 번째 하나만 남는다", "`Ok`로 감싸여 남는다"]
+  answer: 0
+  feedback:
+    correct: 맞아요. `keeping:`이라는 레이블 그대로 `True`인 원소를 남깁니다.
+    choices:
+      1: 반대예요. 빼고 싶다면 조건을 뒤집어 `fn(x) { !p(x) }`를 넘깁니다.
+      2: 조건에 맞는 첫 원소 하나를 찾는 것은 `list.find`이고, 결과는 `Result`입니다.
+      3: "`Result`를 돌려주는 콜백으로 거르면서 바꾸는 것은 `list.filter_map`입니다. `list.filter`는 원소를 그대로 남깁니다."
+cloze:
+  prompt: 빈칸을 채워 양수만 남기세요.
+  code: "list.____([3, -1, 0, 5], fn(x) { x > 0 })"
+  answers: [filter]
+  expected: "[3, 5]"
+predict:
+  prompt: 이 식의 값은?
+  code: "list.filter([5, 1, 4, 2], fn(x) { x > 1 })"
+  expected: "[5, 4, 2]"
+produce:
+  prompt: 나이 리스트에서 18세 이상만 남기는 함수 본문을 `list.filter`로 쓰세요.
+  header: "pub fn adults(ages: List(Int)) -> List(Int)"
+  checks: "#(adults([12, 18, 30]), adults([]), adults([5, 17]))"
+  expected: "#([18, 30], [], [])"
+  mustUse: [list.filter]
+  reference: "list.filter(ages, fn(age) { age >= 18 })"
+  hint: 남길 원소에 `True`를 돌려주는 조건을 넘기세요.

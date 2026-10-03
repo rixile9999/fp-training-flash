@@ -1,0 +1,16 @@
+title: Negating a Float variable
+summary: "Unary `-` can only negate Int variables. For a Float variable use `float.negate(x)`. Literals like `-1.5` are fine."
+recognize:
+  prompt: "Given `let x = 2.5`, what is `-x`?"
+  choices: ["`-2.5`", "A type error: unary `-` only takes an Int", "`2.5` (the sign is ignored)", "`-2`"]
+  feedback:
+    correct: "Right. For a Float variable, use `float.negate(x)` or `0.0 -. x`."
+    choices:
+      0: "Unlike other languages, unary `-` doesn't work on a Float variable. It's a compile error."
+      2: It isn't ignored; compilation fails.
+      3: Gleam never quietly turns a Float into an Int. It's a type error.
+cloze:
+  prompt: Fill in the blank to negate the Float.
+produce:
+  prompt: "Flip the sign of every amount in a list of transactions (Floats)."
+  hint: "You can pass `float.negate` to `list.map` directly."

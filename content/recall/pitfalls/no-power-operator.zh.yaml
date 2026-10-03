@@ -1,0 +1,18 @@
+title: 没有乘方运算符
+summary: "没有 `**` 或 `^` 这样的乘方运算符。要用 `int.power(底数, of: 指数)` 或 `float.power`，指数是 `Float`，结果是 `Result(Float, Nil)`。"
+recognize:
+  prompt: "`int.power(2, of: 10.0)` 的值是？"
+  choices: ["`1024`", "`Ok(1024.0)`", "`1024.0`", "`Ok(1024)`"]
+  feedback:
+    correct: 对。结果是 `Float`，并且因为可能失败而包在 `Result` 里。
+    choices:
+      0: "这是 Python `2 ** 10` 的结果。Gleam 的 `int.power` 不返回 `Int`。"
+      2: "有些情况无法计算，比如负数的分数次幂，所以返回 `Result`。"
+      3: "结果是 `Float`，不是 `Int`。"
+cloze:
+  prompt: 填空，求 3 的平方。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: "返回本金 `amount` 按年利率 `rate` 复利增长 `years` 年后的金额。"
+  hint: "指数也必须是 `Float`，所以用 `int.to_float(years)` 转换，再用 `result.unwrap` 取出 `Result` 中的值。"

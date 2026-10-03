@@ -1,0 +1,16 @@
+title: Type aliases
+summary: "`pub type Cents = Int` only gives an existing type another name. It isn't a new type, so it's fully interchangeable with `Int`."
+recognize:
+  prompt: "Given `pub type UserId = Int` and `fn find(id: UserId)`, what about `find(7)`?"
+  choices: ["It compiles: `UserId` is another name for `Int`", "A type error: you must wrap it as `UserId(7)`", "A type error: `7` must be converted to `UserId`", "It's checked at run time"]
+  feedback:
+    correct: "Right. An alias doesn't create a new type, so you can pass an `Int` as it is."
+    choices:
+      1: "Wrapping like `UserId(7)` is for custom types with a constructor. An alias has no constructor."
+      2: An alias doesn't create a new type, so no conversion is needed.
+      3: "Types are checked at compile time. The alias is treated as the same type as `Int`."
+cloze:
+  prompt: "Fill in the type. Both the alias `Cents` and `Int` work."
+produce:
+  prompt: "Add 10% tax (integer division) to a price. Bind the tax with the alias type written out, as in `let tax: Cents = ...`."
+  hint: "`Cents` is `Int`, so `/` and `+` work as usual."

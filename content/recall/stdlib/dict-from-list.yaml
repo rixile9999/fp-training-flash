@@ -1,0 +1,32 @@
+title: dict.from_list
+topic: gleam/dict
+order: 32
+summary: "`#(키, 값)` 튜플 리스트로 dict를 만듭니다. 같은 키가 여러 번 나오면 뒤에 나온 값이 남습니다."
+example: |
+  dict.from_list([#("a", 1), #("b", 2)]) |> dict.get("b")  // -> Ok(2)
+imports: ["gleam/dict.{type Dict}"]
+signature: "dict.from_list(List(#(a, b))) -> Dict(a, b)"
+frequency: 6
+recognize:
+  prompt: "`dict.from_list([#(\"a\", 1), #(\"a\", 2)])`의 결과는?"
+  choices: ["`dict.from_list([#(\"a\", 2)])`", "`dict.from_list([#(\"a\", 1)])`", "`Error(Nil)`", "`dict.from_list([#(\"a\", 1), #(\"a\", 2)])`"]
+  answer: 0
+  feedback:
+    correct: 맞아요. 앞에서부터 차례로 넣으므로 뒤의 값이 앞의 값을 덮어씁니다.
+    choices:
+      1: 처음 값이 남는 게 아니라 마지막 값이 남습니다.
+      2: "`dict.from_list`는 실패하지 않습니다. 반환 타입은 `Result`가 아니라 `Dict`입니다."
+      3: dict에서 같은 키는 한 번만 나옵니다. 한 키에 값 두 개를 둘 수 없습니다.
+cloze:
+  prompt: 빈칸을 채워 튜플 리스트로 dict를 만드세요.
+  code: 'dict.____([#("x", 1)]) |> dict.get("x")'
+  answers: [from_list]
+  expected: "Ok(1)"
+produce:
+  prompt: '`#(이름, 점수)` 리스트에서 이름으로 점수를 찾는 함수 본문을 `dict.from_list`로 쓰세요. 같은 이름이 또 나오면 나중 점수가 맞습니다.'
+  header: "pub fn score_of(scores: List(#(String, Int)), name: String) -> Result(Int, Nil)"
+  checks: '#(score_of([#("ann", 90), #("bo", 70)], "bo"), score_of([#("ann", 90), #("ann", 95)], "ann"), score_of([], "ann"))'
+  expected: "#(Ok(70), Ok(95), Error(Nil))"
+  mustUse: [dict.from_list]
+  reference: "scores |> dict.from_list |> dict.get(name)"
+  hint: dict를 만든 뒤 `dict.get`으로 찾으세요.

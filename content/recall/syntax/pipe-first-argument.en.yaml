@@ -1,0 +1,18 @@
+title: The pipe operator |>
+summary: "`a |> f(b)` means `f(a, b)`. The pipe passes the value on its left as the first argument of the function on its right."
+recognize:
+  prompt: Which expression is the same as `10 |> int.subtract(3)`?
+  choices: ["`int.subtract(10, 3)`", "`int.subtract(3, 10)`", "`int.subtract(3)(10)`", "`int.subtract(10)`"]
+  feedback:
+    correct: Right. The piped value 10 goes into the first argument slot.
+    choices:
+      1: Pipes in F# and Elm fill the last slot. Gleam's fills the first.
+      2: Gleam functions aren't curried, so you don't call them in pieces like this.
+      3: "That's one argument short: the piped value is an argument too."
+cloze:
+  prompt: Fill in the blank to turn the string into uppercase.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Write the body of a function that trims surrounding whitespace, converts to uppercase and adds `"!"` at the end, chaining the steps with pipes.
+  hint: Piping into `string.append(first, second)` makes the piped value the first part.

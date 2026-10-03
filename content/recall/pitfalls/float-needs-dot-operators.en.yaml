@@ -1,0 +1,16 @@
+title: Float arithmetic is +. -. *. /.
+summary: "Arithmetic on `Float`s uses the dotted operators `+.` `-.` `*.` `/.`. Plain `+` is for `Int` only, so `1.5 + 2.5` is a compile error."
+recognize:
+  prompt: "`price` and `tax` are both `Float`. Which expression adds them?"
+  choices: ["`price + tax`", "`price +. tax`", "`price .+ tax`", "`int.to_float(price + tax)`"]
+  feedback:
+    correct: Right. `Float` addition is `+.`.
+    choices:
+      0: "`+` only works on `Int`, so using it on `Float`s is a type error. Gleam keeps separate operators per type."
+      2: The dot goes after the operator. `.+` is a syntax error.
+      3: "`price + tax` is already a type error, and `int.to_float` takes an `Int`."
+cloze:
+  prompt: Fill in the operator.
+produce:
+  prompt: Return the price `price` plus tax at rate `rate`.
+  hint: Multiplication is `*.` too.

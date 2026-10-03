@@ -1,0 +1,18 @@
+title: string.split
+summary: "按分隔符切开字符串，返回 `List(String)`。空片段不会被丢掉，所以分隔符在末尾时会留下一个 `\"\"`。"
+recognize:
+  prompt: "`string.split(\"a,b,\", \",\")` 的值是？"
+  choices: ["`[\"a\", \"b\"]`", "`[\"a\", \"b\", \"\"]`", "`Ok([\"a\", \"b\"])`", "`#(\"a\", \"b,\")`"]
+  feedback:
+    correct: 对。最后一个逗号后面的空片段 `""` 也会保留。
+    choices:
+      0: 它不会过滤空片段。不需要的话，要自己用 `list.filter` 去掉 `""`。
+      2: "`split` 不会失败，所以直接返回列表，不包在 `Result` 里。"
+      3: 只切一次并返回元组的是 `string.split_once`，而且它会把元组包在 `Result` 里。
+cloze:
+  prompt: 填空，把日期分成年、月、日。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 把用逗号分隔的标签字符串转成标签列表，并去掉每个标签前后的空格。
+  hint: "先按 `\",\"` 切开，再用 `list.map(string.trim)` 去掉空格。"

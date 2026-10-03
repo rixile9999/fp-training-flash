@@ -1,0 +1,17 @@
+title: result.replace_error
+summary: "把 `Error` 里的值换成给定的值，`Ok` 保持不变。用来给 `int.parse` 返回的 `Error(Nil)` 这类没有信息的错误换上有意义的错误。"
+recognize:
+  prompt: "`result.replace_error(r, ?)` 的第二个参数是什么？"
+  choices: ["新的错误值（例如 `\"bad input\"`）", "转换错误的函数 `fn(e) { ... }`", "遇到 `Error` 时改用的成功值"]
+  feedback:
+    correct: 对。它接收一个值，丢掉原来的错误，换成这个值。
+    choices:
+      1: 接收函数来转换原错误的是 `result.map_error`。
+      2: 接收默认值并拆掉 `Result` 的是 `result.unwrap`。`replace_error` 返回的仍然是 `Result`。
+cloze:
+  prompt: 填空，给解析错误加上一条消息。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 把年龄字符串解析为整数。失败时返回 `Error("invalid age")`。
+  hint: "把 `int.parse(s)` 的结果通过管道传给 `result.replace_error`。"

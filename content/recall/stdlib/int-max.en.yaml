@@ -1,0 +1,18 @@
+title: int.max
+summary: "Returns the larger of two integers. `int.max(x, 0)` is the common way to put a floor of 0 under a value (\"0 if negative\")."
+recognize:
+  prompt: "Which code turns a balance `b` into 0 when it is negative and leaves it alone otherwise?"
+  choices: ["`int.max(b, 0)`", "`int.min(b, 0)`", "`int.absolute_value(b)`", "`int.max([b, 0])`"]
+  feedback:
+    correct: Right. Picking the larger of `b` and 0 turns negatives into 0 and keeps positives as they are.
+    choices:
+      1: "`int.min(b, 0)` does the opposite: it turns positives into 0."
+      2: The absolute value turns -5 into 5, not 0.
+      3: "`int.max` takes two integers, not a list. For lists there is `list.max(xs, int.compare)`, which returns a `Result`."
+cloze:
+  prompt: Fill in the blank to pick the larger value.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Clamp a score to the range 0 to 100 and return it. Use `int.max`.
+  hint: "Cut the top at 100 with `int.min` and the bottom at 0 with `int.max`."

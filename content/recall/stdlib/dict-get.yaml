@@ -1,0 +1,40 @@
+title: dict.get
+topic: gleam/dict
+order: 7
+summary: 키로 값을 찾아 `Result`로 돌려줍니다. 키가 있으면 `Ok(값)`, 없으면 `Error(Nil)`입니다.
+example: |
+  dict.get(dict.from_list([#("a", 1), #("b", 2)]), "b")  // -> Ok(2)
+imports: ["gleam/dict.{type Dict}"]
+signature: "dict.get(Dict(a, b), a) -> Result(b, Nil)"
+frequency: 23
+recognize:
+  prompt: "`dict.get(ages, \"zoe\")`에서 `\"zoe\"` 키가 없으면?"
+  choices: ["`Error(Nil)`을 돌려준다", "`None`을 돌려준다", "패닉(예외)이 난다", "`Nil`을 돌려준다"]
+  answer: 0
+  feedback:
+    correct: 맞아요. 반환 타입이 `Result(b, Nil)`이라 없는 키는 `Error(Nil)`입니다.
+    choices:
+      1: Rust의 `HashMap::get`은 `Option`을 돌려주지만, Gleam의 `dict.get`은 `Result`를 돌려줍니다.
+      2: Python의 `KeyError`처럼 예외를 던지지 않습니다. 실패도 값으로 돌려줍니다.
+      3: "`Nil`은 값이 `Nil` 하나뿐인 타입이라 찾은 값을 담을 수 없습니다. 결과는 언제나 `Ok` 또는 `Error`입니다."
+cloze:
+  prompt: 빈칸을 채워 키 `"x"`의 값을 찾으세요.
+  code: 'dict.____(dict.from_list([#("x", 10)]), "x")'
+  answers: [get]
+  expected: "Ok(10)"
+predict:
+  prompt: 이 식의 값은?
+  code: 'dict.get(dict.from_list([#(1, "one")]), 2)'
+  expected: "Error(Nil)"
+produce:
+  prompt: 가격표에서 상품 가격을 찾는 함수 본문을 `dict.get`으로 쓰세요. 가격표에 없는 상품은 0입니다.
+  header: "pub fn price_of(prices: Dict(String, Int), item: String) -> Int"
+  checks: '#(price_of(dict.from_list([#("tea", 3), #("cake", 5)]), "cake"), price_of(dict.from_list([#("tea", 3)]), "milk"), price_of(dict.new(), "tea"))'
+  expected: "#(5, 0, 0)"
+  mustUse: [dict.get]
+  reference: |
+    case dict.get(prices, item) {
+      Ok(price) -> price
+      Error(Nil) -> 0
+    }
+  hint: "`case`로 `Ok(price)`와 `Error(Nil)`을 나누세요."

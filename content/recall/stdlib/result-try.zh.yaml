@@ -1,0 +1,17 @@
+title: result.try
+summary: "如果是 `Ok`，就把里面的值交给回调；如果是 `Error`，就不调用回调，原样返回这个错误。回调也返回 `Result`，所以它用来串联可能失败的步骤。"
+recognize:
+  prompt: "在 `result.try(r, f)` 中，回调 `f` 必须返回什么？"
+  choices: ["`Result` 值（`Ok(...)` 或 `Error(...)`）", "没有包装的普通值", "`Option` 值（`Some(...)` 或 `None`）"]
+  feedback:
+    correct: 对。回调本身也可能失败，所以返回 `Result(c, b)`，错误类型 `b` 要和输入相同。
+    choices:
+      1: 返回普通值的回调用于 `result.map`。回调本身可能失败时才用 `result.try`。
+      2: "`Option` 和 `Result` 是不同的类型。`result.try` 的回调必须返回 `Result`。"
+cloze:
+  prompt: 填空，把解析和除法串起来。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 把两个字符串解析为整数，并用 `Ok` 返回它们的和。只要有一个解析失败，就返回 `Error(Nil)`。请使用 `result.try`。
+  hint: "用 `use x <- result.try(int.parse(a))` 取出值，最后用 `Ok(x + y)` 包装后返回。"

@@ -1,0 +1,17 @@
+title: int.parse takes whole numbers only
+summary: "`int.parse` only succeeds when the whole string is an integer. `\"1.0\"`, `\" 1\"` with surrounding spaces, and even `\"1_000\"` (fine in source code) all give `Error(Nil)`."
+recognize:
+  prompt: "What is the value of `int.parse(\"3.0\")`?"
+  choices: ["`Ok(3)`", "`Error(Nil)`", "`3`", "`Ok(3.0)`"]
+  feedback:
+    correct: Right. With a decimal point it isn't read as an integer.
+    choices:
+      0: "It doesn't read a prefix and stop like JavaScript's `parseInt`. The whole string must be an integer."
+      2: "Parsing can fail, so the result comes wrapped in a `Result`."
+      3: "`int.parse` only produces an `Int`. Decimals are `float.parse`."
+cloze:
+  prompt: Fill in the blank to parse input with spaces around it.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Read the age a user typed as an integer, ignoring spaces around it.

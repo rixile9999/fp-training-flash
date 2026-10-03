@@ -1,0 +1,17 @@
+title: Result(a, Nil)
+summary: stdlib functions with only one way to fail, such as `list.first` and `int.parse`, return `Result(a, Nil)`. On failure the value is `Error(Nil)`.
+recognize:
+  prompt: What is the value of `list.first([])`?
+  choices: ["`None`", "`Nil`", "A crash at run time", "`Error(Nil)`"]
+  feedback:
+    correct: Right. An empty list has no first element, so it's `Error(Nil)`.
+    choices:
+      0: "`None` belongs to `Option`. `list.first` returns a `Result`."
+      1: A bare `Nil` couldn't be told apart from a success.
+      2: stdlib functions don't crash on an empty list; they return an `Error`.
+cloze:
+  prompt: Fill in the blank so the comparison is `True`.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Write the body of a function that matches on the result of `list.first` with `case`, using `Ok` and `Error` branches, and returns the first element, or 0 if the list is empty.

@@ -1,0 +1,18 @@
+title: List pattern [x, ..rest]
+summary: "`[x, ..rest]` matches a non-empty list, binding the first element to `x` and the remaining list to `rest`. Handle the empty list in a separate `[]` branch."
+recognize:
+  prompt: When `[x, ..rest]` matches `[7]`, what is `rest`?
+  choices: ["`7`", "`[7]`", "It doesn't match", "`[]`"]
+  feedback:
+    correct: Right. The first element 7 goes to `x`, and what's left is the empty list.
+    choices:
+      0: "`7` is bound to `x`. `rest` is always a list."
+      1: The first element goes to `x`, so it isn't in `rest` any more.
+      2: A single-element list matches too. Only the empty list fails to match `[x, ..rest]`.
+cloze:
+  prompt: Fill in the blank to split the list into its first element and the rest.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Write the body of a function that moves the person at the front of a waiting list to the back, using the pattern `[x, ..rest]`. An empty list is returned as is.
+  hint: "Split it with `[first, ..rest]`, then put `first` at the end with `list.append(rest, [first])`."

@@ -1,0 +1,16 @@
+title: Nil
+summary: "`Nil` 是只有一个值的类型，这个值也叫 `Nil`。像 `io.println` 这样只产生副作用的函数返回 `Nil`，`Error(Nil)` 表示“失败，没有详细原因”。"
+recognize:
+  prompt: "`io.println(\"hi\")` 返回什么？"
+  choices: ["`Nil`", "`\"hi\"`", "`Ok(Nil)`", "没有返回值（`void`）"]
+  feedback:
+    correct: "对。打印是副作用，返回的值是 `Nil`。"
+    choices:
+      1: 它不会返回打印的字符串。这是只有副作用的函数，所以返回 `Nil`。
+      2: "`io.println` 不会失败，所以不包在 `Result` 里。"
+      3: "Gleam 的每个函数都返回值。表示“什么都没有”的值就是 `Nil`。"
+cloze:
+  prompt: 填空，用模式接住没有失败原因的错误。
+produce:
+  prompt: "订单数量至少为 1 时返回 `Ok(数量)`，否则返回不带原因的失败。"
+  hint: "失败的情况是 `Error(Nil)`。"

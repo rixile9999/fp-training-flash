@@ -1,0 +1,40 @@
+title: 패턴에 이름 붙이기 as
+topic: case
+order: 207
+summary: 패턴 뒤에 `as name`을 붙이면 그 부분을 분해하면서 동시에 통째로 `name`에 묶을 수 있어요.
+example: |
+  case [1, 2, 3] {
+    [first, ..] as all -> #(first, all)
+    [] -> #(0, [])
+  }  // -> #(1, [1, 2, 3])
+recognize:
+  prompt: "`[x, ..] as all`에서 `all`에 묶이는 것은?"
+  choices: ["첫 원소", "첫 원소를 뺀 나머지", "맞은 리스트 전체", "아무것도 묶이지 않는다(`as`는 타입 변환)"]
+  answer: 2
+  feedback:
+    correct: 맞아요. `as`는 앞의 패턴과 맞은 값 전체에 이름을 붙입니다.
+    choices:
+      0: 첫 원소는 `x`에 묶여요.
+      1: 나머지를 받으려면 `[x, ..rest]`처럼 씁니다.
+      3: Gleam에는 `as`로 하는 타입 변환이 없어요. 패턴의 `as`는 이름을 붙이고, `import ... as`는 모듈 이름을 바꿉니다.
+cloze:
+  prompt: 빈칸을 채워 리스트 전체를 `all`로 묶으세요.
+  code: |-
+    case [1, 2, 3] {
+      [first, ..] ____ all -> #(first, all)
+      [] -> #(0, [])
+    }
+  answers: [as]
+  expected: "#(1, [1, 2, 3])"
+produce:
+  prompt: 리스트의 첫 쌍의 수가 양수이면 그 쌍을 `Ok`로, 아니면(빈 리스트 포함) `Error(Nil)`을 돌려주세요. 쌍을 분해해 수를 검사하면서 `as`로 쌍 전체에도 이름을 붙이세요.
+  header: "pub fn first_positive(pairs: List(#(String, Int))) -> Result(#(String, Int), Nil)"
+  checks: '#(first_positive([#("a", 3), #("b", 0)]), first_positive([#("a", 0), #("b", 5)]), first_positive([]))'
+  expected: '#(Ok(#("a", 3)), Error(Nil), Error(Nil))'
+  mustUse: [" as "]
+  reference: |-
+    case pairs {
+      [#(_, n) as pair, ..] if n > 0 -> Ok(pair)
+      _ -> Error(Nil)
+    }
+  hint: "`[#(_, n) as pair, ..]`에 가드 `if n > 0`을 붙이세요."

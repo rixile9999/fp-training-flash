@@ -1,0 +1,18 @@
+title: use 把回调作为最后一个参数
+summary: "`use x <- f(a)` 是 `f(a, fn(x) { 代码块的其余部分 })` 的简写。只要函数的最后一个参数是函数，就可以配合 `use` 使用。"
+recognize:
+  prompt: 在 `use x <- list.map(xs)` 中，代码块的其余部分去了哪里？
+  choices: ["作为 `list.map` 的第一个参数", "在调用 `list.map` 之后单独执行一次", "成为 `list.map` 最后一个参数 `fn(x) { ... }` 的函数体", "`x` 绑定整个 `xs`，然后照常执行"]
+  feedback:
+    correct: 对。其余代码成为回调的函数体，对每个元素执行一次。
+    choices:
+      0: 第一个参数是括号里的 `xs`，回调放在最后一个参数的位置。
+      1: 它不会单独执行。它成了回调的函数体，由 `list.map` 对每个元素调用。
+      3: "`x` 是回调的参数，每次接收一个元素。"
+cloze:
+  prompt: 填空，把代码块的其余部分作为回调传入。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 写出函数体：从两个列表中各取一个元素，返回所有组合成的二元组。用 `use` 串起 `list.flat_map` 和 `list.map`。
+  hint: 外层是 `list.flat_map`，内层是 `list.map`。最后一行是一个二元组。

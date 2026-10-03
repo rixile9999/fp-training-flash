@@ -1,0 +1,42 @@
+title: 콜백 안에서 바깥 변수를 바꿀 수 없음
+topic: immutability
+order: 22
+summary: "콜백 안에서 `let count = count + 1`을 해도 바깥 `count`는 바뀌지 않습니다. 반복하며 값을 쌓으려면 `list.fold`로 누적값을 넘깁니다."
+example: |
+  {
+    let count = 0
+    list.each([1, 2, 3], fn(_) {
+      let count = count + 1
+      count
+    })
+    count
+  }  // -> 0
+imports: [gleam/list]
+recognize:
+  prompt: "`{ let count = 0  list.each([1, 2, 3], fn(_) { let count = count + 1  count })  count }`의 값은?"
+  choices: ["`0`", "`3`", "`1`"]
+  answer: 0
+  feedback:
+    correct: 맞아요. 콜백 안의 `let count`는 새 이름일 뿐이라 바깥 `count`는 0 그대로입니다.
+    choices:
+      1: "JavaScript의 `forEach`처럼 바깥 변수를 고친다고 생각한 결과예요. Gleam의 값은 바뀌지 않습니다."
+      2: "콜백 안에서는 매번 `0 + 1`이 되지만, 그 값은 밖으로 나오지 않아요. 바깥 `count`는 여전히 0입니다."
+cloze:
+  prompt: 빈칸을 채워 원소 개수를 세세요.
+  code: "list.____([1, 2, 3], 0, fn(count, _) { count + 1 })"
+  answers: [fold]
+  expected: "3"
+produce:
+  prompt: "`list.fold`로 양수가 몇 개인지 세세요."
+  header: "pub fn count_positive(xs: List(Int)) -> Int"
+  checks: "#(count_positive([1, -2, 3]), count_positive([]), count_positive([0, -1]))"
+  expected: "#(2, 0, 0)"
+  mustUse: [list.fold]
+  reference: |
+    list.fold(xs, 0, fn(count, x) {
+      case x > 0 {
+        True -> count + 1
+        False -> count
+      }
+    })
+  hint: 콜백이 돌려준 값이 다음 원소의 누적값이 됩니다.

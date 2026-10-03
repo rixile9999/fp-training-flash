@@ -1,0 +1,31 @@
+title: 익명 함수 fn
+topic: fn
+order: 213
+summary: "`fn(x) { x + 1 }`은 이름 없는 함수예요. 바깥 변수를 붙잡아 쓸 수 있고(클로저), 타입은 `fn(Int) -> Int`처럼 씁니다."
+example: |
+  let offset = 10
+  let add_offset = fn(x) { x + offset }
+  add_offset(5)  // -> 15
+imports: [gleam/list]
+recognize:
+  prompt: Gleam의 익명 함수 문법은?
+  choices: ["`|x| x + 1`", "`fn(x) { x + 1 }`", "`x => x + 1`", "`lambda x: x + 1`"]
+  answer: 1
+  feedback:
+    correct: 맞아요. 이름 있는 함수처럼 `fn`과 중괄호 본문을 쓰고 이름만 빠집니다.
+    choices:
+      0: Rust의 클로저 문법이에요.
+      2: JavaScript의 화살표 함수 문법이에요.
+      3: Python의 람다 문법이에요.
+cloze:
+  prompt: 빈칸을 채워 각 원소를 두 배로 만드세요.
+  code: list.map([1, 2, 3], ____(x) { x * 2 })
+  answers: [fn]
+  expected: "[2, 4, 6]"
+produce:
+  prompt: "`n`을 더하는 함수를 만들어 돌려주는 함수 본문을 쓰세요. 돌려주는 함수는 `n`을 붙잡는 익명 함수입니다."
+  header: "pub fn make_adder(n: Int) -> fn(Int) -> Int"
+  checks: "#(make_adder(1)(2), make_adder(10)(-3), make_adder(0)(5))"
+  expected: "#(3, 7, 5)"
+  mustUse: ["fn("]
+  reference: fn(x) { x + n }

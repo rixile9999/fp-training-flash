@@ -1,0 +1,16 @@
+title: 不透明类型
+summary: "`pub opaque type` 公开类型本身，但隐藏构造器和字段访问。其他模块只能通过定义它的模块里的函数（智能构造器）来创建和读取值。"
+recognize:
+  prompt: "如果在其他模块里用 `Percent(150)` 创建上面的 `Percent`，会怎样？"
+  choices: ["得到 `Percent(150)` 这个值", "编译错误：不透明类型的构造器不能在定义它的模块之外使用", "变成 `Error(Nil)`", "运行时失败"]
+  feedback:
+    correct: "对。所以每个 `Percent` 值都要经过做检查的 `percent` 函数来创建。"
+    choices:
+      0: "`opaque` 在模块外隐藏了构造器，无法创建绕过检查的值。"
+      2: "范围检查是 `percent` 函数做的事。直接调用构造器这一步就被禁止了。"
+      3: 在模块外的使用在编译时就被阻止。
+cloze:
+  prompt: "假设你在模块外，用公开函数取出 `Percent` 里的整数。"
+produce:
+  prompt: "把两个 `Percent` 相加。和超过 100 时结果必须是 `Error(Nil)`，所以不要用构造器，而要用做检查的 `percent` 来创建。"
+  hint: "用 `to_int` 取出两个值相加，再把和传给 `percent(...)`。"

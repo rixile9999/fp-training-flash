@@ -1,0 +1,16 @@
+title: option.unwrap
+summary: "Returns the value inside `Some`, or the default given as `or:` when it is `None`."
+recognize:
+  prompt: "How do you take the value out of `opt: Option(Int)`, using 0 when it is `None`?"
+  choices: ["`option.unwrap(opt, 0)`", "`opt.unwrap_or(0)`", "`result.unwrap(opt, 0)`", "`opt ?? 0`"]
+  feedback:
+    correct: Right. Pass the `Option` as the first argument of the module function and the default as the second.
+    choices:
+      1: That is a Rust-style method call. Gleam has no methods; you pass the value as the first argument of a module function.
+      2: "`result.unwrap` is for `Result`, so passing an `Option` is a compile error."
+      3: Gleam has no `??` operator.
+cloze:
+  prompt: Fill in the blank to use a default when it is `None`.
+produce:
+  prompt: Return the name to show on screen. Use the nickname if there is one, otherwise the real name.
+  hint: The default does not have to be a constant; you can pass the variable `name`.

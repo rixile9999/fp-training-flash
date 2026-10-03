@@ -1,0 +1,33 @@
+title: int.parse는 정수 표기만
+topic: int
+order: 8
+summary: "`int.parse`는 문자열 전체가 정수 표기일 때만 성공합니다. `\"1.0\"`, 앞뒤 공백이 있는 `\" 1\"`, 소스 코드에서는 되는 `\"1_000\"`도 모두 `Error(Nil)`이에요."
+example: |
+  int.parse("1.0")  // -> Error(Nil)
+imports: [gleam/int, gleam/string]
+recognize:
+  prompt: "`int.parse(\"3.0\")`의 값은?"
+  choices: ["`Ok(3)`", "`Error(Nil)`", "`3`", "`Ok(3.0)`"]
+  answer: 1
+  feedback:
+    correct: 맞아요. 소수점이 있으면 정수로 읽지 않습니다.
+    choices:
+      0: "JavaScript `parseInt`처럼 앞부분만 읽고 멈추지 않아요. 문자열 전체가 정수여야 합니다."
+      2: "실패할 수 있어서 `Result`로 감싸서 돌려줍니다."
+      3: "`int.parse`는 `Int`만 만듭니다. 소수는 `float.parse`예요."
+cloze:
+  prompt: 빈칸을 채워 공백이 섞인 입력을 파싱하세요.
+  code: 'int.parse(string.____("  42 "))'
+  answers: [trim]
+  expected: "Ok(42)"
+predict:
+  prompt: 이 식의 값은?
+  code: 'int.parse("1_000")'
+  expected: "Error(Nil)"
+produce:
+  prompt: 사용자가 입력한 나이 문자열을 앞뒤 공백을 무시하고 정수로 읽으세요.
+  header: "pub fn parse_age(s: String) -> Result(Int, Nil)"
+  checks: '#(parse_age("42"), parse_age(" 7 "), parse_age("7.5"), parse_age(""))'
+  expected: "#(Ok(42), Ok(7), Error(Nil), Error(Nil))"
+  mustUse: [int.parse, string.trim]
+  reference: "int.parse(string.trim(s))"

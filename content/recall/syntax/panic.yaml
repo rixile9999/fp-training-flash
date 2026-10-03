@@ -1,0 +1,45 @@
+title: panic
+topic: panic
+order: 227
+summary: '`panic`은 그 자리에서 무조건 크래시시켜요. `as "메시지"`로 이유를 붙이고, 일어날 수 없는 상태에만 씁니다.'
+example: |
+  let n = 2
+  case n {
+    1 -> "one"
+    2 -> "two"
+    _ -> panic as "unexpected number"
+  }  // -> "two"
+recognize:
+  prompt: '`String`을 돌려주는 `case`의 한 분기를 `_ -> panic as "bug"`로 쓰면 그 분기의 타입은?'
+  choices: ["`Nil`이라 다른 분기도 `Nil`이어야 한다", "다른 분기와 같은 타입으로 맞춰진다(여기서는 `String`)", "`Result`라 다른 분기도 `Result`여야 한다", "메시지가 문자열이라서 항상 `String`이다"]
+  answer: 1
+  feedback:
+    correct: 맞아요. `panic`은 값을 돌려주지 않고 끝나므로 어떤 타입 자리에도 쓸 수 있어요.
+    choices:
+      0: "`panic`은 `Nil`을 돌려주지 않아요. 돌아오지 않으므로 어떤 타입과도 맞습니다."
+      2: "`panic`은 `Error`를 만들지 않고 실제로 크래시해요."
+      3: 메시지는 `as` 뒤의 설명일 뿐 식의 타입과 상관없어요. `Int` 자리에도 쓸 수 있습니다.
+cloze:
+  prompt: 빈칸을 채워 `panic`에 메시지를 붙이세요.
+  code: |-
+    let n = 2
+    case n {
+      1 -> "one"
+      2 -> "two"
+      _ -> panic ____ "unexpected number"
+    }
+  answers: [as]
+  expected: '"two"'
+produce:
+  prompt: 순위 1, 2, 3을 `"gold"`, `"silver"`, `"bronze"`로 바꾸는 함수 본문을 쓰세요. 호출하는 쪽이 1~3만 넘긴다고 보장하므로, 그 밖의 값은 `panic`으로 처리합니다.
+  header: "pub fn medal(rank: Int) -> String"
+  checks: "#(medal(1), medal(2), medal(3))"
+  expected: '#("gold", "silver", "bronze")'
+  mustUse: [panic]
+  reference: |-
+    case rank {
+      1 -> "gold"
+      2 -> "silver"
+      3 -> "bronze"
+      _ -> panic as "rank must be 1, 2 or 3"
+    }

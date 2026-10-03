@@ -1,0 +1,15 @@
+title: let assert
+summary: "`let assert pattern = value` binds with a pattern that can fail, and crashes the process if it doesn't match. Don't use it for failures you can expect; return a `Result` instead."
+recognize:
+  prompt: What happens when `let assert Ok(n) = int.parse("abc")` runs?
+  choices: ["The process crashes", "`n` becomes 0", "A compile error", "The function returns `Error(Nil)`"]
+  feedback:
+    correct: Right. If the pattern doesn't match, it crashes right there. You can add a reason with `as "message"`.
+    choices:
+      1: No default value is filled in. If you need one, use `result.unwrap`.
+      2: "`let assert` allows patterns that can fail, so it compiles."
+      3: It doesn't return an `Error` for you. For that, handle it with `case` or `result.try`.
+cloze:
+  prompt: Fill in the blank to take out the first element. You're certain the list isn't empty.
+produce:
+  prompt: The caller guarantees it only ever passes digit strings. Write the body of a function that takes the integer out of the result of `int.parse` with `let assert` and returns it.

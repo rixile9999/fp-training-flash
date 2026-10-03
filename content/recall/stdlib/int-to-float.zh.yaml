@@ -1,0 +1,16 @@
+title: int.to_float
+summary: "把 `Int` 转成 `Float`。Gleam 不能把 `Int` 和 `Float` 混在一起计算，所以像求平均值这样需要浮点运算时要先转换。"
+recognize:
+  prompt: "把 `n: Int` 乘以 `1.5`，正确的写法是？"
+  choices: ["`n * 1.5`", "`n *. 1.5`", "`int.to_float(n) *. 1.5`", "`float(n) *. 1.5`"]
+  feedback:
+    correct: 对。先转成 `Float`，再用 `Float` 运算符 `*.`。
+    choices:
+      0: "`*` 只用于 `Int`，和 `Float` 混用会产生编译错误。"
+      1: "`*.` 两边都必须是 `Float`，而 `n` 还是 `Int`。"
+      3: 这是 Python 风格的转换。Gleam 没有 `float` 函数，要用 `int.to_float`。
+cloze:
+  prompt: 填空，把整数按浮点数相除。
+produce:
+  prompt: 以 `Float` 返回整数列表的平均值。空列表时返回 `0.0`。
+  hint: "把总和（`int.sum`）和个数（`list.length`）分别用 `int.to_float` 转换，再用 `/.` 相除。"

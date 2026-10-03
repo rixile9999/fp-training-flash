@@ -1,0 +1,16 @@
+title: 自定义类型的变体
+summary: "自定义类型列出所有可能的情况（变体）。没有字段的变体本身就是值，可以当枚举用；名字以大写字母开头。"
+recognize:
+  prompt: "在 `pub type Light { Red Yellow Green }` 中，`Red` 是什么？"
+  choices: ["`Light` 类型的值（构造器）", "字符串 `\"Red\"`", "整数 0", "名为 `Red` 的独立类型"]
+  feedback:
+    correct: "对。`Red`、`Yellow`、`Green` 都是 `Light` 类型的值。"
+    choices:
+      1: "它不是字符串，而是 `Light` 类型的值，只能放在需要 `Light` 的地方。"
+      2: 它不会像 C 的枚举那样变成整数。和整数比较是类型错误。
+      3: "类型只有一个 `Light`，`Red`、`Yellow`、`Green` 是它的变体（构造器）。"
+cloze:
+  prompt: "在空白处填入一个 `Light` 值，使结果为 3。"
+produce:
+  prompt: "返回交通信号灯的下一个信号：红之后是绿，绿之后是黄，黄之后是红。"
+  hint: "按变体分支：`case light { Red -> ... Green -> ... Yellow -> ... }`。"

@@ -1,0 +1,18 @@
+title: string.join
+summary: "用 `with:` 分隔符把字符串列表连接成一个字符串。列表是第一个参数，所以可以写成管道：`parts |> string.join(\", \")`。"
+recognize:
+  prompt: "用 `\", \"` 连接 `parts: List(String)` 的表达式是？"
+  choices: ["`string.join(\", \", parts)`", "`string.concat(parts, \", \")`", "`string.join(parts, \", \")`", "`parts |> string.join`"]
+  feedback:
+    correct: 对。列表在前，分隔符在后。
+    choices:
+      0: "这是 Python 的 `\", \".join(parts)` 写法。在 Gleam 中列表是第一个参数。"
+      1: "`string.concat` 只接收一个列表，不加分隔符直接拼接。"
+      3: "缺少 `with:` 分隔符参数。应写成 `parts |> string.join(\", \")`。"
+cloze:
+  prompt: 填空，用 `-` 连接年、月、日。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 把整数列表转成一行用逗号分隔的 CSV。
+  hint: "先用 `list.map(int.to_string)` 得到字符串列表。"

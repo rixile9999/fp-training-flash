@@ -1,0 +1,18 @@
+title: A block is an expression
+summary: "A block `{ }` is an expression with a value. After its `let`s, the value of the last expression becomes the block's value, and names made inside aren't visible outside."
+recognize:
+  prompt: "After `let y = { let a = 2  a * 10 }`, what is `y`?"
+  choices: ["`20`", "`Nil`", "`2`", "A compile error (a block isn't a value)"]
+  feedback:
+    correct: Right. The block's value is the value of its last expression, `a * 10`.
+    choices:
+      1: A block isn't a group of statements; it's an expression that returns its last expression's value.
+      2: The block's value is that of the last expression, not the first binding.
+      3: "In Gleam a block is an expression with a value, so it can sit on the right of a `let`."
+cloze:
+  prompt: Fill in the last expression so the total becomes the block's value.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: "Build a receipt line like `\"pen: 2200\"`. Compute the total inside a `let total = { ... }` block: bind the subtotal (`qty * price`), then add 10% tax (integer division)."
+  hint: "The block's last line, `subtotal + subtotal / 10`, becomes the value of `total`."

@@ -1,0 +1,16 @@
+title: Opaque types
+summary: "`pub opaque type` makes the type public but hides its constructors and field access. Other modules can only build and read values through the defining module's functions (smart constructors)."
+recognize:
+  prompt: "What happens if another module builds the `Percent` above with `Percent(150)`?"
+  choices: ["A `Percent(150)` value is created", "A compile error: an opaque type's constructor can't be used outside its module", "It becomes `Error(Nil)`", "It fails at run time"]
+  feedback:
+    correct: "Right. That's why every `Percent` value goes through the checking `percent` function."
+    choices:
+      0: "`opaque` hides the constructor outside the module, so you can't build a value that skips the check."
+      2: "The range check is what `percent` does. Calling the constructor directly is blocked in the first place."
+      3: Use outside the module is blocked at compile time.
+cloze:
+  prompt: "Imagine you're outside the module: take the integer out of the `Percent` with the public function."
+produce:
+  prompt: "Add two `Percent`s. If the sum is over 100 the result must be `Error(Nil)`, so build it with the checking `percent` instead of the constructor."
+  hint: "Take both values out with `to_int`, add them, and pass the sum to `percent(...)`."

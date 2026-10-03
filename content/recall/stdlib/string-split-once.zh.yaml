@@ -1,0 +1,18 @@
+title: string.split_once
+summary: "在第一次出现分隔符的位置只切一次，返回 `Ok(#(前, 后))`。找不到分隔符时返回 `Error(Nil)`。"
+recognize:
+  prompt: "`string.split_once(\"a:b:c\", \":\")` 的值是？"
+  choices: ["`#(\"a\", \"b:c\")`", "`[\"a\", \"b:c\"]`", "`Ok(#(\"a:b\", \"c\"))`", "`Ok(#(\"a\", \"b:c\"))`"]
+  feedback:
+    correct: 对。在第一个 `:` 处切开，其余部分原样留在后半段。
+    choices:
+      0: "分隔符可能不存在，所以元组会包在 `Result` 里返回。"
+      1: "结果是前后两段组成的元组，不是列表。按每个分隔符切成列表的是 `string.split`。"
+      2: "它在第一个分隔符处切开，而不是最后一个。"
+cloze:
+  prompt: 填空，把字段名和值分开。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: "把 `key = value` 格式的配置行拆成键和值。去掉两边的空格；即使值里还有 `=`，也只在第一个 `=` 处切开。没有 `=` 时返回 `Error(Nil)`。"
+  hint: "用 `case` 匹配结果，在 `Ok(#(key, value))` 分支里对两边调用 `string.trim`。"

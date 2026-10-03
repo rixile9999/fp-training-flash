@@ -1,0 +1,33 @@
+title: Int는 넘치지 않음
+topic: int
+order: 12
+summary: "Erlang에서 `Int`는 크기 제한이 없어서, 아무리 커져도 넘쳐서 음수가 되는 일이 없습니다(JavaScript 대상은 다릅니다)."
+example: |
+  9_223_372_036_854_775_807 + 1  // -> 9223372036854775808
+imports: [gleam/list]
+recognize:
+  prompt: "Erlang 대상에서 `9_223_372_036_854_775_807 + 1`의 값은?"
+  choices: ["`-9223372036854775808`", "`9223372036854775808`", 런타임 오류(overflow)로 멈춤]
+  answer: 1
+  feedback:
+    correct: 맞아요. Erlang의 정수는 필요한 만큼 자리를 늘립니다.
+    choices:
+      0: Java나 C의 64비트 정수처럼 넘쳐서 돌아간 값이에요. Erlang의 `Int`는 넘치지 않습니다.
+      2: 크기 제한이 없으니 overflow 오류도 없어요.
+cloze:
+  prompt: 빈칸을 채워 세 수를 모두 곱하세요.
+  code: "list.fold([1_000_000_000, 1_000_000_000, 1_000_000_000], 1, fn(acc, x) { acc ____ x })"
+  answers: ["*"]
+  expected: "1000000000000000000000000000"
+produce:
+  prompt: "`n!`(1부터 `n`까지의 곱)을 돌려주세요. `0!`은 1입니다."
+  header: "pub fn factorial(n: Int) -> Int"
+  checks: "#(factorial(0), factorial(5), factorial(25))"
+  expected: "#(1, 120, 15511210043330985984000000)"
+  mustUse: ["*"]
+  reference: |
+    case n <= 1 {
+      True -> 1
+      False -> n * factorial(n - 1)
+    }
+  hint: 큰 수를 따로 처리할 필요가 없습니다. 그냥 곱하면 돼요.

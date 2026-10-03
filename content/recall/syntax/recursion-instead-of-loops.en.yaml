@@ -1,0 +1,16 @@
+title: Recursion instead of loops
+summary: Gleam has no `for`, `while` or `break`. You repeat work with recursion (a function calling itself) or with `gleam/list` functions such as `list.map` and `list.fold`.
+recognize:
+  prompt: How do you do the same thing to every element of a list in Gleam?
+  choices: ["`for x in xs { ... }`", "A `while` loop that increments an index", "`xs.forEach(...)`", "Recursion, or functions like `list.map` and `list.each`"]
+  feedback:
+    correct: Right. With no loops, you use recursion or `gleam/list` functions.
+    choices:
+      0: Gleam has no `for` loop.
+      1: There's no `while` either, and lists can't be accessed by index.
+      2: Gleam has no methods. You pass the list as the first argument to a module function.
+cloze:
+  prompt: Fill in the blank to multiply every element by 10 without a loop.
+produce:
+  prompt: Write the body of a function that returns the sum of the digits of a non-negative integer, using recursion instead of a loop. For example, 123 gives 6.
+  hint: A single digit (less than 10) is returned as is. Otherwise add the last digit, `n % 10`, to `digit_sum(n / 10)`.

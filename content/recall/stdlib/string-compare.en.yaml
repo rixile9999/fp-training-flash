@@ -1,0 +1,18 @@
+title: string.compare
+summary: "Compares two strings by character code and returns an `order.Order` (`Lt`, `Eq`, `Gt`). Uppercase comes before lowercase, and digits are compared as characters, not as numbers."
+recognize:
+  prompt: "What is the value of `string.compare(\"a\", \"B\")`?"
+  choices: ["`Lt`", "`Gt`", "`Eq`", "`True`"]
+  feedback:
+    correct: "Right. Uppercase letters have smaller codes, so `\"B\"` comes first and `\"a\"` is greater."
+    choices:
+      0: It does not ignore case the way a dictionary does. By character code, uppercase `B` comes before lowercase `a`.
+      2: "`Eq` means the strings are exactly the same. To ignore case, lowercase both with `string.lowercase` first."
+      3: "`compare` returns `Lt`, `Eq` or `Gt`, not a `Bool`."
+cloze:
+  prompt: Fill in the blank to sort the strings alphabetically.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Sort a list of words alphabetically, ignoring case. Keep the words themselves unchanged.
+  hint: "Inside the compare function, lowercase both words with `string.lowercase`, then compare them."

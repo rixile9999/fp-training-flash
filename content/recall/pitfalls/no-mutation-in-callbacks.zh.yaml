@@ -1,0 +1,15 @@
+title: 回调里不能修改外部变量
+summary: "在回调里写 `let count = count + 1` 并不会改变外部的 `count`。要在遍历中累积值，用 `list.fold` 传递累加器。"
+recognize:
+  prompt: "`{ let count = 0  list.each([1, 2, 3], fn(_) { let count = count + 1  count })  count }` 的值是？"
+  choices: ["`0`", "`3`", "`1`"]
+  feedback:
+    correct: 对。回调里的 `let count` 只是一个新名字，外部的 `count` 仍然是 0。
+    choices:
+      1: "这是像 JavaScript `forEach` 那样以为外部变量被修改了。Gleam 的值不会改变。"
+      2: "回调里每次都算出 `0 + 1`，但这个值不会传到外面，外部的 `count` 仍然是 0。"
+cloze:
+  prompt: 填空，统计元素个数。
+produce:
+  prompt: "用 `list.fold` 统计正数的个数。"
+  hint: 回调返回的值会成为处理下一个元素时的累加器。

@@ -1,0 +1,15 @@
+title: The sign of % follows the left operand
+summary: "`%` is a remainder, so the result takes the sign of the number being divided. `-7 % 2` is `-1`; when the divisor is positive, `int.modulo` gives a result that is never negative."
+recognize:
+  prompt: "What is the value of `-7 % 2`?"
+  choices: ["`1`", "`-1`", "`Ok(-1)`"]
+  feedback:
+    correct: Right. The remainder takes the sign of the left operand, `-7`.
+    choices:
+      0: "That's Python's `%` (floor modulo). In Gleam, `int.modulo(-7, by: 2)` gives that value as `Ok(1)`."
+      2: "The `%` operator returns an `Int` directly. The ones that return a `Result` are `int.remainder` and `int.modulo`."
+cloze:
+  prompt: Fill in the blank to get a non-negative remainder.
+produce:
+  prompt: Decide whether the integer `n` is odd. Negative numbers must work too.
+  hint: "`n % 2 == 1` is wrong for negatives: `-3 % 2` is `-1`."

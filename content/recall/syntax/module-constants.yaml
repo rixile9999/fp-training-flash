@@ -1,0 +1,32 @@
+title: 상수 const
+topic: const
+order: 231
+summary: 모듈 최상위 값은 `const`로 정의해요(최상위 `let`은 없습니다). 상수에는 리터럴 값(숫자, 문자열, 리스트, 튜플, 레코드)과 다른 상수를 쓸 수 있지만, 함수 호출은 쓸 수 없어요.
+example: |
+  max_players * 2  // -> 8
+definitions: |
+  pub const max_players = 4
+
+  pub const vat_percent = 10
+recognize:
+  prompt: 모듈 최상위에 쓸 수 있는 것은?
+  choices: ["`let limit = 10`", "`const limit = int.max(3, 10)`", "`var limit = 10`", "`const limits = [3, 10]`"]
+  answer: 3
+  feedback:
+    correct: 맞아요. 리스트, 튜플, 레코드 같은 리터럴 값은 상수가 될 수 있어요.
+    choices:
+      0: 최상위 `let`은 없어요. 모듈 수준 값은 `const`로 씁니다.
+      1: 상수에는 함수 호출을 쓸 수 없어요("Functions can only be called within other functions").
+      2: Gleam에는 `var`가 없고, 모든 값은 불변이에요.
+cloze:
+  prompt: 빈칸에 상수 이름을 써서 두 팀의 총인원을 구하세요.
+  code: ____ * 2
+  answers: [max_players]
+  expected: "8"
+produce:
+  prompt: 상수 `vat_percent`를 써서 부가세를 더한 가격을 돌려주는 함수 본문을 쓰세요. 정수 나눗셈을 씁니다.
+  header: "pub fn with_vat(price: Int) -> Int"
+  checks: "#(with_vat(1000), with_vat(0), with_vat(55))"
+  expected: "#(1100, 0, 60)"
+  mustUse: [vat_percent]
+  reference: price + price * vat_percent / 100

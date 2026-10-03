@@ -1,0 +1,46 @@
+title: 레코드 갱신 ..
+topic: records
+order: 123
+summary: "`Person(..p, age: 31)`은 `p`를 복사하면서 적은 필드만 바꾼 새 레코드를 만듭니다. 원래 `p`는 그대로예요."
+definitions: |
+  pub type Person {
+    Person(name: String, age: Int)
+  }
+example: |
+  {
+    let p = Person(name: "ann", age: 30)
+    Person(..p, age: 31)
+  }  // -> Person("ann", 31)
+imports: []
+recognize:
+  prompt: "`p: Person`에서 나이만 31로 바꾼 레코드를 만드는 식은?"
+  choices: ["`Person(..p, age: 31)`", "`p.age = 31`", "`{ ...p, age: 31 }`", "`Person(p, age: 31)`"]
+  answer: 0
+  feedback:
+    correct: "맞아요. 생성자 이름, `..p`, 바꿀 필드 순으로 씁니다."
+    choices:
+      1: 필드에 대입하는 문법은 없어요. 레코드는 불변이라 새 레코드를 만듭니다.
+      2: "`...`는 JavaScript의 스프레드예요. Gleam은 생성자 이름과 `..p`를 씁니다."
+      3: "`..` 없이 `p`를 넘기면 `name` 자리에 `Person`을 넣는 셈이라 컴파일 오류예요."
+cloze:
+  prompt: 빈칸을 채워 이름만 바꾼 새 레코드를 만드세요.
+  code: '{ let p = Person(name: "ann", age: 30)  Person(____p, name: "bo") }'
+  answers: [".."]
+  expected: 'Person("bo", 30)'
+predict:
+  prompt: 이 식의 값은?
+  code: |
+    {
+      let p = Person(name: "ann", age: 30)
+      let q = Person(..p, age: 31)
+      p.age + q.age
+    }
+  expected: "61"
+produce:
+  prompt: "나이를 1 올린 `Person`을 돌려주세요. 레코드 갱신 `..`을 쓰세요."
+  header: "pub fn birthday(p: Person) -> Person"
+  checks: '#(birthday(Person("ann", 30)), birthday(Person("bo", 0)), birthday(Person("", -1)))'
+  expected: '#(Person("ann", 31), Person("bo", 1), Person("", 0))'
+  mustUse: [".."]
+  reference: "Person(..p, age: p.age + 1)"
+  hint: "`Person(..p, age: ...)` 모양이고, 새 나이는 `p.age + 1`입니다."

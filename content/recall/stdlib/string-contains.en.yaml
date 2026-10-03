@@ -1,0 +1,18 @@
+title: string.contains
+summary: "Tells you, as a `Bool`, whether the first string (`does:`) contains the second (`contain:`). It is case-sensitive."
+recognize:
+  prompt: "Which expression checks whether the log line `line` contains `\"error\"`?"
+  choices: ["`string.contains(\"error\", line)`", "`list.contains(line, \"error\")`", "`string.contains(line, \"error\")`", "`string.includes(line, \"error\")`"]
+  feedback:
+    correct: "Right. It reads as `does: line, contain: \"error\"`: the text to search comes first, the piece you look for second."
+    choices:
+      0: "It's the other way round. This asks whether `line` appears inside `\"error\"`."
+      1: "`list.contains` looks for an element in a list. `line` is a `String`, so this is a type error."
+      3: "`includes` is the JavaScript name. Gleam has no `string.includes`."
+cloze:
+  prompt: 'Fill in the blank to check whether the sentence contains `"fun"`.'
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: 'From a list of log lines, keep only the lines that contain `"ERROR"`.'
+  hint: "Use `string.contains(line, \"ERROR\")` as the `list.filter` condition."

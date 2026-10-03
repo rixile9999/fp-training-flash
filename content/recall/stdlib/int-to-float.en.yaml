@@ -1,0 +1,16 @@
+title: int.to_float
+summary: "Turns an `Int` into a `Float`. Gleam cannot mix `Int` and `Float` in arithmetic, so convert first when you need floating-point maths, as for an average."
+recognize:
+  prompt: "Which code correctly multiplies `n: Int` by `1.5`?"
+  choices: ["`n * 1.5`", "`n *. 1.5`", "`int.to_float(n) *. 1.5`", "`float(n) *. 1.5`"]
+  feedback:
+    correct: Right. Convert to `Float` first, then use the `Float` operator `*.`.
+    choices:
+      0: "`*` is for `Int` only, so mixing it with a `Float` is a compile error."
+      1: "Both sides of `*.` must be `Float`, and `n` is still an `Int`."
+      3: That is Python-style conversion. Gleam has no `float` function; use `int.to_float`.
+cloze:
+  prompt: Fill in the blank to divide the integer as a float.
+produce:
+  prompt: Return the average of a list of integers as a `Float`. For an empty list, return `0.0`.
+  hint: "Convert the sum (`int.sum`) and the count (`list.length`) with `int.to_float`, then divide with `/.`."

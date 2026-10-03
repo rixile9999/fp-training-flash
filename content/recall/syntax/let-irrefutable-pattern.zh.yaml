@@ -1,0 +1,16 @@
+title: let 模式必须总能匹配
+summary: 普通的 `let` 只能拆解总能匹配的模式（元组、只有一个构造器的记录）。像 `let [x, ..] = xs` 这样可能失败的模式是编译错误，应改用 `case` 或 `let assert`。
+recognize:
+  prompt: 下面哪个能编译？
+  choices: ["`let [first, ..] = xs`", "`let #(a, b) = pair`", "`let Ok(n) = int.parse(s)`", "`let Some(x) = opt`"]
+  feedback:
+    correct: 对。元组模式总能匹配，所以可以用 `let` 拆解。
+    choices:
+      0: 空列表无法匹配，所以是编译错误（"Inexhaustive pattern"）。请用 `case` 或 `let assert`。
+      2: 结果可能是 `Error`，普通 `let` 不行。要处理失败用 `case`，确定不会失败时用 `let assert`。
+      3: 值可能是 `None`，所以是编译错误。
+cloze:
+  prompt: 列表模式可能匹配失败。填空，把空列表也处理好。
+produce:
+  prompt: 写出函数体：从 `#(名字, 分数列表)` 中返回第一个分数，没有分数时返回 0。元组用 `let` 拆解，可能失败的列表模式用 `case` 处理。
+  hint: "`let [first, ..] = scores` 无法编译，因为它匹配不了空列表。"

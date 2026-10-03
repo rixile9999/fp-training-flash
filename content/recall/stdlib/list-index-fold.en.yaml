@@ -1,0 +1,18 @@
+title: list.index_fold
+summary: "Like `list.fold`, but the callback also gets the element's index (from 0). The callback arguments come in the order `fn(accumulator, element, index)`."
+recognize:
+  prompt: "In which order does the `list.index_fold` callback receive its arguments?"
+  choices: ["`fn(acc, x, i)`", "`fn(acc, i, x)`", "`fn(i, acc, x)`", "`fn(x, i)`"]
+  feedback:
+    correct: Right. It's the `fn(acc, x)` of `list.fold` with the index added at the end.
+    choices:
+      1: The index comes after the element, in last place.
+      2: In the fold family, the accumulator is always the first argument.
+      3: Taking only the element and the index, with no accumulator, is the `list.index_map` callback.
+cloze:
+  prompt: Fill in the blank to sum each element multiplied by its index.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Write the body of a function that adds up only the elements at even indexes (0, 2, 4, ...), using `list.index_fold`.
+  hint: The callback looks like `fn(acc, x, i) { ... }`; at an odd index, return `acc` unchanged.

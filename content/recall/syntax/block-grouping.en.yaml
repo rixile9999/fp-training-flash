@@ -1,0 +1,18 @@
+title: Group calculations with braces
+summary: "To group a calculation, use a block `{ }`, not parentheses. `{ 1 + 2 } * 3` is 9."
+recognize:
+  prompt: "How do you write `(a + b) * c` in Gleam?"
+  choices: ["`(a + b) * c`", "`{ a + b } * c`", "`[a + b] * c`", "`a + b * c`"]
+  feedback:
+    correct: Right. In Gleam you group expressions with a brace block.
+    choices:
+      0: "Parentheses don't group expressions in Gleam. You get a syntax error with a hint to use `{ }`."
+      2: "`[a + b]` is a one-element list, and you can't use `*` on a list."
+      3: "`*` binds tighter, so `a + b * c` adds `b * c` to `a`."
+cloze:
+  prompt: Fill in the blank so the addition is computed first.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Compute the average of two integers with integer division. Group the addition so it happens first.
+  hint: "Write `{ a + b } / 2` instead of `(a + b) / 2`."

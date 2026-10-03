@@ -1,0 +1,18 @@
+title: list.filter_map
+summary: Elements for which the callback returns `Ok(value)` are kept as that value; elements that give an `Error` are quietly dropped. It filters and transforms in one go.
+recognize:
+  prompt: "What type must the `list.filter_map` callback return?"
+  choices: ["`Bool`", "`Result(b, e)`", "`Option(b)`", "`List(b)`"]
+  feedback:
+    correct: Right. `Ok(value)` is kept and `Error(_)` is dropped.
+    choices:
+      0: "Filtering with a `Bool` alone is `list.filter`."
+      2: Rust's `filter_map` and Elm's `List.filterMap` use `Option`/`Maybe`, but Gleam uses `Result`.
+      3: Returning a list for each element and joining them is `list.flat_map`.
+cloze:
+  prompt: Fill in the blank to keep only the strings that parse as integers, turned into integers.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Write the body of a function that collects, in order, the ages of the names found in the age dict, using `list.filter_map`. Skip names that aren't there.
+  hint: "`dict.get` already returns a `Result(Int, Nil)`."

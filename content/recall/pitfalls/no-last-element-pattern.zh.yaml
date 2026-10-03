@@ -1,0 +1,15 @@
+title: "没有 [..rest, last] 模式"
+summary: "列表模式只能从前往后匹配。`[..rest, last]` 是语法错误，最后一个元素用 `list.last` 取出（结果是 `Result`）。"
+recognize:
+  prompt: "取出列表 `xs` 最后一个元素的表达式是？"
+  choices: ['`case xs { [..rest, last] -> Ok(last)  [] -> Error(Nil) }`', "`list.last(xs)`", "`xs[-1]`"]
+  feedback:
+    correct: "对。列表为空时得到 `Error(Nil)`，否则得到 `Ok(最后一个元素)`。"
+    choices:
+      0: "`..rest` 只能放在模式的末尾，`[..rest, last]` 是语法错误。"
+      2: 没有 Python 那样的负数索引，Gleam 根本没有索引语法。
+cloze:
+  prompt: 填空，取出最后一个元素。
+produce:
+  prompt: 返回按空格切分后的句子的最后一个单词。
+  hint: "`string.split(\"\", \" \")` 的结果是 `[\"\"]`，所以空句子得到 `Ok(\"\")`。"

@@ -1,0 +1,15 @@
+title: 标签与内部名称
+summary: "在 `fn f(label name: Type)` 中，前面的 `label` 是调用方使用的名字，后面的 `name` 是函数体里使用的名字。"
+recognize:
+  prompt: 在上方 `replace` 的函数体中，指代第一个参数的名字是？
+  choices: ["`in`", "`in.text`", "`in` 和 `text` 都可以", "`text`"]
+  feedback:
+    correct: 对。函数体里使用内部名称 `text`。
+    choices:
+      0: "`in` 是调用方使用的标签，函数体里不能用。"
+      1: 没有这种语法。
+      2: 两者是分开的：标签给调用方用，内部名称给函数体用。
+cloze:
+  prompt: 填入标签，传入原始字符串。
+produce:
+  prompt: 写出函数体：判断 `x` 是否大于等于 `low` 且小于等于 `high`。函数体里必须使用内部名称，而不是标签（`from`、`to`）。

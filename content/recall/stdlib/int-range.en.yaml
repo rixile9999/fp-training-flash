@@ -1,0 +1,18 @@
+title: int.range
+summary: "Calls `run` for each integer from `from` up to, but not including, `to`, folding an accumulator. It does not build a list; it is a fold over a range of integers."
+recognize:
+  prompt: "What does `int.range(from: a, to: b, with: init, run: f)` return?"
+  choices: ["A list of the integers from `a` to `b`, `List(Int)`", "The accumulator, starting from `init` and folded with `f`", "`Nil` (it only loops)", "`Result(List(Int), Nil)`"]
+  feedback:
+    correct: Right. It calls `f(acc, i)` for each integer `i` and returns the final accumulator.
+    choices:
+      0: Unlike Python's `range`, it does not build a list. The result has the type of the accumulator given as `with:`.
+      2: It is not a loop just for side effects; it returns the accumulator that started at `with:`.
+      3: It cannot fail, so it is not wrapped in a `Result`.
+cloze:
+  prompt: Fill in the blank to add up 1 to 4.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: "Return `n!` (the product of 1 to `n`). When `n` is 0, return 1."
+  hint: "`to` is excluded, so run up to `n + 1`; a product starts from 1."

@@ -1,0 +1,18 @@
+title: string.pad_start
+summary: "在字符串开头用 `with:` 字符串填充，直到长度达到 `to:`。如果已经达到或超过这个长度，就原样返回，不会截断。"
+recognize:
+  prompt: "`string.pad_start(\"1234\", to: 3, with: \"0\")` 的值是？"
+  choices: ["`\"234\"`", "`\"0001234\"`", "`\"1234\"`", "`Error(Nil)`"]
+  feedback:
+    correct: 对。它已经有 3 个以上字符，不需要填充，多出的部分也不会被截掉。
+    choices:
+      0: 比目标长的字符串不会被截断。
+      1: "`to:` 是想要的总长度，而不是要补多少个字符。"
+      3: "它不会失败，总是返回 `String`。"
+cloze:
+  prompt: 填空，补成两位数。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: '用小时和分钟生成每部分两位的时间字符串，例如 `"09:05"`。'
+  hint: "用 `let` 写一个把数字变成两位字符串的小函数，调用两次。"

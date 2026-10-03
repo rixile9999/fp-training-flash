@@ -1,0 +1,15 @@
+title: 没有全局内置函数
+summary: "Gleam 没有 `len`、`max`、`print`、`str` 这样的全局内置函数。所有函数都在模块里，要加上模块名调用，例如 `list.length`、`int.max`、`io.println`。"
+recognize:
+  prompt: "求两个整数 `a`、`b` 中较大值的表达式是？"
+  choices: ["`max(a, b)`", "`int.max(a, b)`", "`a.max(b)`", "`math.max(a, b)`"]
+  feedback:
+    correct: 对。整数相关的函数在 `gleam/int` 模块里。
+    choices:
+      0: "没有全局函数 `max`，会报 \"Unknown variable\" 错误。"
+      2: Gleam 没有方法调用。
+      3: "`gleam_stdlib` 没有 `math` 模块，要按类型使用 `int.max`、`float.max`。"
+cloze:
+  prompt: 填入模块名。
+produce:
+  prompt: 返回两个字符串中较长那个的字符数。

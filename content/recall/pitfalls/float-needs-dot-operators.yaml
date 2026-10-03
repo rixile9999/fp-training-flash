@@ -1,0 +1,29 @@
+title: Float 산술은 +. -. *. /.
+topic: float
+order: 1
+summary: "`Float`끼리 계산할 때는 점이 붙은 `+.` `-.` `*.` `/.`를 씁니다. `+`는 `Int` 전용이라 `1.5 + 2.5`는 컴파일 오류예요."
+example: |
+  1.5 +. 2.5 *. 2.0  // -> 6.5
+recognize:
+  prompt: "`price`와 `tax`가 둘 다 `Float`일 때 합을 구하는 식은?"
+  choices: ["`price + tax`", "`price +. tax`", "`price .+ tax`", "`int.to_float(price + tax)`"]
+  answer: 1
+  feedback:
+    correct: 맞아요. `Float` 덧셈은 `+.`입니다.
+    choices:
+      0: "`+`는 `Int` 전용이라 `Float`에 쓰면 타입 오류예요. Gleam은 연산자를 타입별로 따로 둡니다."
+      2: "점은 연산자 뒤에 붙습니다. `.+`는 문법 오류예요."
+      3: "`price + tax`부터 타입 오류이고, `int.to_float`는 `Int`를 받는 함수입니다."
+cloze:
+  prompt: 빈칸에 알맞은 연산자를 채우세요.
+  code: "1.5 ____ 2.5"
+  answers: ["+."]
+  expected: "4.0"
+produce:
+  prompt: 가격 `price`에 세율 `rate`만큼 세금을 더한 금액을 돌려주세요.
+  header: "pub fn with_tax(price: Float, rate: Float) -> Float"
+  checks: "#(with_tax(100.0, 0.25), with_tax(8.0, 0.5), with_tax(20.0, 0.0))"
+  expected: "#(125.0, 12.0, 20.0)"
+  mustUse: ["+.", "*."]
+  reference: "price +. price *. rate"
+  hint: 곱셈도 `*.`입니다.

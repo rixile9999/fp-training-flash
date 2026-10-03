@@ -1,0 +1,38 @@
+title: 타입 별칭
+topic: type-aliases
+order: 126
+summary: "`pub type Cents = Int`는 기존 타입에 다른 이름을 붙일 뿐입니다. 새 타입이 아니라서 `Int`와 완전히 바꿔 쓸 수 있어요."
+definitions: |
+  pub type Cents =
+    Int
+example: |
+  {
+    let price: Cents = 1500
+    price + 500
+  }  // -> 2000
+imports: []
+recognize:
+  prompt: "`pub type UserId = Int`이고 `fn find(id: UserId)`일 때 `find(7)`은?"
+  choices: ["컴파일됩니다. `UserId`는 `Int`의 다른 이름입니다", "타입 오류: `UserId(7)`로 감싸야 합니다", "타입 오류: `7`을 `UserId`로 변환해야 합니다", "실행할 때 검사합니다"]
+  answer: 0
+  feedback:
+    correct: "맞아요. 별칭은 새 타입을 만들지 않아서 `Int` 값을 그대로 넘길 수 있습니다."
+    choices:
+      1: "`UserId(7)`처럼 감싸는 건 생성자가 있는 사용자 정의 타입이에요. 별칭에는 생성자가 없습니다."
+      2: 별칭은 새 타입을 만들지 않아서 변환이 필요 없어요.
+      3: "타입 검사는 컴파일할 때 해요. 별칭은 `Int`와 같은 타입으로 취급됩니다."
+cloze:
+  prompt: "빈칸에 타입을 넣으세요. 별칭 `Cents`와 `Int` 모두 됩니다."
+  code: "{ let id: ____ = 41  id + 1 }"
+  answers: [Cents, Int]
+  expected: "42"
+produce:
+  prompt: "가격에 10% 세금(정수 나눗셈)을 더하세요. 세금은 `let tax: Cents = ...`처럼 별칭 타입을 적어 바인딩하세요."
+  header: "pub fn with_tax(price: Cents) -> Cents"
+  checks: "#(with_tax(1000), with_tax(0), with_tax(55))"
+  expected: "#(1100, 0, 60)"
+  mustUse: [": Cents"]
+  reference: |
+    let tax: Cents = price / 10
+    price + tax
+  hint: "`Cents`는 `Int`라서 `/`, `+`를 그대로 쓸 수 있어요."

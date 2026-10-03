@@ -1,0 +1,18 @@
+title: string.pad_start
+summary: "Fills the start of a string with the `with:` string until it is `to:` characters long. If it is already that long or longer, it is left as is, not cut."
+recognize:
+  prompt: "What is the value of `string.pad_start(\"1234\", to: 3, with: \"0\")`?"
+  choices: ["`\"234\"`", "`\"0001234\"`", "`\"1234\"`", "`Error(Nil)`"]
+  feedback:
+    correct: Right. It is already 3 or more characters, so there is nothing to fill, and nothing is cut off either.
+    choices:
+      0: It never cuts a string that is longer than the target.
+      1: "`to:` is the total length you want, not the number of characters to add."
+      3: "It never fails; it always returns a `String`."
+cloze:
+  prompt: Fill in the blank to make it two digits.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: 'Build a time string from hours and minutes, two digits each, like `"09:05"`.'
+  hint: "Write a small `let` function that turns one number into a two-digit string, and use it twice."

@@ -1,0 +1,18 @@
+title: list.try_map
+summary: Applies a function that returns a `Result` to every element. If all succeed you get `Ok(list)`; if any fails you get the first `Error` it hits.
+recognize:
+  prompt: "What is the value of `list.try_map([\"1\", \"x\", \"3\"], int.parse)`?"
+  choices: ["`Ok([1, 3])`", "`[Ok(1), Error(Nil), Ok(3)]`", "`Error(Nil)`", "`Ok([1, 0, 3])`"]
+  feedback:
+    correct: Right. `int.parse` fails on `"x"`, so that `Error(Nil)` becomes the whole result.
+    choices:
+      0: Skipping failed elements and keeping only the successes is `list.filter_map`.
+      1: "Getting a list of `Result`s as is would be `list.map(xs, int.parse)`. `try_map` combines them into a single `Result`."
+      3: Failures aren't replaced with a default. If any element fails, the whole result is an `Error`.
+cloze:
+  prompt: Fill in the blank to turn every string into an integer.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Write the body of a function that turns scores given as strings into a list of integers, using `list.try_map`. If any of them isn't an integer, return `Error(Nil)`.
+  hint: "`int.parse` already has the shape `String -> Result(Int, Nil)`."

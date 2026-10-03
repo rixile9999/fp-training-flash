@@ -1,0 +1,15 @@
+title: Float comparison is <. >.
+summary: "Comparing `Float`s also uses dotted operators: `<.` `>.` `<=.` `>=.`. Only `==` and `!=` work unchanged on every type."
+recognize:
+  prompt: "Which expression checks whether the `Float` `a` is less than `b`?"
+  choices: ["`a < b`", "`a <. b`", "`float.less(a, b)`", "`a.lt(b)`"]
+  feedback:
+    correct: Right. `Float` comparison is `<.`.
+    choices:
+      0: "`<` only works on `Int`, so using it on `Float`s is a type error."
+      2: "There's no such function. If you need an `Order`, use `float.compare(a, b)`."
+      3: Gleam has no method calls.
+cloze:
+  prompt: Fill in the comparison operator.
+produce:
+  prompt: Return `True` when the body temperature `temp` is above 37.5.

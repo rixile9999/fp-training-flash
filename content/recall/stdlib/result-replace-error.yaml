@@ -1,0 +1,35 @@
+title: result.replace_error
+topic: gleam/result
+order: 13
+summary: "`Error` 안의 값을 주어진 값으로 바꾸고 `Ok`는 그대로 둡니다. `int.parse`의 `Error(Nil)`처럼 정보 없는 오류에 뜻 있는 오류를 붙일 때 씁니다."
+example: |
+  result.replace_error(int.parse("x"), "not a number")  // -> Error("not a number")
+imports: [gleam/int, gleam/result]
+signature: "result.replace_error(Result(a, b), c) -> Result(a, c)"
+frequency: 15
+recognize:
+  prompt: "`result.replace_error(r, ?)`의 두 번째 인자는?"
+  choices: ["새 오류 값 (예: `\"bad input\"`)", "오류를 바꾸는 함수 `fn(e) { ... }`", "`Error`일 때 대신 쓸 성공 값"]
+  answer: 0
+  feedback:
+    correct: 맞아요. 값 하나를 받아 원래 오류를 버리고 그 값으로 바꿉니다.
+    choices:
+      1: 함수를 받아 원래 오류를 바꾸는 것은 `result.map_error`예요.
+      2: 기본값을 받아 `Result`를 벗겨 내는 것은 `result.unwrap`입니다. `replace_error`는 여전히 `Result`를 돌려줘요.
+cloze:
+  prompt: 빈칸을 채워 파싱 오류에 메시지를 붙이세요.
+  code: 'int.parse("x") |> result.____("not a number")'
+  answers: [replace_error]
+  expected: 'Error("not a number")'
+predict:
+  prompt: 이 식의 값은?
+  code: 'result.replace_error(Ok(1), "bad")'
+  expected: "Ok(1)"
+produce:
+  prompt: 나이 문자열을 정수로 파싱하세요. 실패하면 `Error("invalid age")`를 돌려주세요.
+  header: "pub fn parse_age(s: String) -> Result(Int, String)"
+  checks: '#(parse_age("30"), parse_age("abc"), parse_age(""), parse_age("-1"))'
+  expected: '#(Ok(30), Error("invalid age"), Error("invalid age"), Ok(-1))'
+  mustUse: [result.replace_error]
+  reference: 'int.parse(s) |> result.replace_error("invalid age")'
+  hint: "`int.parse(s)`의 결과를 파이프로 `result.replace_error`에 넘기세요."

@@ -1,0 +1,42 @@
+title: 리스트 앞에 붙이기
+topic: lists
+order: 115
+summary: "`[x, ..rest]`는 리스트 `rest` 앞에 `x`를 붙인 새 리스트입니다. 앞에 붙이기는 O(1)이고 원래 리스트는 그대로예요."
+example: |
+  {
+    let xs = [2, 3]
+    [1, ..xs]
+  }  // -> [1, 2, 3]
+imports: []
+recognize:
+  prompt: "리스트 `xs` 앞에 0을 붙이는 Gleam 식은?"
+  choices: ["`[0, ..xs]`", "`[..xs, 0]`", "`0 :: xs`", "`[0] + xs`"]
+  answer: 0
+  feedback:
+    correct: "맞아요. `..xs`는 항상 리스트의 맨 끝에 옵니다."
+    choices:
+      1: "`..xs`는 맨 끝에만 올 수 있어 문법 오류예요. 뒤에 붙이려면 `list.append(xs, [0])`을 씁니다."
+      2: "`::`는 OCaml이나 F#의 표기예요."
+      3: "`+`는 Int 전용이에요. 리스트를 이을 때는 `list.append`를 씁니다."
+cloze:
+  prompt: 빈칸을 채워 리스트 앞에 `"a"`를 붙이세요.
+  code: '["a", ____["b", "c"]]'
+  answers: [".."]
+  expected: '["a", "b", "c"]'
+predict:
+  prompt: 이 식의 값은?
+  code: |
+    {
+      let xs = [2, 3]
+      let ys = [1, ..xs]
+      xs
+    }
+  expected: "[2, 3]"
+produce:
+  prompt: "CSV 행 리스트 맨 앞에 머리글 `\"name,age\"`를 붙이세요."
+  header: "pub fn with_header(rows: List(String)) -> List(String)"
+  checks: '#(with_header(["ann,30"]), with_header([]), with_header(["a,1", "b,2"]))'
+  expected: '#(["name,age", "ann,30"], ["name,age"], ["name,age", "a,1", "b,2"])'
+  mustUse: [".."]
+  reference: '["name,age", ..rows]'
+  hint: "`[새 원소, ..rows]` 모양입니다."

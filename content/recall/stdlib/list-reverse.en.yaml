@@ -1,0 +1,18 @@
+title: list.reverse
+summary: Returns a new list with the elements in the opposite order. You often use it once at the end, after collecting results by prepending with `[x, ..acc]`.
+recognize:
+  prompt: "In a recursion you collected `acc` by prepending, as in `[x, ..acc]`. What do you do at the end to get the elements back in the order you added them?"
+  choices: ["`list.reverse(acc)`", "`list.sort(acc, int.compare)`", "`string.reverse(acc)`", "Nothing: the insertion order is already kept"]
+  feedback:
+    correct: Right. Prepending stacks the elements in reverse, so you flip them once at the end with `list.reverse`.
+    choices:
+      1: Sorting orders by value; it doesn't restore the order you added things in.
+      2: "`string.reverse` reverses a `String`, so using it on a list is a type error."
+      3: "`[x, ..acc]` puts each new element at the front, so the collected order ends up reversed."
+cloze:
+  prompt: Fill in the blank to reverse the list.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Write the body of a function that checks whether a list reads the same forwards and backwards (a palindrome), using `list.reverse`.
+  hint: Lists can be compared with `==` too.

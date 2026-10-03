@@ -1,0 +1,15 @@
+title: int.to_string
+summary: "把整数转成十进制字符串。Gleam 没有隐式类型转换，所以用 `<>` 拼接之前要自己转换。"
+recognize:
+  prompt: "把 `Int` 值 `3` 接在字符串 `\"n=\"` 后面，正确的写法是？"
+  choices: ["`\"n=\" <> 3`", "`\"n=\" <> int.to_string(3)`", "`\"n=\" + 3`", "`\"n=\" <> string.from_int(3)`"]
+  feedback:
+    correct: 对。`<>` 两边都必须是 `String`，所以先用 `int.to_string` 转换。
+    choices:
+      0: 没有隐式类型转换，这会产生编译错误。`<>` 两边都必须是 `String`。
+      2: "`+` 只用于 `Int` 加法。字符串拼接用 `<>`。"
+      3: "没有 `string.from_int` 这个函数。转换函数放在原类型的模块 `gleam/int` 里。"
+cloze:
+  prompt: 填空，把整数转成字符串。
+produce:
+  prompt: 接收数量和商品名，生成形如 `"3 x apple"` 的字符串。

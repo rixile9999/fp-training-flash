@@ -1,0 +1,16 @@
+title: string.replace replaces every match
+summary: "`string.replace` replaces every match, not just the first. Expecting only the first one to change, as with JavaScript's `replace`, gives the wrong answer."
+recognize:
+  prompt: "What is the value of `string.replace(\"1,000,000\", each: \",\", with: \"\")`?"
+  choices: ['`"1000,000"`', '`"1000000"`', '`Ok("1000000")`']
+  feedback:
+    correct: Right. Every comma is removed.
+    choices:
+      0: "That replaces only the first match, like JavaScript's `replace`. Gleam replaces them all."
+      2: "It can't fail, so it returns a `String` directly."
+cloze:
+  prompt: Fill in the blank to turn every `-` into `_`.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: "Make a URL-friendly name: lower-case the title and turn every space into `-`."

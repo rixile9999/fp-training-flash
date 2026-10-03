@@ -1,0 +1,36 @@
+title: null 대신 Option
+topic: "null"
+order: 232
+summary: Gleam에는 `null`, `nil`, `undefined`가 없어요. 값이 없을 수 있다면 타입에 `Option`으로 드러내고, 쓰는 쪽이 `None`을 반드시 처리합니다.
+example: |
+  let middle: Option(String) = None
+  option.unwrap(middle, "-")  // -> "-"
+imports: ["gleam/option.{type Option, None, Some}"]
+recognize:
+  prompt: 없을 수도 있는 중간 이름 필드의 타입으로 알맞은 것은?
+  choices: ["`String` (없으면 `null`)", "`String` (없으면 `Nil`)", "`Option(String)`", "`String?`"]
+  answer: 2
+  feedback:
+    correct: 맞아요. 없을 수 있다는 사실이 타입에 드러나서 컴파일러가 `None` 처리를 확인합니다.
+    choices:
+      0: Gleam에는 `null`이 없어요. 쓰면 알 수 없는 이름이라는 컴파일 오류가 납니다.
+      1: "`Nil`은 `Nil` 타입의 값이라 `String` 자리에 넣을 수 없어요."
+      3: 물음표를 붙인 nullable 타입(Kotlin, Swift)은 Gleam에 없어요.
+cloze:
+  prompt: 빈칸에 타입 이름을 채우세요.
+  code: |-
+    let middle: ____(String) = None
+    option.unwrap(middle, "-")
+  answers: [Option]
+  expected: '"-"'
+produce:
+  prompt: 이름이 정확히 세 부분이면 가운데 부분을 `Some`으로, 아니면 `None`을 돌려주는 함수 본문을 쓰세요.
+  header: "pub fn middle_name(parts: List(String)) -> Option(String)"
+  checks: '#(middle_name(["Kim", "Min", "Su"]), middle_name(["Ann", "Lee"]), middle_name([]), middle_name(["a", "b", "c", "d"]))'
+  expected: '#(Some("Min"), None, None, None)'
+  mustUse: ["Some(", None]
+  reference: |-
+    case parts {
+      [_, middle, _] -> Some(middle)
+      _ -> None
+    }

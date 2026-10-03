@@ -1,0 +1,40 @@
+title: string.slice
+topic: gleam/string
+order: 50
+summary: "`at_index`(0부터, 글자 단위)에서 시작해 `length` 글자를 잘라냅니다. 세 번째 인자는 끝 위치가 아니라 길이이고, 음수 인덱스는 끝에서부터 셉니다."
+example: |
+  string.slice("gleam", at_index: 1, length: 3)  // -> "lea"
+imports: [gleam/string]
+signature: "string.slice(from: String, at_index: Int, length: Int) -> String"
+frequency: 2
+recognize:
+  prompt: "`string.slice(\"abcdef\", 2, 3)`의 값은?"
+  choices: ["`\"c\"`", "`\"bcd\"`", "`Ok(\"cde\")`", "`\"cde\"`"]
+  answer: 3
+  feedback:
+    correct: 맞아요. 인덱스 2(`c`)부터 3글자를 잘라냅니다.
+    choices:
+      0: "세 번째 인자는 끝 인덱스가 아니라 길이예요. JavaScript의 `slice(2, 3)`과 다릅니다."
+      1: 인덱스는 1이 아니라 0부터 셉니다.
+      2: "범위를 벗어나도 실패하지 않고 `String`을 바로 돌려줘요. 벗어난 부분은 그냥 빠집니다."
+cloze:
+  prompt: 빈칸을 채워 날짜에서 월을 꺼내세요.
+  code: 'string.____("2026-10-03", 5, 2)'
+  answers: [slice]
+  expected: '"10"'
+predict:
+  prompt: 이 식의 값은?
+  code: 'string.slice("gleam", -3, 2)'
+  expected: '"ea"'
+produce:
+  prompt: '제목이 `n`글자보다 길면 앞의 `n`글자만 남기고 `"..."`를 붙이세요. 길지 않으면 그대로 둡니다.'
+  header: "pub fn shorten(title: String, n: Int) -> String"
+  checks: '#(shorten("functional", 3), shorten("hi", 5), shorten("gleam", 5), shorten("", 0))'
+  expected: '#("fun...", "hi", "gleam", "")'
+  mustUse: [string.slice]
+  reference: |-
+    case string.length(title) > n {
+      True -> string.slice(title, 0, n) <> "..."
+      False -> title
+    }
+  hint: "`string.length`로 길이를 비교하고, 길 때만 `string.slice(title, 0, n)`을 쓰세요."

@@ -1,0 +1,18 @@
+title: list.index_map
+summary: "和 `list.map` 一样，但回调还会收到从 0 开始的索引。回调参数的顺序是 `fn(元素, 索引)`。"
+recognize:
+  prompt: "`list.index_map` 回调的参数顺序和索引起始值是？"
+  choices: ["`fn(x, i)`，从 0 开始", "`fn(i, x)`，从 0 开始", "`fn(x, i)`，从 1 开始", "`fn(acc, x, i)`，从 0 开始"]
+  feedback:
+    correct: 对。元素在前，索引在后，索引从 0 开始数。
+    choices:
+      1: Elm 的 `List.indexedMap` 是索引在前，但 Gleam 是元素在前。
+      2: 索引从 0 开始。想从 1 开始编号，就用 `i + 1`。
+      3: 还接收累加器的是 `list.index_fold`。
+cloze:
+  prompt: 填空，给每个元素加上它的索引。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: '用 `list.index_map` 写出函数体：给每一项从 1 开始编号，生成 `"1. milk"` 这样的行。'
+  hint: 索引从 0 开始，所以要用 `int.to_string(i + 1)`。

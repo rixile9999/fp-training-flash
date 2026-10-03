@@ -1,0 +1,16 @@
+title: 用 Result 代替异常
+summary: Gleam 没有 `try`/`catch`/`throw`。失败以 `Result` 返回，由调用方处理。`panic` 和 `let assert` 是无法捕获的崩溃。
+recognize:
+  prompt: "`panic` 引起的崩溃能在同一个函数里捕获并处理吗？"
+  choices: ["能，用 `try { ... } catch`", "能，用 `rescue`", "能，用 `case`", "不能。可以预料的失败用 `Result` 返回"]
+  feedback:
+    correct: 对。需要处理的失败作为 `Result` 值返回，崩溃只用于 bug。
+    choices:
+      0: Gleam 没有 `try`/`catch`。
+      1: "`rescue` 是 Ruby 或 Elixir 的语法。"
+      2: "`case` 只是按值分支，不能捕获崩溃。"
+cloze:
+  prompt: 填入类型名。解析不会抛出异常，而是返回这种类型的值。
+produce:
+  prompt: 写出函数体：从余额中取出 `amount`，用 `Ok` 返回新的余额。金额大于余额时不抛出异常，而是返回 `Error("insufficient funds")`。
+  hint: 在其他语言会抛出异常的地方返回 `Error(...)`。取出与余额相等的金额是允许的。

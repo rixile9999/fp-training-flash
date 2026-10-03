@@ -1,0 +1,33 @@
+title: 0.0으로 나누면 0.0
+topic: float
+order: 4
+summary: "`x /. 0.0`은 예외도 `Infinity`도 아닌 `0.0`입니다. 0으로 나눈 경우를 구분하려면 `Result`를 돌려주는 `float.divide`를 씁니다."
+example: |
+  1.0 /. 0.0  // -> 0.0
+imports: [gleam/float]
+recognize:
+  prompt: "`1.0 /. 0.0`의 값은?"
+  choices: ["`Infinity`", "`0.0`", 런타임 오류로 멈춤, "`NaN`"]
+  answer: 1
+  feedback:
+    correct: 맞아요. Gleam은 0으로 나누면 `0.0`을 돌려줍니다.
+    choices:
+      0: "JavaScript와 달리 `Infinity`가 되지 않아요."
+      2: 예외를 던지지 않고 값 `0.0`을 돌려줍니다. 그래서 실수를 알아채기 어려워요.
+      3: "`NaN`도 나오지 않습니다. 결과는 `0.0`이에요."
+cloze:
+  prompt: 빈칸을 채워 0으로 나누기를 `Error`로 받으세요.
+  code: "float.____(1.0, by: 0.0)"
+  answers: [divide]
+  expected: "Error(Nil)"
+predict:
+  prompt: 이 식의 값은?
+  code: "10.0 /. 0.0 +. 1.0"
+  expected: "1.0"
+produce:
+  prompt: "`part`가 `whole`에서 차지하는 비율을 돌려주세요. `whole`이 0이면 `Error(Nil)`입니다."
+  header: "pub fn ratio(part: Float, whole: Float) -> Result(Float, Nil)"
+  checks: "#(ratio(1.0, 4.0), ratio(3.0, 0.0), ratio(0.0, 2.0))"
+  expected: "#(Ok(0.25), Error(Nil), Ok(0.0))"
+  mustUse: [float.divide]
+  reference: "float.divide(part, by: whole)"

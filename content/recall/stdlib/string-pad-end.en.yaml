@@ -1,0 +1,18 @@
+title: string.pad_end
+summary: "Fills the end of a string with the `with:` string until it is `to:` characters long. Handy for lining up columns, like in a table."
+recognize:
+  prompt: "Which expression pads `\"Ada\"` with spaces at the end to get `\"Ada   \"`, 6 characters long?"
+  choices: ["`string.pad_start(\"Ada\", to: 6, with: \" \")`", "`string.pad_end(\"Ada\", to: 6, with: \" \")`", "`string.pad_end(\"Ada\", to: 3, with: \" \")`", "`string.pad_end(\"Ada\", \" \", 6)`"]
+  feedback:
+    correct: "Right. `pad_end` fills the end, and `to:` is the total length you want."
+    choices:
+      0: "`pad_start` fills the start, giving `\"   Ada\"`."
+      2: "`to:` is the total length, not how much to add. `\"Ada\"` is already 3 characters, so it stays `\"Ada\"`."
+      3: "Without labels the order is the string, the length (`Int`), then the fill string. This order is a type error."
+cloze:
+  prompt: Fill in the blank to fill the end with `-`.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Build one row of a score table. Pad the name with spaces to 8 characters, then append the score. Names longer than 8 characters are not cut.
+  hint: "Pad the name with `to: 8`, then attach the score string with `<>`."

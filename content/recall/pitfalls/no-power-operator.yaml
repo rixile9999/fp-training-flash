@@ -1,0 +1,36 @@
+title: 거듭제곱 연산자는 없음
+topic: float
+order: 7
+summary: "`**`나 `^` 같은 거듭제곱 연산자는 없습니다. `int.power(밑, of: 지수)`나 `float.power`를 쓰는데, 지수는 `Float`이고 결과는 `Result(Float, Nil)`이에요."
+example: |
+  int.power(2, of: 10.0)  // -> Ok(1024.0)
+imports: [gleam/float, gleam/int, gleam/result]
+recognize:
+  prompt: "`int.power(2, of: 10.0)`의 값은?"
+  choices: ["`1024`", "`Ok(1024.0)`", "`1024.0`", "`Ok(1024)`"]
+  answer: 1
+  feedback:
+    correct: 맞아요. 결과는 `Float`이고, 실패할 수 있어서 `Result`로 감쌉니다.
+    choices:
+      0: "Python `2 ** 10`의 결과예요. Gleam의 `int.power`는 `Int`를 돌려주지 않습니다."
+      2: "음수의 분수 거듭제곱처럼 계산할 수 없는 경우가 있어서 `Result`로 감싸 돌려줘요."
+      3: "결과는 `Int`가 아니라 `Float`입니다."
+cloze:
+  prompt: 빈칸을 채워 3의 제곱을 구하세요.
+  code: "int.____(3, of: 2.0)"
+  answers: [power]
+  expected: "Ok(9.0)"
+predict:
+  prompt: 이 식의 값은?
+  code: "float.power(-8.0, of: 0.5)"
+  expected: "Error(Nil)"
+produce:
+  prompt: "원금 `amount`가 해마다 `rate`의 비율로 `years`년 동안 복리로 불어난 금액을 돌려주세요."
+  header: "pub fn grow(amount: Float, rate: Float, years: Int) -> Float"
+  checks: "#(grow(100.0, 1.0, 3), grow(100.0, 0.5, 2), grow(50.0, 0.1, 0))"
+  expected: "#(800.0, 225.0, 50.0)"
+  mustUse: [float.power]
+  reference: |
+    let factor = float.power(1.0 +. rate, of: int.to_float(years)) |> result.unwrap(1.0)
+    amount *. factor
+  hint: "지수도 `Float`여야 하니 `int.to_float(years)`로 바꾸고, `Result`는 `result.unwrap`으로 풉니다."

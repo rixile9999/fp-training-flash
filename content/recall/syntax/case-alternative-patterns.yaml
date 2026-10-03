@@ -1,0 +1,43 @@
+title: 대안 패턴 |
+topic: case
+order: 203
+summary: 한 분기에 `|`로 패턴을 여러 개 나열하면 그중 하나만 맞아도 그 분기가 실행돼요.
+example: |
+  let day = "sun"
+  case day {
+    "sat" | "sun" -> "weekend"
+    _ -> "weekday"
+  }  // -> "weekend"
+recognize:
+  prompt: 값이 1, 2, 3 중 하나일 때 맞는 분기는 어떻게 쓰나요?
+  choices: ["`1 || 2 || 3 ->`", "`1 | 2 | 3 ->`", "`1, 2, 3 ->`", "`[1, 2, 3] ->`"]
+  answer: 1
+  feedback:
+    correct: 맞아요. 패턴 사이에 `|`를 넣으면 그중 하나만 맞아도 됩니다.
+    choices:
+      0: "`||`는 Bool의 '또는' 연산자라 패턴에 쓸 수 없어요."
+      2: 쉼표는 `case a, b, c`처럼 값을 여러 개 맞출 때 패턴을 구분합니다.
+      3: 원소가 정확히 1, 2, 3인 리스트와 맞는 패턴이에요.
+cloze:
+  prompt: 빈칸을 채워 토요일과 일요일을 한 분기로 묶으세요.
+  code: |-
+    let day = "sat"
+    case day {
+      "sat" ____ "sun" -> "weekend"
+      _ -> "weekday"
+    }
+  answers: ["|"]
+  expected: '"weekend"'
+produce:
+  prompt: HTTP 메서드를 종류로 나누는 함수 본문을 대안 패턴으로 쓰세요. `"GET"`, `"HEAD"`는 `"read"`, `"POST"`, `"PUT"`, `"PATCH"`, `"DELETE"`는 `"write"`, 그 밖은 `"unknown"`입니다.
+  header: "pub fn method_kind(method: String) -> String"
+  checks: '#(method_kind("GET"), method_kind("HEAD"), method_kind("DELETE"), method_kind("PUT"), method_kind("get"), method_kind(""))'
+  expected: '#("read", "read", "write", "write", "unknown", "unknown")'
+  mustUse: [case, "|"]
+  reference: |-
+    case method {
+      "GET" | "HEAD" -> "read"
+      "POST" | "PUT" | "PATCH" | "DELETE" -> "write"
+      _ -> "unknown"
+    }
+  hint: 분기는 세 개면 충분해요. 대소문자는 구분합니다.

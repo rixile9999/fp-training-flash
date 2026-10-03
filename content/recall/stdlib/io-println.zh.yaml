@@ -1,0 +1,15 @@
+title: io.println
+summary: "把一个字符串写到标准输出并换行。它只接收 `String`，返回 `Nil`。"
+recognize:
+  prompt: "`io.println(42)` 会怎样？"
+  choices: ["输出 `42` 并换行", "产生编译错误", "返回字符串 `\"42\"`"]
+  feedback:
+    correct: 对。`io.println` 只接收 `String`，要先像 `io.println(int.to_string(42))` 这样转换。
+    choices:
+      0: 没有隐式类型转换。传入 `Int` 类型不匹配，无法编译。
+      2: "`io.println` 只负责输出，返回 `Nil`。"
+cloze:
+  prompt: 填空，把问候语写到标准输出并换行。
+produce:
+  prompt: "接收名字和分数，像 `ann: 90` 这样输出成一行。"
+  hint: "先用 `int.to_string` 转换分数，再用 `<>` 拼接。"

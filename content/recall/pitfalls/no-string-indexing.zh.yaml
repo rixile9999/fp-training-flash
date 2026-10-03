@@ -1,0 +1,17 @@
+title: 字符串没有 s[0]
+summary: "字符串也没有 `s[0]` 这样的索引。第一个字符用 `string.first`（结果是 `Result`）取出，第 i 个字符用 `string.slice(s, i, 1)`，两者都按字符（字素）计数。"
+recognize:
+  prompt: "取出字符串 `s` 第一个字符的表达式是？"
+  choices: ["`s[0]`", "`string.first(s)`", "`s.charAt(0)`", "`string.get(s, 0)`"]
+  feedback:
+    correct: 对。字符串可能为空，所以返回 `Result(String, Nil)`。
+    choices:
+      0: "Gleam 没有索引语法。"
+      2: Gleam 没有方法调用。
+      3: "没有 `string.get`。第 i 个字符用 `string.slice(s, i, 1)` 取出。"
+cloze:
+  prompt: 填空，取出位置 2（从 0 数起）的字符。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: "单词以英文小写元音（a、e、i、o、u）开头时返回 `True`。空单词返回 `False`。"

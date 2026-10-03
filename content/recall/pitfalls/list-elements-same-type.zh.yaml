@@ -1,0 +1,16 @@
+title: 列表元素必须是同一类型
+summary: "列表中的所有元素必须是同一类型。`[\"ann\", 30]` 是类型错误，要把不同类型的值放在一起，用元组 `#(\"ann\", 30)` 或记录。"
+recognize:
+  prompt: "把名字（`String`）和年龄（`Int`）组合成一个值的表达式是？"
+  choices: ['`["ann", 30]`', '`#("ann", 30)`', '`("ann", 30)`', '`{"ann", 30}`']
+  feedback:
+    correct: 对。元组可以把固定数量、类型不同的值组合在一起。
+    choices:
+      0: "和 Python、JavaScript 不同，列表里不能混合 `String` 和 `Int`，所以是类型错误。"
+      2: "这是 Python 的元组语法。在 Gleam 中圆括号不能创建元组。"
+      3: "这是 Erlang 或 Elixir 的元组语法。在 Gleam 中 `{ }` 是代码块，所以是语法错误。"
+cloze:
+  prompt: 填空，创建一个元组。
+produce:
+  prompt: "把每个单词变成元组 `#(单词, 字符数)`，以列表返回。"
+  hint: "像 `[w, string.length(w)]` 这样用列表组合会类型错误。"

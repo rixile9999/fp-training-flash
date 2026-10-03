@@ -1,0 +1,18 @@
+title: No index access on lists
+summary: "Lists have no index access like `xs[0]`. Get the first element with the pattern `[first, ..]` or with `list.first`."
+recognize:
+  prompt: "Which is a correct way to get the first element of `xs: List(Int)`?"
+  choices: ["`xs[0]`", "`xs.0`", "`case xs { [first, ..] -> ... [] -> ... }`", "`xs.first`"]
+  feedback:
+    correct: "Right. The pattern `[first, ..]` takes the first element, and the empty list `[]` is handled too."
+    choices:
+      0: "There is no index syntax. `xs[0]` is read as `xs` followed by a separate list `[0]`, which leads to confusing warnings or errors."
+      1: "`.0` reads a tuple element. It doesn't work on lists."
+      3: "Lists have no fields. There is a function, `list.first(xs)`, and it returns a `Result`."
+cloze:
+  prompt: Fill in the blank to complete a pattern that ignores the remaining elements.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: "Instead of `xs[1]`, take the second element with a list pattern. If the list has fewer than two elements, return `default`."
+  hint: "`[_, second, ..]` matches lists with two or more elements."

@@ -1,0 +1,16 @@
+title: result.unwrap
+summary: "是 `Ok` 就返回里面的值，是 `Error` 就返回 `or:` 给出的默认值。错误内容会被丢弃，所以只在默认值足够时使用。"
+recognize:
+  prompt: "已知 `r: Result(Int, String)`，`result.unwrap(r, or: 0)` 的类型是？"
+  choices: ["`Int`", "`Result(Int, String)`", "`Option(Int)`", "`String`"]
+  feedback:
+    correct: 对。它拆掉 `Result`，返回 `Ok` 一侧的类型，所以默认值也必须是 `Int`。
+    choices:
+      1: "`unwrap` 会拆掉 `Result`。想保留 `Result` 并改变里面的值，用 `result.map`。"
+      2: "把 `Result` 转成 `Option` 的是 `option.from_result`。"
+      3: 错误值 `String` 被丢弃了。结果是 `Ok` 一侧的类型 `Int`。
+cloze:
+  prompt: 填空，让解析失败时得到 0。
+produce:
+  prompt: 把网址里的页码字符串转成整数。不是数字时按第 1 页处理。
+  hint: "把 `int.parse(s)` 的结果交给 `result.unwrap`，默认值给 1。"

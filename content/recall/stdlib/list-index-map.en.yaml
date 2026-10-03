@@ -1,0 +1,18 @@
+title: list.index_map
+summary: "Like `list.map`, but the callback also gets the element's index, starting at 0. The callback arguments come in the order `fn(element, index)`."
+recognize:
+  prompt: "In which order does the `list.index_map` callback take its arguments, and where does the index start?"
+  choices: ["`fn(x, i)`, from 0", "`fn(i, x)`, from 0", "`fn(x, i)`, from 1", "`fn(acc, x, i)`, from 0"]
+  feedback:
+    correct: Right. The element comes first, then the index, and the index counts from 0.
+    choices:
+      1: Elm's `List.indexedMap` puts the index first, but in Gleam the element comes first.
+      2: The index starts at 0. To number from 1, use `i + 1`.
+      3: The one that also takes an accumulator is `list.index_fold`.
+cloze:
+  prompt: Fill in the blank to add each element's index to it.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: 'Write the body of a function that numbers the items from 1, producing lines like `"1. milk"`, using `list.index_map`.'
+  hint: The index starts at 0, so use `int.to_string(i + 1)`.

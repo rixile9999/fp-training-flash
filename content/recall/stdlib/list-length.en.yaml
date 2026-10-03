@@ -1,0 +1,18 @@
+title: list.length
+summary: Counts the elements in a list. It walks the whole list, so it takes time proportional to the number of elements.
+recognize:
+  prompt: "How do you get the length of a list `xs` in Gleam?"
+  choices: ["`xs.length`", "`len(xs)`", "`list.length(xs)`", "`list.size(xs)`"]
+  feedback:
+    correct: Right. It's `list.length(xs)` from `gleam/list`.
+    choices:
+      0: That's JavaScript-style property access. Gleam lists have no fields or methods.
+      1: That's Python's built-in. Gleam has no global `len`.
+      3: "`size` is the name used by `dict.size` and `set.size`. For lists it's `list.length`."
+cloze:
+  prompt: Fill in the blank to count the elements.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Write the body of a function that counts how many negative numbers a list of integers has. Count them with `list.length`.
+  hint: First keep only the negatives with `list.filter`, then count them.

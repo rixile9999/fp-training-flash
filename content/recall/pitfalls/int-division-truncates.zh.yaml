@@ -1,0 +1,17 @@
+title: Int 除法向零截断
+summary: "`Int` 除法 `/` 向零截断。`-7 / 2` 是 `-3`，而不是 Python 里的 `-4`。需要向下取整时用 `int.floor_divide`。"
+recognize:
+  prompt: "`-7 / 2` 的值是？"
+  choices: ["`-3`", "`-4`", "`-3.5`"]
+  feedback:
+    correct: 对。小数部分被舍去，得到更接近零的 `-3`。
+    choices:
+      1: "这是像 Python `//` 那样向下取整的结果。Gleam 的 `/` 向零截断，向下取整用 `int.floor_divide`。"
+      2: "两个 `Int` 相除结果还是 `Int`。需要小数时先用 `int.to_float` 转换，再用 `/.`。"
+cloze:
+  prompt: 填空，求向负无穷取整的商。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: "给定以午夜为起点的分钟数 `minutes`，返回它落在哪一天：0~1439 为 0，1440~2879 为 1，-1440~-1 为 -1（前一天）。"
+  hint: "`minutes / 1440` 会把 -1 分钟截断成第 0 天。`int.floor_divide` 返回 `Result`，用 `result.unwrap` 取出值。"

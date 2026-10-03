@@ -1,0 +1,16 @@
+title: 导入模块与限定调用
+summary: "用 `import gleam/int` 导入后，调用模块函数时要在前面加上路径的最后一段，比如 `int.to_string`。"
+recognize:
+  prompt: "`import gleam/int` 之后，把整数转成字符串的正确调用是？"
+  choices: ["`int.to_string(5)`", "`gleam/int.to_string(5)`", "`to_string(5)`", "`Int.to_string(5)`"]
+  feedback:
+    correct: 对。模块用路径的最后一段（`int`）来限定。
+    choices:
+      1: 调用时不写完整路径，只写最后一段 `int`。
+      2: "只写 `import gleam/int` 不会把函数名以非限定方式引入。要那样用，需要写成 `import gleam/int.{to_string}`。"
+      3: 模块名是小写的。大写开头的 `Int` 是类型名。
+cloze:
+  prompt: 在空白处填入模块名，把整数转成字符串。
+produce:
+  prompt: "用 `gleam/int` 模块的函数，写出把重量（kg）变成 `\"3kg\"` 这种字符串的函数体。"
+  hint: "用 `<>` 把单位接在 `int.to_string(kg)` 后面。"

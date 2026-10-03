@@ -1,0 +1,49 @@
+title: 여러 값을 한 번에 case
+topic: case
+order: 202
+summary: "`case a, b { ... }`처럼 쉼표로 값을 여러 개 나열하면 분기마다 쉼표로 구분한 패턴으로 한꺼번에 맞춰요. 튜플로 묶을 필요가 없습니다."
+example: |
+  let x = 0
+  let y = 5
+  case x, y {
+    0, 0 -> "origin"
+    0, _ -> "on the y axis"
+    _, _ -> "elsewhere"
+  }  // -> "on the y axis"
+imports: [gleam/int]
+recognize:
+  prompt: "`case a, b { ... }`의 분기 패턴은 어떻게 쓰나요?"
+  choices: ["`(0, 0) ->`", "`[0, 0] ->`", "`0, 0 ->`", "`0 && 0 ->`"]
+  answer: 2
+  feedback:
+    correct: 맞아요. 값을 나열한 순서대로 패턴도 쉼표로 나열합니다.
+    choices:
+      0: Gleam에서 괄호는 묶는 데 쓰이지 않아요. 튜플은 `#(0, 0)`이고, 그렇게 맞추려면 `case`에 넘기는 값도 `#(a, b)`여야 합니다.
+      1: "`[0, 0]`은 원소가 두 개인 리스트 패턴이에요."
+      3: "`&&`는 Bool 연산자이고 패턴에 쓸 수 없어요."
+cloze:
+  prompt: 빈칸을 채워 두 나머지를 한꺼번에 맞추세요.
+  code: |-
+    let n = 15
+    case n % 3____ n % 5 {
+      0, 0 -> "FizzBuzz"
+      0, _ -> "Fizz"
+      _, 0 -> "Buzz"
+      _, _ -> "other"
+    }
+  answers: [","]
+  expected: '"FizzBuzz"'
+produce:
+  prompt: FizzBuzz 함수 본문을 `case n % 3, n % 5`로 쓰세요. 15의 배수는 `"FizzBuzz"`, 3의 배수는 `"Fizz"`, 5의 배수는 `"Buzz"`, 그 밖은 숫자를 문자열로 돌려줍니다.
+  header: "pub fn fizzbuzz(n: Int) -> String"
+  checks: "#(fizzbuzz(15), fizzbuzz(9), fizzbuzz(10), fizzbuzz(7))"
+  expected: '#("FizzBuzz", "Fizz", "Buzz", "7")'
+  mustUse: [case, "0, 0 ->"]
+  reference: |-
+    case n % 3, n % 5 {
+      0, 0 -> "FizzBuzz"
+      0, _ -> "Fizz"
+      _, 0 -> "Buzz"
+      _, _ -> int.to_string(n)
+    }
+  hint: "`0, 0` 분기를 가장 위에 두세요. 숫자는 `int.to_string`으로 바꿉니다."

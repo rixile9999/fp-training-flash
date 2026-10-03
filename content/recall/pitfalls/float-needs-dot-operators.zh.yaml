@@ -1,0 +1,16 @@
+title: Float 运算用 +. -. *. /.
+summary: "`Float` 之间的运算要用带点的 `+.` `-.` `*.` `/.`。`+` 只用于 `Int`，所以 `1.5 + 2.5` 是编译错误。"
+recognize:
+  prompt: "`price` 和 `tax` 都是 `Float`，求和的表达式是？"
+  choices: ["`price + tax`", "`price +. tax`", "`price .+ tax`", "`int.to_float(price + tax)`"]
+  feedback:
+    correct: 对。`Float` 加法是 `+.`。
+    choices:
+      0: "`+` 只用于 `Int`，用在 `Float` 上会类型错误。Gleam 为不同类型分别提供运算符。"
+      2: 点放在运算符后面。`.+` 是语法错误。
+      3: "`price + tax` 本身就是类型错误，而且 `int.to_float` 接收的是 `Int`。"
+cloze:
+  prompt: 填入正确的运算符。
+produce:
+  prompt: 返回价格 `price` 加上税率 `rate` 对应税额后的金额。
+  hint: 乘法也要用 `*.`。

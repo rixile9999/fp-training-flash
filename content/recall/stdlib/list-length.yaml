@@ -1,0 +1,36 @@
+title: list.length
+topic: gleam/list
+order: 12
+summary: 리스트의 원소 개수를 셉니다. 리스트를 끝까지 훑으므로 원소 수에 비례하는 시간이 걸립니다.
+example: |
+  list.length([7, 8, 9])  // -> 3
+imports: [gleam/list]
+signature: "list.length(of: List(a)) -> Int"
+frequency: 18
+recognize:
+  prompt: "Gleam에서 리스트 `xs`의 길이를 구하는 식은?"
+  choices: ["`xs.length`", "`len(xs)`", "`list.length(xs)`", "`list.size(xs)`"]
+  answer: 2
+  feedback:
+    correct: 맞아요. `gleam/list`의 `list.length(xs)`입니다.
+    choices:
+      0: JavaScript식 속성 접근이에요. Gleam 리스트에는 필드나 메서드가 없습니다.
+      1: Python의 내장 함수예요. Gleam에는 전역 `len`이 없습니다.
+      3: "`size`는 `dict.size`, `set.size`에 쓰는 이름입니다. 리스트는 `list.length`입니다."
+cloze:
+  prompt: 빈칸을 채워 원소 개수를 구하세요.
+  code: 'list.____(["a", "b"])'
+  answers: [length]
+  expected: "2"
+predict:
+  prompt: 이 식의 값은?
+  code: "list.length([[1, 2], [3, 4, 5]])"
+  expected: "2"
+produce:
+  prompt: 정수 리스트에 음수가 몇 개인지 세는 함수 본문을 쓰세요. 개수는 `list.length`로 셉니다.
+  header: "pub fn count_negatives(xs: List(Int)) -> Int"
+  checks: "#(count_negatives([-1, 2, -3]), count_negatives([]), count_negatives([4, 5]))"
+  expected: "#(2, 0, 0)"
+  mustUse: [list.length]
+  reference: "list.filter(xs, fn(x) { x < 0 }) |> list.length"
+  hint: 먼저 `list.filter`로 음수만 남긴 뒤 개수를 세세요.

@@ -1,0 +1,18 @@
+title: int.compare
+summary: "比较两个整数，返回 `order.Order`（`Lt`、`Eq`、`Gt`）。它的形状是 `fn(Int, Int) -> Order`，可以直接作为比较函数传给 `list.sort`。"
+recognize:
+  prompt: "`int.compare(2, 5)` 的值是？"
+  choices: ["`-1`", "`Lt`", "`Gt`", "`True`"]
+  feedback:
+    correct: 对。第一个参数 2 小于 5，所以是 `Lt`。
+    choices:
+      0: 它不像其他语言的 `compareTo` 那样返回数字，而是返回 `order.Order` 值。
+      2: 以第一个参数为准。2 小于 5，所以是 `Lt`。
+      3: "需要 `Bool` 时写 `2 < 5`。`compare` 区分小于、等于和大于三种情况。"
+cloze:
+  prompt: 填空，按升序排序。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: "把 `#(名称, 数量)` 对组成的列表按数量升序排序。"
+  hint: "用 `a.1` 取出元组的第二个元素。"

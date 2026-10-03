@@ -1,0 +1,15 @@
+title: Anonymous functions with fn
+summary: "`fn(x) { x + 1 }` is a function without a name. It can capture variables from the surrounding scope (a closure), and its type is written like `fn(Int) -> Int`."
+recognize:
+  prompt: What is Gleam's syntax for an anonymous function?
+  choices: ["`|x| x + 1`", "`fn(x) { x + 1 }`", "`x => x + 1`", "`lambda x: x + 1`"]
+  feedback:
+    correct: Right. It's written like a named function, with `fn` and a body in braces, just without the name.
+    choices:
+      0: That's Rust's closure syntax.
+      2: That's a JavaScript arrow function.
+      3: That's a Python lambda.
+cloze:
+  prompt: Fill in the blank to double every element.
+produce:
+  prompt: Write the body of a function that returns a function adding `n`. The returned function is an anonymous function that captures `n`.

@@ -1,0 +1,15 @@
+title: There are no global built-in functions
+summary: "Gleam has no global built-ins like `len`, `max`, `print` or `str`. Every function lives in a module, so you call it with the module name: `list.length`, `int.max`, `io.println`."
+recognize:
+  prompt: "Which expression gives the larger of two integers `a` and `b`?"
+  choices: ["`max(a, b)`", "`int.max(a, b)`", "`a.max(b)`", "`math.max(a, b)`"]
+  feedback:
+    correct: Right. Functions for integers live in the `gleam/int` module.
+    choices:
+      0: "There's no global `max`, so you get an \"Unknown variable\" error."
+      2: Gleam has no method calls.
+      3: "`gleam_stdlib` has no `math` module. Each type has its own, such as `int.max` or `float.max`."
+cloze:
+  prompt: Fill in the module name.
+produce:
+  prompt: Return the character count of whichever of the two strings is longer.

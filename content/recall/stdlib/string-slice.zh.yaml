@@ -1,0 +1,18 @@
+title: string.slice
+summary: "从 `at_index`（从 0 开始，按字符计）开始截取 `length` 个字符。第三个参数是长度而不是结束位置，负数索引从末尾倒数。"
+recognize:
+  prompt: "`string.slice(\"abcdef\", 2, 3)` 的值是？"
+  choices: ["`\"c\"`", "`\"bcd\"`", "`Ok(\"cde\")`", "`\"cde\"`"]
+  feedback:
+    correct: 对。从索引 2（`c`）开始截取 3 个字符。
+    choices:
+      0: "第三个参数是长度，不是结束索引。这和 JavaScript 的 `slice(2, 3)` 不同。"
+      1: 索引从 0 开始，而不是从 1 开始。
+      2: "即使越界也不会失败，直接返回 `String`。越界的部分会被直接忽略。"
+cloze:
+  prompt: 填空，从日期中取出月份。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: '如果标题超过 `n` 个字符，只保留前 `n` 个并加上 `"..."`；否则保持不变。'
+  hint: "用 `string.length` 比较长度，只在过长时使用 `string.slice(title, 0, n)`。"

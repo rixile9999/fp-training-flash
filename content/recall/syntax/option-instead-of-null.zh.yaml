@@ -1,0 +1,15 @@
+title: 用 Option 代替 null
+summary: Gleam 没有 `null`、`nil`、`undefined`。值可能不存在时，就用 `Option` 在类型中表明，使用方必须处理 `None`。
+recognize:
+  prompt: 可能不存在的中间名字段，适合用哪种类型？
+  choices: ["`String`（不存在时为 `null`）", "`String`（不存在时为 `Nil`）", "`Option(String)`", "`String?`"]
+  feedback:
+    correct: 对。类型表明了值可能不存在，编译器会检查是否处理了 `None`。
+    choices:
+      0: Gleam 没有 `null`，写了会得到“未知名称”的编译错误。
+      1: "`Nil` 是 `Nil` 类型的值，不能放在需要 `String` 的位置。"
+      3: Gleam 没有带问号的可空类型（Kotlin、Swift 的写法）。
+cloze:
+  prompt: 填入类型名。
+produce:
+  prompt: 写出函数体：名字恰好由三部分组成时，用 `Some` 返回中间部分，否则返回 `None`。

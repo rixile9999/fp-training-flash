@@ -1,0 +1,31 @@
+title: int.to_string
+topic: gleam/int
+order: 10
+summary: "정수를 10진수 문자열로 바꿉니다. Gleam에는 자동 형 변환이 없으므로 `<>`로 이어 붙이기 전에 직접 바꿔야 합니다."
+example: |
+  "score: " <> int.to_string(42)  // -> "score: 42"
+imports: [gleam/int]
+signature: "int.to_string(Int) -> String"
+frequency: 21
+recognize:
+  prompt: "`Int` 값 `3`을 문자열 `\"n=\"` 뒤에 이어 붙이는 올바른 코드는?"
+  choices: ["`\"n=\" <> 3`", "`\"n=\" <> int.to_string(3)`", "`\"n=\" + 3`", "`\"n=\" <> string.from_int(3)`"]
+  answer: 1
+  feedback:
+    correct: 맞아요. `<>`는 양쪽이 모두 `String`이어야 하므로 `int.to_string`으로 먼저 바꿉니다.
+    choices:
+      0: 자동 형 변환이 없어서 컴파일 오류예요. `<>`의 양쪽은 모두 `String`이어야 합니다.
+      2: "`+`는 `Int` 덧셈 전용이에요. 문자열 연결은 `<>`입니다."
+      3: "`string.from_int`라는 함수는 없어요. 변환 함수는 원래 타입의 모듈인 `gleam/int`에 있습니다."
+cloze:
+  prompt: 빈칸을 채워 정수를 문자열로 바꾸세요.
+  code: '"n=" <> int.____(3)'
+  answers: [to_string]
+  expected: '"n=3"'
+produce:
+  prompt: 수량과 상품 이름을 받아 `"3 x apple"` 꼴의 문자열을 만드세요.
+  header: "pub fn line_label(qty: Int, name: String) -> String"
+  checks: '#(line_label(3, "apple"), line_label(0, "pear"), line_label(-1, "fig"))'
+  expected: '#("3 x apple", "0 x pear", "-1 x fig")'
+  mustUse: [int.to_string]
+  reference: 'int.to_string(qty) <> " x " <> name'

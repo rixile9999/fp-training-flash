@@ -1,0 +1,15 @@
+title: Prepend, then reverse once
+summary: "`list.append(acc, [x])` copies the whole list every time (O(n)). When building a list step by step, prepend with `[x, ..acc]` and call `list.reverse` once at the end."
+recognize:
+  prompt: What's the recommended way to collect elements one by one inside a fold?
+  choices: ["`list.append(acc, [x])`", "Build with `[x, ..acc]`, then `list.reverse` at the end", "`acc <> [x]`", "`[..acc, x]`"]
+  feedback:
+    correct: Right. Prepending is O(1), so the whole thing stays O(n).
+    choices:
+      0: "The result is correct, but it copies `acc` every time, making the whole loop O(n²)."
+      2: "`<>` is for strings only, so using it on lists is a type error."
+      3: "`..` can only follow the leading elements, so `[..acc, x]` is a syntax error."
+cloze:
+  prompt: Fill in the blank to put 0 in front of the list.
+produce:
+  prompt: "Use `list.fold` to collect the even numbers in their original order. Prepend as you go and reverse at the end."

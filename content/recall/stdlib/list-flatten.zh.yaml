@@ -1,0 +1,17 @@
+title: list.flatten
+summary: 把列表的列表拼接成一个列表。只展开一层。
+recognize:
+  prompt: "`list.flatten([[[1]], [[2, 3]]])` 的值是？"
+  choices: ["`[1, 2, 3]`", "`[[1], [2, 3]]`", "`[[1, 2, 3]]`", "编译错误"]
+  feedback:
+    correct: 对。只展开最外面一层，把 `[[1]]` 和 `[[2, 3]]` 的元素拼接起来。
+    choices:
+      0: 不会一直展开到底，只展开一层。
+      2: 它拼接的是外层列表的元素（`[[1]]` 和 `[[2, 3]]`），所以 `[1]` 和 `[2, 3]` 仍是各自独立的元素。
+      3: "`List(List(List(Int)))` 也是 `a = List(Int)` 时的 `List(List(a))`，可以正常编译。"
+cloze:
+  prompt: 填空，把列表的列表拼成一个。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 用 `list.flatten` 写出函数体：把每个订单里的商品列表汇总成一个商品列表。

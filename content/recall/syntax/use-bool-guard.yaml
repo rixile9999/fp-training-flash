@@ -1,0 +1,41 @@
+title: use <- bool.guard로 일찍 끝내기
+topic: use
+order: 225
+summary: "`use <- bool.guard(when: 조건, return: 값)`은 조건이 참이면 그 값을 바로 돌려주고, 거짓이면 아래 코드를 계속 실행해요. 다른 언어의 이른 `return` 대신 씁니다."
+example: |
+  {
+    let b = 0
+    use <- bool.guard(when: b == 0, return: 0)
+    100 / b
+  }  // -> 0
+imports: [gleam/bool, gleam/string]
+recognize:
+  prompt: '`use <- bool.guard(when: x < 0, return: "neg")` 다음에 코드가 이어질 때, `x`가 5이면?'
+  choices: ["`\"neg\"`를 돌려준다", "컴파일 오류: `use` 뒤에 변수가 없다", "아래 코드를 계속 실행한다", "`Nil`을 돌려준다"]
+  answer: 2
+  feedback:
+    correct: 맞아요. 조건이 거짓이므로 아래 코드의 값이 결과가 됩니다.
+    choices:
+      0: "`return` 값은 조건이 참일 때만 돌려줘요."
+      1: 콜백이 인자를 받지 않으면 `use <-`처럼 변수 없이 씁니다.
+      3: 조건이 거짓이면 아래 코드를 실행하고 그 값을 돌려줘요.
+cloze:
+  prompt: 빈칸에 레이블을 채워 0으로 나누기 전에 끝내세요.
+  code: |-
+    {
+      let b = 0
+      use <- bool.guard(when: b == 0, ____: 0)
+      100 / b
+    }
+  answers: [return]
+  expected: "0"
+produce:
+  prompt: 이름의 첫 글자를 대문자로 돌려주는 함수 본문을 쓰세요. 이름이 빈 문자열이면 `use <- bool.guard`로 `"?"`를 먼저 돌려줍니다.
+  header: "pub fn initial(name: String) -> String"
+  checks: '#(initial("ann"), initial(""), initial("Bo"))'
+  expected: '#("A", "?", "B")'
+  mustUse: ["use <-", bool.guard]
+  reference: |-
+    use <- bool.guard(when: name == "", return: "?")
+    string.uppercase(string.slice(name, at_index: 0, length: 1))
+  hint: "첫 글자는 `string.slice(name, at_index: 0, length: 1)`로 꺼낼 수 있어요."

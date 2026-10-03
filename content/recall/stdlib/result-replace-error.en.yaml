@@ -1,0 +1,17 @@
+title: result.replace_error
+summary: "Replaces the value inside an `Error` with the given value and leaves `Ok` alone. Use it to give an uninformative error, such as the `Error(Nil)` from `int.parse`, a meaningful one."
+recognize:
+  prompt: "What is the second argument of `result.replace_error(r, ?)`?"
+  choices: ["The new error value (e.g. `\"bad input\"`)", "A function that transforms the error, `fn(e) { ... }`", "A success value to use when it is an `Error`"]
+  feedback:
+    correct: Right. It takes a single value, drops the original error and puts that value in its place.
+    choices:
+      1: The one that takes a function to transform the original error is `result.map_error`.
+      2: Taking a default and unwrapping the `Result` is `result.unwrap`. `replace_error` still returns a `Result`.
+cloze:
+  prompt: Fill in the blank to attach a message to the parse error.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Parse an age string as an integer. If it fails, return `Error("invalid age")`.
+  hint: "Pipe the result of `int.parse(s)` into `result.replace_error`."

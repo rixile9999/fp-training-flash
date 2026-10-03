@@ -1,0 +1,15 @@
+title: Constants with const
+summary: Module-level values are defined with `const` (there's no top-level `let`). A constant can hold literal values (numbers, strings, lists, tuples, records) and other constants, but not function calls.
+recognize:
+  prompt: Which of these is allowed at the top level of a module?
+  choices: ["`let limit = 10`", "`const limit = int.max(3, 10)`", "`var limit = 10`", "`const limits = [3, 10]`"]
+  feedback:
+    correct: Right. Literal values such as lists, tuples and records can be constants.
+    choices:
+      0: There's no top-level `let`. Module-level values use `const`.
+      1: Constants can't contain function calls ("Functions can only be called within other functions").
+      2: Gleam has no `var`; every value is immutable.
+cloze:
+  prompt: Write the constant's name in the blank to get the total number of players for two teams.
+produce:
+  prompt: Write the body of a function that returns the price with VAT added, using the constant `vat_percent`. Use integer division.

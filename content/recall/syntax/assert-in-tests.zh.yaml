@@ -1,0 +1,15 @@
+title: assert（测试）
+summary: "`assert 表达式` 在 Bool 表达式为 `False` 时崩溃。它用于测试；gleeunit 的测试是 `test/` 目录下名字以 `_test` 结尾的 `pub fn`。"
+recognize:
+  prompt: 运行 `assert list.length([1]) == 2` 会怎样？
+  choices: ["返回 `False`", "编译错误", "只输出警告然后继续", "崩溃（在测试中会被报告为失败）"]
+  feedback:
+    correct: 对。条件为 `False` 时崩溃，测试工具会把这个测试报告为失败。
+    choices:
+      0: "`assert` 是检查，不是返回值的表达式。失败时会停下来。"
+      1: 这是 Bool 表达式，所以能编译。失败要到运行时才出现。
+      2: 是崩溃而不是警告，这样失败的测试就不会被漏掉。
+cloze:
+  prompt: 填空，检查排序结果。
+produce:
+  prompt: 写一个测试辅助函数：用 `assert` 检查把 `n` 用 `int.to_string` 转成字符串、再用 `int.parse` 转回来是否得到 `Ok(n)`，然后返回 `n`。

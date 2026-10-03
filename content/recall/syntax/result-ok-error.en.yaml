@@ -1,0 +1,15 @@
+title: "Result: Ok and Error"
+summary: A computation that can fail returns `Result(value, error)`. Success is `Ok(value)`, failure is `Error(error)`, and the caller handles both with `case`.
+recognize:
+  prompt: Which values can have the type `Result(Int, String)`?
+  choices: ["`Some(1)` and `None`", "`Ok(1)` and `Error(\"bad\")`", "`1` and `\"bad\"`", "`Ok(1)` and `Nil`"]
+  feedback:
+    correct: Right. A success value is wrapped in `Ok`, an error value in `Error`.
+    choices:
+      0: "`Some` and `None` are the constructors of `Option`."
+      2: Unwrapped values aren't a `Result`. They must be wrapped in `Ok` or `Error`.
+      3: A failure has to be wrapped in `Error(...)` too; a bare `Nil` doesn't type-check.
+cloze:
+  prompt: Fill in the blank to handle the case where parsing fails.
+produce:
+  prompt: Write the body of a function that returns `Ok(age)` if the age is between 0 and 150 inclusive, and `Error("invalid age")` otherwise.

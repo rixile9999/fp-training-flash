@@ -1,0 +1,51 @@
+title: 빠짐없는 분기
+topic: exhaustiveness
+order: 208
+summary: '`case`는 가능한 모든 값을 다뤄야 해요. 빠진 경우가 있으면 컴파일 오류("Inexhaustive patterns")가 나고, 컴파일러가 빠진 패턴을 알려 줍니다.'
+example: |
+  let light = Yellow
+  case light {
+    Red -> "stop"
+    Yellow -> "slow"
+    Green -> "go"
+  }  // -> "slow"
+definitions: |
+  pub type Light {
+    Red
+    Yellow
+    Green
+  }
+recognize:
+  prompt: "`Result`를 `case`로 나누면서 `Ok(n) -> n` 분기 하나만 쓰면?"
+  choices: ["`Error`일 때 실행 중에 크래시한다", "`Error`일 때 `Nil`을 돌려준다", "경고만 나오고 실행된다", "컴파일 오류가 난다"]
+  answer: 3
+  feedback:
+    correct: 맞아요. 컴파일러가 빠진 `Error(_)` 패턴을 알려 주므로 실행 전에 고칠 수 있어요.
+    choices:
+      0: 실행까지 가지 않아요. 빠진 경우는 컴파일할 때 잡힙니다.
+      1: Gleam은 빈 값을 끼워 넣지 않아요. 모든 경우를 직접 다뤄야 합니다.
+      2: 경고가 아니라 오류예요. 경고는 절대 맞을 수 없는 분기가 있을 때 나옵니다.
+cloze:
+  prompt: 빈칸을 채워 `case`가 모든 경우를 다루게 하세요.
+  code: |-
+    let light = Green
+    case light {
+      Red -> "stop"
+      Yellow -> "slow"
+      ____ -> "go"
+    }
+  answers: [Green, _]
+  expected: '"go"'
+produce:
+  prompt: 신호등의 다음 색을 돌려주는 함수 본문을 쓰세요. 빨강 다음은 초록, 초록 다음은 노랑, 노랑 다음은 빨강입니다. `_` 없이 모든 생성자를 적으세요.
+  header: "pub fn next_light(light: Light) -> Light"
+  checks: "[next_light(Red), next_light(Green), next_light(Yellow)]"
+  expected: "[Green, Yellow, Red]"
+  mustUse: [case, Red, Green, Yellow]
+  reference: |-
+    case light {
+      Red -> Green
+      Green -> Yellow
+      Yellow -> Red
+    }
+  hint: 생성자마다 분기를 하나씩 쓰면 빠진 경우가 없어요.

@@ -1,0 +1,16 @@
+title: 用 == 比较 Float 有风险
+summary: "`Float` 是二进制近似值，所以 `0.1 +. 0.2 == 0.3` 是 `False`。计算得到的 `Float` 之间要用 `float.loosely_equals` 在允许误差的情况下比较。"
+recognize:
+  prompt: "`0.1 +. 0.2 == 0.3` 的值是？"
+  choices: ["`True`", "`False`", "编译错误（`Float` 不能用 `==` 比较）"]
+  feedback:
+    correct: "对。`0.1 +. 0.2` 的结果是 `0.30000000000000004`，并不完全相等。"
+    choices:
+      0: 数学上相等，但二进制浮点数会产生误差，大多数语言都是如此。
+      2: "`Float` 也可以用 `==` 比较，只是必须完全相等才是 `True`。"
+cloze:
+  prompt: 填空，在允许误差的情况下比较。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 两个测量值相差不超过 0.01 时返回 `True`。

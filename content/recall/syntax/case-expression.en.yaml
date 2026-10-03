@@ -1,0 +1,18 @@
+title: case expressions
+summary: "`case` tries its patterns from top to bottom and returns the value of the first branch that matches. Every branch must have the same type."
+recognize:
+  prompt: If several branches of a `case` match the same value, which one runs?
+  choices: ["The first matching branch from the top", "The branch with the most specific pattern", "Every matching branch", "None: it's a compile error"]
+  feedback:
+    correct: Right. Branches are tried in the order written, so the catch-all `_` goes last.
+    choices:
+      1: Gleam doesn't rank patterns by how specific they are; it tries them from the top down.
+      2: A `case` picks exactly one branch and returns that one value.
+      3: Overlapping patterns are fine. A branch that can never match only gets a warning.
+cloze:
+  prompt: Fill in the blank to branch on `n`.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: 'Write the body of a function that turns an HTTP status code into a description, using `case`: 200 is `"ok"`, 404 is `"not found"`, anything else is `"unknown"`.'
+  hint: A `_` in the last branch catches every other value.

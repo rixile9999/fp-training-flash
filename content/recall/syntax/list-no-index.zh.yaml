@@ -1,0 +1,18 @@
+title: 列表没有下标访问
+summary: "列表没有 `xs[0]` 这样的下标访问。第一个元素用模式 `[first, ..]` 或 `list.first` 取出。"
+recognize:
+  prompt: "取 `xs: List(Int)` 第一个元素的正确方法是？"
+  choices: ["`xs[0]`", "`xs.0`", "`case xs { [first, ..] -> ... [] -> ... }`", "`xs.first`"]
+  feedback:
+    correct: "对。用模式 `[first, ..]` 取出第一个元素，同时处理空列表 `[]`。"
+    choices:
+      0: "没有下标语法。`xs[0]` 会被读成 `xs` 后面跟着另一个列表 `[0]`，导致莫名其妙的警告或错误。"
+      1: "`.0` 用来读取元组元素，不能用在列表上。"
+      3: "列表没有字段。有函数 `list.first(xs)`，它返回 `Result`。"
+cloze:
+  prompt: 填空，补全忽略其余元素的模式。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: "不用 `xs[1]`，而用列表模式取出第二个元素。元素少于两个时返回 `default`。"
+  hint: "`[_, second, ..]` 匹配有两个或更多元素的列表。"

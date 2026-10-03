@@ -1,0 +1,16 @@
+title: 用 <> 拼接字符串
+summary: "字符串用 `<>` 拼接。`+` 只用于 Int，用在字符串上是类型错误。"
+recognize:
+  prompt: 哪个 Gleam 表达式能拼接两个字符串？
+  choices: ["`\"a\" + \"b\"`", "`\"a\" <> \"b\"`", "`\"a\" ++ \"b\"`", "`\"a\" . \"b\"`"]
+  feedback:
+    correct: "对。字符串拼接运算符是 `<>`。"
+    choices:
+      0: "`+` 只用于 Int，用在字符串上是类型错误。"
+      2: "`++` 是 Haskell 或 Elm 的写法。Gleam 用 `<>`。"
+      3: "`.` 是 PHP 或 Perl 的写法。在 Gleam 中，`.` 用于字段访问和模块限定。"
+cloze:
+  prompt: 填空，把两个字符串拼起来。
+produce:
+  prompt: "根据名字生成 `\"Hello, Joe!\"` 这样的问候语。"
+  hint: "用两次 `<>`，把前后的文字接上。"

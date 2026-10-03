@@ -1,0 +1,36 @@
+title: result.map
+topic: gleam/result
+order: 15
+summary: "`Ok` 안의 값에만 함수를 적용하고 `Error`는 그대로 통과시킵니다. 콜백은 `Result`가 아니라 그냥 값을 돌려줍니다."
+example: |
+  result.map(int.parse("21"), fn(n) { n * 2 })  // -> Ok(42)
+imports: [gleam/int, gleam/result]
+signature: "result.map(over: Result(a, b), with: fn(a) -> c) -> Result(c, b)"
+frequency: 14
+recognize:
+  prompt: "`Ok` 안의 값에 실패하지 않는 계산(예: `n * 2`)을 적용할 때 쓰는 함수는?"
+  choices: ["`result.map`", "`result.try`", "`result.unwrap`", "`list.map`"]
+  answer: 0
+  feedback:
+    correct: 맞아요. `result.map`은 `Ok`일 때만 콜백을 부르고, 결과를 다시 `Ok`로 감싸 줍니다.
+    choices:
+      1: "`result.try`는 콜백이 `Result`를 돌려줄 때, 즉 그 단계도 실패할 수 있을 때 씁니다."
+      2: "`result.unwrap`은 기본값으로 값을 꺼내 `Result`를 없애요. 계산을 적용하지는 않습니다."
+      3: "`list.map`은 리스트용이에요. `Result`에는 `result.map`을 씁니다."
+cloze:
+  prompt: 빈칸을 채워 파싱한 값을 두 배로 만드세요.
+  code: 'result.____(int.parse("21"), fn(n) { n * 2 })'
+  answers: [map]
+  expected: "Ok(42)"
+predict:
+  prompt: 이 식의 값은?
+  code: 'result.map(Error("empty"), fn(n) { n + 1 })'
+  expected: 'Error("empty")'
+produce:
+  prompt: 센티미터 단위 문자열을 파싱해 밀리미터(× 10)로 바꾸세요. 파싱에 실패하면 오류를 그대로 돌려주세요.
+  header: "pub fn cm_to_mm(s: String) -> Result(Int, Nil)"
+  checks: '#(cm_to_mm("12"), cm_to_mm("0"), cm_to_mm("1.5"), cm_to_mm("-3"))'
+  expected: "#(Ok(120), Ok(0), Error(Nil), Ok(-30))"
+  mustUse: [result.map]
+  reference: "int.parse(s) |> result.map(fn(n) { n * 10 })"
+  hint: 콜백은 `fn(n) { n * 10 }`처럼 그냥 정수를 돌려주면 됩니다. `Ok`로 다시 감싸는 일은 `result.map`이 합니다.

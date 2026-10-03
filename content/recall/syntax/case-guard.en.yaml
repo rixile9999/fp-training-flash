@@ -1,0 +1,16 @@
+title: Guards with if
+summary: Put `if condition` after a pattern and that branch only matches when the condition is true. You can't call functions inside a guard.
+recognize:
+  prompt: Which of these branches does not compile?
+  choices: ["`x if x > 0 ->`", "`x if x % 2 == 0 ->`", "`s if string.length(s) > 3 ->`", "`#(a, b) if a == b ->`"]
+  feedback:
+    correct: Right. Guards can't call functions. Compute the value with `let` first, or use another `case` inside the branch.
+    choices:
+      0: Comparisons are allowed in guards.
+      1: Arithmetic and comparisons are both allowed in guards.
+      3: Comparing variables bound by the pattern works fine.
+cloze:
+  prompt: Fill in the blank so only ages 18 and over are `"adult"`.
+produce:
+  prompt: 'Write the body of a function that reads an order quantity from a string: a positive integer gives `Ok(quantity)`, 0 or less gives `Error("must be positive")`, and anything that isn''t an integer gives `Error("not a number")`. Match on the result of `int.parse` with `case` and use a guard.'
+  hint: "When a guard is false, matching moves on to the next branch. Put a plain `Ok(_)` branch below `Ok(n) if n > 0`."

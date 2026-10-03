@@ -1,0 +1,33 @@
+title: 파이프를 다른 자리에 넣기
+topic: pipe
+order: 217
+summary: 첫 번째가 아닌 자리에 파이프 값을 넣으려면 캡처를 써요. `a |> f(b, _)`는 `f(b, a)`입니다.
+example: |
+  "world" |> string.append("hello ", _)  // -> "hello world"
+imports: [gleam/int, gleam/list, gleam/string]
+recognize:
+  prompt: "`3 |> int.subtract(10, _)`의 값은?"
+  choices: ["`-7`", "`7`", "컴파일 오류"]
+  answer: 1
+  feedback:
+    correct: 맞아요. 3이 `_` 자리에 들어가 `int.subtract(10, 3)`, 즉 `10 - 3`입니다.
+    choices:
+      0: "`int.subtract(3, 10)`의 값이에요. 캡처가 있으면 파이프 값은 `_` 자리로 갑니다."
+      2: 파이프와 캡처는 함께 쓸 수 있어요.
+cloze:
+  prompt: 빈칸을 채워 파이프 값을 두 번째 인자로 넣으세요.
+  code: '"world" |> string.append("hello ", ____)'
+  answers: [_]
+  expected: '"hello world"'
+predict:
+  prompt: 이 식의 값은?
+  code: "[1, 2] |> list.append([0], _)"
+  expected: "[0, 1, 2]"
+produce:
+  prompt: 역할 이름이 `["admin", "editor"]`에 들어 있는지 돌려주는 함수 본문을 쓰세요. `role`을 파이프로 `list.contains`의 두 번째 인자 자리에 넣으세요.
+  header: "pub fn is_allowed(role: String) -> Bool"
+  checks: '#(is_allowed("admin"), is_allowed("editor"), is_allowed("guest"), is_allowed(""))'
+  expected: "#(True, True, False, False)"
+  mustUse: ["|>", "_)"]
+  reference: role |> list.contains(["admin", "editor"], _)
+  hint: "`list.contains(리스트, 찾을 값)`이므로 찾을 값 자리에 `_`를 둡니다."

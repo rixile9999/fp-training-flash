@@ -1,0 +1,15 @@
+title: let assert
+summary: "`let assert 模式 = 值` 用可能失败的模式取值，不匹配时进程崩溃。不要用于可以预料的失败，那种情况应返回 `Result`。"
+recognize:
+  prompt: 运行 `let assert Ok(n) = int.parse("abc")` 会怎样？
+  choices: ["进程崩溃", "`n` 变成 0", "编译错误", "函数返回 `Error(Nil)`"]
+  feedback:
+    correct: 对。模式不匹配就当场崩溃。可以用 `as "消息"` 附上原因。
+    choices:
+      1: 它不会填入默认值。需要默认值时用 `result.unwrap`。
+      2: "`let assert` 允许可能失败的模式，所以能编译。"
+      3: 它不会替你返回 `Error`。要那样做，得用 `case` 或 `result.try` 处理。
+cloze:
+  prompt: 填空，取出第一个元素。你确定列表不为空。
+produce:
+  prompt: 调用方保证只传入数字字符串。写出函数体：用 `let assert` 从 `int.parse` 的结果中取出整数并返回。

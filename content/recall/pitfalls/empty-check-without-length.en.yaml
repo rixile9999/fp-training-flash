@@ -1,0 +1,15 @@
+title: Don't check emptiness with length
+summary: "`list.length(xs) == 0` walks the whole list (O(n)). Check emptiness directly with `list.is_empty`, `xs == []` or an `[]` pattern."
+recognize:
+  prompt: Which is the best way to check whether a very long list `xs` is empty?
+  choices: ["`list.length(xs) == 0`", "`list.is_empty(xs)`", "`xs.empty?`", "`!xs`"]
+  feedback:
+    correct: Right. It answers after looking at the first cell only.
+    choices:
+      0: "The result is correct, but counting the length walks every element, which is O(n)."
+      2: Gleam has no method calls.
+      3: "`!` only works on `Bool`. There's no rule that treats an empty list as false."
+cloze:
+  prompt: Fill in the blank to check whether the list is empty.
+produce:
+  prompt: Return `True` if the cart holds at least one item.

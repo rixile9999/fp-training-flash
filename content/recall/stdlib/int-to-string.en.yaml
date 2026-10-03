@@ -1,0 +1,15 @@
+title: int.to_string
+summary: "Turns an integer into a decimal string. Gleam has no implicit conversion, so you convert it yourself before joining with `<>`."
+recognize:
+  prompt: "Which code correctly appends the `Int` `3` to the string `\"n=\"`?"
+  choices: ["`\"n=\" <> 3`", "`\"n=\" <> int.to_string(3)`", "`\"n=\" + 3`", "`\"n=\" <> string.from_int(3)`"]
+  feedback:
+    correct: Right. Both sides of `<>` must be `String`, so you convert with `int.to_string` first.
+    choices:
+      0: There is no implicit conversion, so this is a compile error. Both sides of `<>` must be `String`.
+      2: "`+` only adds `Int`s. String concatenation is `<>`."
+      3: "There is no `string.from_int`. Conversion functions live in the module of the original type, `gleam/int`."
+cloze:
+  prompt: Fill in the blank to turn the integer into a string.
+produce:
+  prompt: Given a quantity and a product name, build a string like `"3 x apple"`.

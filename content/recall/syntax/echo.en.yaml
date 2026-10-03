@@ -1,0 +1,16 @@
+title: echo
+summary: "`echo value` prints the value to standard error along with the file name and line number, and returns the value unchanged. It's for debugging, so remove it when you're done."
+recognize:
+  prompt: What is the value of `[1, 2] |> echo |> list.length`?
+  choices: ["`Nil`", "`2`", "`[1, 2]`", "A compile error"]
+  feedback:
+    correct: Right. `echo` prints the value and passes it on, so this is `list.length([1, 2])`.
+    choices:
+      0: It's `io.println` that returns `Nil`. `echo` returns what it was given.
+      2: "`list.length` still comes after `echo`."
+      3: "`echo` can be used as a step in the middle of a pipeline."
+cloze:
+  prompt: Fill in the blank to print the value in the middle of the pipeline.
+produce:
+  prompt: Write the body of a function that doubles each element, prints that list with `echo` to check it, and returns the sum.
+  hint: "`echo` can go in as one step of the pipeline."

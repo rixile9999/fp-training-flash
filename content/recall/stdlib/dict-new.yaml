@@ -1,0 +1,35 @@
+title: dict.new
+topic: gleam/dict
+order: 8
+summary: 빈 dict를 만듭니다. 인자 없는 함수라 `dict.new()`처럼 괄호를 붙여 호출하고, fold의 시작값으로 자주 씁니다.
+example: |
+  dict.new() |> dict.insert("a", 1)  // -> dict.from_list([#("a", 1)])
+imports: [gleam/list, gleam/string, "gleam/dict.{type Dict}"]
+signature: "dict.new() -> Dict(a, b)"
+frequency: 23
+recognize:
+  prompt: "빈 dict를 만드는 식은?"
+  choices: ["`dict.new()`", "`dict.new`", "`{}`", "`dict.empty()`"]
+  answer: 0
+  feedback:
+    correct: 맞아요. 호출해야 빈 `Dict`가 나옵니다.
+    choices:
+      1: 괄호가 없으면 dict가 아니라 함수 `fn() -> Dict(a, b)` 자체입니다.
+      2: JavaScript나 Python의 리터럴이에요. Gleam에는 dict 리터럴이 없고 `{ }`는 블록입니다.
+      3: "`dict.empty`라는 함수는 없습니다. 빈 dict는 `dict.new()`입니다."
+cloze:
+  prompt: 빈칸을 채워 빈 dict에서 시작하세요.
+  code: 'dict.____() |> dict.insert("k", 1) |> dict.size'
+  answers: [new]
+  expected: "1"
+produce:
+  prompt: 단어마다 그 길이를 담은 dict를 만드는 함수 본문을 쓰세요. `list.fold`의 시작값으로 `dict.new()`를 씁니다.
+  header: "pub fn word_lengths(words: List(String)) -> Dict(String, Int)"
+  checks: '#(word_lengths(["hi", "gleam"]), word_lengths([]), word_lengths(["a", "a"]))'
+  expected: '#(dict.from_list([#("gleam", 5), #("hi", 2)]), dict.from_list([]), dict.from_list([#("a", 1)]))'
+  mustUse: [dict.new]
+  reference: |
+    list.fold(words, dict.new(), fn(acc, word) {
+      dict.insert(acc, word, string.length(word))
+    })
+  hint: 콜백에서 `dict.insert(acc, word, string.length(word))`로 하나씩 넣습니다.

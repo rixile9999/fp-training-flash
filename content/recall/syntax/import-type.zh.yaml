@@ -1,0 +1,16 @@
+title: 导入类型
+summary: "要不带限定地使用类型，导入时要加 `type`，比如 `.{type Option}`。构造器 `Some`、`None` 不加 `type` 直接导入。"
+recognize:
+  prompt: "要让 `Option` 类型和 `Some`、`None` 构造器都能不带限定使用，应该怎么写？"
+  choices: ["`import gleam/option.{Option, Some, None}`", "`import gleam/option.{type Option, Some, None}`", "`import gleam/option.{type Option, type Some, type None}`", "`import gleam/option.*`"]
+  feedback:
+    correct: 对。类型前加 `type`，构造器是值，直接列出即可。
+    choices:
+      0: "不加 `type` 的名字会被当作值（函数或构造器）查找。没有叫 `Option` 的值，所以会编译错误。"
+      2: "`Some`、`None` 是构造器（值），不是类型，导入时不加 `type`。"
+      3: "Gleam 没有 `*` 这种整体导入，需要把用到的名字一一列出。"
+cloze:
+  prompt: 在空白处填入类型，表示一个不存在的中间名。
+produce:
+  prompt: "有昵称就原样返回，没有就返回 `\"guest\"`。用非限定导入的 `Some`、`None` 做模式匹配。"
+  hint: "形式是 `case nick { Some(name) -> ... None -> ... }`。"

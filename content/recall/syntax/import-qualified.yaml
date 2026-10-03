@@ -1,0 +1,30 @@
+title: 모듈 가져오기와 한정 호출
+topic: imports
+order: 100
+summary: "`import gleam/int`로 가져온 모듈의 함수는 경로의 마지막 부분을 앞에 붙여 `int.to_string`처럼 부릅니다."
+example: |
+  int.to_string(7) <> "kg"  // -> "7kg"
+imports: [gleam/int]
+recognize:
+  prompt: "`import gleam/int` 다음에 정수를 문자열로 바꾸는 올바른 호출은?"
+  choices: ["`int.to_string(5)`", "`gleam/int.to_string(5)`", "`to_string(5)`", "`Int.to_string(5)`"]
+  answer: 0
+  feedback:
+    correct: 맞아요. 모듈은 경로의 마지막 부분(`int`)으로 한정해 부릅니다.
+    choices:
+      1: 부를 때는 전체 경로가 아니라 마지막 부분 `int`만 씁니다.
+      2: "`import gleam/int`만으로는 함수 이름이 한정 없이 들어오지 않아요. 그렇게 쓰려면 `import gleam/int.{to_string}`처럼 가져와야 합니다."
+      3: 모듈 이름은 소문자예요. 대문자로 시작하는 `Int`는 타입 이름입니다.
+cloze:
+  prompt: 빈칸에 모듈 이름을 넣어 정수를 문자열로 바꾸세요.
+  code: "____.to_string(42)"
+  answers: [int]
+  expected: '"42"'
+produce:
+  prompt: "무게(kg)를 `\"3kg\"` 같은 문자열로 만드는 함수 본문을 `gleam/int` 모듈의 함수로 쓰세요."
+  header: "pub fn weight_label(kg: Int) -> String"
+  checks: "#(weight_label(3), weight_label(0), weight_label(-2))"
+  expected: '#("3kg", "0kg", "-2kg")'
+  mustUse: [int.to_string]
+  reference: 'int.to_string(kg) <> "kg"'
+  hint: "`int.to_string(kg)`에 `<>`로 단위를 이어 붙이세요."

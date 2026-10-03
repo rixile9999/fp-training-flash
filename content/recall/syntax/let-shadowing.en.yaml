@@ -1,0 +1,18 @@
+title: Shadowing is not mutation
+summary: "A new `let` with the same name only hides the old binding; it doesn't change any value. Code that captured the old value keeps seeing it."
+recognize:
+  prompt: "What does `let x = x + 1` do on the line after `let x = 1`?"
+  choices: ["It changes the value of `x` to 2", "It creates a new binding named `x` that hides the old one", "It's a compile error because a name can't be reused", "It turns `x` into a mutable variable"]
+  feedback:
+    correct: Right. Bindings are immutable; the new `x` just shadows the old one.
+    choices:
+      0: Nothing is changed. The old `x` is still 1; later code simply sees the new `x`.
+      2: You can `let` the same name again, even in the same block.
+      3: Gleam has no mutable variables. Every binding is immutable.
+cloze:
+  prompt: "Fill in the blank to rebind `n` to twice the previous `n`."
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: "Trim the name and lowercase it. Write it step by step, rebinding the same name `name` with `let`."
+  hint: "Start with `let name = string.trim(name)`, then `let name = string.lowercase(name)`."

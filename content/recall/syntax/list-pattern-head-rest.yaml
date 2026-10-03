@@ -1,0 +1,50 @@
+title: 리스트 패턴 [x, ..rest]
+topic: case
+order: 204
+summary: "`[x, ..rest]`는 비어 있지 않은 리스트와 맞고, 첫 원소를 `x`에, 나머지 리스트를 `rest`에 묶어요. 빈 리스트는 `[]` 분기로 따로 처리합니다."
+example: |
+  case [1, 2, 3] {
+    [] -> []
+    [_, ..rest] -> rest
+  }  // -> [2, 3]
+imports: [gleam/list]
+recognize:
+  prompt: "`[x, ..rest]`가 `[7]`과 맞으면 `rest`는?"
+  choices: ["`7`", "`[7]`", "맞지 않는다", "`[]`"]
+  answer: 3
+  feedback:
+    correct: 맞아요. 첫 원소 7이 `x`로 빠지고 남은 것은 빈 리스트입니다.
+    choices:
+      0: "`7`은 `x`에 묶여요. `rest`는 언제나 리스트입니다."
+      1: 첫 원소는 `x`로 빠지므로 `rest`에는 남지 않아요.
+      2: 원소가 하나여도 맞아요. `[x, ..rest]`와 맞지 않는 것은 빈 리스트뿐입니다.
+cloze:
+  prompt: 빈칸을 채워 첫 원소와 나머지로 나누세요.
+  code: |-
+    case [10, 20, 30] {
+      [] -> 0
+      [first, ____rest] -> first + list.length(rest)
+    }
+  answers: [..]
+  expected: "12"
+predict:
+  prompt: 이 식의 값은?
+  code: |-
+    case [5] {
+      [a, b, ..] -> a + b
+      [a, ..] -> a
+      [] -> 0
+    }
+  expected: "5"
+produce:
+  prompt: 차례를 기다리는 사람 목록에서 맨 앞 사람을 맨 뒤로 보내는 함수 본문을 `[x, ..rest]` 패턴으로 쓰세요. 빈 목록은 그대로 돌려줍니다.
+  header: "pub fn next_turn(queue: List(String)) -> List(String)"
+  checks: '#(next_turn(["ann", "bo", "cy"]), next_turn(["ann"]), next_turn([]), next_turn(["a", "b"]))'
+  expected: '#(["bo", "cy", "ann"], ["ann"], [], ["b", "a"])'
+  mustUse: [case, ..]
+  reference: |-
+    case queue {
+      [] -> []
+      [first, ..rest] -> list.append(rest, [first])
+    }
+  hint: "`[first, ..rest]`로 나눈 뒤 `list.append(rest, [first])`로 맨 뒤에 붙입니다."

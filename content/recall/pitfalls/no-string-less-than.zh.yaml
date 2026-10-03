@@ -1,0 +1,15 @@
+title: 字符串不能用 < 比较
+summary: "`<`、`>` 只用于 `Int`，所以 `\"apple\" < \"banana\"` 是类型错误。字符串的先后顺序用 `string.compare` 求得，结果是 `order.Order` 值 `Lt`、`Eq` 或 `Gt`。"
+recognize:
+  prompt: "判断字符串 `a` 按字典序是否排在 `b` 前面的表达式是？"
+  choices: ["`a < b`", "`string.compare(a, b) == order.Lt`", "`a.localeCompare(b) < 0`", "`string.compare(a, b) < 0`"]
+  feedback:
+    correct: 对。把 `string.compare` 返回的 `Order` 与 `order.Lt` 比较。
+    choices:
+      0: "`<` 只用于 `Int`，用在字符串上是类型错误。"
+      2: "这是 JavaScript 的方法。Gleam 没有方法调用。"
+      3: "`string.compare` 不像 C 的 `strcmp` 那样返回数字，而是返回 `Lt`、`Eq` 或 `Gt`。"
+cloze:
+  prompt: 填入正确的 `Order` 值。
+produce:
+  prompt: 返回两个单词中按字典序排在前面的那个。相同时返回任意一个即可。

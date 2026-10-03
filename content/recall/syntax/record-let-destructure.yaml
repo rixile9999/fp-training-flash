@@ -1,0 +1,39 @@
+title: let으로 레코드 풀기
+topic: records
+order: 124
+summary: "변형이 하나뿐인 레코드는 `let Point(x:, y:) = p`처럼 `let`으로 바로 풀 수 있습니다. 필요 없는 나머지 필드는 `..`로 건너뛰어요."
+definitions: |
+  pub type Point {
+    Point(x: Int, y: Int)
+  }
+example: |
+  {
+    let Point(x:, y:) = Point(3, 4)
+    x * y
+  }  // -> 12
+imports: [gleam/int]
+recognize:
+  prompt: "패턴 `let Point(x:, ..) = p`에서 `..`의 뜻은?"
+  choices: ["나머지 필드를 무시합니다", "나머지 필드를 리스트로 모읍니다", "레코드 갱신입니다", "문법 오류입니다"]
+  answer: 0
+  feedback:
+    correct: "맞아요. `x`만 바인딩하고 나머지 필드는 건너뜁니다."
+    choices:
+      1: "리스트 패턴의 `..rest`와 달리, 생성자 패턴의 `..`는 아무것도 바인딩하지 않아요."
+      2: "레코드 갱신 `Point(..p, x: 1)`은 식에서 쓰는 문법이고, 여기는 패턴이에요."
+      3: 생성자 패턴에서 남은 필드를 건너뛰는 올바른 문법이에요.
+cloze:
+  prompt: "빈칸을 채워 `x`만 꺼내고 나머지 필드는 무시하세요."
+  code: "{ let Point(x:, ____) = Point(5, 9)  x }"
+  answers: ["..", "y: _"]
+  expected: "5"
+produce:
+  prompt: "점의 맨해튼 거리 |x| + |y|를 구하세요. `let`으로 레코드를 풀어 쓰세요."
+  header: "pub fn manhattan(p: Point) -> Int"
+  checks: "#(manhattan(Point(3, -4)), manhattan(Point(0, 0)), manhattan(Point(-2, 5)))"
+  expected: "#(7, 0, 7)"
+  mustUse: ["let Point("]
+  reference: |
+    let Point(x:, y:) = p
+    int.absolute_value(x) + int.absolute_value(y)
+  hint: "`let Point(x:, y:) = p`로 시작하고, 절댓값은 `int.absolute_value`로 구합니다."

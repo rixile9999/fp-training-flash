@@ -1,0 +1,34 @@
+title: echo
+topic: echo
+order: 230
+summary: "`echo 값`은 값을 파일 이름, 줄 번호와 함께 표준 오류로 출력하고 그 값을 그대로 돌려줘요. 디버깅용이니 다 쓰면 지웁니다."
+example: |
+  [1, 2, 3] |> echo |> list.length  // -> 3
+imports: [gleam/int, gleam/list]
+recognize:
+  prompt: "`[1, 2] |> echo |> list.length`의 값은?"
+  choices: ["`Nil`", "`2`", "`[1, 2]`", "컴파일 오류"]
+  answer: 1
+  feedback:
+    correct: 맞아요. `echo`는 값을 출력한 뒤 그대로 넘기므로 `list.length([1, 2])`가 됩니다.
+    choices:
+      0: "`Nil`을 돌려주는 것은 `io.println`이에요. `echo`는 받은 값을 그대로 돌려줍니다."
+      2: "`echo` 다음에 `list.length`가 이어져요."
+      3: "`echo`는 파이프 중간 단계로 쓸 수 있어요."
+cloze:
+  prompt: 빈칸을 채워 파이프 중간의 값을 출력해 보세요.
+  code: "[1, 2, 3] |> ____ |> list.length"
+  answers: [echo]
+  expected: "3"
+produce:
+  prompt: 각 원소를 두 배로 만든 리스트를 `echo`로 출력해 확인하고, 그 합을 돌려주는 함수 본문을 쓰세요.
+  header: "pub fn debug_total(xs: List(Int)) -> Int"
+  checks: "#(debug_total([1, 2]), debug_total([]), debug_total([-3]))"
+  expected: "#(6, 0, -6)"
+  mustUse: [echo]
+  reference: |-
+    xs
+    |> list.map(fn(x) { x * 2 })
+    |> echo
+    |> int.sum
+  hint: "`echo`는 파이프의 한 단계로 넣을 수 있어요."

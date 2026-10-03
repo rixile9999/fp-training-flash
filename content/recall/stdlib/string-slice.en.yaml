@@ -1,0 +1,18 @@
+title: string.slice
+summary: "Cuts out `length` characters starting at `at_index` (counted from 0, in characters). The third argument is a length, not an end position, and a negative index counts from the end."
+recognize:
+  prompt: "What is the value of `string.slice(\"abcdef\", 2, 3)`?"
+  choices: ["`\"c\"`", "`\"bcd\"`", "`Ok(\"cde\")`", "`\"cde\"`"]
+  feedback:
+    correct: Right. It takes 3 characters starting at index 2 (`c`).
+    choices:
+      0: "The third argument is a length, not an end index. This is not JavaScript's `slice(2, 3)`."
+      1: Indexes start at 0, not 1.
+      2: "It never fails, even out of range; it returns a `String` directly. Anything out of range is simply left out."
+cloze:
+  prompt: Fill in the blank to take the month out of the date.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: 'If a title is longer than `n` characters, keep only the first `n` and add `"..."`. Otherwise leave it as is.'
+  hint: "Compare the length with `string.length`, and use `string.slice(title, 0, n)` only when it is too long."

@@ -1,0 +1,16 @@
+title: string.replace 会全部替换
+summary: "`string.replace` 会替换所有匹配，而不只是第一个。像 JavaScript 的 `replace` 那样以为只换第一个，就会出错。"
+recognize:
+  prompt: "`string.replace(\"1,000,000\", each: \",\", with: \"\")` 的值是？"
+  choices: ['`"1000,000"`', '`"1000000"`', '`Ok("1000000")`']
+  feedback:
+    correct: 对。所有逗号都被删除。
+    choices:
+      0: "这是像 JavaScript `replace` 那样只替换第一个的结果。Gleam 会全部替换。"
+      2: "它不会失败，直接返回 `String`。"
+cloze:
+  prompt: 填空，把所有 `-` 换成 `_`。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: "生成适合 URL 的名字：把标题转成小写，并把所有空格换成 `-`。"

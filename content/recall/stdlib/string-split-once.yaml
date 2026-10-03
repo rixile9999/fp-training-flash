@@ -1,0 +1,40 @@
+title: string.split_once
+topic: gleam/string
+order: 38
+summary: "구분자가 처음 나오는 곳에서 한 번만 잘라 `Ok(#(앞, 뒤))`를 돌려줍니다. 구분자가 없으면 `Error(Nil)`입니다."
+example: |
+  string.split_once("key=a=b", "=")  // -> Ok(#("key", "a=b"))
+imports: [gleam/string]
+signature: "string.split_once(String, on: String) -> Result(#(String, String), Nil)"
+frequency: 3
+recognize:
+  prompt: "`string.split_once(\"a:b:c\", \":\")`의 값은?"
+  choices: ["`#(\"a\", \"b:c\")`", "`[\"a\", \"b:c\"]`", "`Ok(#(\"a:b\", \"c\"))`", "`Ok(#(\"a\", \"b:c\"))`"]
+  answer: 3
+  feedback:
+    correct: 맞아요. 처음 나오는 `:`에서 자르고, 나머지는 뒤 조각에 그대로 남습니다.
+    choices:
+      0: "구분자가 없을 수도 있어서 튜플을 `Result`로 감싸 돌려줘요."
+      1: "리스트가 아니라 앞과 뒤 두 조각의 튜플이에요. 리스트로 모두 자르는 것은 `string.split`입니다."
+      2: "마지막이 아니라 처음 나오는 구분자에서 자릅니다."
+cloze:
+  prompt: 빈칸을 채워 항목 이름과 값을 나누세요.
+  code: 'string.____("name: Ada", ": ")'
+  answers: [split_once]
+  expected: 'Ok(#("name", "Ada"))'
+predict:
+  prompt: 이 식의 값은?
+  code: 'string.split_once("no-colon", ":")'
+  expected: "Error(Nil)"
+produce:
+  prompt: "`key = value` 형식의 설정 줄을 키와 값으로 나누세요. 양쪽 공백은 지우고, 값에 `=`가 또 있어도 첫 `=`에서만 자릅니다. `=`가 없으면 `Error(Nil)`입니다."
+  header: "pub fn parse_setting(line: String) -> Result(#(String, String), Nil)"
+  checks: '#(parse_setting("port = 8080"), parse_setting("url=/a?b=c"), parse_setting("invalid"), parse_setting("="))'
+  expected: '#(Ok(#("port", "8080")), Ok(#("url", "/a?b=c")), Error(Nil), Ok(#("", "")))'
+  mustUse: [string.split_once]
+  reference: |-
+    case string.split_once(line, "=") {
+      Ok(#(key, value)) -> Ok(#(string.trim(key), string.trim(value)))
+      Error(Nil) -> Error(Nil)
+    }
+  hint: "결과를 `case`로 나눠 `Ok(#(key, value))`일 때 양쪽에 `string.trim`을 적용하세요."

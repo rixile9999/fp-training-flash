@@ -1,0 +1,35 @@
+title: list.flatten
+topic: gleam/list
+order: 39
+summary: 리스트의 리스트를 하나의 리스트로 이어 붙입니다. 한 단계만 펼칩니다.
+example: |
+  list.flatten([[1, 2], [], [3]])  // -> [1, 2, 3]
+imports: [gleam/list]
+signature: "list.flatten(List(List(a))) -> List(a)"
+frequency: 3
+recognize:
+  prompt: "`list.flatten([[[1]], [[2, 3]]])`의 값은?"
+  choices: ["`[1, 2, 3]`", "`[[1], [2, 3]]`", "`[[1, 2, 3]]`", "컴파일 오류"]
+  answer: 1
+  feedback:
+    correct: 맞아요. 바깥 한 단계만 펼쳐서 `[[1]]`과 `[[2, 3]]`의 원소를 이어 붙입니다.
+    choices:
+      0: 끝까지 다 펼치지 않습니다. 한 단계만 펼칩니다.
+      2: 바깥 리스트의 원소들(`[[1]]`, `[[2, 3]]`)을 이어 붙이므로 `[1]`과 `[2, 3]`이 각각 원소로 남습니다.
+      3: "`List(List(List(Int)))`도 `a = List(Int)`인 `List(List(a))`이므로 문제없이 컴파일됩니다."
+cloze:
+  prompt: 빈칸을 채워 리스트의 리스트를 하나로 이으세요.
+  code: 'list.____([["a"], ["b", "c"]])'
+  answers: [flatten]
+  expected: '["a", "b", "c"]'
+predict:
+  prompt: 이 식의 값은?
+  code: "list.flatten([[], []])"
+  expected: "[]"
+produce:
+  prompt: 주문마다 담긴 상품 리스트를 모아 전체 상품 리스트 하나로 만드는 함수 본문을 `list.flatten`으로 쓰세요.
+  header: "pub fn all_items(orders: List(List(String))) -> List(String)"
+  checks: '#(all_items([["pen"], ["ink", "cap"]]), all_items([]), all_items([[], ["tea"]]))'
+  expected: '#(["pen", "ink", "cap"], [], ["tea"])'
+  mustUse: [list.flatten]
+  reference: "list.flatten(orders)"

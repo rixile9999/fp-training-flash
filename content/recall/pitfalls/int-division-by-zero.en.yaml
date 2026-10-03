@@ -1,0 +1,17 @@
+title: Dividing by 0 gives 0
+summary: "`x / 0` is `0` with no error, and `x % 0` is `0` too. To tell division by zero apart, use `int.divide`, which returns a `Result`."
+recognize:
+  prompt: "What is the value of `10 / 0`?"
+  choices: ["`0`", It crashes at runtime, "`Error(Nil)`", "`Infinity`"]
+  feedback:
+    correct: Right. Gleam's `/` returns `0` when you divide by zero.
+    choices:
+      1: Unlike Python or Java, nothing is thrown, which is why the mistake is easy to miss.
+      2: "The `/` operator returns an `Int` directly. If you want a `Result`, use `int.divide`."
+      3: "`Int` has no `Infinity`."
+cloze:
+  prompt: Fill in the blank so division by zero comes back as an `Error`.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: "Return each person's share when `total` is split evenly among `people`. If there are 0 people, return `Error(Nil)`."

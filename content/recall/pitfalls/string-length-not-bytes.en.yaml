@@ -1,0 +1,18 @@
+title: Byte limits use string.byte_size
+summary: "`string.length` counts characters (graphemes), not bytes. For a limit set in bytes, such as a storage field, check the UTF-8 byte count with `string.byte_size`."
+recognize:
+  prompt: "What is the value of `#(string.length(\"café\"), string.byte_size(\"café\"))`?"
+  choices: ["`#(4, 5)`", "`#(5, 5)`", "`#(4, 4)`", "`#(4, 8)`"]
+  feedback:
+    correct: Right. `é` is one character but two bytes in UTF-8, so the byte count is one higher.
+    choices:
+      1: "`string.length` counts characters, not bytes. `é` is a single character."
+      2: "`string.byte_size` counts UTF-8 bytes, not characters. `é` takes 2 bytes."
+      3: "That counts 2 bytes per character, as in UTF-16 (Java, JavaScript). Gleam strings are UTF-8."
+cloze:
+  prompt: Fill in the blank to get the number of UTF-8 bytes.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: "Return `True` if `text` fits in a field that stores at most `limit` bytes of UTF-8."
+  hint: "Counting with `string.length` gives 4 for `\"café\"`, so it would wrongly fit in 4 bytes."

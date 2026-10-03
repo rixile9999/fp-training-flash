@@ -1,0 +1,18 @@
+title: 没有字符串插值
+summary: "Gleam 没有字符串插值。先用 `int.to_string` 之类的函数把值转成字符串，再用 `<>` 拼接。"
+recognize:
+  prompt: "已知 `score: Int`，哪段 Gleam 代码能生成 `\"Score: 10\"` 这样的字符串？"
+  choices: ["`\"Score: ${score}\"`", "`\"Score: #{score}\"`", "`\"Score: \" <> int.to_string(score)`", "`\"Score: \" <> score`"]
+  feedback:
+    correct: "对。先用 `int.to_string` 转换整数，再用 `<>` 拼接。"
+    choices:
+      0: "`${...}` 是 JavaScript 的模板字符串。在 Gleam 字符串里它只是普通文字。"
+      1: "`#{...}` 是 Elixir 或 Ruby 的插值。在 Gleam 字符串里它只是普通文字。"
+      3: "`<>` 只能拼接 String。Int 要先用 `int.to_string` 转换。"
+cloze:
+  prompt: 填空，把整数转成字符串再拼接。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: "用名字和分数生成 `\"ann: 10\"` 这样的一行。"
+  hint: "像 `name <> \": \" <> ...` 这样拼接，分数用 `int.to_string` 转换。"

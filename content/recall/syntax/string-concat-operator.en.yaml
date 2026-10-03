@@ -1,0 +1,16 @@
+title: Joining strings with <>
+summary: "Strings are joined with `<>`. `+` is for Int only, so using it on strings is a type error."
+recognize:
+  prompt: Which Gleam expression joins two strings?
+  choices: ["`\"a\" + \"b\"`", "`\"a\" <> \"b\"`", "`\"a\" ++ \"b\"`", "`\"a\" . \"b\"`"]
+  feedback:
+    correct: "Right. The string concatenation operator is `<>`."
+    choices:
+      0: "`+` is for Int only, so using it on strings is a type error."
+      2: "`++` is Haskell or Elm notation. Gleam uses `<>`."
+      3: "`.` is PHP or Perl notation. In Gleam, `.` is for field access and module qualification."
+cloze:
+  prompt: Fill in the blank to join the two strings.
+produce:
+  prompt: "Given a name, build a greeting like `\"Hello, Joe!\"`."
+  hint: "Use `<>` twice to attach the text before and after."

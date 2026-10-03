@@ -1,0 +1,16 @@
+title: Parameter and return type annotations
+summary: "Parameter types are written `name: Type` and the return type `-> Type`. They can be left out and inferred, but top-level functions usually spell them out."
+recognize:
+  prompt: Which is a correct Gleam function head that adds two integers?
+  choices: ["`fn add(a: Int, b: Int) -> Int`", "`fn add(a: Int, b: Int): Int`", "`fn add(Int a, Int b) -> Int`", "`fn add(a, b) => Int`"]
+  feedback:
+    correct: "Right. Parameters are `a: Int` and the return type is `-> Int`."
+    choices:
+      1: "The return type comes after `->`, not `:`. `: Int` is TypeScript notation."
+      2: "The type goes after the name, as in `a: Int`. Type-first is the Java or C order."
+      3: "`=>` isn't Gleam syntax. The return type is written `-> Int`."
+cloze:
+  prompt: Fill in the symbol that comes before the return type.
+produce:
+  prompt: "Apply a 10% discount to every price (integer division). Annotate both the parameter type and the return type of the anonymous function you pass to `list.map`."
+  hint: "It looks like `fn(p: Int) -> Int { ... }`."

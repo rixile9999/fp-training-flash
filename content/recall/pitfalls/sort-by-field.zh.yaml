@@ -1,0 +1,16 @@
+title: 按字段排序要传比较函数
+summary: "没有接收取键函数的 `sort_by`。要按字段排序，就给 `list.sort` 传一个比较两个值并返回 `Order` 的函数，例如 `fn(a, b) { int.compare(a.age, b.age) }`。"
+recognize:
+  prompt: "把 `users: List(User)` 按 `age` 字段（`Int`）排序的表达式是？"
+  choices: ["`list.sort(users, by: fn(a, b) { int.compare(a.age, b.age) })`", "`list.sort_by(users, fn(u) { u.age })`", "`list.sort(users, by: fn(a, b) { a.age < b.age })`", "`list.sort(users, by: int.compare)`"]
+  feedback:
+    correct: 对。用 `int.compare` 比较两个用户的 `age`。
+    choices:
+      1: "`gleam/list` 没有 `sort_by`，这是 Python `key=` 或 Elixir `Enum.sort_by` 的习惯。"
+      2: "比较函数必须返回 `Order`（`Lt`、`Eq`、`Gt`），而不是 `Bool`。"
+      3: "`int.compare` 接收两个 `Int`，传入 `User` 会类型错误。"
+cloze:
+  prompt: 填空，对 Float 列表排序。
+produce:
+  prompt: 把商品列表按价格从低到高排序。
+  hint: "价格是 `Float`，用 `float.compare` 比较。"

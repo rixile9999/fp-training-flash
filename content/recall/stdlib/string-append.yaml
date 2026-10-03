@@ -1,0 +1,39 @@
+title: string.append
+topic: gleam/string
+order: 47
+summary: "첫 번째 문자열(`to:`) 뒤에 두 번째 문자열(`suffix:`)을 붙입니다. `a <> b`와 같고, 파이프로 이어 쓸 때 `s |> string.append(\"!\")`처럼 씁니다."
+example: |
+  string.append("Hello", ", Gleam")  // -> "Hello, Gleam"
+imports: [gleam/string]
+signature: "string.append(to: String, suffix: String) -> String"
+frequency: 3
+recognize:
+  prompt: "`\"report\" |> string.append(\".txt\")`의 값은?"
+  choices: ["`\".txtreport\"`", "`\"report.txt\"`", "`[\"report\", \".txt\"]`"]
+  answer: 1
+  feedback:
+    correct: "맞아요. 파이프는 왼쪽 값을 첫 번째 인자 `to:`로 넣으므로 `\".txt\"`가 뒤에 붙습니다."
+    choices:
+      0: "파이프 왼쪽 값은 첫 번째 인자 `to:`가 돼요. 그래서 `\".txt\"`가 앞이 아니라 뒤에 붙습니다."
+      2: "리스트를 만들지 않고 이어 붙인 `String` 하나를 돌려줘요."
+cloze:
+  prompt: 빈칸을 채워 느낌표를 붙이세요.
+  code: 'string.____("Hello", "!")'
+  answers: [append]
+  expected: '"Hello!"'
+predict:
+  prompt: 이 식의 값은?
+  code: 'string.append(suffix: "!", to: "hi")'
+  expected: '"hi!"'
+produce:
+  prompt: "파일 이름이 `.gleam`으로 끝나지 않으면 `.gleam`을 붙이고, 이미 끝나면 그대로 두세요."
+  header: "pub fn with_ext(name: String) -> String"
+  checks: '#(with_ext("main"), with_ext("app.gleam"), with_ext(""), with_ext("gleam"))'
+  expected: '#("main.gleam", "app.gleam", ".gleam", "gleam.gleam")'
+  mustUse: [string.append]
+  reference: |-
+    case string.ends_with(name, ".gleam") {
+      True -> name
+      False -> string.append(name, ".gleam")
+    }
+  hint: "`string.ends_with`로 확장자가 이미 있는지 먼저 확인하세요."

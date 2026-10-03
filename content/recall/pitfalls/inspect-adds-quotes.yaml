@@ -1,0 +1,32 @@
+title: string.inspect는 따옴표를 붙임
+topic: strings
+order: 20
+summary: "`string.inspect`는 값을 Gleam 코드 모양으로 보여 주므로 문자열에는 따옴표가 붙습니다. 문자열은 그대로 잇고, `inspect`는 리스트처럼 구조가 있는 값을 보여 줄 때 씁니다."
+example: |
+  "Name: " <> string.inspect("ann")  // -> "Name: \"ann\""
+imports: [gleam/string]
+recognize:
+  prompt: "`io.println(string.inspect(\"ann\"))`가 화면에 출력하는 것은?"
+  choices: ["`ann`", "`\"ann\"`", "`Ok(\"ann\")`"]
+  answer: 1
+  feedback:
+    correct: 맞아요. Python의 `repr`처럼 따옴표까지 포함한 코드 모양이 나옵니다.
+    choices:
+      0: "따옴표 없이 출력하려면 `string.inspect` 없이 `io.println(\"ann\")`처럼 문자열을 그대로 넘깁니다."
+      2: "`string.inspect`는 실패하지 않고 `String`을 바로 돌려줘요."
+cloze:
+  prompt: 빈칸을 채워 리스트를 문자열로 보여 주세요.
+  code: "string.____([1, 2])"
+  answers: [inspect]
+  expected: '"[1, 2]"'
+predict:
+  prompt: 이 식의 값은?
+  code: 'string.inspect(["a"])'
+  expected: '"[\"a\"]"'
+produce:
+  prompt: "이름과 태그 리스트로 `ann: [\"x\"]` 같은 한 줄을 만드세요. 이름에는 따옴표가 붙지 않아야 합니다."
+  header: "pub fn describe(name: String, tags: List(String)) -> String"
+  checks: '#(describe("ann", ["x"]), describe("bo", []), describe("", ["a", "b"]))'
+  expected: '#("ann: [\"x\"]", "bo: []", ": [\"a\", \"b\"]")'
+  mustUse: [string.inspect]
+  reference: 'name <> ": " <> string.inspect(tags)'

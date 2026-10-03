@@ -1,0 +1,18 @@
+title: 管道运算符 |>
+summary: "`a |> f(b)` 就是 `f(a, b)`。管道把左边的值作为右边函数的第一个参数传入。"
+recognize:
+  prompt: 哪个表达式和 `10 |> int.subtract(3)` 相同？
+  choices: ["`int.subtract(10, 3)`", "`int.subtract(3, 10)`", "`int.subtract(3)(10)`", "`int.subtract(10)`"]
+  feedback:
+    correct: 对。管道传入的值 10 放在第一个参数的位置。
+    choices:
+      1: 放到最后一个位置的是 F# 和 Elm 的管道。Gleam 放在第一个位置。
+      2: Gleam 函数不是柯里化的，不能这样分开调用。
+      3: 少了一个参数：管道传入的值也是参数。
+cloze:
+  prompt: 填空，把字符串转成大写。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 用管道串起来写出函数体：去掉字符串前后的空白，转成大写，再在末尾加上 `"!"`。
+  hint: 用管道传入 `string.append(前, 后)` 时，管道值是前面的部分。

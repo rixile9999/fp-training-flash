@@ -1,0 +1,18 @@
+title: list.filter_map
+summary: 回调返回 `Ok(值)` 的元素以该值保留，返回 `Error` 的元素被悄悄丢掉。一次完成过滤和转换。
+recognize:
+  prompt: "`list.filter_map` 的回调必须返回什么类型？"
+  choices: ["`Bool`", "`Result(b, e)`", "`Option(b)`", "`List(b)`"]
+  feedback:
+    correct: 对。`Ok(值)` 会保留，`Error(_)` 会丢掉。
+    choices:
+      0: "只用 `Bool` 过滤的是 `list.filter`。"
+      2: Rust 的 `filter_map` 和 Elm 的 `List.filterMap` 用 `Option`/`Maybe`，而 Gleam 用 `Result`。
+      3: 每个元素返回一个列表再拼接起来的是 `list.flat_map`。
+cloze:
+  prompt: 填空，只保留能解析为整数的字符串，并转成整数。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 用 `list.filter_map` 写出函数体：按顺序收集名字列表中在年龄 dict 里能找到的年龄。找不到的名字跳过。
+  hint: "`dict.get` 本身就返回 `Result(Int, Nil)`。"

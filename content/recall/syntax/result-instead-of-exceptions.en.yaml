@@ -1,0 +1,16 @@
+title: Result instead of exceptions
+summary: Gleam has no `try`/`catch`/`throw`. Failures are returned as a `Result` for the caller to handle. `panic` and `let assert` are crashes that can't be caught.
+recognize:
+  prompt: Can a crash caused by `panic` be caught and handled in the same function?
+  choices: ["Yes, with `try { ... } catch`", "Yes, with `rescue`", "Yes, with `case`", "No. Return expected failures as a `Result`"]
+  feedback:
+    correct: Right. Failures that need handling are returned as `Result` values; crashes are for bugs.
+    choices:
+      0: Gleam has no `try`/`catch`.
+      1: "`rescue` is Ruby or Elixir syntax."
+      2: "`case` only branches on values; it doesn't catch crashes."
+cloze:
+  prompt: Fill in the type name. Parsing returns a value of this type instead of throwing.
+produce:
+  prompt: Write the body of a function that withdraws `amount` and returns the new balance in `Ok`. Instead of throwing, return `Error("insufficient funds")` when the amount is larger than the balance.
+  hint: Where another language would throw an exception, return an `Error(...)`. Withdrawing exactly the balance is allowed.

@@ -1,0 +1,17 @@
+title: 把 Float 转成 Int
+summary: "把 `Float` 转成 `Int` 要用 `float.round`（四舍五入）或 `float.truncate`（舍去小数）。`float.floor` 和 `float.ceiling` 返回的是 `Float`，不是 `Int`。"
+recognize:
+  prompt: "把 `2.7` 转成 `Int` 值 `2` 的表达式是？"
+  choices: ["`int(2.7)`", "`float.truncate(2.7)`", "`float.floor(2.7)`", "`float.round(2.7)`"]
+  feedback:
+    correct: 对。`float.truncate` 舍去小数部分，返回 `Int`。
+    choices:
+      0: "没有 Python `int()` 那样的全局转换函数。"
+      2: "`float.floor(2.7)` 的结果是 `2.0`，是 `Float`。需要 `Int` 时用 `float.truncate` 或 `float.round`。"
+      3: "`float.round` 四舍五入，结果是 `3`。"
+cloze:
+  prompt: 填空，求舍去小数后的整数。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 把评分（Float）换算成最接近的整数星级，小数部分正好是 0.5 时进位。

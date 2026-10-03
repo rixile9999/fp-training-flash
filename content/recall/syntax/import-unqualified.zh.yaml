@@ -1,0 +1,16 @@
+title: 按名称导入
+summary: "像 `import gleam/list.{map}` 这样用 `.{...}` 导入的函数，可以不带模块名直接调用 `map(...)`。这时 `list.map` 依然可以用。"
+recognize:
+  prompt: "`import gleam/list.{map}` 之后，可以写哪种调用？"
+  choices: ["只能 `map(xs, f)`", "只能 `list.map(xs, f)`", "`map(xs, f)` 和 `list.map(xs, f)` 都可以", "`List.map(xs, f)`"]
+  feedback:
+    correct: 对。`.{map}` 只是多引入一个名字，模块 `list` 也一并导入了。
+    choices:
+      0: "加了 `.{map}`，模块本身照样被导入，所以 `list.map` 也能用。"
+      1: "用 `.{map}` 导入的名字可以不带模块名直接调用。"
+      3: 模块名是小写的 `list`。大写开头的名字是类型或构造器。
+cloze:
+  prompt: "填空，给每个元素加 1。（`map` 已以非限定方式导入。）"
+produce:
+  prompt: "把价格列表里的每个值都翻倍，使用非限定导入的 `map`。"
+  hint: "不写 `list.`，直接写 `map(prices, fn(p) { ... })`。"

@@ -1,0 +1,16 @@
+title: String prefix pattern <>
+summary: The pattern `"prefix" <> rest` matches when the string starts with that prefix and binds the remainder to `rest`. A suffix (`rest <> ".txt"`) can't be matched with a pattern.
+recognize:
+  prompt: Can a `case` pattern check whether a file name ends with `.txt`?
+  choices: ["Yes, with `name <> \".txt\" ->`", "Yes, with `\"*.txt\" ->`", "No. Patterns only match prefixes, so use `string.ends_with`", "Yes, with `_ <> \".txt\" ->`"]
+  feedback:
+    correct: Right. The left side of a `<>` pattern must be a string literal, so only prefixes can be matched.
+    choices:
+      0: "That's a compile error: only a string literal may appear left of `<>`."
+      1: Patterns have no wildcards inside strings. `"*.txt"` only matches that exact text.
+      3: "`_` isn't allowed left of `<>` either; only a string literal is."
+cloze:
+  prompt: Fill in the blank to take what comes after `"say "`.
+produce:
+  prompt: Write the body of a function that returns the token after `"Bearer "` as `Ok` when an `Authorization` header value starts with it, and `Error(Nil)` otherwise.
+  hint: Include the space in the prefix. Matching is case-sensitive.

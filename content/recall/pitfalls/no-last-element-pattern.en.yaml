@@ -1,0 +1,15 @@
+title: "There's no [..rest, last] pattern"
+summary: "List patterns only match from the front. `[..rest, last]` is a syntax error, so take the last element with `list.last` (it returns a `Result`)."
+recognize:
+  prompt: "Which expression gets the last element of the list `xs`?"
+  choices: ['`case xs { [..rest, last] -> Ok(last)  [] -> Error(Nil) }`', "`list.last(xs)`", "`xs[-1]`"]
+  feedback:
+    correct: "Right. It's `Error(Nil)` for an empty list and `Ok(last element)` otherwise."
+    choices:
+      0: "`..rest` can only come at the end of a pattern. `[..rest, last]` is a syntax error."
+      2: There's no Python-style negative indexing; there's no indexing at all.
+cloze:
+  prompt: Fill in the blank to get the last element.
+produce:
+  prompt: Return the last word of a sentence split on spaces.
+  hint: "`string.split(\"\", \" \")` is `[\"\"]`, so an empty sentence gives `Ok(\"\")`."

@@ -1,0 +1,17 @@
+title: Turning a Float into an Int
+summary: "To turn a `Float` into an `Int`, use `float.round` (round to nearest) or `float.truncate` (drop the decimals). `float.floor` and `float.ceiling` return a `Float`, not an `Int`."
+recognize:
+  prompt: "Which expression turns `2.7` into the `Int` value `2`?"
+  choices: ["`int(2.7)`", "`float.truncate(2.7)`", "`float.floor(2.7)`", "`float.round(2.7)`"]
+  feedback:
+    correct: Right. `float.truncate` drops the decimals and returns an `Int`.
+    choices:
+      0: "There's no global conversion like Python's `int()`."
+      2: "`float.floor(2.7)` is `2.0`, a `Float`. If you need an `Int`, use `float.truncate` or `float.round`."
+      3: "`float.round` rounds to the nearest whole number, giving `3`."
+cloze:
+  prompt: Fill in the blank to get the integer with the decimals dropped.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Turn a rating (Float) into the nearest whole number of stars. A fraction of exactly .5 rounds up.

@@ -1,0 +1,34 @@
+title: 함수 캡처 _
+topic: fn
+order: 214
+summary: "`f(a, _)`는 `fn(x) { f(a, x) }`의 줄임말이에요. 빈자리 `_`는 하나만 쓸 수 있습니다."
+example: |
+  list.map([1, 2, 3], int.subtract(10, _))  // -> [9, 8, 7]
+imports: [gleam/int, gleam/list, gleam/string]
+recognize:
+  prompt: "`int.subtract(10, _)`와 같은 함수는?"
+  choices: ["`fn(x) { x - 10 }`", "`fn(x, y) { x - y }`", "`int.subtract(10)`", "`fn(x) { 10 - x }`"]
+  answer: 3
+  feedback:
+    correct: 맞아요. `_` 자리에 인자가 들어가므로 `int.subtract(10, x)`, 즉 `10 - x`입니다.
+    choices:
+      0: "`_`는 두 번째 인자 자리라서 `x`가 빼는 쪽이 됩니다. `int.subtract(_, 10)`이라야 `x - 10`이에요."
+      1: 캡처는 빈자리 하나를 채우는, 인자가 하나인 함수를 만들어요.
+      2: Gleam 함수는 자동으로 커링되지 않아요. 인자가 모자라면 컴파일 오류입니다.
+cloze:
+  prompt: 빈칸을 채워 각 문자열 앞에 `"x"`를 붙이세요.
+  code: list.map(["a", "b"], string.append("x", ____))
+  answers: [_]
+  expected: '["xa", "xb"]'
+predict:
+  prompt: 이 식의 값은?
+  code: list.map([1, 2], int.subtract(_, 10))
+  expected: "[-9, -8]"
+produce:
+  prompt: 모든 단어 앞에 `prefix`를 붙이는 함수 본문을 쓰세요. 익명 함수 대신 `string.append`의 캡처를 쓰세요.
+  header: "pub fn prefix_all(words: List(String), prefix: String) -> List(String)"
+  checks: '#(prefix_all(["a", "b"], "x-"), prefix_all([], "x-"), prefix_all(["c"], ""))'
+  expected: '#(["x-a", "x-b"], [], ["c"])'
+  mustUse: ["_)"]
+  reference: list.map(words, string.append(prefix, _))
+  hint: "`string.append(앞, 뒤)`에서 단어가 들어갈 자리는 뒤쪽입니다."

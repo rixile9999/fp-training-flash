@@ -1,0 +1,18 @@
+title: int.parse
+summary: "把字符串解析为整数，返回 `Result(Int, Nil)`。整个字符串必须是整数，夹带空格或小数点就会得到 `Error(Nil)`。"
+recognize:
+  prompt: "`int.parse(\"12a\")` 的值是？"
+  choices: ["`12`", "`Ok(12)`", "`Error(Nil)`", "`0`"]
+  feedback:
+    correct: 对。整个字符串不是整数时，结果是 `Error(Nil)`。
+    choices:
+      0: "`int.parse` 可能失败，所以结果总是包在 `Result` 里返回。"
+      1: 它不像 JavaScript 的 `parseInt` 那样只读开头部分。整个字符串都必须是整数。
+      3: 它不会用 0 之类的默认值掩盖失败，而是返回 `Error(Nil)`。
+cloze:
+  prompt: 填空，把字符串转成整数。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 用 `Bool` 告诉调用者输入字符串能否读作整数。
+  hint: "像 `case int.parse(s) { Ok(_) -> ... Error(_) -> ... }` 这样对结果做模式匹配。"

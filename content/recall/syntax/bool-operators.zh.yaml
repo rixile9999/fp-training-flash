@@ -1,0 +1,16 @@
+title: 逻辑运算符
+summary: "逻辑运算符是 `&&`（与）、`||`（或）、`!`（非）。`&&` 和 `||` 在结果确定后就不再计算右边。"
+recognize:
+  prompt: "“已登录且购物车不为空”用 Gleam 怎么写？"
+  choices: ["`logged_in and not empty`", "`logged_in && !empty`", "`logged_in & ~empty`", "`logged_in && not(empty)`"]
+  feedback:
+    correct: "对。“与”是 `&&`，“非”是 `!`。"
+    choices:
+      0: "`and`、`not` 是 Python 的写法。Gleam 用 `&&` 和 `!`。"
+      2: "`&`、`~` 不是 Gleam 运算符。逻辑与是 `&&`，非是 `!`。"
+      3: "没有可以直接调用的 `not` 函数，取反用运算符 `!`。"
+cloze:
+  prompt: "在空白处填入“或”运算符。"
+produce:
+  prompt: "只有在已登录（`logged_in`）且购物车不为空（不是 `cart_empty`）时才能结账。"
+  hint: "用 `&&` 连接，并在 `cart_empty` 前加 `!`。"

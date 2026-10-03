@@ -1,0 +1,48 @@
+title: dict.upsert
+topic: gleam/dict
+order: 9
+summary: 키의 값을 고치거나, 없으면 새로 넣습니다. 콜백은 기존 값을 `Option`으로(`Some(값)` 또는 `None`) 받아 새 값을 돌려줍니다.
+example: |
+  dict.from_list([#("a", 1)])
+  |> dict.upsert("a", fn(x) {
+    case x {
+      Some(n) -> n + 1
+      None -> 1
+    }
+  })  // -> dict.from_list([#("a", 2)])
+imports: ["gleam/dict.{type Dict}", "gleam/option.{None, Some}"]
+signature: "dict.upsert(in: Dict(a, b), update: a, with: fn(option.Option(b)) -> b) -> Dict(a, b)"
+frequency: 21
+recognize:
+  prompt: "`dict.upsert(d, key, f)`에서 콜백 `f`가 받는 인자는?"
+  choices: ["기존 값 `b` (키가 없으면 패닉)", "`Option(b)`: 있으면 `Some(값)`, 없으면 `None`", "`Result(b, Nil)`: 있으면 `Ok(값)`, 없으면 `Error(Nil)`", "키와 기존 값 `fn(key, value)`"]
+  answer: 1
+  feedback:
+    correct: 맞아요. 키가 없을 때도 호출되며 그때는 `None`을 받습니다.
+    choices:
+      0: 키가 없어도 패닉이 나지 않습니다. 콜백이 `None`을 받고 새 값을 정합니다.
+      2: "`Result`를 돌려주는 것은 `dict.get`입니다. `upsert`의 콜백은 `Option`을 받습니다."
+      3: 콜백은 기존 값(`Option`) 하나만 받습니다. 키와 값을 함께 받는 것은 `dict.map_values`의 콜백입니다.
+cloze:
+  prompt: 빈칸을 채워 키 `"a"`의 개수를 하나 늘리세요.
+  code: 'dict.____(dict.new(), "a", fn(x) { case x { Some(n) -> n + 1 None -> 1 } })'
+  answers: [upsert]
+  expected: 'dict.from_list([#("a", 1)])'
+predict:
+  prompt: 이 식의 값은?
+  code: 'dict.new() |> dict.upsert("k", fn(x) { option.unwrap(x, 10) * 2 })'
+  expected: 'dict.from_list([#("k", 20)])'
+produce:
+  prompt: 재고 dict에 상품 수량을 더하는 함수 본문을 `dict.upsert`로 쓰세요. 처음 들어오는 상품이면 그 수량으로 새로 넣습니다.
+  header: "pub fn add_stock(stock: Dict(String, Int), item: String, qty: Int) -> Dict(String, Int)"
+  checks: '#(add_stock(dict.from_list([#("pen", 2)]), "pen", 3), add_stock(dict.from_list([#("pen", 2)]), "ink", 1), add_stock(dict.new(), "cap", 0))'
+  expected: '#(dict.from_list([#("pen", 5)]), dict.from_list([#("ink", 1), #("pen", 2)]), dict.from_list([#("cap", 0)]))'
+  mustUse: [dict.upsert]
+  reference: |
+    dict.upsert(stock, item, fn(current) {
+      case current {
+        Some(n) -> n + qty
+        None -> qty
+      }
+    })
+  hint: 콜백에서 `case`로 `Some(n)`과 `None`을 나누세요.

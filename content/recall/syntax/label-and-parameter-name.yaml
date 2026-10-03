@@ -1,0 +1,37 @@
+title: 레이블과 내부 이름
+topic: labels
+order: 219
+summary: "`fn f(label name: Type)`에서 앞의 `label`은 호출하는 쪽이 쓰는 이름이고, 뒤의 `name`은 함수 본문에서 쓰는 이름이에요."
+example: |
+  replace(each: " ", with: "-", in: "a b c")  // -> "a-b-c"
+imports: [gleam/string]
+definitions: |
+  pub fn replace(
+    in text: String,
+    each pattern: String,
+    with replacement: String,
+  ) -> String {
+    string.replace(text, pattern, replacement)
+  }
+recognize:
+  prompt: 위 `replace`의 본문에서 첫 번째 인자를 가리키는 이름은?
+  choices: ["`in`", "`in.text`", "`in`과 `text` 둘 다", "`text`"]
+  answer: 3
+  feedback:
+    correct: 맞아요. 본문에서는 내부 이름 `text`를 씁니다.
+    choices:
+      0: "`in`은 호출하는 쪽이 쓰는 레이블이에요. 본문에서는 쓸 수 없습니다."
+      1: 그런 문법은 없어요.
+      2: 레이블은 바깥에서, 내부 이름은 안에서만 쓰도록 나뉘어 있어요.
+cloze:
+  prompt: 빈칸에 레이블을 채워 원래 문자열을 넘기세요.
+  code: 'replace(____: "a-b", each: "-", with: "+")'
+  answers: [in]
+  expected: '"a+b"'
+produce:
+  prompt: "`x`가 `low` 이상 `high` 이하인지 돌려주는 함수 본문을 쓰세요. 본문에서는 레이블(`from`, `to`)이 아니라 내부 이름을 써야 합니다."
+  header: "pub fn between(x: Int, from low: Int, to high: Int) -> Bool"
+  checks: "#(between(5, from: 1, to: 10), between(0, to: 3, from: 1), between(3, from: 1, to: 3), between(11, from: 1, to: 10))"
+  expected: "#(True, False, True, False)"
+  mustUse: [low, high]
+  reference: x >= low && x <= high

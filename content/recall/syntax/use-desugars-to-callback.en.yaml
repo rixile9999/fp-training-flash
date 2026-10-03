@@ -1,0 +1,18 @@
+title: use passes a callback last
+summary: "`use x <- f(a)` is shorthand for `f(a, fn(x) { rest of the block })`. It works with any function whose last parameter is a function."
+recognize:
+  prompt: In `use x <- list.map(xs)`, where does the rest of the block go?
+  choices: ["Into the first argument of `list.map`", "It runs once, separately, after `list.map` is called", "Into the body of `fn(x) { ... }`, the last argument of `list.map`", "`x` is bound to all of `xs` and it runs as is"]
+  feedback:
+    correct: Right. The rest of the code becomes the callback body and runs for each element.
+    choices:
+      0: The first argument is the `xs` in parentheses; the callback goes in the last slot.
+      1: It doesn't run separately. It becomes the callback body, so `list.map` calls it for each element.
+      3: "`x` is the callback's argument, so it receives one element at a time."
+cloze:
+  prompt: Fill in the blank to pass the rest of the block as a callback.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Write the body of a function that returns every pair made of one element from each list. Chain `list.flat_map` and `list.map` with `use`.
+  hint: "`list.flat_map` on the outside, `list.map` on the inside. The last line is a single pair."

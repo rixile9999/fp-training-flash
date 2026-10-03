@@ -1,0 +1,34 @@
+title: 문자열 보간 없음
+topic: strings
+order: 114
+summary: "Gleam에는 문자열 보간이 없습니다. 값은 `int.to_string` 같은 함수로 문자열로 바꾼 뒤 `<>`로 이어요."
+example: |
+  "n = " <> int.to_string(42)  // -> "n = 42"
+imports: [gleam/int]
+recognize:
+  prompt: "`score: Int`로 `\"Score: 10\"` 같은 문자열을 만드는 Gleam 코드는?"
+  choices: ["`\"Score: ${score}\"`", "`\"Score: #{score}\"`", "`\"Score: \" <> int.to_string(score)`", "`\"Score: \" <> score`"]
+  answer: 2
+  feedback:
+    correct: "맞아요. 정수를 `int.to_string`으로 바꾼 뒤 `<>`로 잇습니다."
+    choices:
+      0: "`${...}`는 JavaScript 템플릿 문자열이에요. Gleam 문자열 안에서는 그냥 글자로 남습니다."
+      1: "`#{...}`는 Elixir나 Ruby의 보간이에요. Gleam 문자열 안에서는 그냥 글자로 남습니다."
+      3: "`<>`는 String끼리만 이어요. Int는 먼저 `int.to_string`으로 바꿔야 합니다."
+cloze:
+  prompt: 빈칸을 채워 정수를 문자열로 바꿔 이어 붙이세요.
+  code: '"total: " <> int.____(7)'
+  answers: [to_string]
+  expected: '"total: 7"'
+predict:
+  prompt: 이 식의 값은?
+  code: '"n = ${1 + 1}"'
+  expected: '"n = ${1 + 1}"'
+produce:
+  prompt: "이름과 점수로 `\"ann: 10\"` 같은 한 줄을 만드세요."
+  header: "pub fn score_line(name: String, score: Int) -> String"
+  checks: '#(score_line("ann", 10), score_line("bo", 0), score_line("cy", -3))'
+  expected: '#("ann: 10", "bo: 0", "cy: -3")'
+  mustUse: [int.to_string, "<>"]
+  reference: 'name <> ": " <> int.to_string(score)'
+  hint: "`name <> \": \" <> ...`처럼 잇고, 점수는 `int.to_string`으로 바꾸세요."

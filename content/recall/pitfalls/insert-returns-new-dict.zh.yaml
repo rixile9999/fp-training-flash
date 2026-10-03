@@ -1,0 +1,15 @@
+title: dict.insert 返回新的 dict
+summary: "`dict.insert` 不会修改原来的 dict，而是返回一个新的 dict。丢掉返回值就什么都没变，所以要用 `let` 接住，或用管道串起来。"
+recognize:
+  prompt: "`{ let d = dict.new()  dict.insert(d, \"a\", 1)  dict.size(d) }` 的值是？"
+  choices: ["`0`", "`1`", 编译错误]
+  feedback:
+    correct: 对。`d` 仍然是空的，新的 dict 被丢弃了。
+    choices:
+      1: "这是像 Python 的 dict 那样以为会原地修改。Gleam 的值不会改变。"
+      2: "可以通过编译，只会出现 \"Unused value\" 警告，所以这种错误很容易被忽略。"
+cloze:
+  prompt: 填空，用同一个名字接住新的 dict。
+produce:
+  prompt: "把键 `from` 的值移到键 `to` 下。`from` 不存在时原样返回 dict。"
+  hint: "`dict.delete` 也返回新的 dict，所以用管道串起来。"

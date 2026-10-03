@@ -1,0 +1,18 @@
+title: dict.fold
+summary: 把 dict 的所有条目折叠成一个值。回调按 `fn(累加器, 键, 值)` 的顺序接收参数，访问条目的顺序是不确定的。
+recognize:
+  prompt: "`dict.fold` 的回调接收参数的顺序是？"
+  choices: ["`fn(acc, key, value)`", "`fn(key, value, acc)`", "`fn(acc, #(key, value))`", "`fn(acc, value)`"]
+  feedback:
+    correct: 对。和 `list.fold` 一样，累加器在前，然后是键和值。
+    choices:
+      1: Elm 的 `Dict.foldl` 把累加器放在最后，但 Gleam 中累加器在前。
+      2: 键和值是分开传入的，不是元组。
+      3: 键也会传进来。不用的话，就像 `_key` 这样用下划线忽略。
+cloze:
+  prompt: 填空，求所有值的乘积。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 用 `dict.fold` 写出函数体：根据各商品的库存 dict 求库存总数量。
+  hint: 初始值是 0，回调的形式是 `fn(acc, _item, qty) { ... }`。

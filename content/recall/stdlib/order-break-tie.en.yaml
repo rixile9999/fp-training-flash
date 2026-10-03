@@ -1,0 +1,15 @@
+title: order.break_tie
+summary: "Uses the second comparison only when the first one is `Eq`. Use it to sort by several keys, like \"by age, then by name\"."
+recognize:
+  prompt: "What is the value of `order.break_tie(in: Gt, with: Lt)`?"
+  choices: ["`Gt`", "`Lt`", "`Eq`"]
+  feedback:
+    correct: Right. The first result is not `Eq`, so it stays `Gt`.
+    choices:
+      1: The second comparison is used only when the first one is `Eq`.
+      2: The two results do not cancel out or combine. If the first one is not `Eq`, it is the answer.
+cloze:
+  prompt: Fill in the blank to compare by name when the ages are equal.
+produce:
+  prompt: "Sort a list of `#(name, age)` by age ascending, and by name ascending when ages are equal."
+  hint: "The first key is `int.compare(a.1, b.1)`, the second is `string.compare(a.0, b.0)`."

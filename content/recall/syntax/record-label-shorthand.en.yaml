@@ -1,0 +1,16 @@
+title: "Label shorthand name:"
+summary: "When the variable you pass has the same name as the label, as in `name: name`, you can write just `name:`."
+recognize:
+  prompt: "After `let age = 30`, what does `age:` mean in `User(name: \"ann\", age:, admin: False)`?"
+  choices: ["It's short for `age: age`, so 30 goes in", "The field is left empty and gets the default 0", "It's a syntax error", "It becomes `age: Nil`"]
+  feedback:
+    correct: "Right. It passes the variable `age` under the label of the same name."
+    choices:
+      1: "Gleam fields have no default values. `age:` means \"pass the variable named `age`\"."
+      2: This is valid shorthand, as long as a variable with that name exists.
+      3: "You can't put `Nil` in an Int field. It passes the variable of the same name."
+cloze:
+  prompt: "Fill in the blank to pass the variable `admin` under the label of the same name."
+produce:
+  prompt: "Given a name and an age, build a non-admin `User`. Write the arguments in the defined order (name, age, admin) and pass `name` and `age` with the shorthand."
+  hint: "Write it in the order `User(name:, age:, admin: False)`."

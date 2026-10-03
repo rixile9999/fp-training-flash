@@ -1,0 +1,16 @@
+title: echo
+summary: "`echo 值` 把值连同文件名和行号输出到标准错误，并原样返回这个值。它用于调试，用完就删掉。"
+recognize:
+  prompt: "`[1, 2] |> echo |> list.length` 的值是？"
+  choices: ["`Nil`", "`2`", "`[1, 2]`", "编译错误"]
+  feedback:
+    correct: 对。`echo` 输出值后把它原样传下去，所以结果是 `list.length([1, 2])`。
+    choices:
+      0: 返回 `Nil` 的是 `io.println`。`echo` 返回收到的值。
+      2: "`echo` 后面还有 `list.length`。"
+      3: "`echo` 可以作为管道中间的一步。"
+cloze:
+  prompt: 填空，输出管道中间的值。
+produce:
+  prompt: 写出函数体：把每个元素翻倍，用 `echo` 输出这个列表检查一下，再返回总和。
+  hint: "`echo` 可以作为管道的一步放进去。"

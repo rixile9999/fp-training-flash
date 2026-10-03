@@ -1,0 +1,36 @@
+title: 예외 대신 Result
+topic: exceptions
+order: 233
+summary: Gleam에는 `try`/`catch`/`throw`가 없어요. 실패는 `Result`로 돌려주고 부르는 쪽이 처리합니다. `panic`과 `let assert`는 잡을 수 없는 크래시예요.
+example: |
+  result.unwrap(int.parse("12x"), 0)  // -> 0
+imports: [gleam/int, gleam/result]
+recognize:
+  prompt: "`panic`으로 난 크래시를 같은 함수 안에서 잡아 처리할 수 있나요?"
+  choices: ["`try { ... } catch`로 잡는다", "`rescue`로 잡는다", "`case`로 잡는다", "잡을 수 없다. 예상되는 실패는 `Result`로 돌려준다"]
+  answer: 3
+  feedback:
+    correct: 맞아요. 처리해야 하는 실패는 `Result` 값으로 돌려주고, 크래시는 버그에만 씁니다.
+    choices:
+      0: Gleam에는 `try`/`catch`가 없어요.
+      1: "`rescue`는 Ruby나 Elixir의 문법이에요."
+      2: "`case`는 값을 나눌 뿐, 크래시를 잡지 않아요."
+cloze:
+  prompt: 빈칸에 타입 이름을 채우세요. 파싱은 예외 대신 이 타입의 값을 돌려줍니다.
+  code: |-
+    let parsed: ____(Int, Nil) = int.parse("7")
+    parsed
+  answers: [Result]
+  expected: Ok(7)
+produce:
+  prompt: 잔액에서 금액을 출금한 뒤의 잔액을 `Ok`로 돌려주는 함수 본문을 쓰세요. 예외를 던지는 대신, 금액이 잔액보다 크면 `Error("insufficient funds")`를 돌려줍니다.
+  header: "pub fn withdraw(balance: Int, amount: Int) -> Result(Int, String)"
+  checks: "#(withdraw(100, 30), withdraw(10, 50), withdraw(5, 5))"
+  expected: '#(Ok(70), Error("insufficient funds"), Ok(0))'
+  mustUse: ["Error("]
+  reference: |-
+    case amount > balance {
+      True -> Error("insufficient funds")
+      False -> Ok(balance - amount)
+    }
+  hint: 다른 언어라면 예외를 던졌을 자리에서 `Error(...)`를 돌려주세요. 잔액과 같은 금액은 출금할 수 있어요.

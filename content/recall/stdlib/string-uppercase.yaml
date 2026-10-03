@@ -1,0 +1,36 @@
+title: string.uppercase
+topic: gleam/string
+order: 37
+summary: "문자열의 모든 글자를 대문자로 바꿉니다. 숫자와 기호는 그대로 둡니다. 첫 글자만 대문자, 나머지는 소문자로 만드는 것은 `string.capitalise`입니다."
+example: |
+  string.uppercase("gleam")  // -> "GLEAM"
+imports: [gleam/string]
+signature: "string.uppercase(String) -> String"
+frequency: 4
+recognize:
+  prompt: "`string.uppercase(\"hello world\")`의 값은?"
+  choices: ["`\"Hello world\"`", "`\"HELLO WORLD\"`", "`\"Hello World\"`", "`Ok(\"HELLO WORLD\")`"]
+  answer: 1
+  feedback:
+    correct: 맞아요. 단어와 위치에 상관없이 모든 글자가 대문자가 됩니다.
+    choices:
+      0: "첫 글자만 대문자로 (나머지는 소문자로) 만드는 것은 `string.capitalise`예요."
+      2: "`uppercase`는 단어 첫 글자만이 아니라 모든 글자를 바꿔요."
+      3: "실패할 일이 없어서 `String`을 바로 돌려줘요."
+cloze:
+  prompt: 빈칸을 채워 모두 대문자로 바꾸세요.
+  code: '"ok" |> string.____'
+  answers: [uppercase]
+  expected: '"OK"'
+predict:
+  prompt: 이 식의 값은?
+  code: 'string.uppercase("v1.0-beta")'
+  expected: '"V1.0-BETA"'
+produce:
+  prompt: '사용자가 입력한 국가 코드를 정리하세요. 앞뒤 공백을 지우고 대문자로 바꿉니다(`" kr "` -> `"KR"`).'
+  header: "pub fn country_code(input: String) -> String"
+  checks: '#(country_code(" kr "), country_code("Us"), country_code("JP"), country_code(""))'
+  expected: '#("KR", "US", "JP", "")'
+  mustUse: [string.uppercase]
+  reference: "input |> string.trim |> string.uppercase"
+  hint: "`string.trim`으로 공백을 먼저 지우고 파이프로 이어 가세요."

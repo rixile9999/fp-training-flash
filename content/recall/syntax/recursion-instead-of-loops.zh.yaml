@@ -1,0 +1,16 @@
+title: 用递归代替循环
+summary: Gleam 没有 `for`、`while`、`break`。重复工作用递归（函数调用自身）或 `list.map`、`list.fold` 等 `gleam/list` 函数来完成。
+recognize:
+  prompt: 在 Gleam 中，怎样对列表的每个元素做同样的事？
+  choices: ["`for x in xs { ... }`", "用 `while` 循环递增索引", "`xs.forEach(...)`", "递归，或 `list.map`、`list.each` 等函数"]
+  feedback:
+    correct: 对。没有循环，所以用递归或 `gleam/list` 的函数。
+    choices:
+      0: Gleam 没有 `for` 循环。
+      1: 也没有 `while`，而且列表不能按索引访问。
+      2: Gleam 没有方法。把列表作为第一个参数传给模块函数。
+cloze:
+  prompt: 填空，不用循环把每个元素乘以 10。
+produce:
+  prompt: 不用循环，用递归写出函数体：返回非负整数各位数字之和。例如 123 得到 6。
+  hint: 一位数（小于 10）直接返回。否则把最后一位 `n % 10` 加上 `digit_sum(n / 10)`。

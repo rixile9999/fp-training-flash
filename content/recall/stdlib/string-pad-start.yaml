@@ -1,0 +1,38 @@
+title: string.pad_start
+topic: gleam/string
+order: 40
+summary: "문자열의 길이가 `to:`가 될 때까지 앞쪽을 `with:` 문자열로 채웁니다. 이미 그 길이 이상이면 자르지 않고 그대로 둡니다."
+example: |
+  string.pad_start("7", to: 3, with: "0")  // -> "007"
+imports: [gleam/int, gleam/string]
+signature: "string.pad_start(String, to: Int, with: String) -> String"
+frequency: 3
+recognize:
+  prompt: "`string.pad_start(\"1234\", to: 3, with: \"0\")`의 값은?"
+  choices: ["`\"234\"`", "`\"0001234\"`", "`\"1234\"`", "`Error(Nil)`"]
+  answer: 2
+  feedback:
+    correct: 맞아요. 이미 3글자 이상이라 채울 것이 없고, 넘치는 부분을 자르지도 않습니다.
+    choices:
+      0: 목표보다 긴 문자열을 잘라 내지 않아요.
+      1: "`to:`는 덧붙일 개수가 아니라 목표로 하는 전체 길이예요."
+      3: "실패하지 않고 언제나 `String`을 돌려줘요."
+cloze:
+  prompt: 빈칸을 채워 두 자리로 맞추세요.
+  code: 'string.____("5", to: 2, with: "0")'
+  answers: [pad_start]
+  expected: '"05"'
+predict:
+  prompt: 이 식의 값은?
+  code: 'string.pad_start("7", to: 4, with: "ab")'
+  expected: '"aba7"'
+produce:
+  prompt: '시와 분을 `"09:05"`처럼 두 자리씩 맞춘 시각 문자열로 만드세요.'
+  header: "pub fn clock(hours: Int, minutes: Int) -> String"
+  checks: "#(clock(9, 5), clock(23, 59), clock(0, 0), clock(12, 30))"
+  expected: '#("09:05", "23:59", "00:00", "12:30")'
+  mustUse: [string.pad_start]
+  reference: |-
+    let two = fn(n) { string.pad_start(int.to_string(n), to: 2, with: "0") }
+    two(hours) <> ":" <> two(minutes)
+  hint: "숫자 하나를 두 자리 문자열로 만드는 작은 함수를 `let`으로 만들어 두 번 쓰세요."

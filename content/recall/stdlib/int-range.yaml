@@ -1,0 +1,36 @@
+title: int.range
+topic: gleam/int
+order: 21
+summary: "`from`부터 `to` 직전까지(`to`는 제외) 정수마다 `run`을 불러 누적값을 접습니다. 리스트를 만드는 함수가 아니라 정수 구간에 대한 fold입니다."
+example: |
+  int.range(from: 1, to: 5, with: 0, run: fn(acc, i) { acc + i })  // -> 10
+imports: [gleam/int]
+signature: "int.range(from: Int, to: Int, with: a, run: fn(a, Int) -> a) -> a"
+frequency: 10
+recognize:
+  prompt: "`int.range(from: a, to: b, with: init, run: f)`가 돌려주는 것은?"
+  choices: ["`a`부터 `b`까지의 정수 리스트 `List(Int)`", "`init`에서 시작해 `f`로 접은 누적값", "`Nil` (반복만 한다)", "`Result(List(Int), Nil)`"]
+  answer: 1
+  feedback:
+    correct: 맞아요. 각 정수 `i`마다 `f(acc, i)`를 불러, 마지막 누적값을 돌려줍니다.
+    choices:
+      0: Python의 `range`와 달리 리스트를 만들지 않아요. 결과 타입은 `with:`로 준 누적값의 타입입니다.
+      2: 부수효과만 내는 반복이 아니라, `with:`에서 시작한 누적값을 돌려줍니다.
+      3: 실패할 일이 없어서 `Result`로 감싸지 않아요.
+cloze:
+  prompt: 빈칸을 채워 1부터 4까지 더하세요.
+  code: "int.____(from: 1, to: 5, with: 0, run: fn(acc, i) { acc + i })"
+  answers: [range]
+  expected: "10"
+predict:
+  prompt: 이 식의 값은?
+  code: 'int.range(from: 0, to: 3, with: "", run: fn(acc, i) { acc <> int.to_string(i) })'
+  expected: '"012"'
+produce:
+  prompt: "`n!`(1부터 `n`까지의 곱)을 돌려주세요. `n`이 0이면 1입니다."
+  header: "pub fn factorial(n: Int) -> Int"
+  checks: "#(factorial(0), factorial(1), factorial(5), factorial(10))"
+  expected: "#(1, 1, 120, 3628800)"
+  mustUse: [int.range]
+  reference: "int.range(from: 1, to: n + 1, with: 1, run: fn(acc, i) { acc * i })"
+  hint: "`to`는 포함되지 않으니 `n + 1`까지 돌리고, 곱셈의 시작값은 1입니다."

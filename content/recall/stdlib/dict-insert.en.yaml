@@ -1,0 +1,18 @@
+title: dict.insert
+summary: Returns a new dict with the key and value added. The arguments go `dict.insert(dict, key, value)`, and an existing key gets its value overwritten.
+recognize:
+  prompt: "Which call puts key `k` with value `v` into dict `d`?"
+  choices: ["`dict.insert(d, k, v)`", "`dict.insert(k, v, d)`", "`dict.insert(d, #(k, v))`", "`dict.insert(d, v, k)`"]
+  feedback:
+    correct: Right. The dict comes first, so you can pipe it as `d |> dict.insert(k, v)`.
+    choices:
+      1: Elm's `Dict.insert` takes the dict last, but in Gleam the dict is the first argument.
+      2: Key and value are passed separately. A `#(key, value)` tuple is the shape you give to `dict.from_list`.
+      3: Just like the labels `into:`, `for:`, `insert:`, the key comes first and the value after.
+cloze:
+  prompt: Fill in the blank to put 1 under the key `"x"`.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: 'From a list of login records `#(user, time)`, write the body of a function that builds a dict of each user''s last login time, using `dict.insert`. The records are in time order.'
+  hint: "If you insert them one by one with `list.fold`, a user's earlier time gets overwritten."

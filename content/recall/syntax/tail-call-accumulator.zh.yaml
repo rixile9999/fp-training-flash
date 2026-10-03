@@ -1,0 +1,18 @@
+title: 尾调用与累加器
+summary: 如果函数最后做的事是调用自身（尾调用），调用栈就不会增长。所以把累加器作为参数传递的尾递归，在 Gleam 里起到循环的作用。
+recognize:
+  prompt: 下面哪个分支里的递归调用是尾调用？
+  choices: ["`[x, ..rest] -> x + sum(rest)`", "`[x, ..rest] -> sum_loop(rest, acc + x)`", "`[x, ..rest] -> [x * 2, ..double(rest)]`", "`[_, ..rest] -> 1 + length(rest)`"]
+  feedback:
+    correct: 对。直接返回调用的结果，剩下的计算已经提前放进累加器 `acc + x`。
+    choices:
+      0: 递归调用返回后还要计算 `x +`，所以不是尾调用。
+      2: 还要把元素加到结果前面，所以不是尾调用。
+      3: 调用之后还剩 `1 +`。加一个累加器参数就能改成尾调用。
+cloze:
+  prompt: 求和时累加器应该从多少开始？填空。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 写出尾递归函数体：把元素依次乘进累加器 `acc`。列表为空时返回 `acc`。
+  hint: 和上面的 `sum_loop` 形状相同，只要把 `+` 换成 `*`。

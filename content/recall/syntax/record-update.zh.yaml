@@ -1,0 +1,18 @@
+title: 记录更新 ..
+summary: "`Person(..p, age: 31)` 会复制 `p`，只改动写出的字段，生成一条新记录。原来的 `p` 保持不变。"
+recognize:
+  prompt: "已知 `p: Person`，只把年龄改为 31 的新记录怎么写？"
+  choices: ["`Person(..p, age: 31)`", "`p.age = 31`", "`{ ...p, age: 31 }`", "`Person(p, age: 31)`"]
+  feedback:
+    correct: "对。依次写构造器名、`..p` 和要改的字段。"
+    choices:
+      1: 没有给字段赋值的语法。记录是不可变的，要构造新记录。
+      2: "`...` 是 JavaScript 的展开语法。Gleam 用构造器名加 `..p`。"
+      3: "不加 `..` 直接传 `p`，就等于把 `Person` 放到 `name` 的位置，会编译错误。"
+cloze:
+  prompt: 填空，构造一条只改了名字的新记录。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: "返回年龄加 1 后的 `Person`。使用记录更新 `..`。"
+  hint: "形式是 `Person(..p, age: ...)`，新年龄是 `p.age + 1`。"

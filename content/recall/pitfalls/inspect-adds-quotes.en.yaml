@@ -1,0 +1,16 @@
+title: string.inspect adds quotes
+summary: "`string.inspect` shows a value the way it looks in Gleam code, so strings get quotes. Join strings as they are, and use `inspect` for structured values such as lists."
+recognize:
+  prompt: "What does `io.println(string.inspect(\"ann\"))` print?"
+  choices: ["`ann`", "`\"ann\"`", "`Ok(\"ann\")`"]
+  feedback:
+    correct: Right. Like Python's `repr`, you get the code form, quotes included.
+    choices:
+      0: "To print it without quotes, pass the string as it is: `io.println(\"ann\")`, with no `string.inspect`."
+      2: "`string.inspect` can't fail; it returns a `String` directly."
+cloze:
+  prompt: Fill in the blank to show the list as a string.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: "Build a line like `ann: [\"x\"]` from a name and a list of tags. The name must not get quotes."

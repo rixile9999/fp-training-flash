@@ -1,0 +1,15 @@
+title: Int doesn't overflow
+summary: "On Erlang, `Int` has no size limit, so however large it grows it never wraps around to a negative number (the JavaScript target differs)."
+recognize:
+  prompt: "On the Erlang target, what is the value of `9_223_372_036_854_775_807 + 1`?"
+  choices: ["`-9223372036854775808`", "`9223372036854775808`", It crashes with an overflow error]
+  feedback:
+    correct: Right. Erlang integers grow as many digits as they need.
+    choices:
+      0: That's the wrapped-around value of a 64-bit integer in Java or C. Erlang's `Int` doesn't overflow.
+      2: There's no size limit, so there's no overflow error either.
+cloze:
+  prompt: Fill in the blank to multiply all three numbers.
+produce:
+  prompt: "Return `n!` (the product of 1 through `n`). `0!` is 1."
+  hint: No special handling for big numbers is needed. Just multiply.

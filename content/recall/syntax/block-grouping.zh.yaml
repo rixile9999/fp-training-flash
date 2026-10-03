@@ -1,0 +1,18 @@
+title: 用花括号分组运算
+summary: "要给运算分组，用代码块 `{ }`，而不是圆括号。`{ 1 + 2 } * 3` 等于 9。"
+recognize:
+  prompt: "`(a + b) * c` 在 Gleam 中怎么写？"
+  choices: ["`(a + b) * c`", "`{ a + b } * c`", "`[a + b] * c`", "`a + b * c`"]
+  feedback:
+    correct: 对。在 Gleam 中用花括号代码块给表达式分组。
+    choices:
+      0: "Gleam 的圆括号不能给表达式分组，会报语法错误，并提示改用 `{ }`。"
+      2: "`[a + b]` 是只有一个元素的列表，列表不能用 `*`。"
+      3: "`*` 先算，所以 `a + b * c` 是 `a` 加上 `b * c`。"
+cloze:
+  prompt: 填空，让加法先计算。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 用整数除法求两个整数的平均值。要先把加法分组。
+  hint: "用 `{ a + b } / 2` 代替 `(a + b) / 2`。"

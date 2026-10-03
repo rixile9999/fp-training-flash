@@ -1,0 +1,42 @@
+title: "Option: Some과 None"
+topic: option
+order: 222
+summary: 있을 수도 없을 수도 있는 값은 `gleam/option`의 `Option(a)`로 나타내요. 값이 있으면 `Some(값)`, 없으면 `None`이고, 실패할 수 있는 연산에는 `Result`를 씁니다.
+example: |
+  let nickname: Option(String) = Some("jo")
+  case nickname {
+    Some(n) -> n
+    None -> "anonymous"
+  }  // -> "jo"
+imports: ["gleam/option.{type Option, None, Some}"]
+recognize:
+  prompt: "`Option`과 `Result`는 각각 언제 쓰나요?"
+  choices: ["`Option`은 실패할 수 있는 연산, `Result`는 없을 수 있는 값", "`Option`은 없을 수 있는 값, `Result`는 실패할 수 있는 연산", "같은 타입이라 아무거나 쓴다", "`Option`은 내장 타입이라 import 없이 쓴다"]
+  answer: 1
+  feedback:
+    correct: 맞아요. 값이 비어 있는 것이 정상이면 `Option`, 실패와 그 이유를 전하려면 `Result`입니다.
+    choices:
+      0: 반대예요. `Result`는 `Error`에 실패 이유를 담을 수 있어요.
+      2: 다른 타입이에요. `Some`/`None`과 `Ok`/`Error`는 서로 섞어 쓸 수 없습니다.
+      3: "`Result`는 내장이지만 `Option`은 `gleam/option`에서 import해야 해요."
+cloze:
+  prompt: 빈칸을 채워 별명이 없는 경우를 처리하세요.
+  code: |-
+    let nickname: Option(String) = None
+    case nickname {
+      Some(n) -> n
+      ____ -> "anonymous"
+    }
+  answers: [None, _]
+  expected: '"anonymous"'
+produce:
+  prompt: 별명이 있으면 별명을, 없으면 이름을 돌려주는 함수 본문을 쓰세요. `case`로 `Some`과 `None`을 나누세요.
+  header: "pub fn display_name(nickname: Option(String), name: String) -> String"
+  checks: '#(display_name(Some("jo"), "John"), display_name(None, "John"), display_name(Some(""), "Ann"))'
+  expected: '#("jo", "John", "")'
+  mustUse: ["Some(", None]
+  reference: |-
+    case nickname {
+      Some(n) -> n
+      None -> name
+    }

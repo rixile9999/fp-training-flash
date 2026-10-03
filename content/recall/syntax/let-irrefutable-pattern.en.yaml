@@ -1,0 +1,16 @@
+title: let patterns must always match
+summary: A plain `let` can only take apart patterns that always match (tuples, records with a single constructor). A pattern that can fail, like `let [x, ..] = xs`, is a compile error; use `case` or `let assert`.
+recognize:
+  prompt: Which of these compiles?
+  choices: ["`let [first, ..] = xs`", "`let #(a, b) = pair`", "`let Ok(n) = int.parse(s)`", "`let Some(x) = opt`"]
+  feedback:
+    correct: Right. A tuple pattern always matches, so `let` can take it apart.
+    choices:
+      0: An empty list wouldn't match, so it's a compile error ("Inexhaustive pattern"). Use `case` or `let assert`.
+      2: It could be an `Error`, so plain `let` won't do. Use `case` to handle failure, or `let assert` if you're certain.
+      3: It could be `None`, so this is a compile error.
+cloze:
+  prompt: A list pattern can fail. Fill in the blank so the empty list is handled too.
+produce:
+  prompt: Write the body of a function that returns the first score from `#(name, scores)`, or 0 if there are no scores. Take the tuple apart with `let`, and use `case` for the list pattern, which can fail.
+  hint: "`let [first, ..] = scores` doesn't compile, because it wouldn't match an empty list."

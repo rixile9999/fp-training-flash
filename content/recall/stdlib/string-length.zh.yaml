@@ -1,0 +1,16 @@
+title: string.length
+summary: "返回字符串的字符（字素）数。它不按字节计数，所以 `\"café\"` 的长度是 4，表情符号 `\"👍🏽\"` 的长度是 1。"
+recognize:
+  prompt: "`string.length(\"café\")` 的值是？"
+  choices: ["`5`", "`4`", "`Ok(4)`"]
+  feedback:
+    correct: 对。它数的是读者看到的字符个数。
+    choices:
+      0: "5 是 UTF-8 字节数（`é` 占 2 个字节）。需要字节数时用 `string.byte_size`。"
+      2: "它不会失败，所以直接返回 `Int`。"
+cloze:
+  prompt: 填空，求字符个数。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 检查密码是否至少有 8 个字符。

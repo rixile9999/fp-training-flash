@@ -1,0 +1,31 @@
+title: Float 비교는 <. >.
+topic: float
+order: 2
+summary: "`Float` 크기 비교도 점이 붙은 `<.` `>.` `<=.` `>=.`를 씁니다. `==`와 `!=`만은 모든 타입에 그대로 써요."
+example: |
+  {
+    let temp = 36.6
+    temp >=. 37.5
+  }  // -> False
+recognize:
+  prompt: "`Float` 값 `a`가 `b`보다 작은지 확인하는 식은?"
+  choices: ["`a < b`", "`a <. b`", "`float.less(a, b)`", "`a.lt(b)`"]
+  answer: 1
+  feedback:
+    correct: 맞아요. `Float` 비교는 `<.`입니다.
+    choices:
+      0: "`<`는 `Int` 전용이라 `Float`에 쓰면 타입 오류예요."
+      2: "그런 함수는 없어요. `Order`가 필요하면 `float.compare(a, b)`를 씁니다."
+      3: Gleam에는 메서드 호출이 없습니다.
+cloze:
+  prompt: 빈칸에 알맞은 비교 연산자를 채우세요.
+  code: "36.6 ____ 37.5"
+  answers: ["<.", "<=."]
+  expected: "True"
+produce:
+  prompt: 체온 `temp`가 37.5보다 높으면 `True`를 돌려주세요.
+  header: "pub fn has_fever(temp: Float) -> Bool"
+  checks: "#(has_fever(36.6), has_fever(37.5), has_fever(39.0))"
+  expected: "#(False, False, True)"
+  mustUse: [">."]
+  reference: "temp >. 37.5"

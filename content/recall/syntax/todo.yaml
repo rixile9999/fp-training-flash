@@ -1,0 +1,51 @@
+title: todo
+topic: todo
+order: 228
+summary: "`todo`는 아직 구현하지 않은 자리를 표시해요. 경고와 함께 컴파일되고, 그 자리가 실행되면 크래시합니다."
+example: |
+  let shape = Square(side: 2.0)
+  case shape {
+    Circle(r) -> 3.14 *. r *. r
+    Square(s) -> s *. s
+    Triangle(..) -> todo as "triangle area"
+  }  // -> 4.0
+definitions: |
+  pub type Shape {
+    Circle(radius: Float)
+    Square(side: Float)
+    Triangle(a: Float, b: Float, c: Float)
+  }
+recognize:
+  prompt: "`todo`가 남아 있는 프로젝트를 빌드하면?"
+  choices: ["컴파일 오류가 나서 실행할 수 없다", "경고 없이 컴파일되고 그 자리는 `Nil`이 된다", "그 분기를 건너뛰고 다음 분기를 실행한다", "경고와 함께 컴파일되고, 그 자리가 실행되면 크래시한다"]
+  answer: 3
+  feedback:
+    correct: 맞아요. 그래서 일부만 만든 코드도 돌려 볼 수 있고, 남은 `todo`는 경고로 알 수 있어요.
+    choices:
+      0: 오류가 아니라 경고("Todo found")예요. 덕분에 작업 중인 코드를 실행해 볼 수 있습니다.
+      1: 컴파일러가 남은 `todo`를 경고로 알려 주고, 값을 만들어 내지 않아요.
+      2: 건너뛰지 않아요. 실행되는 순간 크래시합니다.
+cloze:
+  prompt: 빈칸을 채워 삼각형 분기를 아직 구현하지 않았다고 표시하세요.
+  code: |-
+    let shape = Square(side: 2.0)
+    case shape {
+      Circle(r) -> 3.14 *. r *. r
+      Square(s) -> s *. s
+      Triangle(..) -> ____ as "triangle area"
+    }
+  answers: [todo]
+  expected: "4.0"
+produce:
+  prompt: 도형의 둘레를 구하는 함수 본문을 쓰세요. 원은 `2.0 *. 3.14 *. r`, 정사각형은 `4.0 *. side`이고, 삼각형은 아직 구현하지 않았으니 `todo`로 남겨 두세요.
+  header: "pub fn perimeter(shape: Shape) -> Float"
+  checks: "#(perimeter(Circle(1.0)), perimeter(Square(2.5)), perimeter(Square(0.0)))"
+  expected: "#(6.28, 10.0, 0.0)"
+  mustUse: [todo]
+  reference: |-
+    case shape {
+      Circle(r) -> 2.0 *. 3.14 *. r
+      Square(s) -> 4.0 *. s
+      Triangle(..) -> todo as "triangle perimeter"
+    }
+  hint: Float 연산자는 `*.`입니다. 남은 분기는 `Triangle(..) -> todo`로 둡니다.

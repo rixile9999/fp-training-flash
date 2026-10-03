@@ -1,0 +1,37 @@
+title: 재대입 없음
+topic: let
+order: 106
+summary: "Gleam에는 재대입이 없습니다. `x = x + 1`은 문법 오류이고, 새 값에는 항상 `let`을 씁니다."
+example: |
+  {
+    let total = 100
+    let total = total - 30
+    total
+  }  // -> 70
+imports: []
+recognize:
+  prompt: "`let total = 0` 다음 줄에 `total = total + 5`라고 쓰면?"
+  choices: ["`total`이 5가 됩니다", "문법 오류입니다. 다시 바인딩하려면 `let`을 씁니다", "`total`은 0 그대로이고 경고만 나옵니다", "`total == total + 5`처럼 비교식으로 읽힙니다"]
+  answer: 1
+  feedback:
+    correct: "맞아요. 대입문이 없어서 문법 오류가 나고, 컴파일러가 `let`을 쓰라고 알려 줍니다."
+    choices:
+      0: 다른 언어의 대입처럼 동작하지 않아요. Gleam에는 재대입 문법 자체가 없습니다.
+      2: 경고로 끝나지 않고 컴파일이 실패합니다.
+      3: "`=`는 `let`과 함께 바인딩할 때만 쓰고, 비교는 `==`예요. 이 줄은 그냥 문법 오류입니다."
+cloze:
+  prompt: 빈칸을 채워 `total`에 5를 더한 값을 다시 바인딩하세요.
+  code: "{ let total = 10  ____ total = total + 5  total }"
+  answers: [let]
+  expected: "15"
+produce:
+  prompt: "잔액에서 출금액을 빼고, 다시 수수료 1을 뺀 잔액을 돌려주세요. 단계마다 `let balance = ...`로 다시 바인딩하세요."
+  header: "pub fn after_withdraw(balance: Int, amount: Int) -> Int"
+  checks: "#(after_withdraw(100, 30), after_withdraw(10, 10), after_withdraw(0, 0))"
+  expected: "#(69, -1, -1)"
+  mustUse: [let balance]
+  reference: |
+    let balance = balance - amount
+    let balance = balance - 1
+    balance
+  hint: "`balance = ...`가 아니라 `let balance = balance - amount`처럼 씁니다."

@@ -1,0 +1,16 @@
+title: set.contains
+summary: "Tells you, as a `Bool`, whether a value is in a set. The set comes first (`in:`), the value second (`this:`), and it is faster than scanning a list with `list.contains`."
+recognize:
+  prompt: "Which expression checks whether the set `roles: Set(String)` contains `\"admin\"`?"
+  choices: ["`set.contains(\"admin\", roles)`", "`set.contains(roles, \"admin\")`", "`list.contains(roles, \"admin\")`", "`set.get(roles, \"admin\")`"]
+  feedback:
+    correct: "Right. The set comes first, so you can also pipe it: `roles |> set.contains(\"admin\")`."
+    choices:
+      0: "It's the other way round. Following the labels `in:` and `this:`, the set comes first and the value second."
+      2: "`roles` is a `Set`, not a list, so passing it to `list.contains` is a type error."
+      3: "There is no `set.get`. Asking whether a value is there is `set.contains`, which returns a `Bool`."
+cloze:
+  prompt: Fill in the blank to check whether 2 is in the set.
+produce:
+  prompt: "Remove the words that are in the set of banned words `banned` from a list of words."
+  hint: "In the `list.filter` condition, negate the result of `set.contains` with `!`."

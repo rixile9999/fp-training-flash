@@ -1,0 +1,37 @@
+title: dict.insert는 새 dict를 돌려줌
+topic: dict
+order: 27
+summary: "`dict.insert`는 원래 dict를 바꾸지 않고 새 dict를 돌려줍니다. 결과를 버리면 아무것도 바뀌지 않으니 `let`으로 받거나 파이프로 이어 씁니다."
+example: |
+  {
+    let d = dict.from_list([#("a", 1)])
+    let _ = dict.insert(d, "b", 2)
+    dict.size(d)
+  }  // -> 1
+imports: ["gleam/dict.{type Dict}"]
+recognize:
+  prompt: "`{ let d = dict.new()  dict.insert(d, \"a\", 1)  dict.size(d) }`의 값은?"
+  choices: ["`0`", "`1`", 컴파일 오류]
+  answer: 0
+  feedback:
+    correct: 맞아요. `d`는 그대로 비어 있고, 새 dict는 버려졌습니다.
+    choices:
+      1: "Python의 dict처럼 제자리에서 바뀐다고 생각한 결과예요. Gleam의 값은 바뀌지 않습니다."
+      2: "컴파일은 되고 \"Unused value\" 경고만 나와요. 그래서 실수를 놓치기 쉽습니다."
+cloze:
+  prompt: 빈칸을 채워 새 dict를 같은 이름으로 받으세요.
+  code: '{ let d = dict.new()  let d = dict.____(d, "a", 1)  dict.size(d) }'
+  answers: [insert]
+  expected: "1"
+produce:
+  prompt: "dict에서 키 `from`의 값을 키 `to`로 옮기세요. `from`이 없으면 dict를 그대로 돌려줍니다."
+  header: "pub fn rename_key(d: Dict(String, Int), from: String, to: String) -> Dict(String, Int)"
+  checks: '#(rename_key(dict.from_list([#("a", 1)]), "a", "b") == dict.from_list([#("b", 1)]), rename_key(dict.from_list([#("a", 1)]), "z", "b") == dict.from_list([#("a", 1)]), dict.size(rename_key(dict.from_list([#("a", 1), #("b", 2)]), "a", "c")))'
+  expected: "#(True, True, 2)"
+  mustUse: [dict.insert, dict.delete]
+  reference: |
+    case dict.get(d, from) {
+      Ok(value) -> d |> dict.delete(from) |> dict.insert(to, value)
+      Error(Nil) -> d
+    }
+  hint: "`dict.delete`도 새 dict를 돌려주니, 파이프로 이어 씁니다."

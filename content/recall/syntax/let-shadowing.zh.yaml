@@ -1,0 +1,18 @@
+title: 遮蔽不是修改
+summary: "用同一个名字再次 `let`，只是新绑定遮住了旧绑定，并不会修改任何值。之前捕获了旧值的代码看到的仍是旧值。"
+recognize:
+  prompt: "在 `let x = 1` 的下一行写 `let x = x + 1`，会发生什么？"
+  choices: ["把 `x` 的值改成 2", "创建一个同名的新绑定 `x`，遮住旧的", "名字不能重复使用，所以编译错误", "把 `x` 变成可变变量"]
+  feedback:
+    correct: 对。绑定是不可变的，新的 `x` 只是遮蔽（shadowing）了旧的 `x`。
+    choices:
+      0: 并没有修改值。旧的 `x` 仍然是 1，只是之后的代码看到的是新的 `x`。
+      2: 即使在同一个代码块里，也可以用同一个名字再次 `let`。
+      3: Gleam 没有可变变量，所有绑定都是不可变的。
+cloze:
+  prompt: "填空，把 `n` 重新绑定为旧 `n` 的两倍。"
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: "去掉名字首尾的空白并转成小写后返回。用 `let` 反复绑定同一个名字 `name`，一步一步写。"
+  hint: "先写 `let name = string.trim(name)`，再接 `let name = string.lowercase(name)`。"

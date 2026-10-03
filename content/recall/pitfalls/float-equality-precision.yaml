@@ -1,0 +1,35 @@
+title: Float는 ==로 비교하면 위험
+topic: float
+order: 6
+summary: "`Float`는 2진 근사값이라 `0.1 +. 0.2 == 0.3`이 `False`입니다. 계산해서 나온 `Float`끼리는 `float.loosely_equals`로 오차를 허용해 비교합니다."
+example: |
+  {
+    let sum = 0.1 +. 0.2
+    sum == 0.3
+  }  // -> False
+imports: [gleam/float]
+recognize:
+  prompt: "`0.1 +. 0.2 == 0.3`의 값은?"
+  choices: ["`True`", "`False`", "컴파일 오류(`Float`는 `==`로 비교할 수 없음)"]
+  answer: 1
+  feedback:
+    correct: "맞아요. `0.1 +. 0.2`는 `0.30000000000000004`라서 정확히 같지 않습니다."
+    choices:
+      0: 수학적으로는 같지만 2진 부동소수점에서는 오차가 생겨요. 대부분의 언어에서도 마찬가지입니다.
+      2: "`==`는 `Float`에도 쓸 수 있어요. 다만 비트까지 정확히 같아야 `True`입니다."
+cloze:
+  prompt: 빈칸을 채워 오차를 허용하고 비교하세요.
+  code: "float.____(0.1 +. 0.2, with: 0.3, tolerating: 0.0001)"
+  answers: [loosely_equals]
+  expected: "True"
+predict:
+  prompt: 이 식의 값은?
+  code: "0.1 +. 0.2"
+  expected: "0.30000000000000004"
+produce:
+  prompt: 두 측정값의 차이가 0.01 이내이면 `True`를 돌려주세요.
+  header: "pub fn close_enough(a: Float, b: Float) -> Bool"
+  checks: "#(close_enough(0.1 +. 0.2, 0.3), close_enough(1.0, 1.5), close_enough(2.0, 2.005))"
+  expected: "#(True, False, True)"
+  mustUse: [float.loosely_equals]
+  reference: "float.loosely_equals(a, with: b, tolerating: 0.01)"

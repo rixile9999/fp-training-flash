@@ -1,0 +1,18 @@
+title: 函数捕获 _
+summary: "`f(a, _)` 是 `fn(x) { f(a, x) }` 的简写。空位 `_` 只能有一个。"
+recognize:
+  prompt: 哪个函数和 `int.subtract(10, _)` 相同？
+  choices: ["`fn(x) { x - 10 }`", "`fn(x, y) { x - y }`", "`int.subtract(10)`", "`fn(x) { 10 - x }`"]
+  feedback:
+    correct: 对。参数填进 `_` 的位置，得到 `int.subtract(10, x)`，也就是 `10 - x`。
+    choices:
+      0: "`_` 在第二个参数的位置，所以 `x` 是被减数。`int.subtract(_, 10)` 才是 `x - 10`。"
+      1: 捕获只填一个空位，所以得到的是单参数函数。
+      2: Gleam 函数不会自动柯里化。参数不够是编译错误。
+cloze:
+  prompt: 填空，在每个字符串前面加上 `"x"`。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 写出函数体：在每个单词前面加上 `prefix`。用 `string.append` 的捕获代替匿名函数。
+  hint: 在 `string.append(前, 后)` 中，单词放在后面的位置。

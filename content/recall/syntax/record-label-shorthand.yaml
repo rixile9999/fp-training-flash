@@ -1,0 +1,38 @@
+title: "레이블 줄임 name:"
+topic: records
+order: 121
+summary: "레이블 인자 `name: name`처럼 넘길 변수의 이름이 레이블과 같으면 `name:`만 써도 됩니다."
+definitions: |
+  pub type User {
+    User(name: String, age: Int, admin: Bool)
+  }
+example: |
+  {
+    let name = "ann"
+    let age = 30
+    User(name:, age:, admin: False)
+  }  // -> User("ann", 30, False)
+imports: []
+recognize:
+  prompt: "`let age = 30` 다음 `User(name: \"ann\", age:, admin: False)`에서 `age:`의 뜻은?"
+  choices: ["`age: age`의 줄임이라 30이 들어갑니다", "필드를 비워 두어 기본값 0이 들어갑니다", "문법 오류입니다", "`age: Nil`이 됩니다"]
+  answer: 0
+  feedback:
+    correct: "맞아요. 같은 이름의 변수 `age`를 그 레이블로 넘깁니다."
+    choices:
+      1: "Gleam 필드에는 기본값이 없어요. `age:`는 같은 이름의 변수 `age`를 넘긴다는 뜻입니다."
+      2: 올바른 줄임 문법이에요. 단, 같은 이름의 변수가 있어야 합니다.
+      3: "Int 필드에 `Nil`을 넣을 수는 없어요. 같은 이름의 변수를 넘깁니다."
+cloze:
+  prompt: "빈칸을 채워 변수 `admin`을 같은 이름의 레이블로 넘기세요."
+  code: '{ let admin = True  User(name: "bo", age: 20, ____) }'
+  answers: ["admin:", "admin: admin"]
+  expected: 'User("bo", 20, True)'
+produce:
+  prompt: "이름과 나이를 받아 관리자가 아닌 `User`를 만드세요. 인자는 정의 순서(name, age, admin)대로 쓰고, `name`, `age`는 줄임 문법으로 넘기세요."
+  header: "pub fn member(name: String, age: Int) -> User"
+  checks: '#(member("ann", 30), member("", 0), member("bo", -1))'
+  expected: '#(User("ann", 30, False), User("", 0, False), User("bo", -1, False))'
+  mustUse: ["name:,", "age:,"]
+  reference: "User(name:, age:, admin: False)"
+  hint: "`User(name:, age:, admin: False)` 순서로 쓰세요."

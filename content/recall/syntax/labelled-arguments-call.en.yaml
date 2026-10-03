@@ -1,0 +1,15 @@
+title: Calling with labelled arguments
+summary: "Labelled arguments are passed as `label: value` and may come in any order. Positional arguments, however, must come before labelled ones."
+recognize:
+  prompt: Which call to the `clamp` above does not compile?
+  choices: ["`clamp(5, min: 0, max: 10)`", "`clamp(5, max: 10, min: 0)`", "`clamp(5, 0, 10)`", "`clamp(min: 0, max: 10, 5)`"]
+  feedback:
+    correct: Right. The positional argument `5` comes after labelled ones, which is a compile error ("Unexpected positional argument").
+    choices:
+      0: That's a normal call.
+      1: Labelled arguments can be given in any order.
+      2: Labelled parameters can also be passed by position, though labels make the meaning clearer.
+cloze:
+  prompt: Fill in the label to set the lower bound to 0.
+produce:
+  prompt: Write the body of a function that limits `n` to the range 0 to 100 by calling the `clamp` above with labelled arguments.

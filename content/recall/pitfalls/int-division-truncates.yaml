@@ -1,0 +1,33 @@
+title: Int 나눗셈은 0 쪽으로 버림
+topic: int
+order: 10
+summary: "`Int` 나눗셈 `/`는 0 쪽으로 버립니다. `-7 / 2`는 Python의 `-4`가 아니라 `-3`이에요. 내림이 필요하면 `int.floor_divide`를 씁니다."
+example: |
+  -7 / 2  // -> -3
+imports: [gleam/int, gleam/result]
+recognize:
+  prompt: "`-7 / 2`의 값은?"
+  choices: ["`-3`", "`-4`", "`-3.5`"]
+  answer: 0
+  feedback:
+    correct: 맞아요. 몫의 소수 부분을 버리므로 0에 가까운 `-3`입니다.
+    choices:
+      1: "Python `//`처럼 내림(floor)한 결과예요. Gleam의 `/`는 0 쪽으로 버리고, 내림은 `int.floor_divide`입니다."
+      2: "`Int`끼리 나누면 결과도 `Int`예요. 소수가 필요하면 `int.to_float`로 바꾼 뒤 `/.`를 씁니다."
+cloze:
+  prompt: 빈칸을 채워 음의 무한대 쪽으로 내림한 몫을 구하세요.
+  code: "int.____(-7, by: 2)"
+  answers: [floor_divide]
+  expected: "Ok(-4)"
+predict:
+  prompt: 이 식의 값은?
+  code: "-1 / 2"
+  expected: "0"
+produce:
+  prompt: "자정부터 센 분 `minutes`가 며칠째에 해당하는지 돌려주세요. 0~1439는 0, 1440~2879는 1, -1440~-1은 전날인 -1입니다."
+  header: "pub fn day_offset(minutes: Int) -> Int"
+  checks: "#(day_offset(0), day_offset(1500), day_offset(-1), day_offset(-1440), day_offset(-1441))"
+  expected: "#(0, 1, -1, -1, -2)"
+  mustUse: [int.floor_divide]
+  reference: "int.floor_divide(minutes, by: 1440) |> result.unwrap(0)"
+  hint: "`minutes / 1440`은 -1분을 0일로 버립니다. `int.floor_divide`는 `Result`를 돌려주니 `result.unwrap`으로 풉니다."

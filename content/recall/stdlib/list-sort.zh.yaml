@@ -1,0 +1,18 @@
+title: list.sort
+summary: 用比较函数（`by:`）把列表从小到大排序。比较函数返回 `Order`（`Lt`、`Eq`、`Gt`），整数就传 `int.compare`。
+recognize:
+  prompt: "下面哪个表达式能对整数列表 `xs` 排序？"
+  choices: ["`list.sort(xs)`", "`list.sort(xs, by: int.compare)`", "`list.sort(xs, fn(a, b) { a < b })`", "`list.sort(int.compare, xs)`"]
+  feedback:
+    correct: 对。没有默认顺序，所以一定要传比较函数。
+    choices:
+      0: Gleam 的值没有默认顺序，省略比较函数会产生编译错误。
+      2: 比较函数要返回 `Order`（`Lt`、`Eq`、`Gt`），而不是 `Bool`。
+      3: 要排序的列表是第一个参数，比较函数是第二个。
+cloze:
+  prompt: 填空，把字符串按字典序排序。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 用 `list.sort` 写出函数体：把分数从高到低排序。
+  hint: "像 `int.compare(b, a)` 这样交换参数来比较，就是降序。"

@@ -1,0 +1,36 @@
+title: list.try_map
+topic: gleam/list
+order: 18
+summary: 각 원소에 `Result`를 돌려주는 함수를 적용합니다. 모두 `Ok`이면 `Ok(리스트)`, 하나라도 실패하면 처음 만난 `Error`를 돌려줍니다.
+example: |
+  list.try_map(["1", "2", "3"], int.parse)  // -> Ok([1, 2, 3])
+imports: [gleam/list, gleam/int]
+signature: "list.try_map(over: List(a), with: fn(a) -> Result(b, c)) -> Result(List(b), c)"
+frequency: 11
+recognize:
+  prompt: "`list.try_map([\"1\", \"x\", \"3\"], int.parse)`의 값은?"
+  choices: ["`Ok([1, 3])`", "`[Ok(1), Error(Nil), Ok(3)]`", "`Error(Nil)`", "`Ok([1, 0, 3])`"]
+  answer: 2
+  feedback:
+    correct: 맞아요. `"x"`에서 `int.parse`가 실패하므로 그 `Error(Nil)`이 전체 결과가 됩니다.
+    choices:
+      0: 실패한 원소를 건너뛰고 성공한 값만 모으는 것은 `list.filter_map`입니다.
+      1: "`Result`의 리스트를 그대로 얻는 것은 `list.map(xs, int.parse)`입니다. `try_map`은 결과를 `Result` 하나로 묶습니다."
+      3: 실패를 기본값으로 바꾸지 않습니다. 하나라도 실패하면 전체가 `Error`입니다.
+cloze:
+  prompt: 빈칸을 채워 모든 문자열을 정수로 바꾸세요.
+  code: 'list.____(["4", "5"], int.parse)'
+  answers: [try_map]
+  expected: "Ok([4, 5])"
+predict:
+  prompt: 이 식의 값은?
+  code: "list.try_map([], int.parse)"
+  expected: "Ok([])"
+produce:
+  prompt: 문자열로 받은 점수들을 정수 리스트로 바꾸는 함수 본문을 `list.try_map`으로 쓰세요. 하나라도 정수가 아니면 `Error(Nil)`입니다.
+  header: "pub fn parse_scores(raw: List(String)) -> Result(List(Int), Nil)"
+  checks: '#(parse_scores(["90", "3"]), parse_scores(["90", "A"]), parse_scores([]))'
+  expected: "#(Ok([90, 3]), Error(Nil), Ok([]))"
+  mustUse: [list.try_map]
+  reference: "list.try_map(raw, int.parse)"
+  hint: "`int.parse`가 이미 `String -> Result(Int, Nil)` 모양입니다."

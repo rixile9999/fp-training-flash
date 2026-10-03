@@ -1,0 +1,15 @@
+title: dict.insert returns a new dict
+summary: "`dict.insert` doesn't change the original dict; it returns a new one. If you drop the result nothing changes, so bind it with `let` or chain it with a pipe."
+recognize:
+  prompt: "What is the value of `{ let d = dict.new()  dict.insert(d, \"a\", 1)  dict.size(d) }`?"
+  choices: ["`0`", "`1`", A compile error]
+  feedback:
+    correct: Right. `d` is still empty, and the new dict was thrown away.
+    choices:
+      1: "That assumes the dict changes in place, as in Python. Values in Gleam never change."
+      2: "It compiles with only an \"Unused value\" warning, which is why the mistake is easy to miss."
+cloze:
+  prompt: Fill in the blank to bind the new dict to the same name.
+produce:
+  prompt: "Move the value under key `from` to key `to`. If `from` isn't there, return the dict unchanged."
+  hint: "`dict.delete` also returns a new dict, so chain the calls with a pipe."

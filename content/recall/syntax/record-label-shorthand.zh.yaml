@@ -1,0 +1,16 @@
+title: "标签简写 name:"
+summary: "当要传入的变量名与标签相同（如 `name: name`）时，可以只写 `name:`。"
+recognize:
+  prompt: "`let age = 30` 之后，`User(name: \"ann\", age:, admin: False)` 里的 `age:` 是什么意思？"
+  choices: ["是 `age: age` 的简写，传入 30", "字段留空，取默认值 0", "语法错误", "变成 `age: Nil`"]
+  feedback:
+    correct: "对。它把同名变量 `age` 按这个标签传入。"
+    choices:
+      1: "Gleam 的字段没有默认值。`age:` 的意思是传入同名变量 `age`。"
+      2: 这是合法的简写，前提是存在同名变量。
+      3: "Int 字段里放不了 `Nil`。它传入的是同名变量。"
+cloze:
+  prompt: "填空，把变量 `admin` 按同名标签传入。"
+produce:
+  prompt: "接收名字和年龄，构造一个非管理员的 `User`。参数按定义顺序（name、age、admin）书写，`name` 和 `age` 用简写传入。"
+  hint: "按 `User(name:, age:, admin: False)` 的顺序写。"

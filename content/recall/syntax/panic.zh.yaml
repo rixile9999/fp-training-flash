@@ -1,0 +1,15 @@
+title: panic
+summary: '`panic` 会在原地无条件崩溃。用 `as "消息"` 附上原因，只用于不可能出现的状态。'
+recognize:
+  prompt: 在返回 `String` 的 `case` 中，有一个分支写作 `_ -> panic as "bug"`。这个分支的类型是？
+  choices: ["`Nil`，所以其他分支也必须是 `Nil`", "与其他分支相同（这里是 `String`）", "`Result`，所以其他分支也必须是 `Result`", "总是 `String`，因为消息是字符串"]
+  feedback:
+    correct: 对。`panic` 永远不会返回值，所以可以放在任何类型的位置。
+    choices:
+      0: "`panic` 不返回 `Nil`。它根本不会返回，所以能匹配任何类型。"
+      2: "`panic` 不会构造 `Error`，而是真的崩溃。"
+      3: "`as` 后面的消息只是说明，和表达式的类型无关。它也能用在需要 `Int` 的位置。"
+cloze:
+  prompt: 填空，给 `panic` 附上消息。
+produce:
+  prompt: 写出函数体：把名次 1、2、3 转换为 `"gold"`、`"silver"`、`"bronze"`。调用方保证只传入 1 到 3，其他值用 `panic` 处理。

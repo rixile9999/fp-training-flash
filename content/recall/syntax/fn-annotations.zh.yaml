@@ -1,0 +1,16 @@
+title: 参数与返回类型标注
+summary: "参数类型写成 `name: Type`，返回类型写成 `-> Type`。省略时会自动推断，但顶层函数通常会写上。"
+recognize:
+  prompt: 把两个整数相加的函数头，哪一个是正确的 Gleam 代码？
+  choices: ["`fn add(a: Int, b: Int) -> Int`", "`fn add(a: Int, b: Int): Int`", "`fn add(Int a, Int b) -> Int`", "`fn add(a, b) => Int`"]
+  feedback:
+    correct: "对。参数写 `a: Int`，返回类型写 `-> Int`。"
+    choices:
+      1: "返回类型前用的是 `->`，不是 `:`。`: Int` 是 TypeScript 的写法。"
+      2: "类型写在名字后面，如 `a: Int`。类型在前是 Java 或 C 的顺序。"
+      3: "`=>` 不是 Gleam 语法，返回类型写作 `-> Int`。"
+cloze:
+  prompt: 在空白处填入返回类型前面的符号。
+produce:
+  prompt: "给所有价格打九折（整数除法）。传给 `list.map` 的匿名函数要同时写出参数类型和返回类型。"
+  hint: "形式是 `fn(p: Int) -> Int { ... }`。"

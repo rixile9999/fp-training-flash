@@ -1,0 +1,40 @@
+title: dict.insert
+topic: gleam/dict
+order: 14
+summary: 키와 값을 넣은 새 dict를 돌려줍니다. 인자는 `dict.insert(dict, 키, 값)` 순서이고, 키가 이미 있으면 값을 덮어씁니다.
+example: |
+  dict.from_list([#("a", 1)]) |> dict.insert("b", 2)  // -> dict.from_list([#("a", 1), #("b", 2)])
+imports: [gleam/list, "gleam/dict.{type Dict}"]
+signature: "dict.insert(into: Dict(a, b), for: a, insert: b) -> Dict(a, b)"
+frequency: 15
+recognize:
+  prompt: "dict `d`에 키 `k`, 값 `v`를 넣는 호출은?"
+  choices: ["`dict.insert(d, k, v)`", "`dict.insert(k, v, d)`", "`dict.insert(d, #(k, v))`", "`dict.insert(d, v, k)`"]
+  answer: 0
+  feedback:
+    correct: 맞아요. dict가 먼저라 `d |> dict.insert(k, v)`처럼 파이프로 이을 수 있습니다.
+    choices:
+      1: Elm의 `Dict.insert`는 dict를 마지막에 받지만, Gleam은 dict가 첫 인자입니다.
+      2: 키와 값은 따로 넘깁니다. `#(키, 값)` 튜플은 `dict.from_list`에 넘기는 모양입니다.
+      3: 레이블이 `into:`, `for:`, `insert:` 순서이듯 키가 먼저, 값이 나중입니다.
+cloze:
+  prompt: 빈칸을 채워 키 `"x"`에 1을 넣으세요.
+  code: 'dict.new() |> dict.____("x", 1)'
+  answers: [insert]
+  expected: 'dict.from_list([#("x", 1)])'
+predict:
+  prompt: 이 식의 값은?
+  code: 'dict.new() |> dict.insert("k", 1) |> dict.insert("k", 2) |> dict.size'
+  expected: "1"
+produce:
+  prompt: '접속 기록 `#(사용자, 시각)` 리스트에서 사용자별 마지막 접속 시각을 담은 dict를 만드는 함수 본문을 `dict.insert`로 쓰세요. 기록은 시간 순서입니다.'
+  header: "pub fn last_seen(log: List(#(String, Int))) -> Dict(String, Int)"
+  checks: '#(last_seen([#("ann", 1), #("bo", 2), #("ann", 3)]), last_seen([]), last_seen([#("cy", 7)]))'
+  expected: '#(dict.from_list([#("ann", 3), #("bo", 2)]), dict.from_list([]), dict.from_list([#("cy", 7)]))'
+  mustUse: [dict.insert]
+  reference: |
+    list.fold(log, dict.new(), fn(seen, entry) {
+      let #(user, time) = entry
+      dict.insert(seen, user, time)
+    })
+  hint: "`list.fold`로 차례로 넣으면 같은 사용자의 이전 시각은 덮어써집니다."

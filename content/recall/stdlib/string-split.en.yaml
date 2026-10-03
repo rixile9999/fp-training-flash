@@ -1,0 +1,18 @@
+title: string.split
+summary: "Cuts a string at every separator and returns a `List(String)`. Empty pieces are kept, so a trailing separator leaves a `\"\"` at the end."
+recognize:
+  prompt: "What is the value of `string.split(\"a,b,\", \",\")`?"
+  choices: ["`[\"a\", \"b\"]`", "`[\"a\", \"b\", \"\"]`", "`Ok([\"a\", \"b\"])`", "`#(\"a\", \"b,\")`"]
+  feedback:
+    correct: Right. The empty piece `""` after the last comma is kept.
+    choices:
+      0: Empty pieces are not dropped. If you don't want them, remove `""` yourself with `list.filter`.
+      2: "`split` cannot fail, so it returns the list directly, with no `Result`."
+      3: Splitting just once into a tuple is `string.split_once`, and even that wraps the tuple in a `Result`.
+cloze:
+  prompt: Fill in the blank to break the date into year, month and day.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Turn a comma-separated tag string into a list of tags. Trim the spaces around each tag.
+  hint: "Split on `\",\"`, then remove the spaces with `list.map(string.trim)`."

@@ -1,0 +1,15 @@
+title: 不要用长度判断是否为空
+summary: "`list.length(xs) == 0` 会遍历整个列表（O(n)）。判断是否为空应直接用 `list.is_empty`、`xs == []` 或 `[]` 模式。"
+recognize:
+  prompt: 判断一个很长的列表 `xs` 是否为空，最合适的表达式是？
+  choices: ["`list.length(xs) == 0`", "`list.is_empty(xs)`", "`xs.empty?`", "`!xs`"]
+  feedback:
+    correct: 对。只看第一个位置就能马上得出结果。
+    choices:
+      0: "结果正确，但为了数长度要遍历所有元素，需要 O(n)。"
+      2: Gleam 没有方法调用。
+      3: "`!` 只能用于 `Bool`，空列表不会被当作假值。"
+cloze:
+  prompt: 填空，判断列表是否为空。
+produce:
+  prompt: 购物车里至少有一件商品时返回 `True`。

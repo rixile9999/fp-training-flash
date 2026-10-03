@@ -1,0 +1,16 @@
+title: The last expression is the return value
+summary: "A function returns the value of the last expression in its body. Gleam has no `return`."
+recognize:
+  prompt: "Which is a correct body for `fn double(x: Int) -> Int { ... }`?"
+  choices: ["`return x * 2`", "`x * 2`", "`x * 2;`", "`double = x * 2`"]
+  feedback:
+    correct: Right. The value of the last expression, `x * 2`, is the return value.
+    choices:
+      0: "Gleam has no `return`. You get a compile error saying the name `return` is not in scope."
+      2: Gleam doesn't end statements with semicolons. A semicolon here is a syntax error.
+      3: There's no syntax for returning by assigning to the function name. The last expression is the return value.
+cloze:
+  prompt: "Fill in the blank so the block returns the value of `total`."
+produce:
+  prompt: "Compute the perimeter of a rectangle. Name the sum of width and height with `let`, then return the result as the last expression."
+  hint: "No `return`: just put the value, like `half * 2`, on the last line."

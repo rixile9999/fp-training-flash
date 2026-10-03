@@ -1,0 +1,22 @@
+title: set.from_list
+summary: "Builds a `Set` from a list. Equal values collapse into one, and the order you put them in is not remembered."
+recognize:
+  prompt: "Which statement about `set.from_list([\"a\", \"b\", \"a\"])` is true?"
+  choices:
+    - It is `Error(Nil)` because there is a duplicate
+    - It is a `Set(String)` with 3 members
+    - It is a `Set(String)` with 2 members
+    - "`set.to_list` is guaranteed to give back the original order `[\"a\", \"b\"]`"
+  feedback:
+    correct: "Right. The two `\"a\"`s collapse into one."
+    choices:
+      0: "Duplicates are not an error. They are quietly merged, and you get a `Set` with no `Result`."
+      1: A set never holds the same value twice. Duplicates collapse into one.
+      3: "A set does not remember order. Don't rely on the order `set.to_list` returns."
+cloze:
+  prompt: Fill in the blank to count the distinct values.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Check whether any value appears more than once in a list.
+  hint: Turning the list into a set removes duplicates. Compare the set's size with the list's length.

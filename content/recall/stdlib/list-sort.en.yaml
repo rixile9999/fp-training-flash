@@ -1,0 +1,18 @@
+title: list.sort
+summary: Sorts a list from smallest to largest using a comparison function (`by:`). The comparison returns an `Order` (`Lt`, `Eq`, `Gt`); for integers, pass `int.compare`.
+recognize:
+  prompt: "Which expression sorts a list of integers `xs`?"
+  choices: ["`list.sort(xs)`", "`list.sort(xs, by: int.compare)`", "`list.sort(xs, fn(a, b) { a < b })`", "`list.sort(int.compare, xs)`"]
+  feedback:
+    correct: Right. There's no default ordering, so you always pass a comparison function.
+    choices:
+      0: Gleam values have no default ordering, so leaving out the comparison function is a compile error.
+      2: The comparison function must return an `Order` (`Lt`, `Eq`, `Gt`), not a `Bool`.
+      3: The list to sort is the first argument and the comparison function the second.
+cloze:
+  prompt: Fill in the blank to sort the strings alphabetically.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Write the body of a function that sorts scores from highest to lowest, using `list.sort`.
+  hint: "Swapping the arguments, as in `int.compare(b, a)`, gives descending order."
