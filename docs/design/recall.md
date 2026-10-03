@@ -54,6 +54,8 @@ summary: 리스트를 왼쪽부터 접어 하나의 값으로 만듭니다.
 example: |                          # one expression, with `// -> value`; verified in the sandbox
   list.fold([1, 2, 3], 0, fn(acc, x) { acc + x })  // -> 6
 imports: [gleam/list]               # for example, cloze, predict and produce
+definitions: |                      # optional top-level types/functions (syntax cards: records, custom types)
+  pub type Shape { Circle(r: Float) Square(side: Float) }
 signature: "list.fold(List(a), from: b, with: fn(b, a) -> b) -> b"   # optional, from stdlib.json
 frequency: 39                       # optional
 recognize:
@@ -61,7 +63,7 @@ recognize:
   choices: [...]                    # 3-4
   answer: 1
   feedback: { correct: ..., choices: { 0: ..., 2: ... } }
-cloze:                              # exactly one of `code` (with a single ____) or `predict`
+cloze:                              # `code` is one expression with exactly one ____
   prompt: 빈칸을 채우세요.
   code: "list.____([1, 2, 3], 0, fn(acc, x) { acc + x })"
   answers: [fold]                   # accepted fills, compared after trimming
@@ -79,6 +81,10 @@ produce:
   reference: "list.fold(xs, 0, fn(acc, x) { acc + x })"
   hint: ...                         # optional
 ```
+
+The example is one expression (it may span lines, e.g. a block `{ let x = 1  x + 1 }`); the text after its last
+`// ->` is the expected `string.inspect` value. Every snippet is evaluated with the card's `imports` and
+`definitions`. Produce wraps the body as `<header> {\n<body>\n}` after the definitions, then evaluates `checks`.
 
 Rules (checked by content CI with the sandbox): the example's value matches its `// ->` comment; every accepted
 cloze fill produces `expected`; predict code produces `expected`; the produce reference compiles, uses every

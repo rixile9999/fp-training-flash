@@ -338,6 +338,9 @@ export interface RecallCard {
   /** One expression with a `// -> value` comment. */
   readonly example: string;
   readonly imports: readonly string[];
+  /** Top-level Gleam definitions (types, helper functions) shown with the card and available to example, cloze,
+   * predict, checks and the learner's produce body. Code: never translated. */
+  readonly definitions?: string;
   readonly signature?: string;
   readonly frequency?: number;
   readonly recognize: { readonly prompt: string; readonly choices: readonly string[] };
