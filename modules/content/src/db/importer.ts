@@ -76,6 +76,7 @@ async function writeContent(tx: Db, parsed: ParsedContent, bundleId: string, imp
   await replaceNotes(tx, "concept_notes", parsed.conceptNotes, parsed.translations.conceptNotes);
   await replaceNotes(tx, "theory_topics", parsed.theoryTopics, parsed.translations.theoryTopics);
   await replaceLessons(tx, parsed);
+  await replaceRecall(tx, parsed);
 
   const existing = await tx.query<VariantRow>(
     "select family_id, variant_key, latest_version, content_hash, retired from content.variants",
@@ -190,9 +191,33 @@ async function replaceLessons(tx: Db, parsed: ParsedContent): Promise<void> {
   );
 }
 
+/** Upserts every deck and card; retires decks and cards that are no longer in the bundle. */
+async function replaceRecall(tx: Db, parsed: ParsedContent): Promise<void> {
+  for (const d of parsed.recall.decks) {
+    await tx.query(
+      `insert into content.recall_decks (id, sort_order, data, translations, retired) values ($1, $2, $3::jsonb, $4::jsonb, false)
+       on conflict (id) do update
+         set sort_order = excluded.sort_order, data = excluded.data, translations = excluded.translations, retired = false`,
+      [d.deck.id, d.deck.order, JSON.stringify(d.deck), JSON.stringify(d.translations)],
+    );
+  }
+  for (const c of parsed.recall.cards) {
+    await tx.query(
+      `insert into content.recall_cards (id, deck_id, sort_order, data, key, translations, retired)
+       values ($1, $2, $3, $4::jsonb, $5::jsonb, $6::jsonb, false)
+       on conflict (id) do update
+         set deck_id = excluded.deck_id, sort_order = excluded.sort_order, data = excluded.data, key = excluded.key,
+             translations = excluded.translations, retired = false`,
+      [c.card.id, c.card.deckId, c.order, JSON.stringify(c.card), JSON.stringify(c.key), JSON.stringify(c.translations)],
+    );
+  }
+  await retireMissing(tx, "recall_decks", parsed.recall.decks.map((d) => d.deck.id));
+  await retireMissing(tx, "recall_cards", parsed.recall.cards.map((c) => c.card.id));
+}
+
 async function retireMissing(
   tx: Db,
-  table: "skills" | "concept_notes" | "theory_topics" | "lesson_units",
+  table: "skills" | "concept_notes" | "theory_topics" | "lesson_units" | "recall_decks" | "recall_cards",
   keep: readonly string[],
 ): Promise<void> {
   await tx.query(`update content.${table} set retired = true where not retired and not (id = any($1::text[]))`, [keep]);

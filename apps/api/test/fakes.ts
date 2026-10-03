@@ -8,6 +8,8 @@ import type { LearnerModel, LearnerProfile } from "@fp/learner/contract";
 import type { LessonService, Quiz, UnitProgress } from "@fp/lessons/contract";
 import type { Session, SessionService } from "@fp/sessions/contract";
 import type { CoachingService } from "@fp/coaching/contract";
+import type { RecallCard } from "@fp/content/contract";
+import type { RecallService, RecallSessionView } from "@fp/recall/contract";
 import type { AppServices } from "../src/app.ts";
 
 export const EXERCISE_ID = asId<ExerciseId>("orders-apply-coupon/base@1");
@@ -137,6 +139,46 @@ export function makeQuiz(kind: Quiz["kind"]): Quiz {
   };
 }
 
+// ---------- recall ----------
+
+export const RECALL_DECK_ID = "stdlib";
+export const RECALL_CARD_ID = "stdlib/list-fold";
+export const RECALL_SESSION_ID = "6f1c9a52-3d4e-4b7a-9f0e-1a2b3c4d5e6f";
+export const RECALL_ITEM_ID = "item-1";
+
+/** Card summary per locale, so tests can see which locale the fake recall service was asked for. */
+export const RECALL_SUMMARY = {
+  ko: "리스트를 왼쪽부터 접어 값 하나로 만듭니다.",
+  en: "Folds a list from the left into a single value.",
+  zh: "从左到右把列表折叠成一个值。",
+} as const;
+
+export function makeRecallCard(locale?: Locale): RecallCard {
+  return {
+    id: RECALL_CARD_ID,
+    deckId: RECALL_DECK_ID,
+    title: "list.fold",
+    topic: "gleam/list",
+    summary: pickLocale(RECALL_SUMMARY, locale),
+    example: "list.fold([1, 2, 3], 0, fn(acc, x) { acc + x })  // -> 6",
+    imports: ["gleam/list"],
+    recognize: { prompt: "?", choices: ["`fn(x, acc)`", "`fn(acc, x)`"] },
+    cloze: { prompt: "빈칸", code: "list.____([1, 2, 3], 0, fn(acc, x) { acc + x })" },
+    produce: { prompt: "합", header: "pub fn total(xs: List(Int)) -> Int" },
+    locales: ["ko", "en", "zh"],
+  };
+}
+
+export function makeRecallSession(locale?: Locale): RecallSessionView {
+  return {
+    sessionId: RECALL_SESSION_ID,
+    items: [{ itemId: RECALL_ITEM_ID, kind: "new", form: "recognize", card: makeRecallCard(locale) }],
+    startedAt: CREATED,
+  };
+}
+
+const recallNotFound = () => err(appError("not_found", "암기 세션을 찾을 수 없습니다."));
+
 const lessonNotFound = () => err(appError("not_found", "레슨을 찾을 수 없습니다."));
 const quizNotFound = () => err(appError("not_found", "퀴즈를 찾을 수 없습니다."));
 
@@ -166,6 +208,7 @@ type Overrides = {
   sessions?: Partial<SessionService>;
   coaching?: Partial<CoachingService>;
   lessons?: Partial<LessonService>;
+  recall?: Partial<RecallService>;
 };
 
 /** Wraps every method so calls are recorded as "<service>.<method>". */
@@ -397,6 +440,34 @@ export function makeFakes(overrides: Overrides = {}): Fakes {
     ...overrides.lessons,
   };
 
+  const recall: RecallService = {
+    overview: async () => ({
+      decks: [{ deckId: RECALL_DECK_ID, title: "핵심 라이브러리", total: 50, seen: 3, mastered: 1, due: 2 }],
+      dueNow: 2,
+      newAvailableToday: 10,
+      newPerDay: 10,
+    }),
+    startSession: async (_u, _opts, locale) => ok(makeRecallSession(locale)),
+    answer: async (_u, sessionId, itemId, response) => {
+      if (sessionId !== RECALL_SESSION_ID || itemId !== RECALL_ITEM_ID) return recallNotFound();
+      const correct = response.kind === "choice" && response.choice === 1;
+      return ok({
+        correct,
+        rating: correct ? "good" : "again",
+        feedback: correct ? "맞아요." : "반대예요.",
+        stage: "recognize",
+        nextDueAt: "2026-01-02T00:00:00.000Z",
+      });
+    },
+    finish: async (_u, sessionId) =>
+      sessionId === RECALL_SESSION_ID
+        ? ok({ sessionId, answered: 1, correct: 1, newLearned: 1, dueTomorrow: 2, decks: [] })
+        : recallNotFound(),
+    cards: async (_u, deckId, locale) =>
+      deckId === RECALL_DECK_ID ? ok([{ ...makeRecallCard(locale), state: null }]) : err(appError("not_found", "덱을 찾을 수 없습니다.")),
+    ...overrides.recall,
+  };
+
   const services: AppServices = {
     accounts: recorded("accounts", accounts, calls),
     catalog: recorded("catalog", catalog, calls),
@@ -405,6 +476,7 @@ export function makeFakes(overrides: Overrides = {}): Fakes {
     lessons: recorded("lessons", lessons, calls),
     sessions: recorded("sessions", sessions, calls),
     coaching: recorded("coaching", coaching, calls),
+    recall: recorded("recall", recall, calls),
   };
   (fakes as { services: AppServices }).services = services;
   return fakes;

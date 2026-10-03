@@ -5,6 +5,7 @@ import type { Migration } from "@fp/kernel";
  * `variants` points at the latest version of each (family, variant) and marks retirement.
  * Skills and notes are not versioned: they are replaced on import and retired when removed.
  * Lessons (0003) are unversioned like skills; `lessons.answers` holds answers and feedback (never in `data`).
+ * Recall decks and cards (0004) likewise; `recall_cards.key` holds the answer key (never in `data`).
  * Every content table has `translations` (jsonb, { en?, zh? } text overlays applied by the catalog).
  */
 export const migrations: readonly Migration[] = [
@@ -104,6 +105,33 @@ create table content.lessons (
   retired boolean not null default false,
   primary key (unit_id, lesson_id)
 );
+`,
+  },
+  {
+    // Recall (content/recall). Not versioned: upserted on import, retired when removed (still readable by id).
+    // recall_decks.data: StoredRecallDeck; recall_cards.data: the Korean learner view (RecallCard, no answers),
+    // recall_cards.key: the Korean RecallCardKey; translations: { en?, zh? } (RecallDeckText / RecallCardText).
+    id: "0004_recall",
+    sql: `
+create table content.recall_decks (
+  id text primary key,
+  sort_order integer not null,
+  data jsonb not null,
+  translations jsonb not null default '{}'::jsonb,
+  retired boolean not null default false
+);
+
+create table content.recall_cards (
+  id text primary key,
+  deck_id text not null,
+  sort_order integer not null,
+  data jsonb not null,
+  key jsonb not null,
+  translations jsonb not null default '{}'::jsonb,
+  retired boolean not null default false
+);
+
+create index recall_cards_deck_idx on content.recall_cards (deck_id, sort_order, id);
 `,
   },
 ];

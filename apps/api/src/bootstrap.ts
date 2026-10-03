@@ -20,6 +20,7 @@ import { createLearnerModule, migrations as learnerMigrations } from "@fp/learne
 import { createLessonsModule, migrations as lessonsMigrations } from "@fp/lessons";
 import { createSessionsModule, migrations as sessionsMigrations } from "@fp/sessions";
 import { createCoachingModule, migrations as coachingMigrations } from "@fp/coaching";
+import { createRecallModule, migrations as recallMigrations } from "@fp/recall";
 import type { BundleInfo } from "@fp/content/contract";
 import { createApp } from "./app.ts";
 import type { ApiApp, AppServices } from "./app.ts";
@@ -35,6 +36,7 @@ export const MODULE_MIGRATIONS: readonly (readonly [string, readonly Migration[]
   ["lessons", lessonsMigrations],
   ["sessions", sessionsMigrations],
   ["coaching", coachingMigrations],
+  ["recall", recallMigrations],
 ];
 
 export class ContentInvalidError extends Error {
@@ -153,6 +155,14 @@ export async function bootstrap(config: ApiConfig, opts: BootstrapOptions = {}):
       llm: config.llm,
     });
 
+    const recall = createRecallModule({
+      db,
+      clock,
+      logger: scoped("recall"),
+      catalog: content.catalog,
+      grading: grading.service,
+    });
+
     // Learner and sessions are subscribed by now, so recovered system-error events reach them (they ignore them).
     const recovered = await grading.recoverInterrupted();
     if (recovered > 0) logger.warn("interrupted submissions recovered as system errors", { count: recovered });
@@ -165,6 +175,7 @@ export async function bootstrap(config: ApiConfig, opts: BootstrapOptions = {}):
       lessons: lessons.service,
       sessions: sessions.service,
       coaching: coaching.service,
+      recall: recall.service,
     };
     const app = createApp(services, {
       clock,

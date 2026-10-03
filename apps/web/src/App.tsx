@@ -11,6 +11,9 @@ import type { CourseRoute } from "./course.ts";
 import { Course } from "./screens/Course.tsx";
 import { Login } from "./screens/Login.tsx";
 import { Progress } from "./screens/Progress.tsx";
+import { Recall } from "./screens/Recall.tsx";
+import { RECALL_HOME } from "./recall.ts";
+import type { RecallRoute } from "./recall.ts";
 import type { RecentSession } from "./screens/Progress.tsx";
 import { Training } from "./screens/Training.tsx";
 import type { Phase } from "./session.ts";
@@ -87,8 +90,11 @@ function AppShell({
   const [view, setView] = useState<View>(initialView);
   // Position inside the course tab; kept while visiting other tabs. Re-selecting the tab goes back to the map.
   const [courseRoute, setCourseRoute] = useState<CourseRoute>(MAP);
+  // Recall tab position (session in progress included); re-selecting the tab outside a session returns to its overview.
+  const [recallRoute, setRecallRoute] = useState<RecallRoute>(RECALL_HOME);
   const nav = (v: View) => {
     if (v === "course" && view === "course") setCourseRoute(MAP);
+    if (v === "recall" && view === "recall" && recallRoute.screen !== "session") setRecallRoute(RECALL_HOME);
     setView(v);
   };
   const [skills, setSkills] = useState<readonly Skill[]>([]);
@@ -277,6 +283,8 @@ function AppShell({
             onComplete={() => void complete()}
             onShowProgress={() => setView("progress")}
           />
+        ) : view === "recall" ? (
+          <Recall api={api} now={now} route={recallRoute} onRoute={setRecallRoute} contentKey={contentKey} />
         ) : (
           <Progress
             api={api}

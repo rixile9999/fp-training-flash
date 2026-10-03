@@ -9,7 +9,7 @@ import { Icon } from "./Icon.tsx";
 import { LanguageSwitcher } from "./LanguageSwitcher.tsx";
 import { formatClock } from "./labels.ts";
 
-export type View = "course" | "training" | "progress";
+export type View = "course" | "training" | "recall" | "progress";
 
 export function Header(props: {
   readonly displayName: string;
@@ -43,6 +43,7 @@ export function Header(props: {
             [
               ["course", t("nav.course")],
               ["training", t("nav.training")],
+              ["recall", t("nav.recall")],
               ["progress", t("nav.progress")],
             ] as const
           ).map(([key, label]) => (

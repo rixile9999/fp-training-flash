@@ -6,11 +6,14 @@ import { createCatalog } from "./db/catalog.ts";
 import { importBundle } from "./db/importer.ts";
 import { lessonTranslationGaps as gapsOf, type LessonTranslationGap } from "./loader/lessons.ts";
 import type { ContentIssue } from "./loader/parse.ts";
+import { recallTranslationGaps as recallGapsOf, type RecallTranslationGap } from "./loader/recall.ts";
 
 export { migrations } from "./db/migrations.ts";
 /** Gleam source without comments/blank lines; a localized starter must equal the Korean one under it. */
 export { codeOnly } from "./loader/gleam.ts";
-export type { ContentBundle, ContentIssue, LessonTranslationGap };
+/** Recall card helpers for content CI: the cloze blank and the expected value of an example (text after the last `// ->`). */
+export { CLOZE_BLANK, exampleExpected } from "./loader/recall.ts";
+export type { ContentBundle, ContentIssue, LessonTranslationGap, RecallTranslationGap };
 
 /**
  * Lesson overlays that are not complete for their locale (why a unit lacks that locale in `LessonUnitSummary.locales`).
@@ -19,6 +22,15 @@ export type { ContentBundle, ContentIssue, LessonTranslationGap };
 export function lessonTranslationGaps(bundle: ContentBundle): readonly LessonTranslationGap[] {
   const parsed = parsedContentOf(bundle);
   return parsed ? gapsOf(parsed.lessonUnits) : [];
+}
+
+/**
+ * Recall overlays that are not complete for their locale (why a card lacks that locale in `RecallCard.locales`), plus
+ * missing deck titles/descriptions in decks.<l>.yaml. Served field by field with Korean fallback; not issues.
+ */
+export function recallTranslationGaps(bundle: ContentBundle): readonly RecallTranslationGap[] {
+  const parsed = parsedContentOf(bundle);
+  return parsed ? recallGapsOf(parsed.recall) : [];
 }
 
 export interface ContentModuleDeps {

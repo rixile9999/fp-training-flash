@@ -23,6 +23,7 @@ import type { LearnerModel } from "@fp/learner/contract";
 import type { LessonService } from "@fp/lessons/contract";
 import type { SessionService } from "@fp/sessions/contract";
 import type { CoachingService } from "@fp/coaching/contract";
+import type { RecallService } from "@fp/recall/contract";
 import { apiError, fail, json, parseBody, parseParams, parseQuery, requestLocale, respond } from "./http.ts";
 import { createRateLimiter } from "./rate-limit.ts";
 import type { RateLimitRule } from "./rate-limit.ts";
@@ -36,9 +37,10 @@ export interface AppServices {
   readonly lessons: LessonService;
   readonly sessions: SessionService;
   readonly coaching: CoachingService;
+  readonly recall: RecallService;
 }
 
-export type RateLimitedAction = "submit" | "run" | "chat" | "feedback";
+export type RateLimitedAction = "submit" | "run" | "chat" | "feedback" | "recallAnswer";
 
 export interface AppOptions {
   readonly clock?: Clock;
@@ -71,7 +73,7 @@ export function redactExercise(ex: ExerciseDetail, maxHintLevel: number): Exerci
 }
 
 export function createApp(services: AppServices, options: AppOptions = {}): ApiApp {
-  const { accounts, catalog, grading, learner, lessons, sessions, coaching } = services;
+  const { accounts, catalog, grading, learner, lessons, sessions, coaching, recall } = services;
   const clock = options.clock ?? systemClock;
   const logger = options.logger ?? silentLogger;
   const rule = options.rateLimit ?? DEFAULT_RATE_LIMIT;
@@ -420,6 +422,45 @@ export function createApp(services: AppServices, options: AppOptions = {}): ApiA
     const req = await parseBody(c, s.quizSubmitSchema);
     if (!req.ok) return fail(c, req.error);
     return respond(c, await lessons.submitPlacement(c.get("user").id, p.value.quizId, req.value.answers, loc(c)));
+  });
+
+  // ---------- recall (spaced-repetition memorization) ----------
+  // Session and deck ids are single path segments. Answers may run in the sandbox, so they are rate limited.
+
+  app.get(ROUTES.recallOverview.path, async (c) => json(c, await recall.overview(c.get("user").id, loc(c))));
+
+  app.post(ROUTES.startRecall.path, async (c) => {
+    const req = await parseBody(c, s.startRecallSchema);
+    if (!req.ok) return fail(c, req.error);
+    const { minutes, deckIds } = req.value;
+    const opts = { ...(minutes === undefined ? {} : { minutes }), ...(deckIds === undefined ? {} : { deckIds }) };
+    return respond(c, await recall.startSession(c.get("user").id, opts, loc(c)), 201);
+  });
+
+  app.post(ROUTES.recallAnswer.path, async (c) => {
+    const p = parseParams(c, s.recallSessionParamsSchema);
+    if (!p.ok) return fail(c, p.error);
+    const req = await parseBody(c, s.recallAnswerSchema);
+    if (!req.ok) return fail(c, req.error);
+    const blocked = limited(c, "recallAnswer");
+    if (blocked) return blocked;
+    const { itemId, response, elapsedMs } = req.value;
+    return respond(
+      c,
+      await recall.answer(c.get("user").id, p.value.sessionId, itemId, response, elapsedMs, loc(c)),
+    );
+  });
+
+  app.post(ROUTES.finishRecall.path, async (c) => {
+    const p = parseParams(c, s.recallSessionParamsSchema);
+    if (!p.ok) return fail(c, p.error);
+    return respond(c, await recall.finish(c.get("user").id, p.value.sessionId, loc(c)));
+  });
+
+  app.get(ROUTES.recallDeckCards.path, async (c) => {
+    const p = parseParams(c, s.recallDeckParamsSchema);
+    if (!p.ok) return fail(c, p.error);
+    return respond(c, await recall.cards(c.get("user").id, p.value.deckId, loc(c)));
   });
 
   return app;

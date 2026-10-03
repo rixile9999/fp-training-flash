@@ -25,6 +25,7 @@ import type {
 import { isLocale } from "../i18n/locale.ts";
 import { CONCEPT_NOTES, FAKE_EXERCISES, THEORY_TOPICS, localizedSkills } from "./fake-data.ts";
 import { createFakeCourse } from "./fake-lessons.ts";
+import { createFakeRecall } from "./fake-recall.ts";
 import type { FakeExercise } from "./fake-data.ts";
 import type {
   ErrorTagStat,
@@ -352,6 +353,7 @@ export function createFakeApi(opts: FakeApiOptions = {}): ApiClient {
 
   const api: ApiClient = {
     ...createFakeCourse({ wait: (v) => wait(v), locale, iso: () => iso(), nextId, rate: rateObservations }),
+    ...createFakeRecall({ wait: (v) => wait(v), locale, now, nextId }),
     health: () => wait(() => ({ status: "ok" as const, contentBundle: "fake-bundle", runner: "fake", llm: "none" as const })),
     devLogin: (req) =>
       wait(() => {

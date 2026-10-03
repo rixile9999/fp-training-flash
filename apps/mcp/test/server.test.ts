@@ -47,6 +47,11 @@ describe("fp MCP server", () => {
         "submit_checkpoint",
         "start_placement",
         "submit_placement",
+        "recall_overview",
+        "recall_start",
+        "recall_answer",
+        "recall_finish",
+        "recall_cards",
       ].sort(),
     );
     const instructions = client.getInstructions() ?? "";

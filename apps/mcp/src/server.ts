@@ -19,7 +19,7 @@ import {
   renderTrialRun,
   uris,
 } from "./format.ts";
-import { SERVER_INSTRUCTIONS, coachNote, lessonNote, quizNote } from "./instructions.ts";
+import { SERVER_INSTRUCTIONS, coachNote, lessonNote, quizNote, recallNote } from "./instructions.ts";
 import {
   renderAnswer,
   renderCheckpointResult,
@@ -30,6 +30,7 @@ import {
   renderQuiz,
 } from "./lessons.ts";
 import { DEFAULT_LOCALE, isLocale, translator } from "./messages.ts";
+import { renderRecallCards, renderRecallOverview, renderRecallResult, renderRecallSession, renderRecallSummary } from "./recall.ts";
 import type { Locale, MessageId, Translate } from "./messages.ts";
 
 export interface FpMcpServerDeps {
@@ -44,6 +45,8 @@ export interface FpMcpServerDeps {
   /** Idempotency keys for submissions. */
   readonly newKey?: () => string;
   readonly version?: string;
+  /** Milliseconds clock for recall answer times (tests). */
+  readonly now?: () => number;
 }
 
 type Structured = Record<string, unknown>;
@@ -60,6 +63,7 @@ export function createFpMcpServer(deps: FpMcpServerDeps): McpServer {
   const api = (): FpApi => (typeof deps.api === "function" ? deps.api() : deps.api);
   const language: Language = deps.language ?? "gleam";
   const newKey = deps.newKey ?? randomUUID;
+  const now = deps.now ?? Date.now;
 
   // ---------- learner locale (cached per server instance) ----------
   let cachedLocale: Locale | undefined = deps.locale;
@@ -468,6 +472,117 @@ export function createFpMcpServer(deps: FpMcpServerDeps): McpServer {
     safe(async ({ quiz_id, answers }, ctx) => {
       const res = await api().submitPlacement(quiz_id, { answers });
       return ctx.text(renderPlacementResult(res, ctx.locale), { result: res });
+    }),
+  );
+
+  // ---------- Recall (memorization) ----------
+  // Items never contain answers; the server checks every answer. When the host does not send elapsed_ms, the time
+  // since the session started or the previous answer stands in for the learner's answer time.
+
+  const lastRecallEvent = new Map<string, number>();
+  const sessionId = z.string().min(1).describe("session_id returned by recall_start");
+  const noSpoilers =
+    "Never reveal, hint at or fill in the answer (choice, blank, value or function body) before the learner has answered.";
+
+  server.registerTool(
+    "recall_overview",
+    {
+      title: "Recall overview",
+      description: "Recall (memorizing Gleam syntax and core gleam_stdlib functions): decks with the learner's progress, cards due now and new cards left today.",
+      inputSchema: {},
+      annotations: { readOnlyHint: true },
+    },
+    safe(async (_args, ctx) => {
+      const overview = await api().recallOverview();
+      return ctx.text(renderRecallOverview(overview, ctx.locale), { overview });
+    }),
+  );
+
+  server.registerTool(
+    "recall_start",
+    {
+      title: "Start a recall session",
+      description:
+        "Start a recall session of about `minutes` (default 10): due reviews, new cards, mixed practice and one or two code-writing items. " +
+        "Returns every item without answers. Present exactly one item at a time (for a new card: summary and example first), wait for the learner's own answer, then call recall_answer. " +
+        noSpoilers,
+      inputSchema: {
+        minutes: z.number().int().min(1).max(60).optional().describe("Target length in minutes (default 10)"),
+        deck_ids: z.array(z.string().min(1)).min(1).optional().describe("Only these decks, e.g. [\"stdlib\"] (see recall_overview)"),
+      },
+    },
+    safe(async ({ minutes, deck_ids }, ctx) => {
+      const view = await api().startRecall({
+        ...(minutes === undefined ? {} : { minutes }),
+        ...(deck_ids === undefined ? {} : { deckIds: deck_ids }),
+      });
+      lastRecallEvent.set(view.sessionId, now());
+      const text = view.items.length === 0 ? renderRecallSession(view, ctx.locale) : [renderRecallSession(view, ctx.locale), recallNote(ctx.locale)].join("\n\n");
+      return ctx.text(text, { session: view });
+    }),
+  );
+
+  server.registerTool(
+    "recall_answer",
+    {
+      title: "Answer a recall item",
+      description:
+        "Check the learner's answer to one recall item and return feedback, expected/actual values, diagnostics, missing required functions, the reference (after a wrong code answer) and the next review. " +
+        "Send exactly one of: choice (recognize, 0-based index), text (cloze fill or predicted value, as typed), body (produce: only the function body, without the header). " +
+        "Only call it with the learner's own answer. " +
+        noSpoilers,
+      inputSchema: {
+        session_id: sessionId,
+        item_id: z.string().min(1).describe("item_id of the item from recall_start"),
+        choice: z.number().int().min(0).optional().describe("Recognize items: the learner's choice as a 0-based index"),
+        text: z.string().optional().describe("Cloze items: the word(s) for the blank; predict items: the value the learner expects"),
+        body: z.string().optional().describe("Produce items: the function body the learner wrote, without the header line"),
+        elapsed_ms: z.number().min(0).optional().describe("How long the learner took, if known (otherwise measured since the previous recall call)"),
+      },
+    },
+    safe(async ({ session_id, item_id, choice, text, body, elapsed_ms }, ctx) => {
+      const given = [choice, text, body].filter((v) => v !== undefined).length;
+      if (given !== 1) return { content: [{ type: "text", text: ctx.t("recallOneResponse") }], isError: true };
+      const response =
+        choice !== undefined
+          ? ({ kind: "choice", choice } as const)
+          : text !== undefined
+            ? ({ kind: "text", text } as const)
+            : ({ kind: "code", body: body ?? "" } as const);
+      const t = now();
+      const elapsedMs = Math.round(elapsed_ms ?? Math.max(0, t - (lastRecallEvent.get(session_id) ?? t)));
+      const res = await api().recallAnswer(session_id, { itemId: item_id, response, elapsedMs });
+      lastRecallEvent.set(session_id, now());
+      return ctx.text(renderRecallResult(res, ctx.locale), { result: res });
+    }),
+  );
+
+  server.registerTool(
+    "recall_finish",
+    {
+      title: "Finish a recall session",
+      description: "Finish a recall session (also when the learner stops early) and return the summary: answered, accuracy, cards learned, due tomorrow, mastery per deck.",
+      inputSchema: { session_id: sessionId },
+    },
+    safe(async ({ session_id }, ctx) => {
+      const summary = await api().finishRecall(session_id);
+      lastRecallEvent.delete(session_id);
+      return ctx.text(renderRecallSummary(summary, ctx.locale), { summary });
+    }),
+  );
+
+  server.registerTool(
+    "recall_cards",
+    {
+      title: "Browse a recall deck",
+      description:
+        "List a deck's cards (title, summary) with the learner's stage and next review. Cards contain no answers. Use it for browsing, not as a quiz: do not turn it into questions with answers.",
+      inputSchema: { deck_id: z.string().min(1).describe("Deck id, e.g. syntax, stdlib, pitfalls") },
+      annotations: { readOnlyHint: true },
+    },
+    safe(async ({ deck_id }, ctx) => {
+      const cards = await api().recallDeckCards(deck_id);
+      return ctx.text(renderRecallCards(deck_id, cards, ctx.locale), { deckId: deck_id, cards });
     }),
   );
 

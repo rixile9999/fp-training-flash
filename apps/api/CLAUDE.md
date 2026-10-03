@@ -20,10 +20,13 @@ No business rules live here: grading, rating, coaching and session logic belong 
 - `src/schemas.ts` — zod schemas mirroring the request DTOs (size limits live here). Lesson routes: `pathIdSchema`
   (unit/lesson/quiz/lesson-exercise ids: one segment `[A-Za-z0-9][A-Za-z0-9._-]*`, <= 128 chars), choice index
   int 0..31 or null, quiz `answers` record (keys 1..300 chars, may contain `/` `@`; <= 100 entries). Custom checks carry
-  `params: { messageId }` so the error map renders them from the catalog in the request locale.
+  `params: { messageId }` so the error map renders them from the catalog in the request locale. Recall: minutes
+  1..60, deckIds 1..20 path ids, answer `response` discriminated on `kind` (choice 0..31 / text <= 2000 / code body
+  <= 20000), itemId 1..300 chars, elapsedMs >= 0 rounded and clamped to 24 h.
 - `src/rate-limit.ts` — in-memory sliding window per `(userId, action)` using the injected `Clock`.
 - `src/bootstrap.ts` — `bootstrap(config, opts)`: open db, `migrateAll` (accounts, content, grading, learner,
-  lessons, sessions, coaching), create modules (lessons gets catalog + learner.model) with one `InMemoryEventBus`, load + import `/content` (throws
+  lessons, sessions, coaching, recall), create modules (lessons gets catalog + learner.model; recall gets catalog +
+  grading.service) with one `InMemoryEventBus`, load + import `/content` (throws
   `ContentInvalidError` after logging every issue), choose runner, `serve()`. `Runtime.close()` is idempotent.
 - `src/main.ts` — process entry (`pnpm start` / `pnpm dev`): config -> bootstrap -> SIGINT/SIGTERM shutdown
   (10 s force-exit). Exits 1 on invalid config or invalid content.
@@ -40,19 +43,23 @@ No business rules live here: grading, rating, coaching and session logic belong 
   `learner.ratingChangeFor` -> `SubmissionView`. Grading errors skip the rating lookup.
 - ExerciseView = exercise (redacted) + concept notes + theory topics + hints with level <= helpUsed.maxHintLevel.
 - `notes-opened` records `concept_note` / `theory_note` help via `coaching.recordHelp` (404 if the exercise is unknown).
-- Rate limit (default 30/min per user and action) applies to submit, run, chat, feedback. Validation runs
-  first, so invalid requests do not consume quota.
+- Rate limit (default 30/min per user and action) applies to submit, run, chat, feedback and recall answers
+  (`recallAnswer`; they may run the sandbox). Validation runs first, so invalid requests do not consume quota.
 - Lessons (`@fp/lessons` LessonService): `GET /v1/course`, `GET /v1/lessons/:unitId/:lessonId`,
   `POST .../answers` `{exerciseId, choice, giveUp?}` (giveUp forwarded only when sent), `POST .../complete`,
   `POST /v1/units/:unitId/checkpoint` (201), `POST /v1/checkpoints/:quizId/submit`, `POST /v1/placement` (201),
   `POST /v1/placement/:quizId/submit` `{answers}`. Path params are validated before the body; module
   `Result` errors go through `respond` (STATUS_BY_CODE). No rate limit (lesson answers are unrated retries,
   quiz submits are idempotent per quizId).
+- Recall (`@fp/recall` RecallService): `GET /v1/recall` (overview), `POST /v1/recall/sessions` `{minutes?, deckIds?}`
+  (201; options forwarded only when sent), `POST /v1/recall/sessions/:sessionId/answers` `{itemId, response,
+  elapsedMs}` (rate limited), `POST /v1/recall/sessions/:sessionId/finish`, `GET /v1/recall/decks/:deckId/cards`.
+  Every RecallService call gets the locale. Answers are checked only by the module; nothing here sees the key.
 - Locale (ko/en/zh): the auth middleware sets the `locale` context variable from `user.locale`; `requestLocale`
   falls back to `Accept-Language` (primary subtag, q-values; default ko). Every module call that takes a locale
   receives it (exercise view + notes/topics, exercises, theory, skills, progress skills, run, submit, feedback,
-  chat, hints, explanation, session start, recommend, and every LessonService call except `completeLesson`,
-  which takes none). API error messages (auth, validation, rate limit,
+  chat, hints, explanation, session start, recommend, every RecallService call, and every LessonService call
+  except `completeLesson`, which takes none). API error messages (auth, validation, rate limit,
   not found) use the same locale. `PATCH /v1/me {locale}` -> `accounts.setLocale`; dev-login passes `locale`
   to `accounts.devLogin` only when given (never derived from Accept-Language, so logins do not overwrite it).
 
@@ -62,7 +69,8 @@ No business rules live here: grading, rating, coaching and session logic belong 
 fake `listSkills` names per locale; lesson routes included), PATCH /v1/me, Accept-Language fallback and the catalog. Tests use hand-written fakes of every contract (`test/fakes.ts`, which records
 calls in `fakes.calls`) and call `app.request()` directly or through `createApiClient` with a fetch shim, so
 the tests exercise the real contract client. `test/lessons.test.ts` covers the 8 lesson routes
-(mapping, auth, path/body validation, locale, error mapping; fake lesson titles per locale). Bootstrap is not unit-tested (module factories are stubs until
+(mapping, auth, path/body validation, locale, error mapping; fake lesson titles per locale); `test/recall.test.ts`
+covers the 5 recall routes the same way plus the answer rate limit (fake RecallService in `test/fakes.ts`). Bootstrap is not unit-tested (module factories are stubs until
 merged); `MODULE_MIGRATIONS` order is asserted in `test/config.test.ts`.
 
 ## Gotchas

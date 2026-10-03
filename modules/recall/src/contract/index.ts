@@ -36,7 +36,8 @@ export interface RecallAnswerResult {
   readonly correct: boolean;
   readonly rating: RecallRating;
   readonly feedback: string;
-  /** Shown after answering cloze/predict items. */
+  /** The right answer: the correct choice text (recognize), the first accepted fill (cloze), the value (predict and
+   * produce). */
   readonly expected?: string;
   /** Value the learner's code or typed expression produced (sandbox). */
   readonly actual?: string;
@@ -44,7 +45,7 @@ export interface RecallAnswerResult {
   readonly diagnostics?: readonly string[];
   /** Missing mustUse tokens of a produce answer. */
   readonly missing?: readonly string[];
-  /** Revealed after a wrong produce answer. */
+  /** Reference body, revealed after every produce answer. */
   readonly reference?: string;
   readonly stage: RecallStage;
   readonly nextDueAt: string;
@@ -55,7 +56,7 @@ export interface DeckProgress {
   readonly title: string;
   readonly total: number;
   readonly seen: number;
-  /** Stage produce reached and stability >= 21 days. */
+  /** Stage produce reached and the latest produce answer was correct. */
   readonly mastered: number;
   readonly due: number;
 }

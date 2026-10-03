@@ -7,6 +7,11 @@ import type {
   Locale,
   PlacementResult,
   Quiz,
+  RecallAnswerResult,
+  RecallOverview,
+  RecallResponse,
+  RecallSessionView,
+  RecallSummary,
   Session,
   SubmissionView,
   TrialRun,
@@ -270,6 +275,91 @@ export function placementResult(quizId: string, answers: Readonly<Record<string,
   };
 }
 
+// ---------- recall (cards arrive in the account locale) ----------
+
+export const RECALL_SESSION = "rs-1";
+const RECALL_SUMMARY: Record<Locale, string> = {
+  ko: "리스트를 왼쪽부터 접어 값 하나로 만듭니다.",
+  en: "Folds a list from the left into a single value.",
+  zh: "从左到右把列表折叠成一个值。",
+};
+
+export function recallOverview(): RecallOverview {
+  return {
+    decks: [
+      { deckId: "syntax", title: "문법", total: 60, seen: 12, mastered: 3, due: 4 },
+      { deckId: "stdlib", title: "핵심 라이브러리", total: 50, seen: 5, mastered: 0, due: 1 },
+    ],
+    dueNow: 5,
+    newAvailableToday: 7,
+    newPerDay: 10,
+  };
+}
+
+export function recallSession(locale: Locale = "ko"): RecallSessionView {
+  const card = {
+    id: "stdlib/list-fold",
+    deckId: "stdlib",
+    title: "list.fold",
+    topic: "gleam/list",
+    summary: RECALL_SUMMARY[locale],
+    example: "list.fold([1, 2, 3], 0, fn(acc, x) { acc + x })  // -> 6",
+    imports: ["gleam/list"],
+    signature: "list.fold(List(a), from: b, with: fn(b, a) -> b) -> b",
+    recognize: { prompt: "`list.fold` 콜백의 인자 순서는?", choices: ["`fn(원소, 누적값)`", "`fn(누적값, 원소)`"] },
+    cloze: { prompt: "빈칸을 채우세요.", code: "list.____([1, 2, 3], 0, fn(acc, x) { acc + x })" },
+    predict: { prompt: "이 식의 값은?", code: "list.fold([1, 2, 3], 0, fn(acc, x) { acc - x })" },
+    produce: { prompt: "합을 돌려주는 본문을 쓰세요.", header: "pub fn total(xs: List(Int)) -> Int", hint: "시작값은 0이에요." },
+    locales: ["ko", "en", "zh"] as Locale[],
+  };
+  return {
+    sessionId: RECALL_SESSION,
+    startedAt: "2026-10-03T00:00:00.000Z",
+    items: [
+      { itemId: "i-new", kind: "new", form: "recognize", card },
+      { itemId: "i-cloze", kind: "mix", form: "cloze", card },
+      { itemId: "i-predict", kind: "review", form: "predict", card },
+      { itemId: "i-produce", kind: "finale", form: "produce", card },
+    ],
+  };
+}
+
+/** Correct answers of the fake: choice 1, fill "fold", value "-6", a body that uses list.fold. */
+export function recallAnswerResult(itemId: string, response: RecallResponse): RecallAnswerResult {
+  const nextDueAt = "2026-10-05T00:00:00.000Z";
+  switch (response.kind) {
+    case "choice": {
+      const correct = response.choice === 1;
+      return { correct, rating: correct ? "good" : "again", feedback: correct ? "맞아요. 누적값이 먼저예요." : "반대예요.", stage: "recognize", nextDueAt };
+    }
+    case "text": {
+      const expected = itemId === "i-cloze" ? "fold" : "-6";
+      const correct = response.text === expected;
+      return { correct, rating: correct ? "good" : "again", feedback: correct ? "좋아요." : "다시 볼게요.", expected, ...(correct ? {} : { actual: "6" }), stage: "cloze", nextDueAt };
+    }
+    case "code": {
+      const correct = response.body.includes("list.fold");
+      return correct
+        ? { correct, rating: "easy", feedback: "모든 검사를 통과했어요.", actual: "#(6, 0, 5)", stage: "produce", nextDueAt }
+        : {
+            correct,
+            rating: "again",
+            feedback: "검사를 통과하지 못했어요.",
+            actual: "#(0, 0, 0)",
+            diagnostics: ["warning: unused variable xs"],
+            missing: ["list.fold"],
+            reference: "list.fold(xs, 0, fn(acc, x) { acc + x })",
+            stage: "cloze",
+            nextDueAt,
+          };
+    }
+  }
+}
+
+export function recallSummary(answered: number): RecallSummary {
+  return { sessionId: RECALL_SESSION, answered, correct: Math.min(answered, 3), newLearned: 1, dueTomorrow: 2, decks: recallOverview().decks.slice(1) };
+}
+
 export interface Call {
   readonly method: string;
   readonly args: readonly unknown[];
@@ -338,6 +428,10 @@ export function fakeApi(overrides: Partial<CliApi> = {}, accountLocale: Locale =
     submitCheckpoint: async (quizId, req) => checkpointResult(quizId, req.answers),
     startPlacement: async () => quiz("placement"),
     submitPlacement: async (quizId, req) => placementResult(quizId, req.answers),
+    recallOverview: async () => recallOverview(),
+    startRecall: async () => recallSession(locale),
+    recallAnswer: async (_s, req) => recallAnswerResult(req.itemId, req.response),
+    finishRecall: async () => recallSummary(calls.filter((c) => c.method === "recallAnswer").length),
   };
   const merged = { ...base, ...overrides } as Record<string, (...a: unknown[]) => Promise<unknown>>;
   const api = Object.fromEntries(

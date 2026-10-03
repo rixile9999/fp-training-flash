@@ -2118,3 +2118,45 @@ a {
   .lesson-head, .page-head, .placement-cta { flex-direction: column; align-items: flex-start; }
   .lesson-progress { align-items: flex-start; }
 }
+
+/* ---------- Recall (screens/Recall.tsx, RecallPlayer.tsx) ---------- */
+.page.recall { max-width: 960px; }
+.page.recall.lesson, .page.recall.course-unit { max-width: 840px; }
+.recall-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.recall-stats { grid-template-columns: 1fr 1fr; }
+.recall-stats div, .recall-summary div { border: 1px solid var(--line); background: var(--surface); }
+.recall-stats dd.small { font-size: 13px; font-weight: 400; }
+.recall-summary { grid-template-columns: repeat(4, 1fr); }
+.recall-start, .recall-panel { display: flex; flex-direction: column; gap: 10px; padding: 16px 20px; }
+.segmented { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; border: 0; }
+.segmented legend { margin-bottom: 6px; padding: 0; }
+.segmented label { display: inline-flex; align-items: center; justify-content: center; min-width: 72px; min-height: 44px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: var(--surface); font-weight: 600; cursor: pointer; }
+.segmented label.is-on { border-color: var(--accent); background: var(--accent-tint); color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.segmented label:focus-within { outline: 3px solid var(--focus); outline-offset: 2px; }
+.segmented input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.recall-decks, .recall-cards { display: grid; gap: 12px; }
+.recall-deck-top { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.recall-deck-top .btn { margin-left: auto; }
+.recall-meter { position: relative; height: 8px; }
+.recall-meter span { position: absolute; top: 0; left: 0; }
+.recall-meter .is-seen { background: #e3a6d4; }
+.recall-bar .recall-progress { flex: 1; min-width: 80px; margin: 0; background: var(--line); }
+.recall-card { padding: 6px 16px; }
+.recall-card-body { display: flex; flex-direction: column; gap: 6px; padding-bottom: 12px; }
+.recall-form { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.recall-form > .code-block, .recall-form > .input, .recall-produce { align-self: stretch; }
+.cloze-input { height: 1.6em; margin: 0 2px; padding: 0 4px; border: 0; border-bottom: 2px solid var(--gleam-pink); border-radius: 3px 3px 0 0; background: var(--editor-bg-2); color: var(--gleam-pink); font: inherit; }
+.cloze-input:focus-visible { outline: 2px solid var(--gleam-pink); outline-offset: 2px; }
+.recall-produce { display: flex; flex-direction: column; border-radius: var(--radius-sm); background: var(--editor-bg); overflow: hidden; }
+.recall-produce .code-block { margin: 0; padding-block: 6px; border-radius: 0; }
+.recall-produce .code-block:first-child { padding-top: 12px; }
+.recall-produce .code-block:last-child { padding-bottom: 12px; }
+.recall-editor { height: 200px; }
+@media (max-width: 760px) {
+  .recall-top { grid-template-columns: minmax(0, 1fr); }
+  .recall-summary { grid-template-columns: 1fr 1fr; }
+  /* Four tabs: let the header wrap on phones. */
+  .header-right { flex-wrap: wrap; row-gap: 4px; min-width: 0; max-width: 100%; }
+  .nav-link { padding: 0 10px; }
+  .nav-link.is-active::after { left: 10px; right: 10px; }
+}

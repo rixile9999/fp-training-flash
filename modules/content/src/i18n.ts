@@ -14,6 +14,9 @@ import type {
   LessonAnswerKey,
   LessonBlock,
   LessonUnitSummary,
+  RecallCard,
+  RecallCardKey,
+  RecallDeck,
   ReferenceMaterial,
   RubricItem,
   Skill,
@@ -236,5 +239,99 @@ export function localizeLessonAnswer(
     answer: stored.answer,
     correctFeedback: bt?.correctFeedback ?? stored.correctFeedback,
     choiceFeedback,
+  };
+}
+
+// ---------- Recall cards (content/recall) ----------
+
+/** A deck as stored (Korean). `cardCount` is derived from the card rows by the catalog. */
+export type StoredRecallDeck = Omit<RecallDeck, "cardCount">;
+
+export interface RecallDeckText {
+  readonly title?: string;
+  readonly description?: string;
+}
+
+/**
+ * Translated texts of one card (<card-id>.<l>.yaml without the keys that are never translated). `example` and
+ * `definitions` differ from the Korean code only in comments (checked by the loader).
+ */
+export interface RecallCardText {
+  readonly title?: string;
+  readonly summary?: string;
+  readonly example?: string;
+  readonly definitions?: string;
+  readonly recognize?: {
+    readonly prompt?: string;
+    /** Same length and order as the Korean choices (checked by the loader). */
+    readonly choices?: readonly string[];
+    readonly feedback?: { readonly correct?: string; readonly choices?: Readonly<Record<string, string>> };
+  };
+  readonly cloze?: { readonly prompt?: string };
+  readonly predict?: { readonly prompt?: string };
+  readonly produce?: { readonly prompt?: string; readonly hint?: string };
+}
+
+export function localizeRecallDeck(deck: StoredRecallDeck, t: RecallDeckText | undefined, cardCount: number): RecallDeck {
+  return {
+    id: deck.id,
+    title: t?.title ?? deck.title,
+    description: t?.description ?? deck.description,
+    order: deck.order,
+    cardCount,
+  };
+}
+
+/** Learner view: rebuilt field by field, so nothing but the contract fields (no answers, checks, reference) leaves. */
+export function localizeRecallCard(card: RecallCard, t: RecallCardText | undefined): RecallCard {
+  const choices = t?.recognize?.choices?.length === card.recognize.choices.length ? t.recognize.choices : card.recognize.choices;
+  const definitions = card.definitions === undefined ? undefined : (t?.definitions ?? card.definitions);
+  const hint = card.produce.hint === undefined ? undefined : (t?.produce?.hint ?? card.produce.hint);
+  return {
+    id: card.id,
+    deckId: card.deckId,
+    title: t?.title ?? card.title,
+    topic: card.topic,
+    summary: t?.summary ?? card.summary,
+    example: t?.example ?? card.example,
+    imports: card.imports,
+    ...(definitions === undefined ? {} : { definitions }),
+    ...(card.signature === undefined ? {} : { signature: card.signature }),
+    ...(card.frequency === undefined ? {} : { frequency: card.frequency }),
+    recognize: { prompt: t?.recognize?.prompt ?? card.recognize.prompt, choices },
+    cloze: { prompt: t?.cloze?.prompt ?? card.cloze.prompt, code: card.cloze.code },
+    ...(card.predict === undefined
+      ? {}
+      : { predict: { prompt: t?.predict?.prompt ?? card.predict.prompt, code: card.predict.code } }),
+    produce: {
+      prompt: t?.produce?.prompt ?? card.produce.prompt,
+      header: card.produce.header,
+      ...(hint === undefined ? {} : { hint }),
+    },
+    locales: card.locales,
+  };
+}
+
+/** Answer key with feedback in the locale (per choice index, Korean fallback); answers and code never change. */
+export function localizeRecallCardKey(key: RecallCardKey, t: RecallCardText | undefined): RecallCardKey {
+  const choiceFeedback: Record<number, string> = {};
+  for (const [index, text] of Object.entries(key.recognize.choiceFeedback)) {
+    choiceFeedback[Number(index)] = own(t?.recognize?.feedback?.choices, index) ?? text;
+  }
+  return {
+    cardId: key.cardId,
+    recognize: {
+      answer: key.recognize.answer,
+      correctFeedback: t?.recognize?.feedback?.correct ?? key.recognize.correctFeedback,
+      choiceFeedback,
+    },
+    cloze: { answers: key.cloze.answers, expected: key.cloze.expected },
+    ...(key.predict === undefined ? {} : { predict: { expected: key.predict.expected } }),
+    produce: {
+      checks: key.produce.checks,
+      expected: key.produce.expected,
+      mustUse: key.produce.mustUse,
+      reference: key.produce.reference,
+    },
   };
 }

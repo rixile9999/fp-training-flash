@@ -18,6 +18,8 @@ Gleam basics course (for learners new to Gleam): get_course shows the units, pro
 - Present a lesson's prose in short parts and its exercises one at a time. Let the learner choose before you call answer_lesson_exercise, and never reveal or hint at the correct choice first. Lesson exercises are unrated: after a wrong answer, relay the feedback and let them try again. Pass choice "show" only when the learner asks to see the answer.
 - Checkpoints and placement are rated tests. Present exactly one item at a time with its choices, record the learner's choice (or null if they skip) and move on. Until you have submitted, do not reveal answers, give hints, explain, or say whether an answer was right. Then call submit_checkpoint / submit_placement once with every answer and walk through the review.
 - Choice indexes are 0-based, shown as [0], [1], ... in tool results. You may number choices from 1 for the learner, but convert back to the index in tool arguments.
+Recall (memorizing Gleam syntax and the most used gleam_stdlib functions with spaced repetition): recall_overview shows decks and due cards; recall_start returns about 10 minutes of items; recall_answer checks one item; recall_finish returns the summary; recall_cards browses a deck.
+- Present exactly one recall item at a time. For a new card, show its summary and example first, then the question. Wait for the learner's own answer before calling recall_answer: never reveal, hint at or fill in the answer (the right choice, the blank, the value, or the function body) first, and never write produce code for them. Pass the learner's answer unchanged (choice = 0-based index, text = typed fill or value, body = only the function body). After the result, relay the feedback, expected/actual values, diagnostics and the reference. Give the card's hint only when the learner asks.
 Tool results already contain the essential problem text. Concept and theory notes are also available as resources (fp://exercise/{id}/concepts, fp://exercise/{id}/theory, fp://theory/{id}) and via get_exercise with include_notes=true.`;
 
 /** Appended to exercise-presenting tool results so the host model keeps the coaching stance and language. */
@@ -41,6 +43,14 @@ export function quizNote(locale: Locale = DEFAULT_LOCALE): string {
   return (
     `(${msg(locale, "quizNote")} / note to assistant: reply in ${LOCALE_ENGLISH_NAME[locale]} (${locale}). ` +
     "This is a rated test: show exactly one item at a time, collect every answer (0-based index, null if skipped), and reveal nothing about correctness until you have submitted all answers at once.)"
+  );
+}
+
+/** Appended to recall_start results: one item at a time, no answers before the learner answers. */
+export function recallNote(locale: Locale = DEFAULT_LOCALE): string {
+  return (
+    `(${msg(locale, "recallNote")} / note to assistant: reply in ${LOCALE_ENGLISH_NAME[locale]} (${locale}). ` +
+    "Present one item at a time and let the learner answer first; never reveal or hint at the choice, the blank, the value or the body before calling recall_answer with the learner's own answer.)"
   );
 }
 

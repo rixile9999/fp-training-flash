@@ -6,13 +6,16 @@
  *   node tools/content-ci/src/i18n-check.ts [--family <id>]... [--locale en|zh]... [--notes]
  * Reports per variant and locale: missing files for a complete translation, overlay keys that do not exist in the
  * Korean source, and localized starters whose code differs from the Korean starter apart from comments.
+ * Without --family it also lists incomplete recall translations (content/recall; `recallTranslationGaps` of the loaded
+ * bundle, the same rule as `RecallCard.locales`), or the recall issues when the tree does not load.
  */
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { parse } from "yaml";
-import { codeOnly } from "@fp/content";
+import { createPgliteDb, InMemoryEventBus, silentLogger, systemClock } from "@fp/kernel";
+import { codeOnly, createContentModule, recallTranslationGaps } from "@fp/content";
 
 const root = resolve(fileURLToPath(new URL("../../..", import.meta.url)), "content");
 const { values } = parseArgs({
@@ -113,6 +116,33 @@ if (values.notes) {
   }
 }
 
+// Recall cards: the loader computes the gaps; it needs the whole tree to load (a bundle exists only without issues).
+let recallLine = "";
+if (!values.family?.length) {
+  const db = await createPgliteDb();
+  try {
+    const content = createContentModule({ db, clock: systemClock, events: new InMemoryEventBus(silentLogger), logger: silentLogger });
+    const loaded = await content.admin.loadDirectory(root);
+    if (!loaded.ok) {
+      const recallIssues = loaded.error.filter((i) => i.path.startsWith("recall"));
+      for (const i of recallIssues) problems.push(`${i.path}: ${i.message}`);
+      problems.push(`recall: content does not load (${loaded.error.length} issue(s), ${recallIssues.length} in content/recall); run content CI`);
+    } else {
+      const gaps = recallTranslationGaps(loaded.value).filter((g) => locales.includes(g.locale));
+      for (const g of gaps) problems.push(`${g.path} [${g.locale}] incomplete: ${g.missing.join(", ")}`);
+      const cards = new Set<string>();
+      const recallDir = join(root, "recall");
+      for (const f of existsSync(recallDir) ? (readdirSync(recallDir, { recursive: true }) as string[]) : []) {
+        if (/^[a-z0-9-]+\/[a-z0-9-]+\.yaml$/.test(f.split("\\").join("/"))) cards.add(f);
+      }
+      const incomplete = gaps.filter((g) => !g.path.endsWith(`decks.${g.locale}.yaml`)).length;
+      recallLine = `; ${cards.size * locales.length - incomplete}/${cards.size * locales.length} recall card-locale pairs complete`;
+    }
+  } finally {
+    await db.close();
+  }
+}
+
 for (const p of problems) console.log(`✗ ${p}`);
-console.log(`\n${complete}/${total} variant-locale pairs complete; ${problems.length} problem(s)`);
+console.log(`\n${complete}/${total} variant-locale pairs complete${recallLine}; ${problems.length} problem(s)`);
 process.exit(problems.length ? 1 : 0);

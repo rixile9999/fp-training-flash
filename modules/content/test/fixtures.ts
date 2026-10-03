@@ -305,3 +305,153 @@ blocks:
 `,
   };
 }
+
+export const RS = "recall/stdlib/";
+export const RX = "recall/syntax/";
+
+/**
+ * Recall cards for `baseFiles()`. Decks syntax (order 1) and stdlib (order 2); decks.en.yaml complete, decks.zh.yaml
+ * partial. stdlib: list-map (order 1, no predict/hint, no overlays) and list-fold (order 2, en complete, zh partial).
+ * syntax: shape-area (definitions with a Korean comment; en overlay translates it). SECRET_* marks answer-key texts.
+ */
+export function recallFiles(): Files {
+  return {
+    "recall/decks.yaml": `decks:
+  - { id: stdlib, title: 핵심 라이브러리, description: 자주 쓰는 함수, order: 2 }
+  - { id: syntax, title: 문법, description: 핵심 문법, order: 1 }
+`,
+    "recall/decks.en.yaml": `decks:
+  stdlib: { title: Core library, description: Functions used most }
+  syntax: { title: Syntax, description: Core syntax }
+`,
+    "recall/decks.zh.yaml": `decks:
+  stdlib: { title: 核心库 }
+`,
+    [`${RS}list-fold.yaml`]: `title: list.fold
+topic: gleam/list
+order: 2
+summary: 리스트를 접어 값 하나로 만듭니다.
+example: |
+  list.fold([1, 2, 3], 0, fn(acc, x) { acc + x })  // -> 6
+imports: [gleam/list]
+signature: "list.fold(List(a), from: b, with: fn(b, a) -> b) -> b"
+frequency: 39
+recognize:
+  prompt: 콜백의 인자 순서는?
+  choices: ["\`fn(원소, 누적값)\`", "\`fn(누적값, 원소)\`", "\`fn(x)\`"]
+  answer: 1
+  feedback:
+    correct: 맞아요 SECRET_CORRECT
+    choices:
+      0: 반대예요 SECRET_WRONG
+      2: 인자가 두 개예요
+cloze:
+  prompt: 빈칸을 채우세요.
+  code: "list.____([1, 2, 3], 0, fn(acc, x) { acc + x })"
+  answers: [fold, " fold_left "]
+  expected: "6"
+predict:
+  prompt: 이 식의 값은?
+  code: "list.fold([1, 2, 3], 0, fn(acc, x) { acc - x })"
+  expected: "-6"
+produce:
+  prompt: 합을 돌려주는 본문을 쓰세요.
+  header: "pub fn total(xs: List(Int)) -> Int"
+  checks: "#(total([1, 2]), total([]))"
+  expected: "#(3, 0)"
+  mustUse: [list.fold]
+  reference: "list.fold(xs, 0, fn(secret_acc, x) { secret_acc + x })"
+  hint: 시작값은 0입니다.
+`,
+    [`${RS}list-fold.en.yaml`]: `summary: Folds a list into one value.
+recognize:
+  prompt: In which order does the callback take its arguments?
+  choices: ["\`fn(element, acc)\`", "\`fn(acc, element)\`", "\`fn(x)\`"]
+  feedback:
+    correct: Right
+    choices: { 0: Other way round, 2: It takes two }
+cloze: { prompt: Fill in the blank. }
+predict: { prompt: What is the value? }
+produce: { prompt: Write the body that returns the sum., hint: Start from 0. }
+`,
+    [`${RS}list-fold.zh.yaml`]: `summary: 把列表折叠成一个值。
+recognize:
+  feedback:
+    choices: { 2: 有两个参数 }
+`,
+    [`${RS}list-map.yaml`]: `title: list.map
+topic: gleam/list
+order: 1
+summary: 각 원소를 바꿉니다.
+example: "list.map([1, 2], fn(x) { x * 2 })  // -> [2, 4]"
+imports: [gleam/list]
+recognize:
+  prompt: list.map이 돌려주는 것은?
+  choices: [새 리스트, 원래 리스트, 원소 하나]
+  answer: 0
+  feedback: { correct: 맞아요, choices: { 1: 불변이에요, 2: 리스트예요 } }
+cloze:
+  prompt: 빈칸을 채우세요.
+  code: "list.____([1, 2], fn(x) { x * 2 })"
+  answers: [map]
+  expected: "[2, 4]"
+produce:
+  prompt: 두 배로 만드세요.
+  header: "pub fn double(xs: List(Int)) -> List(Int)"
+  checks: "double([1, 2])"
+  expected: "[2, 4]"
+  mustUse: [list.map]
+  reference: "list.map(xs, fn(x) { x * 2 })"
+`,
+    [`${RX}shape-area.yaml`]: `title: 사용자 정의 타입
+topic: custom-types
+order: 1
+summary: 생성자마다 case로 나눕니다.
+example: |
+  area(Square(2.0))  // -> 4.0
+definitions: |
+  // 도형
+  pub type Shape {
+    Square(side: Float)
+  }
+
+  pub fn area(s: Shape) -> Float {
+    case s { Square(side) -> side *. side }
+  }
+recognize:
+  prompt: 생성자를 나누는 식은?
+  choices: [case, if, match]
+  answer: 0
+  feedback: { correct: 맞아요, choices: { 1: if는 없어요, 2: match는 없어요 } }
+cloze:
+  prompt: 빈칸을 채우세요.
+  code: "____(Square(3.0))"
+  answers: [area]
+  expected: "9.0"
+produce:
+  prompt: 변의 길이를 돌려주세요.
+  header: "pub fn side(s: Shape) -> Float"
+  checks: "side(Square(5.0))"
+  expected: "5.0"
+  reference: "case s { Square(side) -> side }"
+`,
+    [`${RX}shape-area.en.yaml`]: `title: Custom types
+summary: Split on each constructor with case.
+definitions: |
+  // Shape
+  pub type Shape {
+    Square(side: Float)
+  }
+
+  pub fn area(s: Shape) -> Float {
+    case s { Square(side) -> side *. side }
+  }
+recognize:
+  prompt: Which expression splits on constructors?
+  choices: [case, if, match]
+  feedback: { correct: Right, choices: { 1: There is no if, 2: There is no match } }
+cloze: { prompt: Fill in the blank. }
+produce: { prompt: Return the side length. }
+`,
+  };
+}

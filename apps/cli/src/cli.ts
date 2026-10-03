@@ -42,6 +42,8 @@ import type { Locale, LocaleSource, MessageId, MessageParams, SystemLocaleEnv } 
 import { META_FILE, learnerFile, readLearnerCode, readMeta, writeProject } from "./project.ts";
 import type { ProjectMeta } from "./project.ts";
 import type { Prompter } from "./prompt.ts";
+import { externalEditor, formatRecallOverview, runRecallSession } from "./recall.ts";
+import type { EditBody } from "./recall.ts";
 
 /** API methods the CLI uses; tests pass a hand-written fake. */
 export type CliApi = Pick<
@@ -68,6 +70,10 @@ export type CliApi = Pick<
   | "submitCheckpoint"
   | "startPlacement"
   | "submitPlacement"
+  | "recallOverview"
+  | "startRecall"
+  | "recallAnswer"
+  | "finishRecall"
 >;
 
 export interface CliEnv extends ConfigEnv, SystemLocaleEnv {
@@ -75,6 +81,8 @@ export interface CliEnv extends ConfigEnv, SystemLocaleEnv {
   readonly FP_TOKEN?: string | undefined;
   /** Display language override (ko, en, zh; "en_US.UTF-8"-style values are accepted). */
   readonly FP_LANG?: string | undefined;
+  /** Editor for recall produce bodies (the command may carry arguments, e.g. "code -w"). */
+  readonly EDITOR?: string | undefined;
 }
 
 export interface CliDeps {
@@ -88,6 +96,10 @@ export interface CliDeps {
   readonly stdinIsTTY?: boolean;
   /** Creates the line prompter for interactive quizzes (main.ts: node:readline on stdin/stdout). */
   readonly prompter?: () => Prompter;
+  /** Recall produce bodies: replaces the $EDITOR runner (tests). */
+  readonly editBody?: EditBody;
+  /** Milliseconds clock for recall answer times (tests). */
+  readonly now?: () => number;
 }
 
 const LANGUAGE: Language = "gleam";
@@ -122,6 +134,7 @@ const ACCOUNT_LOCALE_COMMANDS = new Set([
   "lesson-done",
   "checkpoint",
   "placement",
+  "recall",
 ]);
 
 type QuizKind = "checkpoint" | "placement";
@@ -223,6 +236,7 @@ export async function runCli(argv: readonly string[], deps: CliDeps): Promise<nu
         lang: { type: "string" },
         answers: { type: "string" },
         quiz: { type: "string" },
+        deck: { type: "string", multiple: true },
       },
     });
   } catch (e) {
@@ -617,6 +631,38 @@ export async function runCli(argv: readonly string[], deps: CliDeps): Promise<nu
       case "placement": {
         if (args.length > 0) throw new CliError("placementUsage", {}, 2);
         return await takeQuiz("placement");
+      }
+      case "recall": {
+        const [sub = "start", ...extra] = args;
+        if (extra.length > 0 || (sub !== "start" && sub !== "status")) throw new CliError("recallUsage", {}, 2);
+        if (sub === "status") {
+          if (opts.minutes !== undefined || opts.deck !== undefined) throw new CliError("recallUsage", {}, 2);
+          const overview = await authed().recallOverview();
+          emit(overview, formatRecallOverview(overview, locale));
+          return 0;
+        }
+        const minutes = opts.minutes === undefined ? undefined : Number(opts.minutes);
+        if (minutes !== undefined && (!Number.isInteger(minutes) || minutes < 1 || minutes > 60)) {
+          throw new CliError("recallMinutesInvalid", {}, 2);
+        }
+        const deckIds = (opts.deck ?? []).flatMap((d) => d.split(",")).map((d) => d.trim()).filter((d) => d !== "");
+        if (opts.deck !== undefined && deckIds.length === 0) throw new CliError("recallUsage", {}, 2);
+        const makePrompter = deps.prompter;
+        if (json || !deps.stdinIsTTY || !makePrompter) throw new CliError("recallNeedsTerminal");
+        const editor = env.EDITOR?.trim();
+        await runRecallSession(
+          {
+            api: authed(),
+            prompter: makePrompter,
+            out,
+            locale,
+            now: deps.now ?? Date.now,
+            editBody: deps.editBody ?? (editor ? externalEditor(editor) : undefined),
+            editorName: editor || undefined,
+          },
+          { ...(minutes === undefined ? {} : { minutes }), ...(deckIds.length > 0 ? { deckIds } : {}) },
+        );
+        return 0;
       }
       case "token": {
         const [sub, ...rest] = args;

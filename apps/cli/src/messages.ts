@@ -60,6 +60,11 @@ Gleam 기초 코스:
     --answers <itemId>=<index>,... [--quiz <quizId>]
                             답 제출 (index는 0부터, 비우면 건너뜀)
 
+암기 (Gleam 문법과 핵심 라이브러리):
+  recall [--minutes 10] [--deck <덱>[,<덱>]]
+                            약 10분 암기 세션 (터미널에서 한 항목씩, 직접 쓰기는 $EDITOR 사용)
+  recall status             덱별 진행 상황과 복습할 카드 수
+
 공통 옵션: --json (기계용 JSON 출력), --lang ko|en|zh (이번 실행의 표시 언어), --help
 환경 변수: FP_API_URL, FP_TOKEN, FP_LANG, FP_CONFIG_DIR (기본 ~/.config/fp)`,
     en: `Usage: fp <command> [options]
@@ -94,6 +99,11 @@ Gleam basics course:
     --answers <itemId>=<index>,... [--quiz <quizId>]
                             submit answers (indexes start at 0, empty = skip)
 
+Recall (Gleam syntax and the core library):
+  recall [--minutes 10] [--deck <deck>[,<deck>]]
+                            a recall session of about 10 minutes (one item at a time in a terminal; $EDITOR for writing code)
+  recall status             progress per deck and the cards due for review
+
 Common options: --json (machine-readable JSON), --lang ko|en|zh (display language for this run), --help
 Environment: FP_API_URL, FP_TOKEN, FP_LANG, FP_CONFIG_DIR (default ~/.config/fp)`,
     zh: `用法：fp <命令> [选项]
@@ -124,6 +134,11 @@ Gleam 基础课程：
     --json                  以 JSON 输出题目（不逐题提问）
     --answers <itemId>=<index>,... [--quiz <quizId>]
                             提交答案（index 从 0 开始，留空表示跳过）
+
+记忆（Gleam 语法与核心库）：
+  recall [--minutes 10] [--deck <卡组>[,<卡组>]]
+                            约 10 分钟的记忆训练回合（在终端中逐项作答，编写代码时使用 $EDITOR）
+  recall status             各卡组的进度与待复习的卡片数
 
 通用选项：--json（机器可读的 JSON 输出）、--lang ko|en|zh（本次运行的显示语言）、--help
 环境变量：FP_API_URL、FP_TOKEN、FP_LANG、FP_CONFIG_DIR（默认 ~/.config/fp）`,
@@ -586,6 +601,124 @@ Gleam 基础课程：
     ko: "`fp course`로 이어서 학습하세요.",
     en: "Continue with `fp course`.",
     zh: "用 `fp course` 继续学习。",
+  },
+
+  // ---------- recall ----------
+  recallUsage: {
+    ko: "사용법: fp recall [status] [--minutes <1-60>] [--deck <덱>[,<덱>...]]",
+    en: "Usage: fp recall [status] [--minutes <1-60>] [--deck <deck>[,<deck>...]]",
+    zh: "用法：fp recall [status] [--minutes <1-60>] [--deck <卡组>[,<卡组>...]]",
+  },
+  recallMinutesInvalid: {
+    ko: "--minutes는 1부터 60 사이의 정수여야 해요.",
+    en: "--minutes must be a whole number from 1 to 60.",
+    zh: "--minutes 必须是 1 到 60 之间的整数。",
+  },
+  recallNeedsTerminal: {
+    ko: "암기 세션은 터미널에서 한 항목씩 진행해요. 터미널에서 `fp recall`을 실행하세요. 진행 상황은 `fp recall status`로 볼 수 있어요.",
+    en: "Recall sessions run one item at a time in a terminal. Run `fp recall` in a terminal; `fp recall status` shows your progress.",
+    zh: "记忆训练回合需要在终端中逐项进行。请在终端中运行 `fp recall`；用 `fp recall status` 查看进度。",
+  },
+  recallHeading: { ko: "암기: Gleam 문법과 핵심 라이브러리", en: "Recall: Gleam syntax and the core library", zh: "记忆：Gleam 语法与核心库" },
+  recallStatusLine: {
+    ko: "지금 복습할 카드 {due}장 · 오늘 남은 새 카드 {fresh}장 (하루 {perDay}장)",
+    en: "{due} cards due for review now · {fresh} new cards left today ({perDay} per day)",
+    zh: "现在待复习的卡片 {due} 张 · 今天还可学新卡片 {fresh} 张（每天 {perDay} 张）",
+  },
+  recallDeckLine: {
+    ko: "{title} ({id}) · 본 카드 {seen}/{total} · 숙달 {mastered} · 복습 대기 {due}",
+    en: "{title} ({id}) · seen {seen}/{total} · mastered {mastered} · due {due}",
+    zh: "{title}（{id}）· 已学 {seen}/{total} · 已掌握 {mastered} · 待复习 {due}",
+  },
+  recallStartHow: {
+    ko: "`fp recall`로 약 10분 세션을 시작하세요. 덱 하나만: `fp recall --deck {deck}`",
+    en: "Start a session of about 10 minutes with `fp recall`. One deck only: `fp recall --deck {deck}`",
+    zh: "用 `fp recall` 开始约 10 分钟的训练回合。只练一个卡组：`fp recall --deck {deck}`",
+  },
+  recallNothingToDo: {
+    ko: "지금은 복습할 카드도 새 카드도 없어요. 내일 다시 만나요.",
+    en: "Nothing to review and no new cards right now. See you tomorrow.",
+    zh: "现在没有待复习的卡片，也没有新卡片。明天再来吧。",
+  },
+  recallSessionHeader: {
+    ko: "암기 세션 · {count}개 항목. 그만하려면 Ctrl-D.",
+    en: "Recall session · {count} items. Press Ctrl-D to stop.",
+    zh: "记忆训练回合 · 共 {count} 项。按 Ctrl-D 结束。",
+  },
+  recallKindNew: { ko: "새 카드", en: "new card", zh: "新卡片" },
+  recallKindReview: { ko: "복습", en: "review", zh: "复习" },
+  recallKindMix: { ko: "섞어 풀기", en: "mixed practice", zh: "混合练习" },
+  recallKindFinale: { ko: "마무리", en: "finale", zh: "收尾" },
+  recallFormRecognize: { ko: "고르기", en: "recognize", zh: "识别" },
+  recallFormCloze: { ko: "빈칸 채우기", en: "fill in the blank", zh: "填空" },
+  recallFormPredict: { ko: "값 예측", en: "predict the value", zh: "预测结果" },
+  recallFormProduce: { ko: "직접 쓰기", en: "write the code", zh: "编写代码" },
+  recallSignature: { ko: "시그니처: {signature}", en: "Signature: {signature}", zh: "签名：{signature}" },
+  recallExampleLabel: { ko: "예:", en: "Example:", zh: "示例：" },
+  recallDefinitionsLabel: { ko: "함께 쓰는 정의:", en: "Definitions in scope:", zh: "可用的定义：" },
+  recallAskChoice: { ko: "답 (1-{max}): ", en: "Your answer (1-{max}): ", zh: "你的答案（1-{max}）：" },
+  recallInvalidChoice: {
+    ko: "1부터 {max} 사이의 번호를 입력하세요.",
+    en: "Enter a number from 1 to {max}.",
+    zh: "请输入 1 到 {max} 之间的序号。",
+  },
+  recallAskBlank: { ko: "빈칸 (모르면 Enter): ", en: "Blank (Enter if you don't know): ", zh: "填空（不会就按回车）：" },
+  recallAskValue: { ko: "값 (모르면 Enter): ", en: "Value (Enter if you don't know): ", zh: "值（不会就按回车）：" },
+  recallProduceHow: {
+    ko: "함수 본문만 입력하고 빈 줄로 끝내세요. 첫 줄에 ?를 입력하면 힌트, 바로 Enter는 모름.",
+    en: "Type only the function body and end it with an empty line. Type ? on the first line for a hint; Enter right away if you don't know.",
+    zh: "只输入函数体，以空行结束。第一行输入 ? 可查看提示；不会就直接按回车。",
+  },
+  recallProduceEditorHow: {
+    ko: "편집기({editor})에서 함수 본문을 쓰고 저장한 뒤 닫으세요.",
+    en: "Write the function body in your editor ({editor}), then save and close it.",
+    zh: "在编辑器（{editor}）中写好函数体，保存后关闭。",
+  },
+  recallEditorTemplate: {
+    ko: "아래 함수의 본문만 쓰세요. {marker}로 시작하는 줄은 무시됩니다.",
+    en: "Write only the body of the function below. Lines starting with {marker} are ignored.",
+    zh: "只写下面函数的函数体。以 {marker} 开头的行会被忽略。",
+  },
+  recallEditorFailed: {
+    ko: "편집기를 실행하지 못했어요. 여기에 직접 입력하세요.",
+    en: "Couldn't run the editor. Type the body here instead.",
+    zh: "无法启动编辑器。请直接在这里输入。",
+  },
+  recallBodyFirst: { ko: "본문> ", en: "body> ", zh: "函数体> " },
+  recallBodyMore: { ko: "(계속)> ", en: "(more)> ", zh: "（续）> " },
+  recallHint: { ko: "힌트: {hint}", en: "Hint: {hint}", zh: "提示：{hint}" },
+  recallNoHint: { ko: "이 카드에는 힌트가 없어요.", en: "This card has no hint.", zh: "这张卡片没有提示。" },
+  recallCorrect: { ko: "정답이에요", en: "Correct", zh: "答对了" },
+  recallWrong: { ko: "아직 아니에요", en: "Not quite", zh: "还不对" },
+  recallExpected: { ko: "정답: {value}", en: "Expected: {value}", zh: "正确答案：{value}" },
+  recallActual: { ko: "내 답의 값: {value}", en: "Your answer gives: {value}", zh: "你的答案得到：{value}" },
+  recallMissing: { ko: "꼭 써야 하는 것: {tokens}", en: "Must use: {tokens}", zh: "必须使用：{tokens}" },
+  recallDiagnostics: { ko: "컴파일/실행 문제:", en: "Compile/runtime problems:", zh: "编译/运行问题：" },
+  recallReference: { ko: "모범 답안:", en: "Reference answer:", zh: "参考答案：" },
+  recallNext: { ko: "다음 복습: {when} · 단계: {stage}", en: "Next review: {when} · stage: {stage}", zh: "下次复习：{when} · 阶段：{stage}" },
+  recallDueMinutes: { ko: "{n}분 후", en: "in {n} min", zh: "{n} 分钟后" },
+  recallDueHours: { ko: "{n}시간 후", en: "in {n} h", zh: "{n} 小时后" },
+  recallDueDays: { ko: "{n}일 후", en: "in {n} days", zh: "{n} 天后" },
+  recallAnswerFailed: {
+    ko: "답을 확인하지 못했어요: {message} 다음 항목으로 넘어갑니다.",
+    en: "Couldn't check this answer: {message} Moving on to the next item.",
+    zh: "无法检查这个答案：{message} 继续下一项。",
+  },
+  recallStopped: {
+    ko: "여기서 멈출게요. 지금까지 답한 항목은 저장되었어요.",
+    en: "Stopping here. The items you answered are saved.",
+    zh: "到此为止。已作答的项目都已保存。",
+  },
+  recallSummaryHeading: { ko: "세션 요약", en: "Session summary", zh: "训练回合小结" },
+  recallSummaryLine: {
+    ko: "답한 항목 {answered}개 · 정답 {correct}개 ({accuracy}) · 새로 익힌 카드 {learned}장 · 내일 복습 {tomorrow}장",
+    en: "{answered} answered · {correct} correct ({accuracy}) · {learned} new cards learned · {tomorrow} due tomorrow",
+    zh: "作答 {answered} 项 · 答对 {correct} 项（{accuracy}）· 新学卡片 {learned} 张 · 明天复习 {tomorrow} 张",
+  },
+  recallSummaryDeck: {
+    ko: "{title}: 숙달 {mastered}/{total} · 복습 대기 {due}",
+    en: "{title}: mastered {mastered}/{total} · due {due}",
+    zh: "{title}：已掌握 {mastered}/{total} · 待复习 {due}",
   },
 
   // ---------- locale names ----------

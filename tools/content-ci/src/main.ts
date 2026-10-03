@@ -3,7 +3,10 @@
  * Content CI. Usage:
  *   node tools/content-ci/src/main.ts [--content <dir>] [--family <id>]... [--runner docker|local]
  *        [--image <tag>] [--template <dir>] [--jobs N] [--write-baselines] [--json] [--lessons-only]
- * The default run (no --family) also checks content/lessons (src/lessons.ts); --lessons-only skips the grader.
+ *        [--recall-only] [--card <id>]...
+ * The default run (no --family) also checks content/lessons (src/lessons.ts) and evaluates every content/recall card
+ * in the sandbox (src/recall.ts); --lessons-only skips the grader; --recall-only skips the exercises (lessons are still
+ * walked; they are cheap) and --card limits the recall check to those card ids.
  * Exit code 1 when any check fails.
  */
 import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -14,9 +17,10 @@ import { parseArgs } from "node:util";
 import { parseDocument } from "yaml";
 import { InMemoryEventBus, runMigrations, silentLogger, systemClock, createPgliteDb } from "@fp/kernel";
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES, type ExerciseId } from "@fp/kernel";
-import { createContentModule, lessonTranslationGaps, migrations as contentMigrations } from "@fp/content";
-import { createDockerGleamRunner, createLocalGleamRunner } from "@fp/grading";
+import { createContentModule, lessonTranslationGaps, migrations as contentMigrations, recallTranslationGaps } from "@fp/content";
+import { createDockerGleamRunner, createGradingModule, createLocalGleamRunner, migrations as gradingMigrations } from "@fp/grading";
 import { formatLessonSummary, verifyLessons, type LessonCheck } from "./lessons.ts";
+import { formatRecallSummary, verifyRecall, type RecallCheck } from "./recall.ts";
 import { verifyExercise, type ExerciseCheck } from "./verify.ts";
 
 const repoRoot = resolve(fileURLToPath(new URL("../../..", import.meta.url)));
@@ -31,6 +35,8 @@ const { values } = parseArgs({
     "write-baselines": { type: "boolean", default: false },
     json: { type: "boolean", default: false },
     "lessons-only": { type: "boolean", default: false },
+    "recall-only": { type: "boolean", default: false },
+    card: { type: "string", multiple: true },
   },
 });
 
@@ -39,6 +45,15 @@ const TRANSLATED = SUPPORTED_LOCALES.filter((l) => l !== DEFAULT_LOCALE);
 const families = new Set(values.family ?? []);
 if (values["lessons-only"] && families.size > 0) {
   console.error("--lessons-only cannot be combined with --family (a --family run does not include content/lessons)");
+  process.exit(2);
+}
+const cardIds = values.card?.length ? new Set(values.card) : undefined;
+if (values["recall-only"] && (families.size > 0 || values["lessons-only"])) {
+  console.error("--recall-only cannot be combined with --family or --lessons-only");
+  process.exit(2);
+}
+if (cardIds && (families.size > 0 || values["lessons-only"])) {
+  console.error("--card selects recall cards; it cannot be combined with --family or --lessons-only");
   process.exit(2);
 }
 
@@ -67,6 +82,7 @@ function scopedContentDir(): { dir: string; cleanup: () => void } {
 const scoped = scopedContentDir();
 const db = await createPgliteDb();
 await runMigrations(db, "content", contentMigrations);
+await runMigrations(db, "grading", gradingMigrations);
 const content = createContentModule({ db, clock: systemClock, events: new InMemoryEventBus(silentLogger), logger: silentLogger });
 
 const loaded = await content.admin.loadDirectory(scoped.dir);
@@ -106,10 +122,49 @@ const runner =
     ? createLocalGleamRunner({ templateDir: resolve(values.template) })
     : createDockerGleamRunner({ image: values.image });
 
-const exercises = (await content.catalog.listExercises()).filter((e) => families.size === 0 || families.has(e.familyId));
+const jobs = Math.max(1, Number(values.jobs) || 1);
+
+// Recall: only in the default run (a --family run validates an isolated copy without content/recall).
+let recallCheck: RecallCheck | null = null;
+if (families.size === 0) {
+  const grading = createGradingModule({
+    db,
+    clock: systemClock,
+    events: new InMemoryEventBus(silentLogger),
+    logger: silentLogger,
+    catalog: content.catalog,
+    runner,
+    concurrency: jobs,
+  });
+  recallCheck = await verifyRecall({
+    catalog: content.catalog,
+    evaluate: (req) => grading.service.evaluateSnippet(req),
+    concurrency: jobs,
+    ...(cardIds ? { cardIds } : {}),
+    locales: SUPPORTED_LOCALES,
+    onCard: (r) => {
+      if (values.json) return;
+      const where = `${r.deckId}/${r.cardId}`;
+      console.log(`${r.problems.length ? "✗" : "✓"} recall ${where} (${r.snippets} snippets, ${r.jobs} jobs, ${r.durationMs}ms)${r.problems.map((p) => `\n    - ${p}`).join("")}`);
+    },
+  });
+  if (!values.json) {
+    for (const p of recallCheck.problems) console.log(`✗ recall ${p}`);
+    for (const id of cardIds ?? []) if (!recallCheck.cards.some((c) => c.cardId === id)) console.log(`✗ recall ${id}: no such card`);
+    for (const g of recallTranslationGaps(loaded.value)) console.log(`  incomplete ${g.locale}: ${g.path}: ${g.missing.join("; ")}`);
+  }
+}
+const recallFailed =
+  recallCheck !== null &&
+  (recallCheck.problems.length > 0 ||
+    recallCheck.cards.some((c) => c.problems.length > 0) ||
+    [...(cardIds ?? [])].some((id) => !recallCheck?.cards.some((c) => c.cardId === id)));
+
+const exercises = values["recall-only"]
+  ? []
+  : (await content.catalog.listExercises()).filter((e) => families.size === 0 || families.has(e.familyId));
 const results: ExerciseCheck[] = [];
 const queue = [...exercises];
-const jobs = Math.max(1, Number(values.jobs) || 1);
 
 await Promise.all(
   Array.from({ length: jobs }, async () => {
@@ -148,14 +203,20 @@ await Promise.all(
 const failed = results.filter((r) => r.problems.length);
 if (values.json) {
   const lessons = lessonCheck ? { lessons: lessonCheck, translationGaps: lessonTranslationGaps(loaded.value) } : {};
-  console.log(JSON.stringify({ checked: results.length, failed: failed.length, results, ...lessons }, null, 2));
+  const recall = recallCheck ? { recall: recallCheck, recallTranslationGaps: recallTranslationGaps(loaded.value) } : {};
+  console.log(JSON.stringify({ checked: results.length, failed: failed.length, results, ...lessons, ...recall }, null, 2));
 } else {
-  console.log(`\n${results.length - failed.length}/${results.length} exercises passed content CI`);
+  if (!values["recall-only"]) console.log(`\n${results.length - failed.length}/${results.length} exercises passed content CI`);
   if (lessonCheck) {
     const verdict = lessonsFailed ? `${lessonCheck.problems.length} lesson problem(s)` : "lessons passed content CI";
     console.log(`${formatLessonSummary(lessonCheck.counts, TRANSLATED)}: ${verdict}`);
   }
+  if (recallCheck) {
+    const listed = await content.catalog.listRecallCards();
+    const complete = TRANSLATED.map((l) => `${l} ${listed.filter((c) => c.locales.includes(l)).length}/${listed.length}`);
+    console.log(`${formatRecallSummary(recallCheck)}; fully translated cards: ${complete.join(", ")}${recallCheck.problems.length ? `; ${recallCheck.problems.length} catalog problem(s)` : ""}`);
+  }
 }
 scoped.cleanup();
 await db.close();
-process.exit(failed.length || lessonsFailed ? 1 : 0);
+process.exit(failed.length || lessonsFailed || recallFailed ? 1 : 0);

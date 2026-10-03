@@ -16,9 +16,13 @@ an immutable, versioned bundle into schema `content`, and serves it through `Con
 - Import is one transaction (serialised by a table lock on `content.bundles`); `content.bundle_imported` is
   published only after commit. Re-importing the *current* bundle hash is a no-op (no event, same BundleInfo).
   Re-importing an older bundle after a newer one is a real import (changed variants get new versions).
-- Skills, notes and lessons are not versioned: upserted on import, retired when removed (not listed, still readable).
+- Skills, notes, lessons and recall decks/cards are not versioned: upserted on import, retired when removed (not
+  listed, still readable by id).
 - `Lesson` (getLesson) never contains answers or feedback: they live in `content.lessons.answers` and are served
   only by `getLessonAnswer` (server side, lessons module). `localizeLesson` rebuilds blocks field by field.
+- `RecallCard` (listRecallCards/getRecallCard) never contains answers, expected values, checks, the reference body,
+  mustUse or feedback: they live in `content.recall_cards.key` and are served only by `getRecallCardKey` (server
+  side, recall module). `localizeRecallCard` rebuilds the card field by field.
 - Localization (content/README.md "Localization"): Korean is stored as the contract objects; en/zh overlays
   (`src/i18n.ts` types) are stored in a `translations` jsonb column next to them and applied by the catalog
   field by field (missing -> Korean). No locale / "ko" returns exactly the Korean objects.
@@ -33,20 +37,24 @@ src/bundle.ts           loadDirectory -> opaque ContentBundle (parsed data kept 
                         created by this module in this process can be imported)
 src/loader/tree.ts      reads a directory into a sorted in-memory tree (skips dot files)
 src/loader/schemas.ts   zod schemas (strict: unknown keys are issues)
-src/i18n.ts             overlay types (SkillText, NoteText, VariantText, UnitText, LessonText), stored lesson
-                        types (StoredLessonUnit, StoredLessonAnswer) and localize* functions for the catalog
+src/i18n.ts             overlay types (SkillText, NoteText, VariantText, UnitText, LessonText, RecallDeckText,
+                        RecallCardText), stored types (StoredLessonUnit, StoredLessonAnswer, StoredRecallDeck) and
+                        localize* functions for the catalog
 src/loader/parse.ts     validation, family->variant merge, cross references, ParsedVariant building
 src/loader/translations.ts  *.<locale>.* overlays: parsing, key checks against Korean, locales (rule 4)
 src/loader/lessons.ts   content/lessons: unit.yaml, <lesson>.yaml, overlays, gaps/locales (see "Lessons")
+src/loader/recall.ts    content/recall: decks.yaml, <deck>/<card>.yaml, overlays, gaps/locales (see "Recall")
 src/loader/graph.ts     findCycle (skill and unit prerequisites)
 src/loader/yaml.ts      parseYaml + validate (unknown keys reported, then checks continue)
 src/loader/gleam.ts     `pub fn` detection, body extraction, codeOnly (skips strings and // comments)
 src/loader/hash.ts      variant hash (family.yaml, family.<l>.yaml + variant files incl. translations) and bundle hash
-                        (every file of the tree, lessons included, + BUNDLE_FORMAT_VERSION)
+                        (every file of the tree, lessons and recall included, + BUNDLE_FORMAT_VERSION)
 src/loader/frontmatter.ts  YAML front matter splitter for notes
 src/db/migrations.ts    schema content: skills, concept_notes, theory_topics, exercise_versions, variants, bundles
                         (0002: `translations` jsonb on skills, notes, topics, exercise_versions;
-                        0003: lesson_units, lessons {data = Korean Lesson, answers, translations, position})
+                        0003: lesson_units, lessons {data = Korean Lesson, answers, translations, position};
+                        0004: recall_decks, recall_cards {deck_id, sort_order, data = Korean RecallCard,
+                        key = Korean RecallCardKey, translations})
 src/db/importer.ts      importBundle
 src/db/catalog.ts       ContentCatalog over the tables (JSONB columns hold the contract objects verbatim)
 ```
@@ -104,6 +112,32 @@ src/db/catalog.ts       ContentCatalog over the tables (JSONB columns hold the c
   `getLesson`, `getLessonAnswer` (null for unknown ids or a prose block). en/zh applied field by field
   (choices as a whole, feedback per choice index), Korean fallback.
 
+## Recall (loader/recall.ts, docs/design/recall.md, content/README.md "Recall cards")
+
+- Tree: `recall/decks.yaml` ({decks: [{id, title, description, order}]}, ids and orders unique), `decks.<l>.yaml`
+  ({decks: {<id>: {title?, description?}}}), `recall/<deck>/<card-id>.yaml`, `<card-id>.<l>.yaml`. No `recall/`
+  directory = no decks. Deck directories must be deck ids (empty decks are fine); card id = file name (kebab-case),
+  unique across all decks; `order` (integer) unique per deck. Stray files, subdirectories, unknown locales and
+  overlays of unknown cards are issues.
+- Card rules (issues): strict keys; `expected` values and cloze answers are YAML strings; recognize 3-4 distinct
+  choices, answer in range, `feedback.choices` exactly the wrong indices; `cloze.code` exactly one `____`; answers
+  non-empty (trimmed); `produce.header` starts with `pub fn <name>(` and has no `{`; reference contains every
+  `mustUse` token; example has a non-empty `// -> value`; imports look like snippet imports (`gleam/list`,
+  `gleam/list.{map}`). Whether the code evaluates to the expected values is content CI's job (sandbox).
+- Overlay issues: `imports`, `recognize.answer`, `cloze.code|answers|expected`, `predict.code|expected`,
+  `produce.header|checks|expected|mustUse|reference` (never translated); other unknown keys; example/definitions
+  whose `codeOnly` differs from the Korean; definitions/predict/hint the Korean card lacks; choice count differs or a
+  Hangul-free Korean choice moved; unknown `feedback.choices` index.
+- Gaps (not issues): summary; recognize prompt, choices, feedback.correct and each feedback choice; cloze, predict
+  (if any) and produce prompts; hint if the Korean has one; title when the Korean title has Hangul; example /
+  definitions overlay when the Korean code has Hangul outside string literals; Hangul left in prose or in comments.
+  `RecallCard.locales` = ko + gap-free locales (RecallDeck has no `locales` in the contract; deck title/description
+  gaps are reported only). `recallTranslationGaps(bundle)` (module root) lists card and decks.<l>.yaml gaps.
+- Catalog: `listRecallDecks` (by order, not retired, `cardCount` = non-retired cards), `listRecallCards(deckId?)`
+  (non-retired, by deck order, card order, id), `getRecallCard`/`getRecallCardKey` (any id, also retired). en/zh
+  applied field by field (choices as a whole, feedback per index), Korean fallback. Module root also exports
+  `CLOZE_BLANK` and `exampleExpected` for content CI.
+
 ## File mapping
 
 starter -> `src/<module>.gleam`; support/*.gleam -> `src/*` (in both starterFiles and supportFiles);
@@ -121,6 +155,9 @@ test/** -> `test/**` (GradingSpec.testFiles, all files); solution and wrong/<key
 - `lessons.test.ts`: `lessonFiles()` fixtures (spread after `baseFiles()`; replaces skills.yaml) with two units,
   en complete / zh partial; loader issues, gaps, hash; catalog in every locale, retirement; real /content
   (15 units, 64 lessons, 150 prose, 228 exercises) served and answered in ko/en/zh.
+- `recall.test.ts`: `recallFiles()` fixtures (spread after `baseFiles()`) with decks syntax/stdlib and three cards,
+  en complete / zh partial; loader issues, overlay issues, gaps, hash; catalog in every locale, no answer leakage,
+  retirement; real /content recall loads without recall issues (no hard-coded card counts: authors add cards).
 
 ## Gotchas
 

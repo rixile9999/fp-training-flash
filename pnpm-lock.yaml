@@ -202,6 +202,9 @@ importers:
       '@fp/lessons':
         specifier: workspace:*
         version: link:../../modules/lessons
+      '@fp/recall':
+        specifier: workspace:*
+        version: link:../../modules/recall
       '@fp/sessions':
         specifier: workspace:*
         version: link:../../modules/sessions

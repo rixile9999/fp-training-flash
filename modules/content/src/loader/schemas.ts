@@ -234,3 +234,90 @@ export const lessonOverlaySchema = z.strictObject({
   blocks: z.record(z.string(), lessonBlockOverlaySchema).default({}),
 });
 export type LessonOverlayYaml = z.infer<typeof lessonOverlaySchema>;
+
+// Recall cards (content/recall, docs/design/recall.md).
+
+export const recallDecksSchema = z.strictObject({
+  decks: z.array(z.strictObject({ id: kebabId, title: text, description: text, order: z.number().int() })),
+});
+export type RecallDecksYaml = z.infer<typeof recallDecksSchema>;
+
+export const recallDecksOverlaySchema = z.strictObject({
+  decks: z.record(z.string(), z.strictObject({ title: text.optional(), description: text.optional() })).default({}),
+});
+
+/** Values are compared with `string.inspect` output, so they must be YAML strings ("6", not 6). */
+const inspected = z.string("must be a string (quote it: \"6\")").trim().min(1, "must not be empty");
+const code = z.string().trim().min(1, "must not be empty");
+
+export const recallCardSchema = z.strictObject({
+  title: text,
+  topic: text,
+  order: z.number().int(),
+  summary: text,
+  example: code,
+  imports: z.array(text).default([]),
+  definitions: code.optional(),
+  signature: text.optional(),
+  frequency: z.number().int().nonnegative().optional(),
+  recognize: z.strictObject({
+    prompt: text,
+    choices: z.array(text).min(3, "recognize needs 3-4 choices").max(4, "recognize needs 3-4 choices"),
+    answer: z.number().int().nonnegative(),
+    feedback: z.strictObject({ correct: text, choices: indexRecord.default({}) }),
+  }),
+  cloze: z.strictObject({
+    prompt: text,
+    code,
+    answers: z.array(z.string("must be a string").trim().min(1, "must not be empty")).min(1, "at least one accepted fill"),
+    expected: inspected,
+  }),
+  predict: z.strictObject({ prompt: text, code, expected: inspected }).optional(),
+  produce: z.strictObject({
+    prompt: text,
+    header: text,
+    checks: code,
+    expected: inspected,
+    mustUse: z.array(text).default([]),
+    reference: code,
+    hint: text.optional(),
+  }),
+});
+export type RecallCardYaml = z.infer<typeof recallCardSchema>;
+
+/**
+ * Keys that exist in a Korean card but are never translated. Declared so the loader reports them with a clear message
+ * instead of "unknown key".
+ */
+const never = z.unknown().optional();
+
+export const recallCardOverlaySchema = z.strictObject({
+  title: text.optional(),
+  summary: text.optional(),
+  /** Same code as the Korean example; only comments differ. */
+  example: code.optional(),
+  definitions: code.optional(),
+  recognize: z
+    .strictObject({
+      prompt: text.optional(),
+      choices: z.array(text).optional(),
+      feedback: z.strictObject({ correct: text.optional(), choices: indexRecord.optional() }).optional(),
+      answer: never,
+    })
+    .optional(),
+  cloze: z.strictObject({ prompt: text.optional(), code: never, answers: never, expected: never }).optional(),
+  predict: z.strictObject({ prompt: text.optional(), code: never, expected: never }).optional(),
+  produce: z
+    .strictObject({
+      prompt: text.optional(),
+      hint: text.optional(),
+      header: never,
+      checks: never,
+      expected: never,
+      mustUse: never,
+      reference: never,
+    })
+    .optional(),
+  imports: never,
+});
+export type RecallCardOverlayYaml = z.infer<typeof recallCardOverlaySchema>;

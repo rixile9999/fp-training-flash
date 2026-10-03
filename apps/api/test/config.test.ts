@@ -127,6 +127,7 @@ describe("MODULE_MIGRATIONS", () => {
       "lessons",
       "sessions",
       "coaching",
+      "recall",
     ]);
   });
 });

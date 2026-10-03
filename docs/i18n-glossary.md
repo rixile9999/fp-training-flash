@@ -72,5 +72,9 @@ Use these terms consistently in UI, content, notes and coach output. Simplified 
 | 탐색과 그래프 | search and graphs | 搜索与图 |
 | 함수형 자료구조 | functional data structures | 函数式数据结构 |
 | 주문 / 배송 대기 | order / pending | 订单 / 待发货 |
+| 암기 (탭) | Recall | 记忆 |
+| 카드 / 덱 | card / deck | 卡片 / 卡组 |
+| 인식 / 빈칸 / 작성 (암기 단계) | recognize / fill in / write (recall stages) | 识别 / 填空 / 编写 |
+| 익힘 | mastered | 已掌握 |
 
 Domain words inside exercises (orders, inventory, logs, ...) follow normal usage; keep Gleam identifiers in English.

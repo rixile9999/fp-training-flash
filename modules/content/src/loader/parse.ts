@@ -23,6 +23,7 @@ import type { NoteText, SkillText, Translations, VariantText } from "../i18n.ts"
 import { findCycle } from "./graph.ts";
 import { hashBundle, hashVariant } from "./hash.ts";
 import { parseLessons, type ParsedLessonUnit } from "./lessons.ts";
+import { parseRecall, type ParsedRecall } from "./recall.ts";
 import {
   conceptFrontMatterSchema,
   exerciseSchema,
@@ -83,6 +84,8 @@ export interface ParsedContent {
   readonly translations: ParsedTranslations;
   /** content/lessons, sorted by unit order (empty when the directory is absent). */
   readonly lessonUnits: readonly ParsedLessonUnit[];
+  /** content/recall (no decks when the directory is absent). */
+  readonly recall: ParsedRecall;
 }
 
 export interface MaterializedExercise {
@@ -164,6 +167,7 @@ export function parseContent(tree: ContentTree): Result<ParsedContent, readonly 
   if (families.length === 0) add("exercises", "no exercise families found");
   for (const familyId of families) variants.push(...parseFamily(tree, familyId, refs, add));
   const lessonUnits = parseLessons(tree, skills, add);
+  const recall = parseRecall(tree, add);
 
   if (issues.length > 0) return err(issues);
   return ok({
@@ -174,6 +178,7 @@ export function parseContent(tree: ContentTree): Result<ParsedContent, readonly 
     variants,
     translations,
     lessonUnits,
+    recall,
   });
 }
 

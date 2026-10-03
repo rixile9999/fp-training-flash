@@ -19,6 +19,8 @@ content/
       test/<module>_test.gleam      tests (gleeunit style); more test/ files allowed (e.g. perf module)
       support/*.gleam               optional exercise-owned src modules (e.g. shared types)
       wrong/<key>/<module>.gleam    representative wrong answers; each must fail its `mustFail` tests
+  lessons/<unit>/                   Gleam basics lessons (docs/design/lessons.md)
+  recall/                           recall cards (see "Recall cards" below)
   LICENSES/                         third-party license texts (e.g. Exercism MIT)
 ```
 
@@ -118,6 +120,54 @@ code yet, so authors and reviewers compile them by hand in a copy of the grader 
 
 Theory notes explain *why*; each ends with a short "이 개념이 쓰이는 곳" section instead of exercise-specific
 text, because one topic is shared by many exercises.
+
+## Recall cards
+
+The "암기 / Recall / 记忆" tab (design: docs/design/recall.md; stdlib targets: docs/design/recall-targets.md).
+Each card is one fact, practised in three stages: recognize (multiple choice), cloze (fill the blank, or type the
+value for `predict`), produce (write a function body).
+
+```text
+recall/decks.yaml                 decks: [{ id, title, description, order }]       ids and orders unique
+recall/decks.<l>.yaml             decks: { <id>: { title, description } }
+recall/<deck>/<card-id>.yaml      one card (Korean source); <deck> must be a deck id; card id = file name,
+                                  kebab-case, unique across all decks
+recall/<deck>/<card-id>.<l>.yaml  overlay (prose only, see below)
+```
+
+Card keys (unknown keys are errors):
+
+| key | |
+|---|---|
+| `title`, `topic`, `summary` | label, module (`gleam/list`) or syntax topic id, one-line summary |
+| `order` | integer, unique within the deck; cards are served by order, then id (stdlib = rank in recall-targets.md) |
+| `example` | one expression ending with `// -> <value>`; the text after the last `// ->` is its `string.inspect` |
+| `imports` | e.g. `[gleam/list]` or `["gleam/list.{map}"]` (no aliases); used by every snippet |
+| `definitions` | optional top-level Gleam code (types, helper functions) available to every snippet and the produce body |
+| `signature`, `frequency` | optional (signature from stdlib.json) |
+| `recognize` | `prompt`, `choices` (3-4, distinct), `answer` (index), `feedback: { correct, choices: { <i>: ... } }` with one explanation per wrong choice |
+| `cloze` | `prompt`, `code` (one expression with exactly one `____`), `answers` (accepted fills, trimmed), `expected` |
+| `predict` | optional: `prompt`, `code`, `expected` |
+| `produce` | `prompt`, `header` (`pub fn name(...) -> T`, no body), `checks` (an expression calling it), `expected`, `mustUse` (optional tokens the body must contain), `reference` (a body), `hint` (optional) |
+
+`expected` values are YAML strings holding `string.inspect` output: `expected: "6"`, `expected: '"abc"'`,
+`expected: "Ok(1)"`. On Erlang a tuple whose first element is a constructor without fields prints like a record
+(`#(Lt, 1)` -> `Lt(1)`); write what `string.inspect` actually prints.
+
+Content CI (`node tools/content-ci/src/main.ts --recall-only [--card <id>]...`) evaluates, in the grading sandbox and
+with the card's imports and definitions: the example (= its `// ->` value), every accepted cloze fill
+(= `cloze.expected`), the predict code (= `predict.expected`), and `checks` after `<header> {\n<reference>\n}`
+(= `produce.expected`). The loader checks the rest (choices, answer range, feedback keys, one blank, header shape,
+`mustUse` tokens in the reference, the `// ->` comment).
+
+Overlays translate prose only: `title`, `summary`, `example` and `definitions` (only comments may differ from the
+Korean code), `recognize: { prompt, choices (same count and order), feedback: { correct, choices } }`,
+`cloze: { prompt }`, `predict: { prompt }`, `produce: { prompt, hint }`. `answer`, `answers`, `expected`, `checks`,
+`mustUse`, `reference`, `header`, `code` and `imports` are never allowed in an overlay. A card is complete in a
+locale (listed in `RecallCard.locales`) when the overlay has the summary, every recognize field and feedback, every
+prompt, the hint when the Korean card has one, the title when the Korean title has Hangul, a translated example /
+definitions when the Korean code has Korean comments, and no Korean left. Incomplete overlays are served field by
+field with Korean fallback; `node tools/content-ci/src/i18n-check.ts` lists what is missing.
 
 ## Third-party content
 

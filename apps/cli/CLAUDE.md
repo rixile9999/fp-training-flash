@@ -34,20 +34,32 @@ Command-line client for learners who solve exercises in their own editor. Thin a
   re-asked, Enter skips (null), EOF/Ctrl-C aborts without submitting (exit 1). Otherwise the quiz is printed
   (text or `--json`) and remembered as `lastQuiz` in config; `--answers id=index,...` (empty or `-` = skip)
   submits `--quiz <id>` or the remembered quiz of the same kind/unit. A failed checkpoint exits 1.
+- Recall (docs/design/recall.md): `recall status` (overview, `--json` ok) and `recall [start] [--minutes 1-60]
+  [--deck a,b --deck c]` (interactive only: TTY + prompter, no `--json`, else exit 1 `recallNeedsTerminal`).
+  One item at a time: new cards show summary/signature/example first; recognize = choice number (re-asked when
+  invalid), cloze/predict = one typed line (Enter = "don't know", sent as ""), produce = the body only, typed
+  line by line until an empty line (`?` on the first line shows the hint) or, when `$EDITOR` is set, edited in a
+  temp `.gleam` file whose `//fp` lines are instructions and are dropped. The prompter is closed while the editor
+  runs and recreated afterwards. Answers are only judged by the server; the CLI shows feedback, expected, actual,
+  missing mustUse tokens, diagnostics, reference and the next review. Per-item API errors (rate limit,
+  unavailable, ...) are reported and the session moves on; EOF stops early but still calls `finishRecall` and
+  prints the summary (exit 0). `elapsedMs` uses `deps.now` (default Date.now).
 
 ## Layout
 
 - `src/main.ts` process entry (bin `fp`); wires real stdout/stderr/env, `stdin.isTTY` and the readline
   prompter into `runCli`.
 - `src/cli.ts` argument parsing (node:util parseArgs), command dispatch, error translation. `runCli(argv, deps)`
-  takes injected env, cwd, output sinks, `createClient`, `newKey`, `stdinIsTTY` and `prompter` so tests need no
-  HTTP or terminal.
+  takes injected env, cwd, output sinks, `createClient`, `newKey`, `stdinIsTTY`, `prompter`, `editBody` and `now`
+  so tests need no HTTP, terminal or editor.
 - `src/config.ts` config file load/save.
 - `src/course.ts` text rendering (locale param) of the course, lessons, lesson answers, quizzes and their results;
   Markdown -> plain text helpers.
 - `src/prompt.ts` `Prompter` and `readlinePrompter` (node:readline; queued lines for piped input, null on EOF).
 - `src/project.ts` local Gleam project generation (gleam.toml, starter, public test module, PROMPT.md, .fp.json)
   and reading the learner's code back.
+- `src/recall.ts` recall rendering (overview, item, result, summary, due-in), the `$EDITOR` runner
+  (`externalEditor`, `bodyTemplate`/`bodyFromTemplate`) and `runRecallSession` (the interactive loop).
 - `src/format.ts` text rendering (locale param) of trial runs, submissions, feedback, hints, sessions, progress.
 - `src/messages.ts` message catalog (ko/en/zh), `LocalizedError`, locale normalization and resolution. Mirrors
   kernel's `pickLocale`/`formatMessage` because the CLI depends only on `@fp/api-contract`.
@@ -59,7 +71,9 @@ Command-line client for learners who solve exercises in their own editor. Thin a
 `test/cli.test.ts` drives commands end to end through `runCli`; `test/locale.test.ts` covers the catalog
 (every key has en/zh with the same placeholders), locale resolution, `fp lang` and per-locale output;
 `test/course.test.ts` covers the course commands (scripted prompter for the interactive quiz, ko/en/zh
-fakes whose content follows the account locale) and `readlinePrompter` over a PassThrough stream.
+fakes whose content follows the account locale) and `readlinePrompter` over a PassThrough stream;
+`test/recall.test.ts` covers `recall status`, the scripted interactive session (every form, editor and fallback,
+Ctrl-D, per-item errors, en/zh), rendering and `externalEditor` with `true`/`false`/`sh`.
 
 ## Gotchas
 

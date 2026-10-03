@@ -8,6 +8,9 @@ import type {
   GradingSpec,
   Lesson,
   LessonUnitSummary,
+  RecallCard,
+  RecallCardKey,
+  RecallDeck,
   ReferenceMaterial,
   Skill,
   TheoryTopic,
@@ -18,6 +21,9 @@ import {
   localizeGrading,
   localizeLesson,
   localizeLessonAnswer,
+  localizeRecallCard,
+  localizeRecallCardKey,
+  localizeRecallDeck,
   localizeReference,
   localizeSkill,
   localizeSummary,
@@ -26,9 +32,12 @@ import {
   overlayFor,
   type LessonText,
   type NoteText,
+  type RecallCardText,
+  type RecallDeckText,
   type SkillText,
   type StoredLessonAnswer,
   type StoredLessonUnit,
+  type StoredRecallDeck,
   type Translations,
   type UnitText,
   type VariantText,
@@ -120,6 +129,35 @@ async function listLessonUnits(db: Db, locale: Locale | undefined): Promise<Less
   });
 }
 
+/** Decks in order (retired ones hidden) with the number of their non-retired cards. */
+async function listRecallDecks(db: Db, locale: Locale | undefined): Promise<RecallDeck[]> {
+  const r = await db.query<{ value: unknown; translations: unknown; card_count: number | string }>(
+    `select d.data as value, d.translations,
+            (select count(*) from content.recall_cards c where c.deck_id = d.id and not c.retired) as card_count
+     from content.recall_decks d where not d.retired order by d.sort_order, d.id`,
+  );
+  return r.rows.map((row) => {
+    const t = overlayFor(json<Translations<RecallDeckText> | null>(row.translations), locale);
+    return localizeRecallDeck(json<StoredRecallDeck>(row.value), t, Number(row.card_count));
+  });
+}
+
+/** Non-retired cards of non-retired decks, by deck order, then card order, then id. */
+async function listRecallCards(db: Db, deckId: string | undefined, locale: Locale | undefined): Promise<RecallCard[]> {
+  const params: unknown[] = [];
+  let where = "not c.retired and not d.retired";
+  if (deckId !== undefined) {
+    params.push(deckId);
+    where += " and c.deck_id = $1";
+  }
+  const r = await db.query<{ value: unknown; translations: unknown }>(
+    `select c.data as value, c.translations from content.recall_cards c join content.recall_decks d on d.id = c.deck_id
+     where ${where} order by d.sort_order, d.id, c.sort_order, c.id`,
+    params,
+  );
+  return r.rows.map((row) => localized<RecallCard, RecallCardText>(row, locale, localizeRecallCard));
+}
+
 export function createCatalog(db: Db): ContentCatalog {
   return {
     async listSkills(locale) {
@@ -198,18 +236,25 @@ export function createCatalog(db: Db): ContentCatalog {
       return localizeLessonAnswer({ unitId, lessonId, exerciseId }, stored, t);
     },
 
-    // Recall (docs/design/recall.md): placeholders until the recall loader lands.
-    async listRecallDecks() {
-      return [];
+    listRecallDecks: (locale) => listRecallDecks(db, locale),
+    listRecallCards: (deckId, locale) => listRecallCards(db, deckId, locale),
+
+    async getRecallCard(cardId, locale) {
+      const r = await db.query<{ value: unknown; translations: unknown }>(
+        "select data as value, translations from content.recall_cards where id = $1",
+        [cardId],
+      );
+      const row = r.rows[0];
+      return row ? localized<RecallCard, RecallCardText>(row, locale, localizeRecallCard) : null;
     },
-    async listRecallCards() {
-      return [];
-    },
-    async getRecallCard() {
-      return null;
-    },
-    async getRecallCardKey() {
-      return null;
+
+    async getRecallCardKey(cardId, locale) {
+      const r = await db.query<{ value: unknown; translations: unknown }>(
+        "select key as value, translations from content.recall_cards where id = $1",
+        [cardId],
+      );
+      const row = r.rows[0];
+      return row ? localized<RecallCardKey, RecallCardText>(row, locale, localizeRecallCardKey) : null;
     },
 
     currentBundle: () => currentBundle(db),

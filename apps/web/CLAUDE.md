@@ -16,7 +16,8 @@ Nested module types are derived from the DTOs in `src/api/types.ts`.
 - `main.tsx` awaits `loadApiFactory(import.meta.env)` (fake API = lazy chunk, absent from production), wires it,
   `browserStore()` and the wall clock into `App`.
 - `App.tsx` owns the locale (localStorage `fp.locale`, `<html lang>`), auth (`fp.auth`), the tab (`course` | `training` |
-  `progress`), the course route (`course.ts` `CourseRoute`: map, unit, lesson + focus, checkpoint, placement; kept across
+  `recall` | `progress`), the recall route (`recall.ts` `RecallRoute`: overview, deck, session (index, intro, draft,
+  result), summary; kept across tabs, re-selecting 암기 outside a session returns to the overview), the course route (`course.ts` `CourseRoute`: map, unit, lesson + focus, checkpoint, placement; kept across
   tabs, re-selecting 강의 or leaving via "훈련으로 가기" returns to the map), the active session, item index, UI phase
   (`work` | `feedback`), the completed-session summary and recent sessions (`fp.recentSessions`).
 - `session.ts` maps session items + phase onto the 5-step stepper (review, focus, feedback, variation, wrapup).
@@ -29,7 +30,9 @@ Nested module types are derived from the DTOs in `src/api/types.ts`.
 - `screens/`: `Login`, `Training` (start card, workspace, summary), `ProblemPanel` (+ `HintPanel`),
   `EditorPanel`, `CoachPanel` (chat), `FeedbackView` (3 layers, rating, coach feedback, explanation),
   `Progress`, `Course` (holds `CourseView`, `refresh()`; map, unit view), `Lesson` (`LessonPlayer`, shared `Choice`,
-  `ItemHead`), `Quiz` (`QuizRunner` one item at a time, `ReviewList` + backlinks, checkpoint and placement screens).
+  `ItemHead`), `Quiz` (`QuizRunner` one item at a time, `ReviewList` + backlinks, checkpoint and placement screens),
+  `Recall` (overview with start options, deck browser, summary) + `RecallPlayer` (one item: new-card intro, then
+  recognize / cloze (inline blank) / predict / produce (header + CodeMirror body + `}`), result, 다음).
 - `ui/`: small presentational pieces (inline stroke `Icon`, `Disclosure`, safe `Markdown` subset, `CodeBlock`,
   `StatusBadge`, `Alert`, `RangeBar`, `RatingLine`, enum `labels`, `LanguageSwitcher`, `PageTitle` (h1 focused on mount),
   `BackLink`). `styles.css` holds all styling; tokens on `:root`.
@@ -41,6 +44,9 @@ Nested module types are derived from the DTOs in `src/api/types.ts`.
 - `api/fake-lessons.ts`: fake course routes (checkpoint: 8 items, pass 80%; placement: 12 items, >= 80% advanced ->
   all units passed + "training", >= 50% intermediate -> level 1). Data: `api/generated/fake-lessons.ts` (all titles,
   full u01 + u02 lessons in ko/en/zh), converted once from content/lessons; outside the context budget.
+- `api/fake-recall.ts`: fake recall routes, 3 Korean cards (2 syntax, list.fold; deck titles in ko/en/zh), one card due
+  at start. Session = due reviews, new recognize, mix (cloze / predict), one produce finale; `minutes` is ignored.
+  Produce is correct when the body is non-empty and contains every mustUse token; answers are idempotent per item.
 
 ## Invariants
 
@@ -61,7 +67,12 @@ Nested module types are derived from the DTOs in `src/api/types.ts`.
 - Course: only the server judges answers. Choices: correct = blue + check + "정답", wrong = orange + x + "오답" (kept on
   retry); 정답 보기 (`giveUp`) is not solved. Blocks show up to the first unresolved exercise (all when completed or via
   a backlink). Quizzes: no feedback before submit, unanswered = `null`. A language switch refetches course and lesson
-  text; shown feedback and a running quiz keep their language. The package is at the 120k context budget.
+  text; shown feedback and a running quiz keep their language.
+- Recall: only the server judges. `elapsedMs` runs from the question being shown (not the intro) to submit. Keys:
+  1-4 or A-D choose in recognize; Enter submits cloze/predict, Ctrl/Cmd+Enter produce; after a result focus moves to
+  다음 (Enter). Recognize marks the chosen choice; after a wrong answer the choice whose text equals `result.expected` (the server sends the correct choice text) is marked correct too. The produce reference is
+  wrapped in the header unless it already contains it. Recall never changes ratings (copy says so).
+- Context budget: 160k (package.json); recall added ~18k.
 
 ## Tests (`test/`)
 
@@ -70,6 +81,8 @@ Nested module types are derived from the DTOs in `src/api/types.ts`.
   `EditorView.findFromDOM(await screen.findByRole("textbox", { name: /코드 편집기/ }))` and `dispatch` (the view
   is created in an effect). Queries use the Korean catalog text; `test/i18n.test.tsx` covers en/zh and fallback.
 - `user.type` treats `[` as a key descriptor; use `user.paste` for Gleam list literals.
+- `recall.test.tsx`: overview + deck browser, a full session through every form with keys and a tab switch, en/zh,
+  fake grading. Use a mutable clock (`now={() => clock.t}`) to check `elapsedMs`.
 
 ## Gotchas
 

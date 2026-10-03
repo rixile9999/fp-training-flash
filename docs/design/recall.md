@@ -57,7 +57,7 @@ example: |                          # one expression, with `// -> value`; verifi
 imports: [gleam/list]               # for example, cloze, predict and produce
 definitions: |                      # optional top-level types/functions (syntax cards: records, custom types)
   pub type Shape { Circle(r: Float) Square(side: Float) }
-signature: "list.fold(List(a), from: b, with: fn(b, a) -> b) -> b"   # optional, from stdlib.json
+signature: "list.fold(over: List(a), from: b, with: fn(b, a) -> b) -> b"   # optional, from stdlib.json
 frequency: 39                       # optional
 recognize:
   prompt: ...

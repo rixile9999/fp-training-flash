@@ -1,8 +1,11 @@
 /** Composition-root entry. Only apps/* and tools/* may import this file. */
-import type { Clock, Db, Logger, Migration } from "@fp/kernel";
+import type { Clock, Db, Logger } from "@fp/kernel";
 import type { ContentCatalog } from "@fp/content/contract";
 import type { GradingService } from "@fp/grading/contract";
 import type { RecallService } from "./contract/index.ts";
+import { createRecallService } from "./internal/service.ts";
+
+export { migrations } from "./internal/migrations.ts";
 
 export interface RecallModuleDeps {
   readonly db: Db;
@@ -18,8 +21,7 @@ export interface RecallModule {
   readonly service: RecallService;
 }
 
-export const migrations: readonly Migration[] = [];
-
-export function createRecallModule(_deps: RecallModuleDeps): RecallModule {
-  throw new Error("not implemented");
+/** Publishes and consumes no events. Run `migrations` (schema "recall") before use. */
+export function createRecallModule(deps: RecallModuleDeps): RecallModule {
+  return { service: createRecallService(deps) };
 }

@@ -28,6 +28,11 @@ export type FpApi = Pick<
   | "submitCheckpoint"
   | "startPlacement"
   | "submitPlacement"
+  | "recallOverview"
+  | "startRecall"
+  | "recallAnswer"
+  | "finishRecall"
+  | "recallDeckCards"
 >;
 
 export const DEFAULT_API_URL = "http://localhost:8787";

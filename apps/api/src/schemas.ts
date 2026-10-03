@@ -133,3 +133,37 @@ export const quizSubmitSchema = z.object({
       messageParams("tooManyAnswers", { max: String(MAX_QUIZ_ANSWERS) }),
     ),
 });
+
+// ---------- recall (spaced-repetition memorization) ----------
+
+export const MAX_RECALL_MINUTES = 60;
+export const MAX_RECALL_DECKS = 20;
+export const MAX_RECALL_TEXT_CHARS = 2_000;
+export const MAX_RECALL_BODY_CHARS = 20_000;
+/** Longer answer times are clamped: a tab left open overnight is still just "slow". */
+export const MAX_RECALL_ELAPSED_MS = 24 * 60 * 60 * 1000;
+
+/** Recall session ids (uuid) and deck ids are single path segments. */
+export const recallSessionParamsSchema = z.object({ sessionId: pathIdSchema });
+export const recallDeckParamsSchema = z.object({ deckId: pathIdSchema });
+
+export const startRecallSchema = z.object({
+  minutes: z.number().int().min(1).max(MAX_RECALL_MINUTES).optional(),
+  deckIds: z.array(pathIdSchema).min(1).max(MAX_RECALL_DECKS).optional(),
+});
+
+const recallResponseSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("choice"), choice: choiceIndex }),
+  z.object({ kind: z.literal("text"), text: z.string().max(MAX_RECALL_TEXT_CHARS) }),
+  z.object({ kind: z.literal("code"), body: z.string().max(MAX_RECALL_BODY_CHARS) }),
+]);
+
+export const recallAnswerSchema = z.object({
+  /** Item ids are opaque (module-generated); only a length bound. */
+  itemId: z.string().min(1).max(300),
+  response: recallResponseSchema,
+  elapsedMs: z
+    .number()
+    .min(0)
+    .transform((v) => Math.min(Math.round(v), MAX_RECALL_ELAPSED_MS)),
+});
