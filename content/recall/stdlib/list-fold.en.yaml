@@ -1,0 +1,18 @@
+title: list.fold
+summary: Folds a list from the left into a single value. The callback takes the accumulator first, then the element.
+recognize:
+  prompt: "In which order does the `list.fold` callback `fn(?, ?)` receive its arguments?"
+  choices: ["`fn(element, accumulator)`", "`fn(accumulator, element)`", "`fn(index, element)`", "`fn(element)`"]
+  feedback:
+    correct: Right. The accumulator comes first, as in `fn(acc, x)`.
+    choices:
+      0: It's the other way round. Gleam's `list.fold` callback takes the accumulator first.
+      2: The one that also gets an index is `list.index_fold`.
+      3: A fold has to pass the accumulator along, so the callback takes two arguments.
+cloze:
+  prompt: Fill in the blank to sum the list.
+predict:
+  prompt: What is the value of this expression?
+produce:
+  prompt: Write the body of a function that returns the sum of a list of integers, using `list.fold`.
+  hint: Start from 0; the callback looks like `fn(acc, x) { ... }`.

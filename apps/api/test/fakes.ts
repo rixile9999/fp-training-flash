@@ -247,6 +247,10 @@ export function makeFakes(overrides: Overrides = {}): Fakes {
     listLessonUnits: async () => [],
     getLesson: async () => null,
     getLessonAnswer: async () => null,
+    listRecallDecks: async () => [],
+    listRecallCards: async () => [],
+    getRecallCard: async () => null,
+    getRecallCardKey: async () => null,
     currentBundle: async () => ({ bundleId: "b-1", contentHash: "h", importedAt: USER.createdAt, exerciseCount: 2 }),
     ...overrides.catalog,
   };

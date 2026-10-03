@@ -28,6 +28,15 @@ import type {
   Quiz,
   UnitProgress,
 } from "@fp/lessons/contract";
+import type {
+  RecallAnswerResult,
+  RecallCardState,
+  RecallOverview,
+  RecallResponse,
+  RecallSessionView,
+  RecallSummary,
+} from "@fp/recall/contract";
+import type { RecallCard, RecallDeck } from "@fp/content/contract";
 
 export type {
   User,
@@ -59,7 +68,28 @@ export type {
   PlacementResult,
   Quiz,
   UnitProgress,
+  RecallAnswerResult,
+  RecallCard,
+  RecallCardState,
+  RecallDeck,
+  RecallOverview,
+  RecallResponse,
+  RecallSessionView,
+  RecallSummary,
 };
+
+export interface StartRecallRequest {
+  readonly minutes?: number;
+  readonly deckIds?: readonly string[];
+}
+
+export interface RecallAnswerRequest {
+  readonly itemId: string;
+  readonly response: RecallResponse;
+  readonly elapsedMs: number;
+}
+
+export type RecallDeckCards = readonly (RecallCard & { readonly state: RecallCardState | null })[];
 
 export interface LessonAnswerRequest {
   readonly exerciseId: string;
@@ -198,6 +228,11 @@ export const ROUTES = {
   submitCheckpoint: { method: "POST", path: "/v1/checkpoints/:quizId/submit" },
   startPlacement: { method: "POST", path: "/v1/placement" },
   submitPlacement: { method: "POST", path: "/v1/placement/:quizId/submit" },
+  recallOverview: { method: "GET", path: "/v1/recall" },
+  startRecall: { method: "POST", path: "/v1/recall/sessions" },
+  recallAnswer: { method: "POST", path: "/v1/recall/sessions/:sessionId/answers" },
+  finishRecall: { method: "POST", path: "/v1/recall/sessions/:sessionId/finish" },
+  recallDeckCards: { method: "GET", path: "/v1/recall/decks/:deckId/cards" },
 } as const;
 
 // ---------- Client ----------
@@ -307,6 +342,11 @@ export function createApiClient(opts: ApiClientOptions) {
     submitCheckpoint: (quizId: string, req: QuizSubmitRequest) => call<CheckpointResult>(ROUTES.submitCheckpoint, { quizId }, req),
     startPlacement: () => call<Quiz>(ROUTES.startPlacement, {}, {}),
     submitPlacement: (quizId: string, req: QuizSubmitRequest) => call<PlacementResult>(ROUTES.submitPlacement, { quizId }, req),
+    recallOverview: () => call<RecallOverview>(ROUTES.recallOverview),
+    startRecall: (req: StartRecallRequest = {}) => call<RecallSessionView>(ROUTES.startRecall, {}, req),
+    recallAnswer: (sessionId: string, req: RecallAnswerRequest) => call<RecallAnswerResult>(ROUTES.recallAnswer, { sessionId }, req),
+    finishRecall: (sessionId: string) => call<RecallSummary>(ROUTES.finishRecall, { sessionId }, {}),
+    recallDeckCards: (deckId: string) => call<RecallDeckCards>(ROUTES.recallDeckCards, { deckId }),
   };
 }
 

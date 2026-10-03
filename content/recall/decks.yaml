@@ -1,0 +1,13 @@
+decks:
+  - id: syntax
+    title: 문법
+    description: Gleam 문법의 핵심 규칙. let, 블록, 연산자, case, 레코드, 파이프, use 등.
+    order: 1
+  - id: stdlib
+    title: 핵심 라이브러리
+    description: 실제 풀이에서 가장 많이 쓰는 gleam_stdlib 함수 50개.
+    order: 2
+  - id: pitfalls
+    title: 함정
+    description: 다른 언어 습관 때문에 자주 틀리는 것들.
+    order: 3

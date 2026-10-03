@@ -51,6 +51,10 @@ function fakeCatalog(over: { lesson?: Lesson | null; keys?: Record<string, Lesso
     listLessonUnits: async () => [unit],
     getLesson: async () => (over.lesson === undefined ? lesson : over.lesson),
     getLessonAnswer: async (_u, _l, id) => (over.keys ?? keys)[id] ?? null,
+    listRecallDecks: async () => [],
+    listRecallCards: async () => [],
+    getRecallCard: async () => null,
+    getRecallCardKey: async () => null,
   };
 }
 

@@ -1,0 +1,22 @@
+{
+  "name": "@fp/recall",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract/index.ts"
+  },
+  "fp": {
+    "kind": "module",
+    "description": "Recall: spaced-repetition memorization of Gleam syntax and core library (FSRS, three stages, sandbox-graded production).",
+    "dbSchema": "recall",
+    "publishes": [],
+    "consumes": []
+  },
+  "dependencies": {
+    "@fp/kernel": "workspace:*",
+    "@fp/content": "workspace:*",
+    "@fp/grading": "workspace:*"
+  }
+}

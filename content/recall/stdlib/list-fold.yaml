@@ -1,0 +1,35 @@
+title: list.fold
+topic: gleam/list
+summary: 리스트를 왼쪽부터 하나씩 접어 값 하나로 만듭니다. 콜백은 누적값이 먼저, 원소가 나중입니다.
+example: |
+  list.fold([1, 2, 3], 0, fn(acc, x) { acc + x })  // -> 6
+imports: [gleam/list]
+signature: "list.fold(List(a), from: b, with: fn(b, a) -> b) -> b"
+frequency: 39
+recognize:
+  prompt: "`list.fold`의 콜백 `fn(?, ?)`에 들어오는 인자 순서는?"
+  choices: ["`fn(원소, 누적값)`", "`fn(누적값, 원소)`", "`fn(인덱스, 원소)`", "`fn(원소)`"]
+  answer: 1
+  feedback:
+    correct: 맞아요. `fn(acc, x)`처럼 누적값이 먼저 옵니다.
+    choices:
+      0: 반대예요. Gleam의 `list.fold` 콜백은 누적값을 먼저 받습니다.
+      2: 인덱스를 함께 받는 것은 `list.index_fold`입니다.
+      3: fold는 누적값을 이어 받아야 하므로 인자가 두 개입니다.
+cloze:
+  prompt: 빈칸을 채워 리스트의 합을 구하세요.
+  code: "list.____([1, 2, 3], 0, fn(acc, x) { acc + x })"
+  answers: [fold]
+  expected: "6"
+predict:
+  prompt: 이 식의 값은?
+  code: "list.fold([1, 2, 3], 0, fn(acc, x) { acc - x })"
+  expected: "-6"
+produce:
+  prompt: 정수 리스트의 합을 돌려주는 함수 본문을 `list.fold`로 쓰세요.
+  header: "pub fn total(xs: List(Int)) -> Int"
+  checks: "#(total([1, 2, 3]), total([]), total([5]))"
+  expected: "#(6, 0, 5)"
+  mustUse: [list.fold]
+  reference: "list.fold(xs, 0, fn(acc, x) { acc + x })"
+  hint: 시작값은 0이고, 콜백은 `fn(acc, x) { ... }` 모양입니다.

@@ -1,0 +1,10 @@
+decks:
+  syntax:
+    title: Syntax
+    description: The core rules of Gleam syntax. let, blocks, operators, case, records, pipes, use and more.
+  stdlib:
+    title: Core library
+    description: The 50 gleam_stdlib functions used most in real solutions.
+  pitfalls:
+    title: Pitfalls
+    description: Things that habits from other languages often get wrong.

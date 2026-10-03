@@ -198,6 +198,20 @@ export function createCatalog(db: Db): ContentCatalog {
       return localizeLessonAnswer({ unitId, lessonId, exerciseId }, stored, t);
     },
 
+    // Recall (docs/design/recall.md): placeholders until the recall loader lands.
+    async listRecallDecks() {
+      return [];
+    },
+    async listRecallCards() {
+      return [];
+    },
+    async getRecallCard() {
+      return null;
+    },
+    async getRecallCardKey() {
+      return null;
+    },
+
     currentBundle: () => currentBundle(db),
   };
 }

@@ -141,6 +141,10 @@ export function fakeCatalog(): ContentCatalog & { calls: string[]; locales: stri
     listLessonUnits: async () => [],
     getLesson: async () => null,
     getLessonAnswer: async () => null,
+    listRecallDecks: async () => [],
+    listRecallCards: async () => [],
+    getRecallCard: async () => null,
+    getRecallCardKey: async () => null,
     currentBundle: async () => null,
   };
 }

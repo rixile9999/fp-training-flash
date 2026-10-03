@@ -258,6 +258,12 @@ export interface ContentCatalog {
   getLesson(unitId: string, lessonId: string, locale?: Locale): Promise<Lesson | null>;
   /** Server-side only (lessons module): answer and feedback of one lesson exercise. */
   getLessonAnswer(unitId: string, lessonId: string, exerciseId: string, locale?: Locale): Promise<LessonAnswerKey | null>;
+  listRecallDecks(locale?: Locale): Promise<readonly RecallDeck[]>;
+  /** Cards of one deck (or all decks), in authoring order. */
+  listRecallCards(deckId?: string, locale?: Locale): Promise<readonly RecallCard[]>;
+  getRecallCard(cardId: string, locale?: Locale): Promise<RecallCard | null>;
+  /** Server-side only (recall module). Feedback texts are localized; answers and code are locale-independent. */
+  getRecallCardKey(cardId: string, locale?: Locale): Promise<RecallCardKey | null>;
   currentBundle(): Promise<BundleInfo | null>;
 }
 
@@ -307,6 +313,59 @@ export interface LessonAnswerKey {
   readonly correctFeedback: string;
   /** Explanation per wrong choice index. */
   readonly choiceFeedback: Readonly<Record<number, string>>;
+}
+
+// ---------- Recall cards (content/recall, docs/design/recall.md) ----------
+
+export type RecallStage = "recognize" | "cloze" | "produce";
+
+export interface RecallDeck {
+  readonly id: string;
+  readonly title: string;
+  readonly description: string;
+  readonly order: number;
+  readonly cardCount: number;
+}
+
+/** Learner-facing card. Never contains answers, expected values, checks or the reference body. */
+export interface RecallCard {
+  readonly id: string;
+  readonly deckId: string;
+  readonly title: string;
+  /** Module (e.g. "gleam/list") or a syntax topic id. */
+  readonly topic: string;
+  readonly summary: string;
+  /** One expression with a `// -> value` comment. */
+  readonly example: string;
+  readonly imports: readonly string[];
+  readonly signature?: string;
+  readonly frequency?: number;
+  readonly recognize: { readonly prompt: string; readonly choices: readonly string[] };
+  /** `code` contains exactly one "____" blank. */
+  readonly cloze: { readonly prompt: string; readonly code: string };
+  readonly predict?: { readonly prompt: string; readonly code: string };
+  /** The learner writes the body of `header`. */
+  readonly produce: { readonly prompt: string; readonly header: string; readonly hint?: string };
+  /** Locales with a complete translation (always includes "ko"). */
+  readonly locales: readonly Locale[];
+}
+
+/** Server-side answer key (recall module only). */
+export interface RecallCardKey {
+  readonly cardId: string;
+  readonly recognize: {
+    readonly answer: number;
+    readonly correctFeedback: string;
+    readonly choiceFeedback: Readonly<Record<number, string>>;
+  };
+  readonly cloze: { readonly answers: readonly string[]; readonly expected: string };
+  readonly predict?: { readonly expected: string };
+  readonly produce: {
+    readonly checks: string;
+    readonly expected: string;
+    readonly mustUse: readonly string[];
+    readonly reference: string;
+  };
 }
 
 export const CONTENT_EVENTS = {

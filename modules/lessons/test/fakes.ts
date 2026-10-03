@@ -125,6 +125,10 @@ export function fakeCatalog(units: readonly FakeUnit[] = UNITS): ContentCatalog 
         choiceFeedback,
       } satisfies LessonAnswerKey;
     },
+    listRecallDecks: async () => [],
+    listRecallCards: async () => [],
+    getRecallCard: async () => null,
+    getRecallCardKey: async () => null,
   };
 }
 

@@ -1,0 +1,10 @@
+decks:
+  syntax:
+    title: 语法
+    description: Gleam 语法的核心规则：let、代码块、运算符、case、记录、管道、use 等。
+  stdlib:
+    title: 核心库
+    description: 实际解题中最常用的 50 个 gleam_stdlib 函数。
+  pitfalls:
+    title: 陷阱
+    description: 受其他语言习惯影响而经常出错的地方。

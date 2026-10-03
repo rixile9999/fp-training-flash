@@ -369,6 +369,18 @@ importers:
         specifier: workspace:*
         version: link:../learner
 
+  modules/recall:
+    dependencies:
+      '@fp/content':
+        specifier: workspace:*
+        version: link:../content
+      '@fp/grading':
+        specifier: workspace:*
+        version: link:../grading
+      '@fp/kernel':
+        specifier: workspace:*
+        version: link:../../shared/kernel
+
   modules/sessions:
     dependencies:
       '@fp/content':
@@ -407,6 +419,9 @@ importers:
       '@fp/lessons':
         specifier: workspace:*
         version: link:../../modules/lessons
+      '@fp/recall':
+        specifier: workspace:*
+        version: link:../../modules/recall
       '@fp/sessions':
         specifier: workspace:*
         version: link:../../modules/sessions

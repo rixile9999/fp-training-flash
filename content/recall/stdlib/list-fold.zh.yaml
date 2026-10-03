@@ -1,0 +1,18 @@
+title: list.fold
+summary: 从左到右把列表折叠成一个值。回调先接收累加器，再接收元素。
+recognize:
+  prompt: "`list.fold` 的回调 `fn(?, ?)` 接收参数的顺序是？"
+  choices: ["`fn(元素, 累加器)`", "`fn(累加器, 元素)`", "`fn(索引, 元素)`", "`fn(元素)`"]
+  feedback:
+    correct: 对。像 `fn(acc, x)` 这样，累加器在前。
+    choices:
+      0: 反了。Gleam 的 `list.fold` 回调先接收累加器。
+      2: 同时接收索引的是 `list.index_fold`。
+      3: 折叠需要把累加器传下去，所以回调有两个参数。
+cloze:
+  prompt: 填空，求列表元素之和。
+predict:
+  prompt: 这个表达式的值是？
+produce:
+  prompt: 用 `list.fold` 写出返回整数列表之和的函数体。
+  hint: 初始值是 0，回调的形式是 `fn(acc, x) { ... }`。

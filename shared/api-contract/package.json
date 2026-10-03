@@ -18,6 +18,7 @@
     "@fp/learner": "workspace:*",
     "@fp/sessions": "workspace:*",
     "@fp/coaching": "workspace:*",
-    "@fp/lessons": "workspace:*"
+    "@fp/lessons": "workspace:*",
+    "@fp/recall": "workspace:*"
   }
 }

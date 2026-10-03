@@ -83,6 +83,10 @@ export function fakeCatalog(specs: readonly GradingSpec[]): ContentCatalog {
     listLessonUnits: async () => [],
     getLesson: async () => null,
     getLessonAnswer: async () => null,
+    listRecallDecks: async () => [],
+    listRecallCards: async () => [],
+    getRecallCard: async () => null,
+    getRecallCardKey: async () => null,
     currentBundle: none,
   };
 }
