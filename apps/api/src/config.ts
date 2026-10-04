@@ -15,6 +15,8 @@ export type RunnerConfig =
 
 export interface ApiConfig {
   readonly port: number;
+  /** Interface to listen on. Default 127.0.0.1: the dev login must not be reachable from the network. */
+  readonly host: string;
   readonly db: DbConfig;
   readonly contentDir: string;
   readonly runner: RunnerConfig;
@@ -29,6 +31,7 @@ export const REPO_ROOT = resolve(import.meta.dirname, "../../..");
 
 export const DEFAULTS = {
   port: 8787,
+  host: "127.0.0.1",
   dataDir: ".data/pglite",
   runnerImage: "fp-gleam-runner:1.18.1",
   coachModel: "claude-opus-5",
@@ -110,11 +113,12 @@ export function loadConfig(env: Env, cwd: string = process.cwd()): Result<ApiCon
   }
 
   const webOrigin = nonEmpty(env.FP_WEB_ORIGIN) ?? DEFAULTS.webOrigin;
+  const host = nonEmpty(env.FP_HOST) ?? DEFAULTS.host;
 
   if (problems.length > 0) {
     return err(appError("invalid_input", "invalid configuration", { problems }));
   }
-  return ok({ port, db, contentDir, runner, llm, webOrigin });
+  return ok({ port, host, db, contentDir, runner, llm, webOrigin });
 }
 
 /** Short runner label for /v1/health and logs. */

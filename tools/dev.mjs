@@ -6,10 +6,12 @@
 //   reset    종료하고 로컬 학습 기록(.data/pglite) 삭제 (--yes 가 없으면 확인을 묻습니다)
 //   status   실행 상태와 API 상태 확인
 //   logs     로그 보기 (api, web 또는 둘 다)
-// up/restart 옵션: --memory (끄면 사라지는 임시 DB), --agent (도구를 쓰는 채팅 코치), --no-open (브라우저 안 열기), --dev (마지막 커밋 대신 작업 폴더 코드로 실행)
+// up/restart 옵션: --memory (끄면 사라지는 임시 DB), --agent (도구를 쓰는 채팅 코치), --no-open (브라우저 안 열기), --dev (마지막 커밋 대신 작업 폴더 코드로 실행),
+//   --remote (Tailscale 기기에서 웹 접속 허용; restart는 이전 설정을 유지, --local 로 끔)
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, openSync, readFileSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import { createInterface } from "node:readline/promises";
+import { networkInterfaces } from "node:os";
 import { join } from "node:path";
 import { ROOT } from "./workspace.mjs";
 
@@ -19,6 +21,8 @@ const IMAGE = process.env.FP_RUNNER_IMAGE ?? "fp-gleam-runner:1.18.1";
 const API_PORT = Number(process.env.PORT ?? 8787);
 const WEB_PORT = 5173;
 const API_URL = `http://localhost:${API_PORT}`;
+// fpctl's own checks and the web proxy use the IPv4 loopback the API listens on (FP_HOST default 127.0.0.1).
+const API_LOOPBACK = `http://127.0.0.1:${API_PORT}`;
 const WEB_URL = `http://localhost:${WEB_PORT}`;
 
 
@@ -30,7 +34,7 @@ const MESSAGES = {
   modeLine: { ko: "  모드   {mode} ({commit})", en: "  mode   {mode} ({commit})", zh: "  模式   {mode}（{commit}）" },
   modeStable: { ko: "안정 실행: 마지막 커밋", en: "stable: last commit", zh: "稳定：最新提交" },
   modeDev: { ko: "개발: 작업 폴더", en: "dev: working tree", zh: "开发：工作区" },
-  help: { ko: "로컬 플랫폼 제어: ./fpctl up | down | restart | reset | status | logs [api|web]\n  up       API와 웹을 백그라운드로 실행 (필요하면 의존성 설치, Docker 기동, 채점 이미지 빌드)\n  down     둘 다 종료\n  restart  종료 후 다시 실행\n  reset    종료하고 로컬 학습 기록(.data/pglite) 삭제 (--yes 가 없으면 확인을 묻습니다)\n  status   실행 상태와 API 상태 확인\n  logs     로그 보기 (api, web 또는 둘 다)\nup/restart 옵션: --memory (끄면 사라지는 임시 DB), --agent (도구를 쓰는 채팅 코치), --no-open (브라우저 안 열기), --dev (마지막 커밋 대신 작업 폴더 코드로 실행)\n공통 옵션: --lang ko|en|zh (또는 FP_LANG)", en: "Local platform control: ./fpctl up | down | restart | reset | status | logs [api|web]\n  up       start API and web in the background (installs deps, starts Docker, builds the grader image if needed)\n  down     stop both\n  restart  stop, then start again\n  reset    stop and delete local learning data (.data/pglite); asks first unless --yes\n  status   show processes and API health\n  logs     follow logs (api, web or both)\nup/restart options: --memory (throwaway in-memory DB), --agent (tool-using chat coach), --no-open (don't open the browser), --dev (run the working tree instead of the last commit)\nCommon option: --lang ko|en|zh (or FP_LANG)", zh: "本地平台控制：./fpctl up | down | restart | reset | status | logs [api|web]\n  up       在后台启动 API 和网页（按需安装依赖、启动 Docker、构建评测镜像）\n  down     停止两者\n  restart  停止后重新启动\n  reset    停止并删除本地学习记录（.data/pglite）；未加 --yes 时会先确认\n  status   查看进程与 API 状态\n  logs     查看日志（api、web 或全部）\nup/restart 选项：--memory（关闭即丢失的临时数据库）、--agent（使用工具的聊天教练）、--no-open（不打开浏览器）、--dev（运行工作区代码而非最新提交）\n通用选项：--lang ko|en|zh（或 FP_LANG）" },
+  help: { ko: "로컬 플랫폼 제어: ./fpctl up | down | restart | reset | status | logs [api|web]\n  up       API와 웹을 백그라운드로 실행 (필요하면 의존성 설치, Docker 기동, 채점 이미지 빌드)\n  down     둘 다 종료\n  restart  종료 후 다시 실행\n  reset    종료하고 로컬 학습 기록(.data/pglite) 삭제 (--yes 가 없으면 확인을 묻습니다)\n  status   실행 상태와 API 상태 확인\n  logs     로그 보기 (api, web 또는 둘 다)\nup/restart 옵션: --memory (끄면 사라지는 임시 DB), --agent (도구를 쓰는 채팅 코치), --no-open (브라우저 안 열기), --dev (마지막 커밋 대신 작업 폴더 코드로 실행), --remote (Tailscale 기기에서 웹 접속 허용; restart는 이전 설정 유지, --local 로 끔)\n공통 옵션: --lang ko|en|zh (또는 FP_LANG)", en: "Local platform control: ./fpctl up | down | restart | reset | status | logs [api|web]\n  up       start API and web in the background (installs deps, starts Docker, builds the grader image if needed)\n  down     stop both\n  restart  stop, then start again\n  reset    stop and delete local learning data (.data/pglite); asks first unless --yes\n  status   show processes and API health\n  logs     follow logs (api, web or both)\nup/restart options: --memory (throwaway in-memory DB), --agent (tool-using chat coach), --no-open (don't open the browser), --dev (run the working tree instead of the last commit), --remote (allow web access from Tailscale devices; restart keeps the previous setting, --local turns it off)\nCommon option: --lang ko|en|zh (or FP_LANG)", zh: "本地平台控制：./fpctl up | down | restart | reset | status | logs [api|web]\n  up       在后台启动 API 和网页（按需安装依赖、启动 Docker、构建评测镜像）\n  down     停止两者\n  restart  停止后重新启动\n  reset    停止并删除本地学习记录（.data/pglite）；未加 --yes 时会先确认\n  status   查看进程与 API 状态\n  logs     查看日志（api、web 或全部）\nup/restart 选项：--memory（关闭即丢失的临时数据库）、--agent（使用工具的聊天教练）、--no-open（不打开浏览器）、--dev（运行工作区代码而非最新提交）、--remote（允许 Tailscale 设备访问网页；restart 沿用上次设置，--local 关闭）\n通用选项：--lang ko|en|zh（或 FP_LANG）" },
   stopped: { ko: "■ {name} 종료", en: "■ {name} stopped", zh: "■ {name} 已停止" },
   installing: { ko: "• 의존성 설치 중 (pnpm install)…", en: "• installing dependencies (pnpm install)…", zh: "• 正在安装依赖（pnpm install）…" },
   installFailed: { ko: "pnpm install 실패", en: "pnpm install failed", zh: "pnpm install 失败" },
@@ -61,6 +65,9 @@ const MESSAGES = {
   procStopped: { ko: "꺼짐", en: "stopped", zh: "已停止" },
   healthDown: { ko: "health 응답 없음", en: "health unreachable", zh: "health 无响应" },
   dataNone: { ko: "(아직 없음)", en: "(none yet)", zh: "（暂无）" },
+  remoteLine: { ko: "  원격   {urls}  (Tailscale 기기에서 접속)", en: "  remote {urls}  (from Tailscale devices)", zh: "  远程   {urls}（从 Tailscale 设备访问）" },
+  remoteWarn: { ko: "! 원격 모드: 개발용 로그인은 비밀번호가 없어서 같은 Tailscale 네트워크의 기기는 누구든 아무 이름으로 들어올 수 있습니다. 같은 Wi-Fi의 다른 기기는 차단됩니다.", en: "! remote mode: the dev login has no password, so any device on your tailnet can sign in under any name. Other devices on the LAN are blocked.", zh: "! 远程模式：开发登录没有密码，同一 Tailscale 网络中的任何设备都能以任意名字登录。同一局域网的其他设备会被拒绝。" },
+  noTailscale: { ko: "Tailscale 주소를 찾지 못했습니다. Tailscale을 켜고 로그인한 뒤 다시 시도하세요.", en: "No Tailscale address found. Start Tailscale, sign in and try again.", zh: "未找到 Tailscale 地址。请启动并登录 Tailscale 后重试。" },
   noLogsYet: { ko: "아직 로그가 없습니다", en: "no logs yet", zh: "暂无日志" },
 };
 
@@ -198,6 +205,36 @@ function ensureImage() {
 }
 
 
+// ---------- remote (Tailscale) ----------
+
+/** Tailscale MagicDNS name and addresses of this machine; null when Tailscale is not connected. */
+function tailscaleInfo() {
+  for (const cli of ["tailscale", "/Applications/Tailscale.app/Contents/MacOS/Tailscale"]) {
+    const r = spawnSync(cli, ["status", "--json"], { encoding: "utf8", timeout: 5000 });
+    if (r.status !== 0 || !r.stdout) continue;
+    try {
+      const self = JSON.parse(r.stdout).Self ?? {};
+      const ips = (self.TailscaleIPs ?? []).filter((ip) => !ip.includes(":"));
+      const dnsName = String(self.DNSName ?? "").replace(/\.$/, "");
+      if (ips.length) return { dnsName, ips };
+    } catch {}
+  }
+  // No CLI: fall back to an interface address in Tailscale's 100.64.0.0/10 range.
+  const ips = Object.values(networkInterfaces())
+    .flat()
+    .filter((a) => a && a.family === "IPv4" && /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./.test(a.address))
+    .map((a) => a.address);
+  return ips.length ? { dnsName: "", ips } : null;
+}
+
+function previousMode() {
+  try {
+    return JSON.parse(readFileSync(modeFile, "utf8"));
+  } catch {
+    return {};
+  }
+}
+
 // ---------- stable snapshot ----------
 
 const STABLE_DIR = join(ROOT, ".data", "stable");
@@ -242,17 +279,20 @@ async function up() {
   await ensureDocker();
   ensureImage();
   const dev = flags.has("--dev");
+  const remote = flags.has("--remote");
+  const tailnet = remote ? tailscaleInfo() : null;
+  if (remote && !tailnet) fail(t("noTailscale"));
   const tree = dev ? { dir: ROOT, commit: "working tree" } : prepareStable();
   if (dev && dirtyFiles() > 0) say(t("devDirty", { n: dirtyFiles() }));
   mkdirSync(RUN_DIR, { recursive: true });
-  writeFileSync(modeFile, JSON.stringify({ mode: dev ? "dev" : "stable", commit: tree.commit }));
+  writeFileSync(modeFile, JSON.stringify({ mode: dev ? "dev" : "stable", commit: tree.commit, remote }));
 
   const memory = flags.has("--memory");
   const env = { FP_DATA_DIR: memory ? "memory" : DATA_DIR, PORT: String(API_PORT) };
   if (flags.has("--agent")) env.FP_COACH_CHAT_AGENT = "on";
   say(t("startingApi", { db: memory ? t("memoryDb") : `DB ${DATA_DIR}`, agent: flags.has("--agent") ? t("agentOn") : "" }));
   startDetached("api", "node", ["apps/api/src/main.ts"], env, tree.dir);
-  const health = await waitFor(`${API_URL}/v1/health`, 90);
+  const health = await waitFor(`${API_LOOPBACK}/v1/health`, 90);
   if (!health) {
     await stop("api");
     fail(t("apiUnhealthy", { log: tail("api", 20) }));
@@ -261,7 +301,17 @@ async function up() {
 
   say(t("startingWeb"));
   // vite directly (not via pnpm), so stopping it does not log a misleading pnpm failure.
-  startDetached("web", join(tree.dir, "apps/web/node_modules/.bin/vite"), ["--port", String(WEB_PORT), "--strictPort"], { VITE_API_URL: API_URL }, join(tree.dir, "apps/web"));
+  // The browser calls the API on the page's own origin ("/"), and vite proxies /v1 to the local API: this works from
+  // other devices and needs no CORS. --remote listens on all interfaces; vite.config.ts then serves only loopback
+  // and Tailscale addresses.
+  const webEnv = { VITE_API_URL: "/", FP_API_PROXY: API_LOOPBACK };
+  const viteArgs = ["--port", String(WEB_PORT), "--strictPort"];
+  if (tailnet) {
+    viteArgs.push("--host", "0.0.0.0");
+    webEnv.FP_WEB_REMOTE = "tailscale";
+    if (tailnet.dnsName) webEnv.FP_WEB_ALLOWED_HOSTS = [tailnet.dnsName, tailnet.dnsName.split(".")[0]].join(",");
+  }
+  startDetached("web", join(tree.dir, "apps/web/node_modules/.bin/vite"), viteArgs, webEnv, join(tree.dir, "apps/web"));
   if (!(await waitFor(WEB_URL, 60))) {
     await stop("web");
     fail(t("webFailed", { log: tail("web", 20) }));
@@ -270,9 +320,14 @@ async function up() {
   say("");
   say(t("running"));
   say(`  web    ${WEB_URL}`);
+  if (tailnet) {
+    const urls = [tailnet.dnsName, ...tailnet.ips].filter(Boolean).map((h) => `http://${h}:${WEB_PORT}`);
+    say(t("remoteLine", { urls: urls.join("  ") }));
+  }
   say(t("apiLine", { url: API_URL, bundle: h.contentBundle, runner: h.runner, llm: h.llm }));
   say(t("modeLine", { mode: dev ? t("modeDev") : t("modeStable"), commit: tree.commit.slice(0, 7) }));
   say(t("hintLine"));
+  if (tailnet) say(t("remoteWarn"));
   if (!flags.has("--no-open") && process.platform === "darwin") spawnSync("open", [WEB_URL]);
 }
 
@@ -313,7 +368,7 @@ async function status() {
     say(`${name.padEnd(4)} ${alive(pid) ? t("procRunning", { pid }) : t("procStopped")}`);
   }
   try {
-    const h = await (await fetch(`${API_URL}/v1/health`)).json();
+    const h = await (await fetch(`${API_LOOPBACK}/v1/health`)).json();
     say(`health ${JSON.stringify(h)}`);
   } catch {
     say(t("healthDown"));
@@ -322,6 +377,10 @@ async function status() {
   try {
     const m = JSON.parse(readFileSync(modeFile, "utf8"));
     say(t("modeLine", { mode: m.mode === "dev" ? t("modeDev") : t("modeStable"), commit: String(m.commit).slice(0, 7) }));
+    if (m.remote) {
+      const ts = tailscaleInfo();
+      if (ts) say(t("remoteLine", { urls: [ts.dnsName, ...ts.ips].filter(Boolean).map((h) => `http://${h}:${WEB_PORT}`).join("  ") }));
+    }
   } catch {}
 }
 
@@ -336,6 +395,8 @@ const commands = {
   up,
   down,
   restart: async () => {
+    // Keep remote access across restarts unless --local is given.
+    if (previousMode().remote && !flags.has("--local")) flags.add("--remote");
     await down();
     await up();
   },

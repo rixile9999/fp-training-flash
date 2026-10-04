@@ -12,6 +12,7 @@ describe("loadConfig", () => {
     if (!r.ok) return;
     expect(r.value).toEqual({
       port: 8787,
+      host: "127.0.0.1",
       db: { kind: "pglite", dataDir: resolve("/work", ".data/pglite") },
       contentDir: resolve(REPO_ROOT, "content"),
       runner: { kind: "docker", image: "fp-gleam-runner:1.18.1" },
@@ -81,9 +82,10 @@ describe("loadConfig", () => {
   });
 
   it("reads PORT, content dir and web origin", () => {
-    const r = loadConfig({ PORT: "9000", FP_CONTENT_DIR: "c", FP_WEB_ORIGIN: "https://fp.example" }, "/work");
-    expect(r.ok && [r.value.port, r.value.contentDir, r.value.webOrigin]).toEqual([
+    const r = loadConfig({ PORT: "9000", FP_HOST: "0.0.0.0", FP_CONTENT_DIR: "c", FP_WEB_ORIGIN: "https://fp.example" }, "/work");
+    expect(r.ok && [r.value.port, r.value.host, r.value.contentDir, r.value.webOrigin]).toEqual([
       9000,
+      "0.0.0.0",
       resolve("/work", "c"),
       "https://fp.example",
     ]);

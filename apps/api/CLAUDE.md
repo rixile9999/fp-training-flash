@@ -9,7 +9,7 @@ No business rules live here: grading, rating, coaching and session logic belong 
 - `src/config.ts` — `loadConfig(env, cwd)`: pure env parsing into `ApiConfig` (returns `Result`, collects all
   problems). Env: `PORT` (8787), `DATABASE_URL` or `FP_DATA_DIR` (`.data/pglite`, `memory` = in-memory),
   `FP_CONTENT_DIR` (repo `/content`), `FP_RUNNER` docker|local, `FP_RUNNER_IMAGE`, `FP_RUNNER_TEMPLATE_DIR`
-  (required for local), `ANTHROPIC_API_KEY` + `FP_COACH_MODEL` (LLM only with a key), `FP_WEB_ORIGIN` (CORS).
+  (required for local), `ANTHROPIC_API_KEY` + `FP_COACH_MODEL` (LLM only with a key), `FP_WEB_ORIGIN` (CORS), `FP_HOST` (listen address, default 127.0.0.1 so the dev login is not on the network).
 - `src/app.ts` — `createApp(services, options)`: Hono app. Middleware order: cors -> body limit -> auth.
   Routes in ROUTES order; `redactExercise` hides unrevealed hint text and predict answers.
 - `src/http.ts` — `STATUS_BY_CODE`, `fail`/`respond`/`json`, `requestLocale`, `apiError(c, code, messageId)`,

@@ -24,6 +24,7 @@ builds the grader image on first run, starts API + web in the background, opens 
 ./fpctl up --dev        # start the working tree instead (uncommitted changes, e.g. while agents are editing)
 ./fpctl up --memory     # start with a throwaway in-memory DB
 ./fpctl up --agent      # start with the tool-using chat coach
+./fpctl up --remote     # also serve the web UI to your Tailscale devices (restart keeps it; --local turns it off)
 ./fpctl status          # processes and API health
 ./fpctl logs [api|web]  # follow logs
 ./fpctl restart         # stop + start
@@ -35,6 +36,11 @@ By default fpctl runs the last commit from a separate git worktree (.data/stable
 or skew the running app; `./fpctl status` shows the mode and commit. Web: http://localhost:5173, API:
 http://localhost:8787. Coaching uses `DASHSCOPE_API_KEY` (or
 `ANTHROPIC_API_KEY`) from the environment; without a key it is rule-based.
+
+The web dev server proxies `/v1` to the API, so the browser only needs port 5173. The API listens on 127.0.0.1 only.
+With `--remote`, the web server listens on all interfaces but answers only this machine and Tailscale addresses
+(100.64.0.0/10); fpctl prints the MagicDNS and IP URLs. The dev login has no password: anyone on your tailnet can
+sign in.
 
 API configuration (environment variables):
 
@@ -51,6 +57,7 @@ API configuration (environment variables):
 | `FP_COACH_MODEL` | `qwen3.8-flash` / `claude-opus-5` | coaching model id |
 | `FP_COACH_CHAT_AGENT` | off | `on` enables the tool-using chat agent (DashScope) |
 | `FP_WEB_ORIGIN` | `http://localhost:5173` | CORS origin for the web UI |
+| `FP_HOST` | `127.0.0.1` | API listen address; keep it local, the dev login has no password |
 
 The web UI can run without a backend: `VITE_FAKE_API=1 pnpm web`.
 

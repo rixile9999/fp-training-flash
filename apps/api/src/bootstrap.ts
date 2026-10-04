@@ -186,8 +186,9 @@ export async function bootstrap(config: ApiConfig, opts: BootstrapOptions = {}):
     });
 
     if (opts.listen ?? true) {
-      server = serve({ fetch: app.fetch, port: config.port }, (info) => {
+      server = serve({ fetch: app.fetch, port: config.port, hostname: config.host }, (info) => {
         logger.info("listening", {
+          host: config.host,
           port: info.port,
           runner: runnerLabel(config.runner),
           llm: config.llm.provider,

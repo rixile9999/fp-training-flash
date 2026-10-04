@@ -7,6 +7,9 @@ Nested module types are derived from the DTOs in `src/api/types.ts`.
 ## Run
 
 - `pnpm --filter @fp/web dev` — needs apps/api at `VITE_API_URL` (default `http://localhost:8787`).
+- Under fpctl: `VITE_API_URL=/` (same origin); `vite.config.ts` proxies `/v1` to `FP_API_PROXY`, adds
+  `FP_WEB_ALLOWED_HOSTS` to the host check and, with `FP_WEB_REMOTE=tailscale`, serves only loopback and Tailscale
+  addresses (`isTailnetOrLoopback`, tested in `test/dev-server.test.ts`).
 - `VITE_FAKE_API=1 pnpm --filter @fp/web dev` — in-memory fake (`src/api/fake.ts`), no backend needed.
 - `pnpm check:module @fp/web` — boundaries, context budget, typecheck (own tsconfig: DOM, react-jsx,
   bundler resolution), vitest + jsdom.
